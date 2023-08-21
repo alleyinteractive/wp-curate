@@ -4,10 +4,10 @@
  *
  * This file will be copied to the assets build directory.
  *
- * @package create-wordpress-plugin
+ * @package wp-curate
  */
 
-namespace Create_WordPress_Plugin;
+namespace Alley\WP\WP_Curate;
 
 add_action(
 	'enqueue_block_editor_assets',
@@ -40,13 +40,13 @@ function register_example_slotfills_scripts(): void {
 
 	/* phpcs:ignore Squiz.PHP.CommentedOutCode.Found
 	 * wp_register_script(
-	 *     'create-wordpress-plugin-example_slotfills',
+	 *     'wp-curate-example_slotfills',
 	 *     plugins_url( 'index.js', __FILE__ ),
 	 *     $asset_file['dependencies'],
 	 *     $asset_file['version'],
 	 *     true
 	 * );
-	 * wp_set_script_translations( 'create-wordpress-plugin-example_slotfills', 'create-wordpress-plugin' );
+	 * wp_set_script_translations( 'wp-curate-example_slotfills', 'wp-curate' );
 	 */
 }
 add_action( 'init', __NAMESPACE__ . '\register_example_slotfills_scripts' );
@@ -55,5 +55,5 @@ add_action( 'init', __NAMESPACE__ . '\register_example_slotfills_scripts' );
  * Enqueue block editor assets for this slotfill.
  */
 function action_enqueue_example_slotfills_assets(): void {
-	wp_enqueue_script( 'create-wordpress-plugin-example_slotfills' );
+	wp_enqueue_script( 'wp-curate-example_slotfills' );
 }

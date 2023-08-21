@@ -1,8 +1,8 @@
 {
-  "name": "create-wordpress-plugin",
+  "name": "wp-curate",
   "version": "1.0.0",
   "license": "GPL-2.0-or-later",
-  "main": "plugin.php",
+  "main": "wp-curate.php",
   "engines": {
     "node": "16",
     "npm": "8"
@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "wp-scripts build --webpack-copy-php --webpack-src-dir=blocks",
-    "create-block": "npx @alleyinteractive/create-block -n create-wordpress-plugin",
+    "create-block": "npx @alleyinteractive/create-block -n wp-curate",
     "precheck-types": "check-node-version --package",
     "check-types": "tsc",
     "lint:fix": "eslint --ext .jsx --ext .js --ext .ts --ext .tsx . --fix",

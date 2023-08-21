@@ -1,7 +1,7 @@
 {
   "core_term_meta": true,
-  "domain": "create-wordpress-plugin",
+  "domain": "wp-curate",
   "folder": "src",
-  "namespace": "Create_WordPress_Plugin",
+  "namespace": "Alley\WP\WP_Curate",
   "require_path": "__DIR__"
 }
