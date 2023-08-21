@@ -1,11 +1,11 @@
 <?php
 /**
- * Create WordPress Plugin Tests: Example Unit Test
+ * WP Curate Tests: Example Unit Test
  *
- * @package create-wordpress-plugin
+ * @package wp-curate
  */
 
-namespace Create_WordPress_Plugin\Tests\Unit;
+namespace Alley\WP\WP_Curate\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 

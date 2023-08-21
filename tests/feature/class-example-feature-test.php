@@ -1,13 +1,13 @@
 <?php
 /**
- * Create WordPress Plugin Tests: Example Feature Test
+ * WP Curate Tests: Example Feature Test
  *
- * @package create-wordpress-plugin
+ * @package wp-curate
  */
 
-namespace Create_WordPress_Plugin\Tests\Feature;
+namespace Alley\WP\WP_Curate\Tests\Feature;
 
-use Create_WordPress_Plugin\Tests\Test_Case;
+use Alley\WP\WP_Curate\Tests\Test_Case;
 
 /**
  * A test suite for an example feature.
