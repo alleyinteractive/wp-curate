@@ -20,7 +20,7 @@ if ( isset( $block->context['curation']['provider'] ) && is_string( $block->cont
 		$wp_curate_term = get_term( $block->context['curation'][ $wp_curate_provider ], $wp_curate_provider );
 
 		if ( WP_Utils::is_wp_term( $wp_curate_term ) ) :
-			$wp_curate_term_link = get_term_link( $wp_curate_term, $wp_curate_provider );
+			$wp_curate_term_link = get_term_link( $wp_curate_term, $wp_curate_provider ); // @phpstan-ignore-line
 
 			if ( is_string( $wp_curate_term_link ) ) {
 				$wp_curate_link = $wp_curate_term_link;

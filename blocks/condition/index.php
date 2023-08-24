@@ -3,6 +3,9 @@
  * Block Name: Query Condition.
  *
  * @package wp-curate
+ *
+ * phpcs:disable Squiz.Commenting.FunctionComment.MissingParamTag
+ * phpcs:disable Squiz.Commenting.FunctionComment.MissingParamName
  */
 
 use wp_curate\Core\Global_Post_Query;
@@ -76,7 +79,7 @@ function wp_curate_condition_block_result( array $parsed_block, array $context )
 					break;
 
 				case method_exists( $wp_query, $condition ) && is_callable( [ $wp_query, $condition ] ):
-					$result = call_user_func( [ $wp_query, $condition ] ) === $expect;
+					$result = call_user_func( [ $wp_query, $condition ] ) === $expect; // @phpstan-ignore-line
 					break;
 
 				default:
