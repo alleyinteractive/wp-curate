@@ -8,6 +8,11 @@
 	"icon": "filter",
 	"description": "Contains the block elements used to render a custom query",
   "textdomain": "wp-curate",
+	"editorScript": "file:index.ts",
+	"editorStyle": "file:index.css",
+	"style": [
+		"file:style-index.css"
+	],
   "attributes": {
     "name": {
       "type": "string"

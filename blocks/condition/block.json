@@ -8,6 +8,11 @@
   "icon": "leftright",
   "description": "Renders blocks based on conditions.",
   "textdomain": "wp-curate",
+	"editorScript": "file:index.ts",
+	"editorStyle": "file:index.css",
+	"style": [
+		"file:style-index.css"
+	],
   "usesContext": ["postId"],
   "providesContext": {
     "conditionResult": "conditionResult"

@@ -8,6 +8,11 @@
   "icon": "arrow-left",
   "description": "Displays when the condition is true.",
   "textdomain": "wp-curate",
+	"editorScript": "file:index.ts",
+	"editorStyle": "file:index.css",
+	"style": [
+		"file:style-index.css"
+	],
   "usesContext": ["conditionResult"],
   "supports": {
     "inserter": true

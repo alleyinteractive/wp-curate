@@ -8,9 +8,16 @@
 	"icon": "heading",
 	"description": "Display heading for a custom query",
 	"textdomain": "wp-curate",
-  "render": "file:render.php",
-  "usesContext": ["heading"],
-  "supports": {
-    "inserter": true
-  }
+	"editorScript": "file:index.ts",
+	"editorStyle": "file:index.css",
+	"style": [
+		"file:style-index.css"
+	],
+	"render": "file:render.php",
+	"usesContext": [
+		"heading"
+	],
+	"supports": {
+		"inserter": true
+	}
 }
