@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "wp-curate/query-heading",
+	"version": "0.1.0",
+	"title": "Query Heading",
+	"category": "theme",
+	"icon": "heading",
+	"description": "Display heading for a custom query",
+	"textdomain": "wp-curate",
+  "render": "file:render.php",
+  "usesContext": ["heading"],
+  "supports": {
+    "inserter": true
+  }
+}

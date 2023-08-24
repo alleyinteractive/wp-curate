@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "wp-curate/is-true",
+  "version": "0.1.0",
+  "title": "Condition Is True",
+  "category": "theme",
+  "icon": "arrow-left",
+  "description": "Displays when the condition is true.",
+  "textdomain": "wp-curate",
+  "usesContext": ["conditionResult"],
+  "supports": {
+    "inserter": true
+  }
+}
