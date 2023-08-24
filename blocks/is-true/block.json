@@ -13,8 +13,5 @@
 	"style": [
 		"file:style-index.css"
 	],
-  "usesContext": ["conditionResult"],
-  "supports": {
-    "inserter": true
-  }
+  "usesContext": ["conditionResult"]
 }

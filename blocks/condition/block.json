@@ -16,8 +16,5 @@
   "usesContext": ["postId"],
   "providesContext": {
     "conditionResult": "conditionResult"
-  },
-  "supports": {
-    "inserter": true
   }
 }

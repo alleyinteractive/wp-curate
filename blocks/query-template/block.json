@@ -18,8 +18,5 @@
       "type": "string"
     }
   },
-  "usesContext": ["queries"],
-  "supports": {
-    "inserter": true
-  }
+  "usesContext": ["queries"]
 }
