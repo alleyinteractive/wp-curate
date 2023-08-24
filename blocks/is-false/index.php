@@ -27,10 +27,10 @@ add_action( 'init', 'wp_curate_is_false_block_init' );
  * Short-circuit the display of blocks inside if the outer condition isn't false.
  *
  * @param string|null   $pre_render   The pre-rendered content. Default null.
- * @param array         $parsed_block The block being rendered.
+ * @param WP_Block      $parsed_block The block being rendered.
  * @param WP_Block|null $parent_block If this is a nested block, a reference to the parent block.
  */
-function wp_curate_pre_render_is_false_block( $pre_render, $parsed_block, $parent_block ) {
+function wp_curate_pre_render_is_false_block( $pre_render, $parsed_block, $parent_block ): string|null {
 	/*
 	 * Previously, the condition block added 'conditionResult' as context to this block. However,
 	 * limitations in the context API meant that the context didn't get passed to child blocks when

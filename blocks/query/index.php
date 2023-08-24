@@ -28,11 +28,11 @@ add_action( 'init', 'wp_curate_query_block_init' );
 /**
  * Renders the `wp-curate/query` block on the server.
  *
- * @param array  $attributes Block attributes.
- * @param string $content    Block default content.
+ * @param array<mixed> $attributes Block attributes.
+ * @param string       $content    Block default content.
  * @return string Block output.
  */
-function wp_curate_render_query_block( $attributes, $content ) {
+function wp_curate_render_query_block( $attributes, $content ): string {
 	$proc = new WP_HTML_Tag_Processor( $content );
 
 	/*
@@ -44,17 +44,18 @@ function wp_curate_render_query_block( $attributes, $content ) {
 	 * available because the post template inner block needs to render for us to know whether there
 	 * are any posts to begin with.
 	 */
-	return $proc->next_tag( 'ul' ) === true || $proc->next_tag( 'ol' ) === true ? $content : '';
+	return $proc->next_tag( [ 'tag_name' => 'ul' ] ) === true || $proc->next_tag( [ 'tag_name' => 'ol' ] ) === true ? $content : '';
 }
 
 /**
  * Provide the 'query' as context to a rendered block.
  *
- * @param array         $context      Default context.
- * @param array         $parsed_block Block being rendered, filtered by `render_block_data`.
+ * @param array<mixed>  $context      Default context.
+ * @param WP_Block      $parsed_block Block being rendered, filtered by `render_block_data`.
  * @param WP_Block|null $parent_block If this is a nested block, a reference to the parent block.
+ * @return array<mixed> Context.
  */
-function wp_curate_query_block_context( $context, $parsed_block, $parent_block ) {
+function wp_curate_query_block_context( $context, $parsed_block, $parent_block ): array {
 	if (
 		! isset( $parsed_block['blockName'], $parsed_block['attrs'] )
 		|| 'wp-curate/query' !== $parsed_block['blockName']
@@ -62,6 +63,7 @@ function wp_curate_query_block_context( $context, $parsed_block, $parent_block )
 		return $context;
 	}
 
+	/*
 	$attributes = $parsed_block['attrs'];
 
 	if ( isset( $attributes['name'] ) ) {
@@ -79,6 +81,7 @@ function wp_curate_query_block_context( $context, $parsed_block, $parent_block )
 			}
 		}
 	}
+	*/
 
 	return $context;
 }

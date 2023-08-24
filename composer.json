@@ -16,7 +16,9 @@
     ],
     "require": {
         "php": "^8.0",
-        "alleyinteractive/composer-wordpress-autoloader": "^1.0"
+        "alleyinteractive/composer-wordpress-autoloader": "^1.0",
+        "alleyinteractive/laminas-validator-extensions": "^2.0",
+        "alleyinteractive/wp-match-blocks": "^3.0"
     },
     "require-dev": {
         "alleyinteractive/alley-coding-standards": "^1.0",

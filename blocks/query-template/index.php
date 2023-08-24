@@ -27,9 +27,9 @@ add_action( 'init', 'wp_curate_query_template_block_init' );
 /**
  * Renders the `wp-curate/query-template` block on the server.
  *
- * @param array    $attributes Block attributes.
- * @param string   $content    Block default content.
- * @param WP_Block $block      Block instance.
+ * @param array<mixed> $attributes Block attributes.
+ * @param string       $content    Block default content.
+ * @param WP_Block     $block      Block instance.
  * @return string Block output.
  */
 function wp_curate_render_query_template_block( $attributes, $content, $block ): string {

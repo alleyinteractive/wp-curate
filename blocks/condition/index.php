@@ -29,8 +29,16 @@ add_action( 'init', 'wp_curate_condition_block_init' );
 /**
  * Evaluate the result of condition block attributes.
  *
- * @param array $parsed_block Parsed condition block.
- * @param array $context      Available context.
+ * @param array{
+ *   attrs?: array{
+ *      query?: string|array<string|callable>,
+ *      post?: mixed[],
+ *      custom?: mixed[],
+ *      condition?: string[],
+ *      index?: array<string, int>
+ *   }
+ * } $parsed_block Parsed condition block.
+ * @param array{'postId'?: int} $context      Available context.
  * @return bool
  */
 function wp_curate_condition_block_result( array $parsed_block, array $context ): bool {
@@ -41,7 +49,7 @@ function wp_curate_condition_block_result( array $parsed_block, array $context )
 
 	$conditions = [];
 
-	if ( isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ) {
+	if ( isset( $parsed_block['attrs'] ) ) {
 		$conditions = $parsed_block['attrs'];
 	}
 
@@ -67,7 +75,7 @@ function wp_curate_condition_block_result( array $parsed_block, array $context )
 					$result = $wp_query->is_tax( $expect );
 					break;
 
-				case method_exists( $wp_query, $condition ):
+				case method_exists( $wp_query, $condition ) && is_callable( [ $wp_query, $condition ] ):
 					$result = call_user_func( [ $wp_query, $condition ] ) === $expect;
 					break;
 
@@ -96,7 +104,7 @@ function wp_curate_condition_block_result( array $parsed_block, array $context )
 	 * Note that this approach means that two identical conditions with two identical set of
 	 * child blocks will use the same counter.
 	 */
-	if ( isset( $conditions['index'] ) && is_array( $conditions['index'] ) ) {
+	if ( isset( $conditions['index'] ) ) {
 		$num_conditions++;
 
 		$validator = new \Laminas\Validator\ValidatorChain();
@@ -128,7 +136,6 @@ function wp_curate_condition_block_result( array $parsed_block, array $context )
 	if (
 		isset( $conditions['post'] )
 		&& isset( $context['postId'] )
-		&& is_numeric( $context['postId'] )
 		&& $context['postId'] > 0
 	) {
 		$conditions['post'] = (array) $conditions['post'];
@@ -137,7 +144,7 @@ function wp_curate_condition_block_result( array $parsed_block, array $context )
 			$num_conditions++;
 
 			if ( 'has_content' === $condition ) {
-				if ( '' !== get_the_content( null, null, $context['postId'] ) ) {
+				if ( '' !== get_the_content( null, false, $context['postId'] ) ) {
 					$num_true++;
 				}
 
@@ -147,9 +154,9 @@ function wp_curate_condition_block_result( array $parsed_block, array $context )
 			/**
 			 * Filters the condition block's result for the given post condition.
 			 *
-			 * @param bool   $result    Condition result.
-			 * @param string $condition Condition name.
-			 * @param int    $post_id   Post ID.
+			 * @param bool  $result    Condition result.
+			 * @param mixed $condition Condition name.
+			 * @param int   $post_id   Post ID.
 			 */
 			if ( true === apply_filters( 'wp_curate_condition_block_post_condition', false, $condition, $context['postId'] ) ) {
 				$num_true++;
@@ -162,14 +169,6 @@ function wp_curate_condition_block_result( array $parsed_block, array $context )
 
 		foreach ( $conditions['custom'] as $condition ) {
 			$num_conditions++;
-
-			if ( 'is_column' === $condition ) {
-				$check = new Slug_Is_In_Category( new Global_Post_Query() );
-
-				if ( $check->isValid( 'category-column' ) || $check->isValid( 'category-hollyblog' ) ) {
-					$num_true++;
-				}
-			}
 		}
 	}
 
