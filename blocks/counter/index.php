@@ -8,7 +8,7 @@
  * phpcs:disable Squiz.Commenting.FunctionComment.MissingParamName
  */
 
-use WP_Curate\Core\Block;
+use Alley\WP\WP_Curate\Block;
 
 use function Alley\WP\add_filter_side_effect;
 use function Alley\WP\match_block;

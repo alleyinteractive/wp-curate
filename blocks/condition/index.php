@@ -8,8 +8,8 @@
  * phpcs:disable Squiz.Commenting.FunctionComment.MissingParamName
  */
 
-use wp_curate\Core\Global_Post_Query;
-use wp_curate\Core\Validator\Slug_Is_In_Category;
+use Alley\WP\WP_Curate\Global_Post_Query;
+use Alley\WP\WP_Curate\Validator\Slug_Is_In_Category;
 
 /**
  * Registers the block using the metadata loaded from the `block.json` file.

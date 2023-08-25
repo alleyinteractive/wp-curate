@@ -5,7 +5,7 @@
  * @package wp-curate
  */
 
-namespace WP_Curate\Core;
+namespace Alley\WP\WP_Curate;
 
 /**
  * A single block.

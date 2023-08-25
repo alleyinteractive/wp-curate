@@ -5,7 +5,7 @@
  * @package wp-curate
  */
 
-namespace WP_Curate\Core;
+namespace Alley\WP\WP_Curate;
 
 /**
  * Describes a class that serializes block content.

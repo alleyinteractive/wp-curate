@@ -9,7 +9,7 @@
  * @package wp-curate
  */
 
-use WP_Curate\Core\WP_Utils;
+use Alley\WP\WP_Curate\WP_Utils;
 
 $wp_curate_link = '';
 
