@@ -9,10 +9,6 @@
   "description": "Display \"See All\" link for a custom query.",
   "textdomain": "wp-curate",
   "editorScript": "file:index.ts",
-  "editorStyle": "file:index.css",
-  "style": [
-    "file:style-index.css"
-  ],
   "usesContext": [
     "curation"
   ],
