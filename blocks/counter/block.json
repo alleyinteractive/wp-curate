@@ -1,0 +1,11 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "wp-curate/counter",
+	"version": "0.1.0",
+	"title": "Counter",
+	"category": "theme",
+	"icon": "editor-ol",
+	"description": "Count template iterations",
+	"textdomain": "wp-curate"
+}

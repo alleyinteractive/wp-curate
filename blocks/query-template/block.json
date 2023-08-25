@@ -1,0 +1,22 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "wp-curate/query-template",
+	"version": "0.1.0",
+	"title": "Query Template",
+	"category": "theme",
+	"icon": "filter",
+	"description": "Contains the block elements used to render a custom query",
+  "textdomain": "wp-curate",
+	"editorScript": "file:index.ts",
+	"editorStyle": "file:index.css",
+	"style": [
+		"file:style-index.css"
+	],
+  "attributes": {
+    "name": {
+      "type": "string"
+    }
+  },
+  "usesContext": ["queries"]
+}
