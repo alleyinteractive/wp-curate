@@ -39,9 +39,9 @@ add_action( 'init', 'wp_curate_counter_block_init' );
  * Inject a counter block into the post template block being rendered.
  *
  * @param WP_Block $parsed_block The block being rendered.
- * @return WP_Block
+ * @return array
  */
-function wp_curate_inject_counter_block( $parsed_block ): WP_Block {
+function wp_curate_inject_counter_block( $parsed_block ): array {
 	global $wp_curate_template_stack;
 
 	if ( isset( $parsed_block['blockName'] ) && 'core/post-template' === $parsed_block['blockName'] ) {

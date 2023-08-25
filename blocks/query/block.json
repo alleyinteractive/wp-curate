@@ -20,8 +20,42 @@
     "curation": "curation"
   },
   "attributes": {
-    "name": {
-      "type": "string"
+    "perPage": {
+      "type": "number",
+      "default": 10
+    },
+    "pages": {
+      "type": "number",
+      "default": 1
+    },
+    "offset": {
+      "type": "number",
+      "default": 0
+    },
+    "postType": {
+      "type": "array",
+      "default": ["post"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "author": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "number"
+      }
+    },
+    "search": {
+      "type": "string",
+      "default": ""
+    },
+    "taxQuery": {
+      "type": "object",
+      "default": {},
+      "items": {
+        "type": "array"
+      }
     }
   }
 }
