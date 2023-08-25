@@ -12,5 +12,11 @@
   "usesContext": [
     "curation"
   ],
-  "render": "file:render.php"
+  "render": "file:render.php",
+  "attributes": {
+    "seeAllText": {
+      "type": "string",
+      "default": "See All"
+    }
+  }
 }

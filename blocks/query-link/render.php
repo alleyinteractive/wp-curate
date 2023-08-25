@@ -35,6 +35,7 @@ if ( strlen( $wp_curate_link ) > 0 ) :
 		href="<?php echo esc_url( $wp_curate_link ); ?>"
 		<?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>
 	>
+		<?php echo wp_kses_post( $attributes['seeAllText'] ) ?>
 		<?php echo esc_html( $content ); ?>
 	</a>
 	<?php
