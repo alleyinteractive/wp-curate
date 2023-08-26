@@ -11,9 +11,13 @@
 
 use Alley\WP\WP_Curate\WP_Utils;
 
-$wp_curate_link = '';
+$wp_curate_link = $attributes['urlOverride'] ?? '';
 
-if ( isset( $block->context['curation']['provider'] ) && is_string( $block->context['curation']['provider'] ) ) :
+if (
+	strlen( $wp_curate_link ) < 1
+	&& isset( $block->context['curation']['provider'] )
+	&& is_string( $block->context['curation']['provider'] )
+) :
 	$wp_curate_provider = $block->context['curation']['provider'];
 
 	if ( taxonomy_exists( $wp_curate_provider ) && isset( $block->context['curation'][ $wp_curate_provider ] ) ) :

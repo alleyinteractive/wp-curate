@@ -17,6 +17,9 @@
     "seeAllText": {
       "type": "string",
       "default": "See All"
+    },
+    "urlOverride": {
+      "type": "string"
     }
   }
 }
