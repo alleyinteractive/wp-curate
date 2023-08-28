@@ -11,7 +11,9 @@
 
 $wp_curate_heading = '';
 
-if ( isset( $block->context['heading']['source'] ) ) :
+if ( isset( $attributes['override'] ) ) : // Static heading override.
+	$wp_curate_heading = $attributes['override'];
+elseif ( isset( $block->context['heading']['source'] ) ) : // Dynamic heading based on block context.
 	if ( 'custom' === $block->context['heading']['source'] && isset( $block->context['heading']['custom'] ) ) :
 		$wp_curate_heading = $block->context['heading']['custom'];
 	endif;
@@ -26,12 +28,12 @@ if ( isset( $block->context['heading']['source'] ) ) :
 			$wp_curate_heading = html_entity_decode( $wp_curate_term->name );
 		endif;
 	endif;
+endif;
 
-	if ( is_string( $wp_curate_heading ) && '' !== $wp_curate_heading ) :
-		?>
-			<h2 <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => 'wp-block-heading' ] ) ); ?>>
-				<?php echo esc_html( $wp_curate_heading ); ?>
-			</h2>
-		<?php
-	endif;
+if ( is_string( $wp_curate_heading ) && '' !== $wp_curate_heading ) :
+	?>
+		<h2 <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => 'wp-block-heading' ] ) ); ?>>
+			<?php echo esc_html( $wp_curate_heading ); ?>
+		</h2>
+	<?php
 endif;

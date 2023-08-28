@@ -16,5 +16,11 @@
   "render": "file:render.php",
   "usesContext": [
     "heading"
-  ]
+  ],
+  "attributes": {
+    "override": {
+      "default": "",
+      "type": "string"
+    }
+  }
 }

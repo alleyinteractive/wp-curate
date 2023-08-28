@@ -43,7 +43,7 @@ add_action( 'rest_api_init', __NAMESPACE__ . '\register_rest_routes' );
  * @return WP_REST_Response REST API response.
  */
 function rest_query_heading( WP_REST_Request $request ): WP_REST_Response {
-    $data     = null;
+    $data     = '';
 	$source   = $request->get_param( 'source' );
 	$custom   = $request->get_param( 'custom' );
 	$term_id  = $request->get_param( 'term_id' );
