@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "wp-curate/is-true",
+	"version": "0.1.0",
+	"title": "Is true",
+	"category": "theme",
+	"icon": "star-filled",
+	"description": "Displays when the condition is true.",
+	"textdomain": "is-true",
+	"editorScript": "file:index.ts",
+	"editorStyle": "file:index.css",
+	"style": [
+		"file:style-index.css"
+	],
+	"render": "file:render.php"
+}
