@@ -7,7 +7,7 @@
 
 namespace Alley\WP\WP_Curate;
 
-use Alley\WP\WP_Curate\WP_Utils;
+use Alley\WP\WP_Curate\WP_Curate;
 use WP_REST_Response;
 use WP_REST_Request;
 use WP_REST_Server;
@@ -44,22 +44,11 @@ add_action( 'rest_api_init', __NAMESPACE__ . '\register_rest_routes' );
  */
 function rest_query_heading( WP_REST_Request $request ): WP_REST_Response {
     $data     = '';
-	$source   = $request->get_param( 'source' );
-	$custom   = $request->get_param( 'custom' );
-	$term_id  = $request->get_param( 'term_id' );
-	$taxonomy = $request->get_param( 'taxonomy' );
+	$curation = $request->get_param( 'curation' );
 
-    if ( 'custom' === $source && isset( $custom ) ) :
-		$data = $custom;
-	endif;
-
-	if ( 'termId' === $source && isset( $term_id, $taxonomy ) ) :
-		$term = get_term( $term_id, $taxonomy );
-		
-		if ( WP_Utils::is_wp_term( $term ) ) :
-			$data = html_entity_decode( $term->name );
-		endif;
-	endif;
+	if ( $curation && is_array( $curation ) ) {
+		$data = WP_Curate::get_query_heading( $curation );
+	}
 
 	// Send the response.
 	return rest_ensure_response( $data );

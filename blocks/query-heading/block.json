@@ -15,7 +15,7 @@
   ],
   "render": "file:render.php",
   "usesContext": [
-    "heading"
+    "curation"
   ],
   "attributes": {
     "override": {

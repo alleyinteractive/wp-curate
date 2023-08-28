@@ -1,4 +1,5 @@
 import apiFetch from '@wordpress/api-fetch';
+import { addQueryArgs } from '@wordpress/url';
 import { RichText, useBlockProps } from '@wordpress/block-editor';
 import { Spinner } from '@wordpress/components';
 import { useEffect, useState } from '@wordpress/element';
@@ -9,12 +10,7 @@ interface EditProps {
     override?: string;
   };
   context?: {
-    heading?: {
-      custom?: string | null;
-      source?: string | null;
-      taxonomy?: string | null;
-      termId?: string | null;
-    };
+    curation?: any; // Shape TBD.
   };
   setAttributes: (attributes: any) => void;
 }
@@ -29,23 +25,18 @@ export default function Edit({
     override = '',
   },
   context: {
-    heading: {
-      custom = 'My Dynamic Heading',
-      source = 'custom',
-      taxonomy = null,
-      termId = null,
-    } = {},
+    curation = {},
   } = {},
   setAttributes,
 }: EditProps) {
   const [dynamicHeading, setDynamicHeading] = useState('');
   const [fetchingHeading, setFetchingHeading] = useState(false);
 
-  // Refresh dynamicHeading when the heading context changes.
+  // Refresh dynamicHeading when the curation context changes.
   useEffect(() => {
     setFetchingHeading(true);
     apiFetch({
-      path: `wp-curate/v1/query-heading?source=${source}&custom=${custom}&term_id=${termId}&taxonomy=${taxonomy}`,
+      path: addQueryArgs('wp-curate/v1/query-heading', { curation }),
     }).then((res) => {
       setDynamicHeading(res as any as string);
     }).catch((err) => {
@@ -54,7 +45,7 @@ export default function Edit({
     }).finally(() => {
       setFetchingHeading(false);
     });
-  }, [source, custom, termId, taxonomy]);
+  }, [curation]);
 
   return (
     <div {...useBlockProps()}>

@@ -9,25 +9,14 @@
  * @package wp-curate
  */
 
+use Alley\WP\WP_Curate\WP_Curate;
+
 $wp_curate_heading = '';
 
-if ( isset( $attributes['override'] ) ) : // Static heading override.
+if ( ! empty( $attributes['override'] ) ) : // Static heading override.
 	$wp_curate_heading = $attributes['override'];
-elseif ( isset( $block->context['heading']['source'] ) ) : // Dynamic heading based on block context.
-	if ( 'custom' === $block->context['heading']['source'] && isset( $block->context['heading']['custom'] ) ) :
-		$wp_curate_heading = $block->context['heading']['custom'];
-	endif;
-
-	if (
-		'termId' === $block->context['heading']['source']
-		&& isset( $block->context['heading']['termId'], $block->context['heading']['taxonomy'] )
-	) :
-		$wp_curate_term = get_term( $block->context['heading']['termId'], $block->context['heading']['taxonomy'] );
-
-		if ( $wp_curate_term instanceof WP_Term ) :
-			$wp_curate_heading = html_entity_decode( $wp_curate_term->name );
-		endif;
-	endif;
+elseif ( isset( $block->context['curation'] ) ) : // Dynamic heading based on block context.
+	$wp_curate_heading = WP_Curate::get_query_heading( $block->context['curation'] );
 endif;
 
 if ( is_string( $wp_curate_heading ) && '' !== $wp_curate_heading ) :
