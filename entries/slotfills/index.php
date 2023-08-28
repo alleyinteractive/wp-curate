@@ -38,7 +38,7 @@ function register_slotfills_scripts(): void {
 	// Automatically load dependencies and version.
 	$asset_file = include __DIR__ . '/index.asset.php';
 
-	 wp_register_script(
+	wp_register_script(
 		'wp-curate_slotfills',
 		plugins_url( 'index.js', __FILE__ ),
 		$asset_file['dependencies'],
