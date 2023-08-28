@@ -30,8 +30,7 @@ export default function Edit({
 }: QueryLinkProps) {
   return (
     <>
-      {/* @ts-ignore */}
-      <BlockControls group="block">
+      <BlockControls>
         {/* @ts-ignore */}
         <ToolbarUrlSelector
           isSelected={isSelected}
@@ -44,11 +43,11 @@ export default function Edit({
       </BlockControls>
 
       <a {...useBlockProps()}>
-          <RichText
-            value={seeAllText || __('See All', 'wp-curate')}
-            allowedFormats={[]}
-            onChange={(value) => setAttributes({ seeAllText: value })}
-          />
+        <RichText
+          value={seeAllText || __('See All', 'wp-curate')}
+          allowedFormats={[]}
+          onChange={(value) => setAttributes({ seeAllText: value })}
+        />
       </a>
     </>
   );
