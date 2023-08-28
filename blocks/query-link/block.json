@@ -21,5 +21,6 @@
     "urlOverride": {
       "type": "string"
     }
-  }
+  },
+  "parent": ["query-template"]
 }
