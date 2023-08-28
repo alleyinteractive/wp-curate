@@ -38,16 +38,24 @@ add_action( 'init', 'wp_curate_counter_block_init' );
 /**
  * Inject a counter block into the post template block being rendered.
  *
- * @param WP_Block $parsed_block The block being rendered.
- * @return array
+ * @param array{
+ *   blockName?: string,
+ *   innerBlocks?: mixed[],
+ *   innerContent?: mixed[],
+ * } $parsed_block The block being rendered.
+ * @return array{
+ *   blockName?: string,
+ *   innerBlocks?: mixed[],
+ *   innerContent?: mixed[],
+ * }
  */
-function wp_curate_inject_counter_block( $parsed_block ): array {
+function wp_curate_inject_counter_block( array $parsed_block ): array {
 	global $wp_curate_template_stack;
 
 	if ( isset( $parsed_block['blockName'] ) && 'core/post-template' === $parsed_block['blockName'] ) {
 		$wp_curate_template_stack[] = -1;
 
-		if ( ! isset( $parsed_block['innerBlocks'] ) || ! is_array( $parsed_block['innerBlocks'] ) ) {
+		if ( ! isset( $parsed_block['innerBlocks'] ) || ! is_array( $parsed_block['innerBlocks'] ) ) { // @phpstan-ignore-line
 			$parsed_block['innerBlocks'] = [];
 		}
 
@@ -56,7 +64,7 @@ function wp_curate_inject_counter_block( $parsed_block ): array {
 			Block::create( 'wp-curate/counter' )->parsed_block(),
 		);
 
-		if ( ! isset( $parsed_block['innerContent'] ) || ! is_array( $parsed_block['innerContent'] ) ) {
+		if ( ! isset( $parsed_block['innerContent'] ) || ! is_array( $parsed_block['innerContent'] ) ) { // @phpstan-ignore-line
 			$parsed_block['innerContent'] = [];
 		}
 
