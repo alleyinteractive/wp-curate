@@ -6,6 +6,15 @@ import {
   BlockControls,
 } from '@wordpress/block-editor';
 
+interface QueryLinkProps {
+  attributes: {
+    seeAllText: string;
+    urlOverride: string;
+  };
+  isSelected: boolean;
+  setAttributes: (new_value: any) => void;
+}
+
 /**
  * The wp-curate/query-link block edit function.
  *
@@ -18,14 +27,16 @@ export default function Edit({
   },
   isSelected,
   setAttributes,
-}) {
+}: QueryLinkProps) {
   return (
     <>
+      {/* @ts-ignore */}
       <BlockControls group="block">
+        {/* @ts-ignore */}
         <ToolbarUrlSelector
           isSelected={isSelected}
           url={urlOverride}
-          onChange={({ url }) => setAttributes({ urlOverride: url })}
+          onChange={({ url }: { url: string }) => setAttributes({ urlOverride: url })}
           linkTitle={__('Override query URL', 'wp-curate')}
           editTitle={__('Edit query URL override', 'wp-curate')}
           settings={[]}
