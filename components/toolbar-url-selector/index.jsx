@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { __ } from '@wordpress/i18n';
 import { useState } from '@wordpress/element';
 import {
@@ -17,7 +18,7 @@ import {
  * Presents toolbar buttons for adding and removing a link, along with the Popover
  * for managing link attributes.
  */
-const ToolbarUrlSelector = ({
+function ToolbarUrlSelector({
   anchorRef,
   editTitle,
   isSelected,
@@ -27,7 +28,7 @@ const ToolbarUrlSelector = ({
   position,
   settings,
   url,
-}) => {
+}) {
   const [isEditingLink, setIsEditingLink] = useState(false);
   const isLinkSet = Boolean(url);
   const opensInNewTab = (linkTarget === '_blank');
@@ -101,6 +102,38 @@ const ToolbarUrlSelector = ({
         : null}
     </>
   );
+}
+
+ToolbarUrlSelector.defaultProps = {
+  editTitle: null,
+  linkTarget: '',
+  linkTitle: null,
+  position: 'bottom center',
+  settings: [
+    {
+      id: 'opensInNewTab',
+      title: 'Open in new tab',
+    },
+  ],
+};
+
+ToolbarUrlSelector.propTypes = {
+  anchorRef: PropTypes.shape({
+    current: PropTypes.element,
+  }).isRequired,
+  editTitle: PropTypes.string,
+  isSelected: PropTypes.bool.isRequired,
+  linkTarget: PropTypes.string,
+  linkTitle: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  position: PropTypes.string,
+  settings: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      title: PropTypes.string,
+    }),
+  ),
+  url: PropTypes.string.isRequired,
 };
 
 export default ToolbarUrlSelector;
