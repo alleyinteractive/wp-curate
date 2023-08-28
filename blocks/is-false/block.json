@@ -13,5 +13,6 @@
 	"style": [
 		"file:style-index.css"
 	],
-	"render": "file:render.php"
+	"render": "file:render.php",
+  "parent": ["condition"]
 }

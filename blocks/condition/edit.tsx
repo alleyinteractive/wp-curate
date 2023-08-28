@@ -32,15 +32,16 @@ export default function Edit({
     <>
       <div {...useBlockProps()}>
         <InnerBlocks
-          template={TEMPLATE}
+          allowedBlocks={['wp-curate/is-true', 'wp-curate/is-false']}
         />
       </div>
+
       <InspectorControls>
         { /* @ts-ignore */ }
         <PanelRow>
           { /* @ts-ignore */ }
           <TextControl
-            label={__('Search Term', 'the-wrap')}
+            label={__('Query', 'wp-curate')}
             onChange={(next) => setAttributes({ query: next })}
             value={query}
           />
@@ -50,7 +51,7 @@ export default function Edit({
         <PanelRow>
           { /* @ts-ignore */ }
           <TextControl
-            label={__('Search Term', 'the-wrap')}
+            label={__('Index', 'wp')}
             onChange={(next) => setAttributes({ index: next })}
             value={index}
           />
@@ -60,7 +61,7 @@ export default function Edit({
         <PanelRow>
           { /* @ts-ignore */ }
           <TextControl
-            label={__('Search Term', 'the-wrap')}
+            label={__('Post', 'wp')}
             onChange={(next) => setAttributes({ post: next })}
             value={post}
           />
@@ -70,7 +71,7 @@ export default function Edit({
         <PanelRow>
           { /* @ts-ignore */ }
           <TextControl
-            label={__('Search Term', 'the-wrap')}
+            label={__('Custom', 'wp')}
             onChange={(next) => setAttributes({ custom: next })}
             value={custom}
           />
@@ -80,7 +81,7 @@ export default function Edit({
         <PanelRow>
           { /* @ts-ignore */ }
           <TextControl
-            label={__('Search Term', 'the-wrap')}
+            label={__('Condition', 'wp')}
             onChange={(next) => setAttributes({ condition: next })}
             value={condition}
           />

@@ -28,7 +28,7 @@
       "type": "string"
     },
     "index": {
-      "type": "string",
+      "type": "string"
     }
   }
 }
