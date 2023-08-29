@@ -42,14 +42,14 @@ add_action( 'rest_api_init', __NAMESPACE__ . '\register_rest_routes' );
  * @param WP_REST_Request $request REST request data.
  * @return WP_REST_Response REST API response.
  */
-function rest_query_heading( WP_REST_Request $request ): WP_REST_Response {
+function rest_query_heading( WP_REST_Request $request ): WP_REST_Response { // @phpstan-ignore-line
     $data     = '';
 	$curation = $request->get_param( 'curation' );
 
-	if ( $curation && is_array( $curation ) ) {
+	if ( $curation && is_array( $curation ) && isset( $curation['provider'] ) ) {
 		$data = WP_Curate::get_query_heading( $curation );
 	}
 
 	// Send the response.
-	return rest_ensure_response( $data );
+	return rest_ensure_response( $data ); // @phpstan-ignore-line
 }
