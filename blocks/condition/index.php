@@ -41,7 +41,7 @@ add_action( 'init', 'wp_curate_condition_block_init' );
  *      index?: array<string, int>
  *   }
  * } $parsed_block Parsed condition block.
- * @param array{'postId'?: int} $context      Available context.
+ * @param array{'postId'?: int} $context Available context.
  * @return bool
  */
 function wp_curate_condition_block_result( array $parsed_block, array $context ): bool {
