@@ -9,15 +9,15 @@
   "description": "Display heading for a custom query",
   "textdomain": "wp-curate",
   "editorScript": "file:index.ts",
-  "editorStyle": "file:index.css",
-  "style": [
-    "file:style-index.css"
-  ],
   "render": "file:render.php",
   "usesContext": [
     "curation"
   ],
   "attributes": {
+    "level": {
+      "default": 2,
+      "type": "number"
+    },
     "override": {
       "default": "",
       "type": "string"
