@@ -21,7 +21,7 @@ class WP_Curate {
 	public static function get_query_heading( array $curation ): string {
         $heading  = '';
         $provider = $curation[ 'provider' ];
-        
+
         if ( taxonomy_exists( $provider ) && isset( $curation[ $provider ] ) && is_numeric( $curation[ $provider ] ) ) { // @phpstan-ignore-line
             $term = get_term( $curation[ $provider ], $provider ); // @phpstan-ignore-line
 
