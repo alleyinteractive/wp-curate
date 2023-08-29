@@ -20,33 +20,30 @@
     "curation": "curation"
   },
   "attributes": {
+    "minNumberOfPosts": {
+      "type": "number",
+      "default": 1
+    },
+    "maxNumberOfPosts": {
+      "type": "number",
+      "default": 10
+    },
     "numberOfPosts": {
       "type": "number",
       "default": 5
-    },
-    "pages": {
-      "type": "number",
-      "default": 1
     },
     "offset": {
       "type": "number",
       "default": 0
     },
-    "postType": {
+    "postTypes": {
       "type": "array",
       "default": ["post"],
       "items": {
         "type": "string"
       }
     },
-    "author": {
-      "type": "array",
-      "default": [],
-      "items": {
-        "type": "number"
-      }
-    },
-    "search": {
+    "searchTerm": {
       "type": "string",
       "default": ""
     },
