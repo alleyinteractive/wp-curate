@@ -18,6 +18,10 @@
     "curation"
   ],
   "attributes": {
+    "level": {
+      "default": 2,
+      "type": "number"
+    },
     "override": {
       "default": "",
       "type": "string"

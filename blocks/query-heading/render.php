@@ -11,7 +11,8 @@
 
 use Alley\WP\WP_Curate\WP_Curate;
 
-$wp_curate_heading = '';
+$wp_curate_heading       = '';
+$wp_curate_heading_level = $attributes['level'] ?? 2;
 
 if ( ! empty( $attributes['override'] ) ) : // Static heading override.
 	$wp_curate_heading = $attributes['override'];
@@ -21,8 +22,9 @@ endif;
 
 if ( is_string( $wp_curate_heading ) && '' !== $wp_curate_heading ) :
 	?>
-		<h2 <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => 'wp-block-heading' ] ) ); ?>>
+		<h<?php echo esc_attr( $wp_curate_heading_level); ?>
+			<?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => 'wp-block-heading' ] ) ); ?>>
 			<?php echo esc_html( $wp_curate_heading ); ?>
-		</h2>
+		</h<?php echo esc_attr( $wp_curate_heading_level); ?>>
 	<?php
 endif;
