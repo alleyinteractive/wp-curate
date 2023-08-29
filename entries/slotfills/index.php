@@ -11,14 +11,14 @@ namespace Alley\WP\WP_Curate;
 
 add_action(
 	'enqueue_block_editor_assets',
-	__NAMESPACE__ . '\action_enqueue_example_slotfills_assets'
+	__NAMESPACE__ . '\action_enqueue_slotfills_assets'
 );
 
 /**
  * Registers all slotfill assets so that they can be enqueued through Gutenberg in
  * the corresponding context.
  */
-function register_example_slotfills_scripts(): void {
+function register_slotfills_scripts(): void {
 	/*
 	|--------------------------------------------------------------------------
 	| Register slotfills assets from entry.
@@ -38,22 +38,21 @@ function register_example_slotfills_scripts(): void {
 	// Automatically load dependencies and version.
 	$asset_file = include __DIR__ . '/index.asset.php';
 
-	/* phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-	 * wp_register_script(
-	 *     'wp-curate-example_slotfills',
-	 *     plugins_url( 'index.js', __FILE__ ),
-	 *     $asset_file['dependencies'],
-	 *     $asset_file['version'],
-	 *     true
-	 * );
-	 * wp_set_script_translations( 'wp-curate-example_slotfills', 'wp-curate' );
-	 */
+	wp_register_script(
+		'wp-curate_slotfills',
+		plugins_url( 'index.js', __FILE__ ),
+		$asset_file['dependencies'],
+		$asset_file['version'],
+		true
+	);
+	wp_set_script_translations( 'wp-curate_slotfills', 'wp-curate' );
+
 }
-add_action( 'init', __NAMESPACE__ . '\register_example_slotfills_scripts' );
+add_action( 'init', __NAMESPACE__ . '\register_slotfills_scripts' );
 
 /**
  * Enqueue block editor assets for this slotfill.
  */
-function action_enqueue_example_slotfills_assets(): void {
-	wp_enqueue_script( 'wp-curate-example_slotfills' );
+function action_enqueue_slotfills_assets(): void {
+	wp_enqueue_script( 'wp-curate_slotfills' );
 }
