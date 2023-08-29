@@ -81,7 +81,7 @@ export default function Edit({
         <PanelRow>
           { /* @ts-ignore */ }
           <TextControl
-            label={__('Condition', 'wp')}
+            label={__('Condition', 'wp-curate')}
             onChange={(next) => setAttributes({ condition: next })}
             value={condition}
           />
