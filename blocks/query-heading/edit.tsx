@@ -1,8 +1,9 @@
 import apiFetch from '@wordpress/api-fetch';
-import { addQueryArgs } from '@wordpress/url';
 import { RichText, useBlockProps } from '@wordpress/block-editor';
 import { Spinner } from '@wordpress/components';
 import { useEffect, useState } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
+import { addQueryArgs } from '@wordpress/url';
 import './index.scss';
 
 interface EditProps {
@@ -42,10 +43,11 @@ export default function Edit({
     }).catch((err) => {
       // eslint-disable-next-line no-console
       console.error(err);
+      setDynamicHeading('');
     }).finally(() => {
       setFetchingHeading(false);
     });
-  }, [curation]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div {...useBlockProps()}>
@@ -60,6 +62,7 @@ export default function Edit({
             allowedFormats={[]}
             value={override || dynamicHeading}
             onChange={(value) => setAttributes({ override: value })}
+            placeholder={__('heading', 'wp-curate')}
           />
         )}
     </div>
