@@ -1,6 +1,5 @@
 import { ToggleControl } from '@wordpress/components';
 import { PluginDocumentSettingPanel } from '@wordpress/edit-post';
-import { group } from '@wordpress/icons';
 import { __ } from '@wordpress/i18n';
 import { usePostMetaValue } from '@alleyinteractive/block-editor-tools';
 
@@ -10,7 +9,7 @@ function Deduplication() {
   return (
     <PluginDocumentSettingPanel
       // @ts-ignore
-      icon={group}
+      icon=""
       name="deduplication"
       title={__('Deduplication', 'wp-curate')}
     >
