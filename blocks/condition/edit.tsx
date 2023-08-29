@@ -51,7 +51,7 @@ export default function Edit({
         <PanelRow>
           { /* @ts-ignore */ }
           <TextControl
-            label={__('Index', 'wp')}
+            label={__('Index', 'wp-curate')}
             onChange={(next) => setAttributes({ index: next })}
             value={index}
           />
