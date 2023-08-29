@@ -2,9 +2,6 @@ import apiFetch from '@wordpress/api-fetch';
 import { BlockControls, RichText, useBlockProps } from '@wordpress/block-editor';
 import { Spinner, ToolbarDropdownMenu, ToolbarGroup } from '@wordpress/components';
 import { useEffect, useState } from '@wordpress/element';
-import { __, sprintf } from '@wordpress/i18n';
-import { addQueryArgs } from '@wordpress/url';
-import './index.scss';
 import {
   heading,
   headingLevel1,
@@ -14,6 +11,8 @@ import {
   headingLevel5,
   headingLevel6,
 } from '@wordpress/icons';
+import { __, sprintf } from '@wordpress/i18n';
+import { addQueryArgs } from '@wordpress/url';
 
 interface EditProps {
   attributes: {
