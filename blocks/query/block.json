@@ -8,11 +8,11 @@
   "icon": "filter",
   "description": "Custom queries for WP Curate",
   "textdomain": "wp-curate",
-	"editorScript": "file:index.ts",
-	"editorStyle": "file:index.css",
-	"style": [
-		"file:style-index.css"
-	],
+  "editorScript": "file:index.ts",
+  "editorStyle": "file:index.css",
+  "style": [
+    "file:style-index.css"
+  ],
   "providesContext": {
     "query": "query",
     "displayLayout": "displayLayout",
