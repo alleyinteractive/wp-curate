@@ -7,7 +7,7 @@
 	"category": "theme",
 	"icon": "star-half",
 	"description": "Conditionally show is-true or is-false blocks",
-	"textdomain": "condition",
+	"textdomain": "wp-curate",
 	"editorScript": "file:index.ts",
 	"editorStyle": "file:index.css",
 	"render": "file:render.php",
