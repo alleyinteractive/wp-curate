@@ -11,6 +11,9 @@ namespace Alley\WP\WP_Curate;
  * Example Plugin
  */
 class WP_Curate {
+	/**
+	 * Set things up.
+	 */
 	public function __construct() {
 		add_filter( 'rest_post_query', [ $this, 'add_type_param' ], 10, 2 );
 	}

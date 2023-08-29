@@ -3,7 +3,6 @@ import { useEffect, useState } from '@wordpress/element';
 
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
-  Panel,
   PanelBody,
   PanelRow,
   RangeControl,
@@ -52,6 +51,18 @@ interface Types {
   };
 }
 
+interface Option {
+  label: string;
+  value: string;
+}
+
+interface Term {
+  id: number;
+  title: string;
+  url: string;
+  type: string;
+}
+
 /**
  * The edit function describes the structure of your block in the context of the
  * editor. This represents what the editor will render when the block is used.
@@ -76,7 +87,7 @@ export default function Edit({
   const allowedTaxonomies = ['category', 'post_tag'];
   const allowedTypes = ['post', 'page'];
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
   const [posts, setPosts] = useState<number[]>([]);
   const [availableTaxonomies, setAvailableTaxonomies] = useState<Taxonomies>({});
   const [availableTypes, setAvailableTypes] = useState<Types>({});
@@ -155,10 +166,10 @@ export default function Edit({
       return;
     }
     let postIndex = 0;
-    const allPosts: number[] = [];
+    const allPosts: Array<number | undefined> = [];
 
-    const filteredPosts = posts.filter((post) => !manualPosts.includes(post));
-    const manualPostIdArray = manualPostIds.split(',');
+    const manualPostIdArray: Array<number | null> = manualPostIds.split(',').map((post) => parseInt(post, 10));
+    const filteredPosts = posts.filter((post) => !manualPostIdArray.includes(post));
     for (let i = 0; i < numberOfPosts; i += 1) {
       if (!manualPostIdArray[i]) {
         manualPostIdArray[i] = null;
@@ -192,7 +203,7 @@ export default function Edit({
     setAttributes({ posts: newManualPosts });
   };
 
-  const setTerms = ((type: string, newTerms: Object[]) => {
+  const setTerms = ((type: string, newTerms: Term[]) => {
     const cleanedTerms = newTerms.map((term) => (
       {
         id: term.id,
@@ -227,7 +238,7 @@ export default function Edit({
     ],
   ];
 
-  const displayTypes = [];
+  const displayTypes: Option[] = [];
   Object.keys(availableTypes).forEach((type) => {
     if (allowedTypes.includes(type)) {
       displayTypes.push(
@@ -298,7 +309,7 @@ export default function Edit({
                     label={availableTaxonomies[taxonomy].name}
                     subTypes={[taxonomy]}
                     selected={terms[taxonomy] ?? []}
-                    onSelect={(newCategories: Object[]) => setTerms(taxonomy, newCategories)}
+                    onSelect={(newCategories: Term[]) => setTerms(taxonomy, newCategories)}
                   />
                 </PanelRow>
               </>
@@ -310,7 +321,7 @@ export default function Edit({
             <TextControl
               label={__('Search Term', 'wp-curate')}
               onChange={(next) => setAttributes({ searchTerm: next })}
-              value={searchTerm}
+              value={searchTerm as string}
             />
           </PanelRow>
         </PanelBody>
