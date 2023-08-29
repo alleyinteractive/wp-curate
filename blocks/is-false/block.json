@@ -9,5 +9,10 @@
 	"description": "Displays when the condition is false.",
 	"textdomain": "is-false",
 	"editorScript": "file:index.ts",
+	"editorStyle": "file:index.css",
+	"style": [
+		"file:style-index.css"
+	],
+	"render": "file:render.php",
   "parent": ["condition"]
 }
