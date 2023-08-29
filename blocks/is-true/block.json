@@ -7,12 +7,7 @@
 	"category": "theme",
 	"icon": "star-filled",
 	"description": "Displays when the condition is true.",
-	"textdomain": "is-true",
+	"textdomain": "wp-curate",
 	"editorScript": "file:index.ts",
-	"editorStyle": "file:index.css",
-	"style": [
-		"file:style-index.css"
-	],
-	"render": "file:render.php",
   "parent": ["condition"]
 }
