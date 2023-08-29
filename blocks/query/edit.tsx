@@ -85,7 +85,7 @@ export default function Edit({
   setAttributes,
 }: EditProps) {
   const allowedTaxonomies = ['category', 'post_tag'];
-  const allowedTypes = ['post', 'page'];
+  const allowedTypes = ['post'];
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
   const [posts, setPosts] = useState<number[]>([]);
@@ -190,6 +190,7 @@ export default function Edit({
     });
     const query = {
       perPage: numberOfPosts,
+      postType: 'post',
       type: postTypeString,
       include: allPosts.join(','),
       orderby: 'include',
@@ -288,7 +289,9 @@ export default function Edit({
             />
           </PanelRow>
           { /* @ts-ignore */ }
-          <PanelRow>
+          <PanelRow
+            className="wp-curate-post-type-selector"
+          >
             { /* @ts-ignore */ }
             <SelectControl
               label={__('Post Types', 'wp-curate')}
@@ -334,7 +337,7 @@ export default function Edit({
             /* @ts-ignore */
             <PanelRow>
               <PostPicker
-                allowedTypes={['post']}
+                allowedTypes={allowedTypes}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] ?? 0}
