@@ -71,7 +71,7 @@ export default function Edit({
         <PanelRow>
           { /* @ts-ignore */ }
           <TextControl
-            label={__('Custom', 'wp')}
+            label={__('Custom', 'wp-curate')}
             onChange={(next) => setAttributes({ custom: next })}
             value={custom}
           />
