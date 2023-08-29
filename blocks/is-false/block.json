@@ -8,10 +8,10 @@
   "icon": "allow-right",
   "description": "Displays when the condition is false.",
   "textdomain": "wp-curate",
-	"editorScript": "file:index.ts",
-	"editorStyle": "file:index.css",
-	"style": [
-		"file:style-index.css"
-	],
+  "editorScript": "file:index.ts",
+  "editorStyle": "file:index.css",
+  "style": [
+    "file:style-index.css"
+  ],
   "usesContext": ["conditionResult"]
 }
