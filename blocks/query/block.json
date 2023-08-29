@@ -20,9 +20,9 @@
     "curation": "curation"
   },
   "attributes": {
-    "perPage": {
+    "numberOfPosts": {
       "type": "number",
-      "default": 10
+      "default": 5
     },
     "pages": {
       "type": "number",
@@ -50,11 +50,22 @@
       "type": "string",
       "default": ""
     },
-    "taxQuery": {
+    "terms": {
       "type": "object",
       "default": {},
       "items": {
-        "type": "array"
+        "type": "array",
+        "default": [],
+        "items": {
+          "type": "object"
+        }
+      }
+    },
+    "posts": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "number"
       }
     }
   }
