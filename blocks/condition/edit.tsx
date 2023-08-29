@@ -61,7 +61,7 @@ export default function Edit({
         <PanelRow>
           { /* @ts-ignore */ }
           <TextControl
-            label={__('Post', 'wp')}
+            label={__('Post', 'wp-curate')}
             onChange={(next) => setAttributes({ post: next })}
             value={post}
           />
