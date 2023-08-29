@@ -30,6 +30,7 @@ export default function Edit({
 }: QueryLinkProps) {
   return (
     <>
+      {/* @ts-ignore */}
       <BlockControls>
         {/* @ts-ignore */}
         <ToolbarUrlSelector
