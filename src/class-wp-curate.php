@@ -15,15 +15,15 @@ class WP_Curate {
     /**
 	 * Get the query heading based on the curation settings.
 	 *
-	 * @param array $curation Curation settings.
+	 * @param array<mixed> $curation Curation settings.
 	 * @return string Query heading.
 	 */
 	public static function get_query_heading( array $curation ): string {
         $heading  = '';
         $provider = $curation[ 'provider' ];
         
-        if ( taxonomy_exists( $provider ) && isset( $curation[ $provider ] ) && is_numeric( $curation[ $provider ] ) ) {
-            $term = get_term( $curation[ $provider ], $provider );
+        if ( taxonomy_exists( $provider ) && isset( $curation[ $provider ] ) && is_numeric( $curation[ $provider ] ) ) { // @phpstan-ignore-line
+            $term = get_term( $curation[ $provider ], $provider ); // @phpstan-ignore-line
 
             if ( $term instanceof \WP_Term ) {
                 $heading = html_entity_decode( $term->name );
