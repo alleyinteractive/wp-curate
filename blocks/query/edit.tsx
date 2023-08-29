@@ -63,6 +63,13 @@ interface Term {
   type: string;
 }
 
+interface Window {
+  wpCurateQueryBlock: {
+    allowedPostTypes: Array<string>;
+    allowedTaxonomies: Array<string>;
+  };
+}
+
 /**
  * The edit function describes the structure of your block in the context of the
  * editor. This represents what the editor will render when the block is used.
@@ -84,8 +91,12 @@ export default function Edit({
   },
   setAttributes,
 }: EditProps) {
-  const allowedTaxonomies = ['category', 'post_tag'];
-  const allowedTypes = ['post'];
+  const {
+    wpCurateQueryBlock: {
+      allowedPostTypes = [],
+      allowedTaxonomies = [],
+    } = {},
+  } = (window as any as Window);
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
   const [posts, setPosts] = useState<number[]>([]);
@@ -241,7 +252,7 @@ export default function Edit({
 
   const displayTypes: Option[] = [];
   Object.keys(availableTypes).forEach((type) => {
-    if (allowedTypes.includes(type)) {
+    if (allowedPostTypes.includes(type)) {
       displayTypes.push(
         {
           label: availableTypes[type].name,
@@ -337,7 +348,7 @@ export default function Edit({
             /* @ts-ignore */
             <PanelRow>
               <PostPicker
-                allowedTypes={allowedTypes}
+                allowedTypes={allowedPostTypes}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] ?? 0}
