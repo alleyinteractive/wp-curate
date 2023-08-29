@@ -7,7 +7,7 @@
 	"category": "theme",
 	"icon": "star-empty",
 	"description": "Displays when the condition is false.",
-	"textdomain": "is-false",
+	"textdomain": "wp-curate",
 	"editorScript": "file:index.ts",
   "parent": ["condition"]
 }
