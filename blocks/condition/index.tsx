@@ -7,13 +7,10 @@ import metadata from './block.json';
 /* @ts-expect-error Provided types are inaccurate to the actual plugin API. */
 registerBlockType(metadata, {
   edit,
-  save: () => {
-    const blockProps = useBlockProps.save();
-    return (
-      <div {...blockProps}>
-        {/* @ts-ignore */}
-        <InnerBlocks.Content />
-      </div>
-    );
-  },
+  save: () => (
+    <div {...useBlockProps.save()}>
+      {/* @ts-ignore */}
+      <InnerBlocks.Content />
+    </div>
+  ),
 });
