@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "wp-curate/query-link",
+  "version": "0.1.0",
+  "title": "Query Link",
+  "category": "theme",
+  "icon": "admin-links",
+  "description": "Display \"See All\" link for a custom query.",
+  "textdomain": "wp-curate",
+  "editorScript": "file:index.ts",
+  "editorStyle": "file:index.css",
+  "style": [
+    "file:style-index.css"
+  ],
+  "usesContext": [
+    "curation"
+  ],
+  "render": "file:render.php"
+}
