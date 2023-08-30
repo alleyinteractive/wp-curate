@@ -240,11 +240,12 @@ export default function Edit({
 
   // @ts-ignore
   const TEMPLATE: Template[] = [
+    ['wp-curate/query-heading'],
     [
       'core/post-template',
       {},
       [
-        ['core/post-title', { isLink: true }],
+        ['core/post-title', { level: 3, isLink: true }],
         ['core/post-excerpt', {}],
       ],
     ],

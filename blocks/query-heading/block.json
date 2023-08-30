@@ -9,6 +9,7 @@
   "description": "Display heading for a custom query",
   "textdomain": "wp-curate",
   "editorScript": "file:index.ts",
+  "parent": ["wp-curate/query"],
   "render": "file:render.php",
   "usesContext": [
     "curation"

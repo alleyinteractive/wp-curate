@@ -8,7 +8,7 @@
 namespace Alley\WP\WP_Curate;
 
 /**
- * Example Plugin
+ * WP_Curate class.
  */
 class WP_Curate {
 	/**
@@ -18,7 +18,7 @@ class WP_Curate {
 		add_filter( 'rest_post_query', [ $this, 'add_type_param' ], 10, 2 );
 	}
 
-	/*
+	/**
 	 * Add post_type to rest post query if the type param is set.
 	 *
 	 * @param array<array<int, string>|string> $query_args The existing query args.
