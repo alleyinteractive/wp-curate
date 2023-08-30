@@ -64,6 +64,11 @@
       "items": {
         "type": "number"
       }
+    },
+    "deduplication": {
+      "type": "string",
+      "enum": ["inherit", "never"],
+      "default": "inherit"
     }
   }
 }
