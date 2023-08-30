@@ -25,7 +25,8 @@
       "type": "string"
     },
     "index": {
-      "type": "string"
+      "type": "object",
+      "default": { "": "" }
     }
   }
 }
