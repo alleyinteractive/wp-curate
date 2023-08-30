@@ -1,20 +1,32 @@
 {
-  "$schema": "https://schemas.wp.org/trunk/block.json",
-  "apiVersion": 2,
-  "name": "wp-curate/condition",
-  "version": "0.1.0",
-  "title": "Condition",
-  "category": "theme",
-  "icon": "leftright",
-  "description": "Renders blocks based on conditions.",
-  "textdomain": "wp-curate",
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "wp-curate/condition",
+	"version": "0.1.0",
+	"title": "Condition",
+	"category": "theme",
+	"icon": "star-half",
+	"description": "Conditionally show is-true or is-false blocks",
+	"textdomain": "wp-curate",
 	"editorScript": "file:index.ts",
 	"editorStyle": "file:index.css",
-	"style": [
-		"file:style-index.css"
-	],
-  "usesContext": ["postId"],
-  "providesContext": {
-    "conditionResult": "conditionResult"
+	"render": "file:render.php",
+  "attributes": {
+    "condition": {
+      "type": "string"
+    },
+    "custom": {
+      "type": "string"
+    },
+    "post": {
+      "type": "string"
+    },
+    "query": {
+      "type": "string"
+    },
+    "index": {
+      "type": "object",
+      "default": { "": "" }
+    }
   }
 }
