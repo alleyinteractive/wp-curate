@@ -22,6 +22,25 @@ function wp_curate_query_block_init(): void {
 			'render_callback' => 'wp_curate_render_query_block',
 		],
 	);
+
+	/**
+	 * Filter the post types that can be used in the Query block.
+	 */
+	$allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
+
+	/**
+	 * Filter the taxonomies that can be used in the Query block.
+	 */
+	$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
+
+	wp_localize_script(
+		'wp-curate-query-editor-script',
+		'wpCurateQueryBlock',
+		[
+			'allowedPostTypes'  => $allowed_post_types,
+			'allowedTaxonomies' => $allowed_taxonomies,
+		]
+	);
 }
 add_action( 'init', 'wp_curate_query_block_init' );
 
@@ -46,43 +65,3 @@ function wp_curate_render_query_block( $attributes, $content ): string {
 	 */
 	return $proc->next_tag( [ 'tag_name' => 'ul' ] ) === true || $proc->next_tag( [ 'tag_name' => 'ol' ] ) === true ? $content : '';
 }
-
-/**
- * Provide the 'query' as context to a rendered block.
- *
- * @param array<mixed>  $context      Default context.
- * @param WP_Block      $parsed_block Block being rendered, filtered by `render_block_data`.
- * @param WP_Block|null $parent_block If this is a nested block, a reference to the parent block.
- * @return array<mixed> Context.
- */
-function wp_curate_query_block_context( $context, $parsed_block, $parent_block ): array {
-	if (
-		! isset( $parsed_block['blockName'], $parsed_block['attrs'] )
-		|| 'wp-curate/query' !== $parsed_block['blockName']
-	) {
-		return $context;
-	}
-
-	/*
-	$attributes = $parsed_block['attrs'];
-
-	if ( isset( $attributes['name'] ) ) {
-		if ( 'profile-archive' === $attributes['name'] ) {
-			$profile = Profile::get_by_post( get_the_ID() );
-			if ( $profile instanceof Profile ) {
-				$context['query'] = [
-					'postType'  => 'post',
-					'taxQuery'  => [
-						'byline' => [ $profile->byline_id ],
-					],
-					'foundRows' => true,
-					'perPage'   => 15,
-				];
-			}
-		}
-	}
-	*/
-
-	return $context;
-}
-add_filter( 'render_block_context', 'wp_curate_query_block_context', 10, 3 );

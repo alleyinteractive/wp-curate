@@ -59,6 +59,6 @@ require_once __DIR__ . '/src/meta.php';
  * Instantiate the plugin.
  */
 function main(): void {
-	// ...
+	new WP_Curate();
 }
 main();
