@@ -8,7 +8,7 @@
 namespace Alley\WP\WP_Curate;
 
 /**
- * Example Plugin
+ * WP_Curate class.
  */
 class WP_Curate {
 	/**
@@ -32,5 +32,34 @@ class WP_Curate {
 			$query_args['post_type'] = $types;
 		}
 		return $query_args;
+	}
+
+	/**
+	 * Get the query heading based on the curation settings.
+	 *
+	 * @param array<mixed> $curation Curation settings.
+	 * @return string Query heading.
+	 */
+	public static function get_query_heading( array $curation ): string {
+		$heading  = '';
+		$provider = $curation[ 'provider' ];
+
+		if ( taxonomy_exists( $provider ) && isset( $curation[ $provider ] ) && is_numeric( $curation[ $provider ] ) ) { // @phpstan-ignore-line
+			$term = get_term( $curation[ $provider ], $provider ); // @phpstan-ignore-line
+
+			if ( $term instanceof \WP_Term ) {
+				$heading = html_entity_decode( $term->name );
+			}
+		}
+
+		/**
+		 * Filters the query heading.
+		 *
+		 * @param string $heading  Default heading.
+		 * @param array  $curation Curation settings.
+		 */
+		$heading = apply_filters( 'wp_curate_query_heading', $heading, $curation );
+
+		return $heading;
 	}
 }

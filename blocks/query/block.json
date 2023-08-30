@@ -16,7 +16,6 @@
   "providesContext": {
     "query": "query",
     "displayLayout": "displayLayout",
-    "heading": "heading",
     "curation": "curation"
   },
   "attributes": {
