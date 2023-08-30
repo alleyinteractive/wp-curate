@@ -22,8 +22,5 @@
       "type": "string"
     }
   },
-  "parent": [
-    "wp-curate/query",
-    "core/post-template"
-  ]
+  "parent": ["wp-curate/query"]
 }
