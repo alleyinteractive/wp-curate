@@ -10,7 +10,7 @@
   "textdomain": "wp-curate",
   "editorScript": "file:index.ts",
   "usesContext": [
-    "curation"
+    "query"
   ],
   "render": "file:render.php",
   "attributes": {
