@@ -1,17 +1,19 @@
-import { __ } from '@wordpress/i18n';
-import { useEffect, useState } from '@wordpress/element';
-
+import { PostPicker, TermSelector, useDebounce } from '@alleyinteractive/block-editor-tools';
+import ApiFetch from '@wordpress/api-fetch';
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
   PanelBody,
   PanelRow,
+  RadioControl,
   RangeControl,
   SelectControl,
   TextControl,
 } from '@wordpress/components';
-import ApiFetch from '@wordpress/api-fetch';
+import { useSelect } from '@wordpress/data';
+import { createInterpolateElement, useEffect, useState } from '@wordpress/element';
+import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
-import { PostPicker, TermSelector, useDebounce } from '@alleyinteractive/block-editor-tools';
+
 import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
 
 import './index.scss';
@@ -28,6 +30,7 @@ interface EditProps {
       [key: string]: any[];
     };
     searchTerm?: string;
+    deduplication?: string;
     query: {
       [key: string]: string | number | number[] | string[];
     }
@@ -88,6 +91,7 @@ export default function Edit({
     posts: manualPosts = [],
     terms = {},
     searchTerm,
+    deduplication = 'inherit',
   },
   setAttributes,
 }: EditProps) {
@@ -97,6 +101,26 @@ export default function Edit({
       allowedTaxonomies = [],
     } = {},
   } = (window as any as Window);
+
+  // @ts-ignore
+  const [isPostDeduplicating, postTypeObject] = useSelect(
+    (select) => {
+      // @ts-ignore
+      const editor = select('core/editor');
+
+      // @ts-ignore
+      const type = editor.getEditedPostAttribute('type');
+      // @ts-ignore
+      const meta = editor.getEditedPostAttribute('meta');
+
+      return [
+        // It's possible for usePostMetaValue() to run here before useEntityProp() is available.
+        Boolean(meta?.wp_curate_deduplication),
+        // @ts-ignore
+        type ? select('core').getPostType(type) : null,
+      ];
+    },
+  );
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
   const [posts, setPosts] = useState<number[]>([]);
@@ -336,6 +360,36 @@ export default function Edit({
               label={__('Search Term', 'wp-curate')}
               onChange={(next) => setAttributes({ searchTerm: next })}
               value={searchTerm as string}
+            />
+          </PanelRow>
+          { /* @ts-ignore */ }
+          <PanelRow>
+            { /* @ts-ignore */ }
+            <RadioControl
+              label={__('Deduplication', 'wp-curate')}
+              help={__('Customize whether posts that have already appeared in previous query blocks can appear again in this block.', 'wp-curate')}
+              options={[
+                {
+                  // @ts-ignore
+                  label: createInterpolateElement(
+                    sprintf(
+                      __('Inherit deduplication setting from this %1$s (currently %2$s)', 'wp-curate'),
+                      postTypeObject ? postTypeObject.labels.singular_name : 'post',
+                      `<strong>${isPostDeduplicating ? __('enabled', 'wp-curate') : __('disabled', 'wp-curate')}</strong>`,
+                    ),
+                    {
+                      strong: <strong />,
+                    },
+                  ),
+                  value: 'inherit',
+                },
+                {
+                  label: __('Never exclude posts appearing in previous query blocks', 'wp-curate'),
+                  value: 'never',
+                },
+              ]}
+              onChange={(next) => setAttributes({ deduplication: next })}
+              selected={deduplication as string}
             />
           </PanelRow>
         </PanelBody>
