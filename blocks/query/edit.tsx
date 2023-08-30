@@ -286,8 +286,6 @@ export default function Edit({
     }
   });
 
-  // @ts-ignore
-  // @ts-ignore
   return (
     <>
       <div {...useBlockProps()}>
