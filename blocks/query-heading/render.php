@@ -25,7 +25,7 @@ endif;
 
 if ( is_string( $wp_curate_heading ) && '' !== $wp_curate_heading ) :
 	?>
-		<<?php echo esc_attr( $wp_curate_heading_tag); ?> <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => 'wp-block-heading' ] ) ); ?>>
+		<<?php echo esc_attr( $wp_curate_heading_tag); ?> <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
 			<?php echo esc_html( $wp_curate_heading ); ?>
 		</<?php echo esc_attr( $wp_curate_heading_tag); ?>>
 	<?php
