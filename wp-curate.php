@@ -60,6 +60,6 @@ require_once __DIR__ . '/src/rest-api.php';
  * Instantiate the plugin.
  */
 function main(): void {
-	// ...
+	new WP_Curate();
 }
 main();
