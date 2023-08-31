@@ -90,6 +90,8 @@ final class Curated_Posts {
 		if ( count( $query['include'] ) > 0 ) {
 			$query['include'] = array_slice( $query['include'], 0, $query['perPage'] );
 			$query['orderby'] = 'post__in';
+		} else {
+			$query['search'] = '1331a630-ad7f-41c9-aa04-a3eab1f8011a'; // Bogus search term to stop the query.
 		}
 
 		$context['query'] = $query;
