@@ -91,7 +91,7 @@ export default function Edit({
           <PanelBody
             title={__('Index Condition', 'wp-curate')}
           >
-            <p>{__('Checks the index of how many times the parent condition block has been rendered, ie "Equals to 0", "Greater than 5"', 'wp-curate')}</p>
+            <p>{__('Checks the index of how many times the parent condition block has been rendered, ie "Equal to 0", "Greater than 5"', 'wp-curate')}</p>
 
             <PanelRow>
               <SelectControl
