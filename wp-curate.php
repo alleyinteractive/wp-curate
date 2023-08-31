@@ -54,11 +54,7 @@ if ( ! file_exists( __DIR__ . '/vendor/wordpress-autoload.php' ) ) {
 // Load the plugin's main files.
 require_once __DIR__ . '/src/assets.php';
 require_once __DIR__ . '/src/meta.php';
+require_once __DIR__ . '/src/main.php';
 
-/**
- * Instantiate the plugin.
- */
-function main(): void {
-	// ...
-}
-main();
+// Make sure all dependency plugins are loaded before we instantiate the plugin.
+add_action( 'plugins_loaded', __NAMESPACE__ . '\main' );

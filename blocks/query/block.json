@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "wp-curate/query",
+  "version": "0.1.0",
+  "title": "Query",
+  "category": "theme",
+  "icon": "filter",
+  "description": "Custom queries for WP Curate",
+  "textdomain": "wp-curate",
+  "editorScript": "file:index.ts",
+  "editorStyle": "file:index.css",
+  "style": [
+    "file:style-index.css"
+  ],
+  "providesContext": {
+    "query": "query",
+    "displayLayout": "displayLayout",
+    "heading": "heading",
+    "curation": "curation"
+  },
+  "attributes": {
+    "minNumberOfPosts": {
+      "type": "number",
+      "default": 1
+    },
+    "maxNumberOfPosts": {
+      "type": "number",
+      "default": 10
+    },
+    "numberOfPosts": {
+      "type": "number",
+      "default": 5
+    },
+    "offset": {
+      "type": "number",
+      "default": 0
+    },
+    "postTypes": {
+      "type": "array",
+      "default": ["post"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "searchTerm": {
+      "type": "string",
+      "default": ""
+    },
+    "terms": {
+      "type": "object",
+      "default": {},
+      "items": {
+        "type": "array",
+        "default": [],
+        "items": {
+          "type": "object"
+        }
+      }
+    },
+    "posts": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}
