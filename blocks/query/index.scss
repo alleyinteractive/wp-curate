@@ -2,6 +2,44 @@
  * Editor styles for the wp-curate/query block.
  */
 
-.wp-curate-post-type-selector .components-base-control {
-  width: 100%;
+.autocomplete__component .components-base-control__label {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.manual-posts__container {
+  gap: 1rem;
+}
+
+.manual-posts__picker {
+  border: 1px dashed #e0e0e0;
+  flex: 1;
+  padding: 8px;
+
+  > .components-button {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .manual-posts__container--selected & {
+    border: 0 none;
+    padding: 0 0 16px;
+
+    > * {
+      width: 100%;
+    }
+  }
+}
+
+.manual-posts__counter {
+  font-weight: 500;
+  
+  // Give counters a min-width if there are double digits.
+  .manual-posts:has(.manual-posts__container:nth-last-child(10)) & {
+    min-width: 18px;
+  }
 }
