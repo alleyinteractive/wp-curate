@@ -281,7 +281,7 @@ export default function Edit({
               { /* @ts-ignore */ }
               <RangeControl
                 label={__('Number of Posts', 'wp-curate')}
-                help={__('The maximun number of posts to show.', 'wp-curate')}
+                help={__('The maximum number of posts to show.', 'wp-curate')}
                 value={numberOfPosts}
                 onChange={(value) => setAttributes({ numberOfPosts: value })}
                 min={minNumberOfPosts}
@@ -292,7 +292,7 @@ export default function Edit({
           { /* @ts-ignore */ }
           <RangeControl
             label={__('Offset', 'wp-curate')}
-            help={__('The number of post to pass over.', 'wp-curate')}
+            help={__('The number of posts to pass over.', 'wp-curate')}
             onChange={(newValue) => setAttributes({ offset: newValue })}
             value={offset}
             min={0}
