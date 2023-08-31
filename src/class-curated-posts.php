@@ -37,12 +37,13 @@ final class Curated_Posts {
 		if ( count( $query['include'] ) < $query['perPage'] ) {
 			$remaining_query = new WP_Query();
 			$remaining_args  = [
-				'fields'         => 'ids',
-				'no_found_rows'  => true,
-				'order'          => 'DESC',
-				'orderby'        => 'date',
-				'posts_per_page' => $query['perPage'],
-				'post_status'    => 'publish',
+				'fields'              => 'ids',
+				'ignore_sticky_posts' => true,
+				'no_found_rows'       => true,
+				'order'               => 'DESC',
+				'orderby'             => 'date',
+				'posts_per_page'      => $query['perPage'],
+				'post_status'         => 'publish',
 			];
 
 			$remaining_args['post_type'] = $attributes['postTypes'] ?? $block_type->attributes['postTypes']['default'];

@@ -58,6 +58,9 @@ final class Core_Query_Block_Integration implements Feature {
 			$query['orderby'] = $orderby;
 		}
 
+		// Make all query blocks ignore sticky posts by default.
+		$query['ignore_sticky_posts'] ??= true;
+
 		return $query;
 	}
 }
