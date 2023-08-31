@@ -4,7 +4,7 @@ import {
   PanelBody, PanelRow, SelectControl, TextControl,
 } from '@wordpress/components';
 
-import useParentBlock from '@/hooks/use-parent-block';
+import { useParentBlock } from '@alleyinteractive/block-editor-tools';
 
 interface EditProps {
   attributes: {
