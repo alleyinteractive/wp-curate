@@ -47,7 +47,7 @@ export default function Edit({
 
       <InspectorControls>
         <PanelBody
-          title={__('Condition', 'the-wrap')}
+          title={__('Condition', 'wp-curate')}
           initialOpen
         >
           <PanelRow>
@@ -89,7 +89,7 @@ export default function Edit({
 
         { parentBlock === 'wp-curate/query' ? (
           <PanelBody
-            title={__('Index Condition', 'the-wrap')}
+            title={__('Index Condition', 'wp-curate')}
           >
             <p>{__('Checks the index of how many times the parent condition block has been rendered, ie "Equals to 0", "Greater than 5"', 'wp-curate')}</p>
 
