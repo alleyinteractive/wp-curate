@@ -15,7 +15,7 @@ interface EditProps {
     index?: object;
   };
   setAttributes: (attributes: any) => void;
-  clientId: number;
+  clientId: string;
 }
 
 /**
@@ -34,7 +34,7 @@ export default function Edit({
   setAttributes,
   clientId,
 }: EditProps) {
-  const { name: parentBlock } = useParentBlock(clientId);
+  const { name: parentBlock } = useParentBlock(clientId) as { name?: string };
   const [operator, compared] = Object.entries(index)[0];
 
   return (

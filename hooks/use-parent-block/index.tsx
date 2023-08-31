@@ -23,7 +23,7 @@ const useParentBlock = (clientId: string) => useSelect(
     const rootBlockClientId = getBlockRootClientId(clientId);
 
     if (!rootBlockClientId) {
-      return null;
+      return {};
     }
 
     // Get parent block attributes.
