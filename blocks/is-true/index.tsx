@@ -9,7 +9,6 @@ registerBlockType(metadata, {
   edit,
   save: () => (
     <div {...useBlockProps.save()}>
-      {/* @ts-ignore */}
       <InnerBlocks.Content />
     </div>
   ),
