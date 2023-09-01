@@ -44,7 +44,7 @@ final class Curated_Posts {
 		}
 
 		if ( count( $query['include'] ) < $query['perPage'] ) {
-			$remaining_args  = [
+			$remaining_args = [
 				'fields'              => 'ids',
 				'ignore_sticky_posts' => true,
 				'no_found_rows'       => true,
