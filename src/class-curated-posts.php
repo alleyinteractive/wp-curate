@@ -58,7 +58,7 @@ final class Curated_Posts {
 			$remaining_args['offset']    = $attributes['offset'] ?? $block_type->attributes['offset']['default'];
 
 			if ( isset( $attributes['terms'] ) && is_array( $attributes['terms'] ) && count( $attributes['terms'] ) > 0 ) {
-				$remaining_args['tax_query'] = [
+				$remaining_args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 					'relation' => 'AND',
 				];
 
