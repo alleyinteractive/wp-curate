@@ -7,13 +7,22 @@
 
 namespace Alley\WP\WP_Curate;
 
+use Alley\WP\Types\Post_Queries;
 use WP_Block_Type;
-use WP_Query;
 
 /**
  * The posts that match block attributes.
  */
 final class Curated_Posts {
+	/**
+	 * Set up.
+	 *
+	 * @param Post_Queries $queries Available queries.
+	 */
+	public function __construct(
+		private readonly Post_Queries $queries,
+	) {}
+
 	/**
 	 * Update 'wp-curate/query' block 'query' context so that 'core/post-template' blocks query for the curated posts.
 	 *
@@ -35,7 +44,6 @@ final class Curated_Posts {
 		}
 
 		if ( count( $query['include'] ) < $query['perPage'] ) {
-			$remaining_query = new WP_Query();
 			$remaining_args  = [
 				'fields'              => 'ids',
 				'ignore_sticky_posts' => true,
@@ -78,12 +86,12 @@ final class Curated_Posts {
 				$remaining_args['s'] = $block_type->attributes['searchTerm']['default'];
 			}
 
-			$remaining_posts = $remaining_query->query( $remaining_args );
+			$remaining_post_ids = $this->queries->post_query_for_args( $remaining_args )->post_ids();
 
-			if ( count( $remaining_posts ) > 0 ) {
+			if ( count( $remaining_post_ids ) > 0 ) {
 				array_push(
 					$query['include'],
-					...array_diff( $remaining_posts, $query['include'] ),
+					...array_diff( $remaining_post_ids, $query['include'] ),
 				);
 			}
 		}
