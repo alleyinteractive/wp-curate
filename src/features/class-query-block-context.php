@@ -67,7 +67,7 @@ final class Query_Block_Context implements Feature {
 
 		// Use deduplicated queries if deduplication is enabled for this post and this block instance.
 		$post_queries = new Variable_Post_Queries(
-			function () use ( $parsed_block ) {
+			input: function () use ( $parsed_block ) {
 				$query = $this->main_query->query_object();
 
 				if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
@@ -84,16 +84,16 @@ final class Query_Block_Context implements Feature {
 
 				return false;
 			},
-			new Comparison( [ 'compared' => true ] ),
-			new Deduplicated_Post_Queries(
-				$this->used_post_ids,
-				$this->default_per_page,
-				$post_queries,
+			test: new Comparison( [ 'compared' => true ] ),
+			is_true: new Deduplicated_Post_Queries(
+				used_post_ids: $this->used_post_ids,
+				posts_per_page: $this->default_per_page,
+				origin: $post_queries,
 			),
-			$post_queries,
+			is_false: $post_queries,
 		);
 
-		$curated_posts = new Curated_Posts( $post_queries );
+		$curated_posts = new Curated_Posts( backfill: $post_queries );
 		$context       = $curated_posts->as_query_context( $context, $parsed_block['attrs'], $block_type );
 
 		// Record the post IDs included in this block for future deduplication.

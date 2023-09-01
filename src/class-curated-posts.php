@@ -17,10 +17,10 @@ final class Curated_Posts {
 	/**
 	 * Set up.
 	 *
-	 * @param Post_Queries $queries Available queries.
+	 * @param Post_Queries $backfill Queries to use when backfilling posts.
 	 */
 	public function __construct(
-		private readonly Post_Queries $queries,
+		private readonly Post_Queries $backfill,
 	) {}
 
 	/**
@@ -86,7 +86,7 @@ final class Curated_Posts {
 				$remaining_args['s'] = $block_type->attributes['searchTerm']['default'];
 			}
 
-			$remaining_post_ids = $this->queries->post_query_for_args( $remaining_args )->post_ids();
+			$remaining_post_ids = $this->backfill->post_query_for_args( $remaining_args )->post_ids();
 
 			if ( count( $remaining_post_ids ) > 0 ) {
 				array_push(
