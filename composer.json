@@ -14,10 +14,11 @@
             "email": "info@alley.com"
         }
     ],
-    "repositories": [{
-        "type": "vcs",
-        "url": "git@github.com:alleyinteractive/wp-type-extensions.git"
-    }
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:alleyinteractive/wp-type-extensions.git"
+        }
     ],
     "require": {
         "php": "^8.0",
