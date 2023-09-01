@@ -7,7 +7,7 @@
 
 namespace Alley\WP\WP_Curate\Features;
 
-use Alley\WP\WP_Curate\Feature;
+use Alley\WP\Types\Feature;
 use WP_Block;
 
 use function Alley\traverse;
