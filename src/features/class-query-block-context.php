@@ -28,6 +28,7 @@ final class Query_Block_Context implements Feature {
 	 * @param Used_Post_IDs          $used_post_ids        The post IDs that have already been used in this request.
 	 * @param Post_Query             $main_query           The main query.
 	 * @param int                    $default_per_page     The default number of posts per page.
+	 * @param string                 $stop_queries_var     The query var to stop queries.
 	 * @param WP_Block_Type_Registry $block_type_registry  Core block type registry.
 	 */
 	public function __construct(
@@ -35,6 +36,7 @@ final class Query_Block_Context implements Feature {
 		private readonly Used_Post_IDs $used_post_ids,
 		private readonly Post_Query $main_query,
 		private readonly int $default_per_page,
+		private readonly string $stop_queries_var,
 		private readonly WP_Block_Type_Registry $block_type_registry,
 	) {}
 
@@ -68,14 +70,14 @@ final class Query_Block_Context implements Feature {
 		// Use deduplicated queries if deduplication is enabled for this post and this block instance.
 		$post_queries = new Variable_Post_Queries(
 			input: function () use ( $parsed_block ) {
-				$query = $this->main_query->query_object();
+				$main_query = $this->main_query->query_object();
 
 				if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
 					return false;
 				}
 
-				if ( true === $query->is_singular() || true === $query->is_posts_page ) {
-					$post_level_deduplication = get_post_meta( $query->get_queried_object_id(), 'wp_curate_deduplication', true );
+				if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
+					$post_level_deduplication = get_post_meta( $main_query->get_queried_object_id(), 'wp_curate_deduplication', true );
 
 					if ( true === (bool) $post_level_deduplication ) {
 						return true;
@@ -94,11 +96,18 @@ final class Query_Block_Context implements Feature {
 		);
 
 		$curated_posts = new Curated_Posts( backfill: $post_queries );
-		$context       = $curated_posts->as_query_context( $context, $parsed_block['attrs'], $block_type );
+		$post_ids      = $curated_posts->curated_block_query( $parsed_block['attrs'], $block_type )->post_ids();
 
 		// Record the post IDs included in this block for future deduplication.
-		if ( isset( $context['query']['include'] ) && is_array( $context['query']['include'] ) ) {
-			$this->used_post_ids->record( $context['query']['include'] );
+		$this->used_post_ids->record( $post_ids );
+
+		// Update context with the post IDs, or nullify the query.
+		if ( count( $post_ids ) > 0 ) {
+			$context['query']['include'] = $post_ids;
+			$context['query']['orderby'] = 'post__in';
+			$context['query']['perPage'] = $parsed_block['attrs']['numberOfPosts'] ?? $block_type->attributes['numberOfPosts']['default'];
+		} else {
+			$context['query'][ $this->stop_queries_var ] = true;
 		}
 
 		return $context;

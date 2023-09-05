@@ -7,7 +7,9 @@
 
 namespace Alley\WP\WP_Curate;
 
+use Alley\WP\Post_IDs_Query;
 use Alley\WP\Types\Post_Queries;
+use Alley\WP\Types\Post_Query;
 use WP_Block_Type;
 
 /**
@@ -24,33 +26,31 @@ final class Curated_Posts {
 	) {}
 
 	/**
-	 * Update 'wp-curate/query' block 'query' context so that 'core/post-template' blocks query for the curated posts.
+	 * Query for posts using block attributes.
 	 *
-	 * @param array         $context    Query block context.
 	 * @param array         $attributes Block attributes.
 	 * @param WP_Block_Type $block_type Block type.
-	 * @return array Updated context.
+	 * @return Post_Query
 	 */
-	public function as_query_context( array $context, array $attributes, WP_Block_Type $block_type ): array {
-		$query            = [];
-		$query['include'] = [];
-		$query['perPage'] = $attributes['numberOfPosts'] ?? $block_type->attributes['numberOfPosts']['default'];
+	public function curated_block_query( array $attributes, WP_Block_Type $block_type ): Post_Query {
+		$include  = [];
+		$per_page = $attributes['numberOfPosts'] ?? $block_type->attributes['numberOfPosts']['default'];
 
 		$pinned_posts = $attributes['posts'] ?? $block_type->attributes['posts']['default'];
 		$pinned_posts = is_array( $pinned_posts ) ? array_filter( $pinned_posts, fn ( $p ) => is_numeric( $p ) && $p > 0 ) : [];
 
 		if ( count( $pinned_posts ) > 0 ) {
-			array_push( $query['include'], ...$pinned_posts );
+			array_push( $include, ...$pinned_posts );
 		}
 
-		if ( count( $query['include'] ) < $query['perPage'] ) {
+		if ( $per_page > count( $include ) ) {
 			$remaining_args = [
 				'fields'              => 'ids',
 				'ignore_sticky_posts' => true,
 				'no_found_rows'       => true,
 				'order'               => 'DESC',
 				'orderby'             => 'date',
-				'posts_per_page'      => $query['perPage'],
+				'posts_per_page'      => $per_page,
 				'post_status'         => 'publish',
 			];
 
@@ -72,39 +72,25 @@ final class Curated_Posts {
 				}
 			}
 
-			if (
-				isset( $attributes['searchTerm'] )
-				&& is_string( $attributes['searchTerm'] )
-				&& strlen( $attributes['searchTerm'] ) > 0
-			) {
-				$remaining_args['s'] = $attributes['searchTerm'];
-			} elseif (
-				isset( $block_type->attributes['searchTerm']['default'] )
-				&& is_string( $block_type->attributes['searchTerm']['default'] )
-				&& strlen( $block_type->attributes['searchTerm']['default'] ) > 0
-			) {
-				$remaining_args['s'] = $block_type->attributes['searchTerm']['default'];
+			$search_term = $attributes['searchTerm'] ?? $block_type->attributes['searchTerm']['default'];
+
+			if ( is_string( $search_term ) && strlen( $search_term ) > 0 ) {
+				$remaining_args['s'] = $search_term;
 			}
 
-			$remaining_post_ids = $this->backfill->post_query_for_args( $remaining_args )->post_ids();
+			$backfill_post_ids = $this->backfill->post_query_for_args( $remaining_args )->post_ids();
 
-			if ( count( $remaining_post_ids ) > 0 ) {
+			if ( count( $backfill_post_ids ) > 0 ) {
 				array_push(
-					$query['include'],
-					...array_diff( $remaining_post_ids, $query['include'] ),
+					$include,
+					...array_diff( $backfill_post_ids, $include ),
 				);
 			}
 		}
 
-		if ( count( $query['include'] ) > 0 ) {
-			$query['include'] = array_slice( $query['include'], 0, $query['perPage'] );
-			$query['orderby'] = 'post__in';
-		} else {
-			$query['search'] = '1331a630-ad7f-41c9-aa04-a3eab1f8011a'; // Bogus search term to stop the query.
-		}
+		// Slice the number of posts per page.
+		$include = array_slice( $include, 0, $per_page );
 
-		$context['query'] = $query;
-
-		return $context;
+		return new Post_IDs_Query( $include );
 	}
 }
