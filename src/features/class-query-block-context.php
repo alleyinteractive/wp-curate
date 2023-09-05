@@ -27,7 +27,6 @@ final class Query_Block_Context implements Feature {
 	 * @param Post_Queries           $default_post_queries The post queries available to all query blocks by default.
 	 * @param Used_Post_IDs          $used_post_ids        The post IDs that have already been used in this request.
 	 * @param Post_Query             $main_query           The main query.
-	 * @param int                    $default_per_page     The default number of posts per page.
 	 * @param string                 $stop_queries_var     The query var to stop queries.
 	 * @param WP_Block_Type_Registry $block_type_registry  Core block type registry.
 	 */
@@ -35,7 +34,6 @@ final class Query_Block_Context implements Feature {
 		private readonly Post_Queries $default_post_queries,
 		private readonly Used_Post_IDs $used_post_ids,
 		private readonly Post_Query $main_query,
-		private readonly int $default_per_page,
 		private readonly string $stop_queries_var,
 		private readonly WP_Block_Type_Registry $block_type_registry,
 	) {}
@@ -65,6 +63,10 @@ final class Query_Block_Context implements Feature {
 			return $context;
 		}
 
+		// Max number of posts to include in the block.
+		$per_page = $parsed_block['attrs']['numberOfPosts'] ?? $block_type->attributes['numberOfPosts']['default'];
+
+		// Set up the object that contains post queries, starting with the default.
 		$post_queries = $this->default_post_queries;
 
 		// Use deduplicated queries if deduplication is enabled for this post and this block instance.
@@ -89,12 +91,16 @@ final class Query_Block_Context implements Feature {
 			test: new Comparison( [ 'compared' => true ] ),
 			is_true: new Deduplicated_Post_Queries(
 				used_post_ids: $this->used_post_ids,
-				posts_per_page: $this->default_per_page,
+				posts_per_page: $per_page,
 				origin: $post_queries,
 			),
 			is_false: $post_queries,
 		);
 
+		/*
+		 * Set up the object that contains curated posts, including the queries it should use if
+		 * manual curation yields too few posts.
+		 */
 		$curated_posts = new Curated_Posts( backfill: $post_queries );
 		$post_ids      = $curated_posts->curated_block_query( $parsed_block['attrs'], $block_type )->post_ids();
 
@@ -104,8 +110,8 @@ final class Query_Block_Context implements Feature {
 		// Update context with the post IDs, or nullify the query.
 		if ( count( $post_ids ) > 0 ) {
 			$context['query']['include'] = $post_ids;
+			$context['query']['perPage'] = $per_page;
 			$context['query']['orderby'] = 'post__in';
-			$context['query']['perPage'] = $parsed_block['attrs']['numberOfPosts'] ?? $block_type->attributes['numberOfPosts']['default'];
 		} else {
 			$context['query'][ $this->stop_queries_var ] = true;
 		}

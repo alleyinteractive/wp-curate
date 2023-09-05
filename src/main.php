@@ -37,7 +37,6 @@ function main(): void {
 		default_post_queries: new Default_Post_Queries(),
 		used_post_ids: new Used_Post_IDs(),
 		main_query: new Global_Post_Query( 'wp_query' ),
-		default_per_page: get_option( 'posts_per_page', 10 ),
 		stop_queries_var: $stop_queries_var,
 		block_type_registry: WP_Block_Type_Registry::get_instance(),
 	);
