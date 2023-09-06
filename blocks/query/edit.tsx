@@ -17,6 +17,8 @@ import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
 
+import { deduplicate, mainDedupe } from '../../services/deduplicate';
+
 import './index.scss';
 
 interface EditProps {
@@ -143,6 +145,10 @@ export default function Edit({
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
   const postTypeString = postTypes.join(',');
 
+  useEffect(() => {
+    mainDedupe();
+  }, []);
+
   // Fetch available taxonomies.
   useEffect(() => {
     const fetchTaxonomies = async () => {
@@ -171,6 +177,9 @@ export default function Edit({
 
   // Fetch "backfill" posts when categories, tags, or search term change.
   useEffect(() => {
+    if (Object.keys(availableTaxonomies).length <= 0) {
+      return;
+    }
     const fetchPosts = async () => {
       let path = addQueryArgs(
         '/wp/v2/posts',
@@ -178,6 +187,7 @@ export default function Edit({
           search: debouncedSearchTerm,
           offset,
           type: postTypeString,
+          per_page: 20,
         },
       );
       path += termQueryArgs;
@@ -193,7 +203,12 @@ export default function Edit({
       });
     };
     fetchPosts();
-  }, [debouncedSearchTerm, termQueryArgs, offset, postTypeString]);
+  }, [debouncedSearchTerm, termQueryArgs, offset, postTypeString, availableTaxonomies]);
+
+  const setAttributesAndDedupe = ((newAttributes: any) => {
+    setAttributes(newAttributes);
+    // mainDedupe();
+  });
 
   // Update the query when the posts change.
   // The query is passed via context to the core/post-template block.
@@ -215,12 +230,17 @@ export default function Edit({
     manualPostIdArray.forEach((post, index) => {
       let manualPost;
       let backfillPost;
-
+      let isUnique = false;
       if (manualPostIdArray[index]) {
         manualPost = manualPostIdArray[index];
       } else {
-        backfillPost = filteredPosts[postIndex];
-        postIndex += 1;
+        do {
+          if (posts[postIndex]) {
+            backfillPost = filteredPosts[postIndex];
+            isUnique = deduplicate(backfillPost);
+          }
+          postIndex += 1;
+        } while (isUnique === false && postIndex <= filteredPosts.length);
       }
       allPosts.push(manualPost ?? backfillPost);
     });
@@ -232,12 +252,13 @@ export default function Edit({
       orderby: 'include',
     };
     setAttributes({ query, queryId: 0 });
+    mainDedupe();
   }, [manualPostIds, posts, numberOfPosts, setAttributes, postTypeString]);
 
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
     newManualPosts.splice(index, 1, id);
-    setAttributes({ posts: newManualPosts });
+    setAttributesAndDedupe({ posts: newManualPosts });
   };
 
   const setTerms = ((type: string, newTerms: Term[]) => {
@@ -253,7 +274,7 @@ export default function Edit({
       ...terms,
       [type]: cleanedTerms,
     };
-    setAttributes({ terms: newTermAttrs });
+    setAttributesAndDedupe({ terms: newTermAttrs });
   });
 
   for (let i = 0; i < numberOfPosts; i += 1) {
@@ -307,7 +328,7 @@ export default function Edit({
               <RangeControl
                 label={__('Number of Posts', 'wp-curate')}
                 value={numberOfPosts}
-                onChange={(value) => setAttributes({ numberOfPosts: value })}
+                onChange={(value) => setAttributesAndDedupe({ numberOfPosts: value })}
                 min={minNumberOfPosts}
                 max={maxNumberOfPosts}
               />
@@ -318,7 +339,7 @@ export default function Edit({
             { /* @ts-ignore */}
             <RangeControl
               label={__('Offset', 'wp-curate')}
-              onChange={(newValue) => setAttributes({ offset: newValue })}
+              onChange={(newValue) => setAttributesAndDedupe({ offset: newValue })}
               value={offset}
               min={0}
               max={20}
@@ -332,7 +353,7 @@ export default function Edit({
             <SelectControl
               label={__('Post Types', 'wp-curate')}
               value={postTypes}
-              onChange={(newValue) => setAttributes({ postTypes: newValue })}
+              onChange={(newValue) => setAttributesAndDedupe({ postTypes: newValue })}
               options={displayTypes}
               multiple
             />
@@ -359,7 +380,7 @@ export default function Edit({
             { /* @ts-ignore */ }
             <TextControl
               label={__('Search Term', 'wp-curate')}
-              onChange={(next) => setAttributes({ searchTerm: next })}
+              onChange={(next) => setAttributesAndDedupe({ searchTerm: next })}
               value={searchTerm as string}
             />
           </PanelRow>
@@ -389,7 +410,7 @@ export default function Edit({
                   value: 'never',
                 },
               ]}
-              onChange={(next) => setAttributes({ deduplication: next })}
+              onChange={(next) => setAttributesAndDedupe({ deduplication: next })}
               selected={deduplication as string}
             />
           </PanelRow>
