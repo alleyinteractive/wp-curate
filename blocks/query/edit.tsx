@@ -18,12 +18,15 @@ import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
 
-import { deduplicate, mainDedupe } from '../../services/deduplicate';
+import {
+  mainDedupe,
+} from '../../services/deduplicate';
 
 import './index.scss';
 
 interface EditProps {
   attributes: {
+    backfillPosts?: number[];
     deduplication?: string;
     maxNumberOfPosts?: number;
     minNumberOfPosts?: number;
@@ -87,6 +90,7 @@ interface Window {
  */
 export default function Edit({
   attributes: {
+    backfillPosts = [],
     deduplication = 'inherit',
     maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
@@ -127,7 +131,6 @@ export default function Edit({
   );
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
-  const [posts, setPosts] = useState<number[]>([]);
   const [availableTaxonomies, setAvailableTaxonomies] = useState<Taxonomies>({});
   const [availableTypes, setAvailableTypes] = useState<Types>({});
 
@@ -148,7 +151,7 @@ export default function Edit({
 
   useEffect(() => {
     mainDedupe();
-  }, []);
+  }, [backfillPosts]);
 
   // Fetch available taxonomies.
   useEffect(() => {
@@ -200,61 +203,29 @@ export default function Edit({
         const postIds: number[] = (response as WP_REST_API_Posts).map(
           (post: WP_REST_API_Post) => post.id,
         );
-        setPosts(postIds);
+        setAttributes({ backfillPosts: postIds });
       });
     };
     fetchPosts();
-  }, [debouncedSearchTerm, termQueryArgs, offset, postTypeString, availableTaxonomies]);
+  }, [
+    debouncedSearchTerm,
+    termQueryArgs,
+    offset,
+    postTypeString,
+    availableTaxonomies,
+    setAttributes,
+  ]);
 
   const setAttributesAndDedupe = ((newAttributes: any) => {
     setAttributes(newAttributes);
     // mainDedupe();
   });
 
-  // Update the query when the posts change.
+  // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    if (!posts.length) {
-      return;
-    }
-    let postIndex = 0;
-    const allPosts: Array<number | undefined> = [];
-
-    const manualPostIdArray: Array<number | null> = manualPostIds.split(',').map((post) => parseInt(post, 10));
-    const filteredPosts = posts.filter((post) => !manualPostIdArray.includes(post));
-    for (let i = 0; i < numberOfPosts; i += 1) {
-      if (!manualPostIdArray[i]) {
-        manualPostIdArray[i] = null;
-      }
-    }
-
-    manualPostIdArray.forEach((post, index) => {
-      let manualPost;
-      let backfillPost;
-      let isUnique = false;
-      if (manualPostIdArray[index]) {
-        manualPost = manualPostIdArray[index];
-      } else {
-        do {
-          if (posts[postIndex]) {
-            backfillPost = filteredPosts[postIndex];
-            isUnique = deduplicate(backfillPost);
-          }
-          postIndex += 1;
-        } while (isUnique === false && postIndex <= filteredPosts.length);
-      }
-      allPosts.push(manualPost ?? backfillPost);
-    });
-    const query = {
-      perPage: numberOfPosts,
-      postType: 'post',
-      type: postTypeString,
-      include: allPosts.join(','),
-      orderby: 'include',
-    };
-    setAttributes({ query, queryId: 0 });
     mainDedupe();
-  }, [manualPostIds, posts, numberOfPosts, setAttributes, postTypeString]);
+  }, [manualPostIds, backfillPosts, numberOfPosts, setAttributes, postTypeString]);
 
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
