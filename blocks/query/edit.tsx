@@ -1,13 +1,7 @@
-<<<<<<< HEAD
 import { PostPicker, TermSelector } from '@alleyinteractive/block-editor-tools';
+import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import ApiFetch from '@wordpress/api-fetch';
-=======
-import classnames from 'classnames';
-import { __ } from '@wordpress/i18n';
-import { useEffect, useState } from '@wordpress/element';
-
->>>>>>> origin/newstart
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
   PanelBody,
@@ -372,52 +366,37 @@ export default function Edit({
             ))
           ) : null}
           { /* @ts-ignore */ }
-<<<<<<< HEAD
-          <PanelRow>
-            { /* @ts-ignore */ }
-            <TextControl
-              label={__('Search Term', 'wp-curate')}
-              onChange={(next) => setAttributesAndDedupe({ searchTerm: next })}
-              value={searchTerm as string}
-            />
-          </PanelRow>
-          { /* @ts-ignore */ }
-          <PanelRow>
-            { /* @ts-ignore */ }
-            <RadioControl
-              label={__('Deduplication', 'wp-curate')}
-              help={__('Customize whether posts that have already appeared in previous query blocks can appear again in this block.', 'wp-curate')}
-              options={[
-                {
-                  // @ts-ignore
-                  label: createInterpolateElement(
-                    sprintf(
-                      __('Inherit deduplication setting from this %1$s (currently %2$s)', 'wp-curate'),
-                      postTypeObject ? postTypeObject.labels.singular_name : 'post',
-                      `<strong>${isPostDeduplicating ? __('enabled', 'wp-curate') : __('disabled', 'wp-curate')}</strong>`,
-                    ),
-                    {
-                      strong: <strong />,
-                    },
-                  ),
-                  value: 'inherit',
-                },
-                {
-                  label: __('Never exclude posts appearing in previous query blocks', 'wp-curate'),
-                  value: 'never',
-                },
-              ]}
-              onChange={(next) => setAttributesAndDedupe({ deduplication: next })}
-              selected={deduplication as string}
-            />
-          </PanelRow>
-=======
           <TextControl
             label={__('Search Term', 'wp-curate')}
-            onChange={(next) => setAttributes({ searchTerm: next })}
+            onChange={(next) => setAttributesAndDedupe({ searchTerm: next })}
             value={searchTerm as string}
           />
->>>>>>> origin/newstart
+          <RadioControl
+            label={__('Deduplication', 'wp-curate')}
+            help={__('Customize whether posts that have already appeared in previous query blocks can appear again in this block.', 'wp-curate')}
+            options={[
+              {
+                // @ts-ignore
+                label: createInterpolateElement(
+                  sprintf(
+                    __('Inherit deduplication setting from this %1$s (currently %2$s)', 'wp-curate'),
+                    postTypeObject ? postTypeObject.labels.singular_name : 'post',
+                    `<strong>${isPostDeduplicating ? __('enabled', 'wp-curate') : __('disabled', 'wp-curate')}</strong>`,
+                  ),
+                  {
+                    strong: <strong />,
+                  },
+                ),
+                value: 'inherit',
+              },
+              {
+                label: __('Never exclude posts appearing in previous query blocks', 'wp-curate'),
+                value: 'never',
+              },
+            ]}
+            onChange={(next) => setAttributesAndDedupe({ deduplication: next })}
+            selected={deduplication as string}
+          />
         </PanelBody>
         { /* @ts-ignore */ }
         <PanelBody
