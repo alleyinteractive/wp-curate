@@ -19,22 +19,6 @@ add_action(
  * the corresponding context.
  */
 function register_slotfills_scripts(): void {
-	/*
-	|--------------------------------------------------------------------------
-	| Register slotfills assets from entry.
-	|--------------------------------------------------------------------------
-	|
-	| This example function is called by the enqueue_block_editor_assets hook. Use it to
-	| enqueue assets that are loaded in the block editor.
-	|
-	| In the example below we can use the __FILE__ path to find the asset and enqueue
-	| under any condition. This file, index.php, will be required from the  `load_scripts()`
-	| function.
-	|
-	| Registering or enqueuing from the entry directory allows a developer to enqueue assets
-	| within the context of an entry point.
-	|
-	*/
 	// Automatically load dependencies and version.
 	$asset_file = include __DIR__ . '/index.asset.php';
 
