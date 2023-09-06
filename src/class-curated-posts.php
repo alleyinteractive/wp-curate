@@ -23,7 +23,8 @@ final class Curated_Posts {
 	/**
 	 * Set up.
 	 *
-	 * @param Post_Queries $backfill Queries to use when backfilling posts.
+	 * @param Post_Queries  $backfill Queries to use when backfilling posts.
+	 * @param Used_Post_IDs $track    The post IDs that have already been used in this request.
 	 */
 	public function __construct(
 		private readonly Post_Queries $backfill,
@@ -47,6 +48,7 @@ final class Curated_Posts {
 
 		$pinned_posts = $attributes['posts'] ?? $block_type->attributes['posts']['default'];
 		$pinned_posts = is_array( $pinned_posts ) ? array_filter( $pinned_posts, fn ( $p ) => is_numeric( $p ) && $p > 0 ) : [];
+		$pinned_posts = array_map( 'intval', $pinned_posts );
 
 		if ( count( $pinned_posts ) > 0 ) {
 			array_push( $include, ...$pinned_posts );
@@ -87,16 +89,30 @@ final class Curated_Posts {
 				$remaining_args['s'] = $search_term;
 			}
 
-			$backfill          = new Excluded_Queries( new class( $include ) implements Post_IDs {
-				public function __construct(
+			$backfill          = new Excluded_Queries(
+				new class( $include ) implements Post_IDs {
+					/**
+					 * Construct the class to hold our excluded post IDs.
+					 *
+					 * @param array<int> $exclude The post IDs to exclude.
+					 */
+					public function __construct(
 					private readonly array $exclude,
-				) {}
+					) {}
 
-				public function post_ids(): array {
-					return $this->exclude;
-				}
-			}, $per_page, $this->backfill );
-			$backfill = new Recorded_Queries( $this->track, $backfill );
+					/**
+					 * Function to return the excluded post ids.
+					 *
+					 * @return array<int>
+					 */
+					public function post_ids(): array {
+						return $this->exclude;
+					}
+				},
+				$per_page,
+				$this->backfill
+			);
+			$backfill          = new Recorded_Queries( $this->track, $backfill );
 			$backfill_post_ids = $backfill->post_query_for_args( $remaining_args )->post_ids();
 
 			if ( count( $backfill_post_ids ) > 0 ) {
