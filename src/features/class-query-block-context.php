@@ -8,7 +8,8 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\Validator\Comparison;
-use Alley\WP\Deduplicated_Post_Queries;
+use Alley\WP\Posts\Excluded_Queries;
+use Alley\WP\Posts\Recorded_Queries;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
@@ -90,10 +91,10 @@ final class Query_Block_Context implements Feature {
 				return false;
 			},
 			test: new Comparison( [ 'compared' => true ] ),
-			is_true: new Deduplicated_Post_Queries(
-				used_post_ids: $this->used_post_ids,
-				posts_per_page: $per_page,
-				origin: $post_queries,
+			is_true: new Excluded_Queries(
+				$this->used_post_ids,
+				10,
+				$post_queries,
 			),
 			is_false: $post_queries,
 		);
@@ -102,11 +103,8 @@ final class Query_Block_Context implements Feature {
 		 * Set up the object that contains curated posts, including the queries it should use if
 		 * manual curation yields too few posts.
 		 */
-		$curated_posts = new Curated_Posts( backfill: $post_queries );
+		$curated_posts = new Curated_Posts( backfill: $post_queries, track: $this->used_post_ids );
 		$post_ids      = $curated_posts->curated_block_query( $parsed_block['attrs'], $block_type )->post_ids();
-
-		// Record the post IDs included in this block for future deduplication.
-		$this->used_post_ids->record( $post_ids );
 
 		// Update context with the post IDs, or nullify the query.
 		if ( count( $post_ids ) > 0 ) {

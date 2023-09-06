@@ -8,8 +8,12 @@
 namespace Alley\WP\WP_Curate;
 
 use Alley\WP\Post_IDs_Query;
+use Alley\WP\Posts\Excluded_Queries;
+use Alley\WP\Posts\Recorded_Queries;
+use Alley\WP\Types\Post_IDs;
 use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
+use Alley\WP\Used_Post_IDs;
 use WP_Block_Type;
 
 /**
@@ -23,6 +27,7 @@ final class Curated_Posts {
 	 */
 	public function __construct(
 		private readonly Post_Queries $backfill,
+		private readonly Used_Post_IDs $track,
 	) {}
 
 	/**
@@ -54,7 +59,7 @@ final class Curated_Posts {
 				'no_found_rows'       => true,
 				'order'               => 'DESC',
 				'orderby'             => 'date',
-				'posts_per_page'      => $per_page,
+				'posts_per_page'      => $per_page - count( $include ),
 				'post_status'         => 'publish',
 			];
 
@@ -82,7 +87,17 @@ final class Curated_Posts {
 				$remaining_args['s'] = $search_term;
 			}
 
-			$backfill_post_ids = $this->backfill->post_query_for_args( $remaining_args )->post_ids();
+			$backfill          = new Excluded_Queries( new class( $include ) implements Post_IDs {
+				public function __construct(
+					private readonly array $exclude,
+				) {}
+
+				public function post_ids(): array {
+					return $this->exclude;
+				}
+			}, $per_page, $this->backfill );
+			$backfill = new Recorded_Queries( $this->track, $backfill );
+			$backfill_post_ids = $backfill->post_query_for_args( $remaining_args )->post_ids();
 
 			if ( count( $backfill_post_ids ) > 0 ) {
 				array_push(
@@ -91,11 +106,7 @@ final class Curated_Posts {
 				);
 			}
 		}
-
-		// Slice the number of posts per page.
-		$include = array_slice( $include, 0, $per_page );
-		$include = array_map( 'intval', $include );
-
+		$this->track->record( $include );
 		return new Post_IDs_Query( $include );
 	}
 }
