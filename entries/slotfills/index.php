@@ -53,7 +53,7 @@ function action_enqueue_slotfills_assets(): void {
 /**
  * Gets the post type currently being edited.
  *
- * @return string
+ * @return string|false
  */
 function get_editor_post_type() {
 	// Set the default post type.
