@@ -8,6 +8,8 @@
 namespace Alley\WP\WP_Curate;
 
 use Alley\WP\Post_IDs_Query;
+use Alley\WP\Posts\Exclude_Queries;
+use Alley\WP\Posts\Post_IDs_Envelope;
 use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
 use WP_Block_Type;
@@ -54,7 +56,7 @@ final class Curated_Posts {
 				'no_found_rows'       => true,
 				'order'               => 'DESC',
 				'orderby'             => 'date',
-				'posts_per_page'      => $per_page,
+				'posts_per_page'      => $per_page - count( $include ),
 				'post_status'         => 'publish',
 			];
 
@@ -82,7 +84,13 @@ final class Curated_Posts {
 				$remaining_args['s'] = $search_term;
 			}
 
-			$backfill_post_ids = $this->backfill->post_query_for_args( $remaining_args )->post_ids();
+			$backfill = new Exclude_Queries(
+				new Post_IDs_Envelope( array_map( 'intval', $include ) ),
+				$per_page,
+				$this->backfill,
+			);
+
+			$backfill_post_ids = $backfill->post_query_for_args( $remaining_args )->post_ids();
 
 			if ( count( $backfill_post_ids ) > 0 ) {
 				array_push(
@@ -92,10 +100,6 @@ final class Curated_Posts {
 			}
 		}
 
-		// Slice the number of posts per page.
-		$include = array_slice( $include, 0, $per_page );
-		$include = array_map( 'intval', $include );
-
-		return new Post_IDs_Query( $include );
+		return new Post_IDs_Query( array_map( 'intval', $include ) );
 	}
 }

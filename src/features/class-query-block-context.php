@@ -8,7 +8,7 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\Validator\Comparison;
-use Alley\WP\Deduplicated_Post_Queries;
+use Alley\WP\Posts\Exclude_Queries;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
@@ -70,7 +70,7 @@ final class Query_Block_Context implements Feature {
 		// Set up the object that contains post queries, starting with the default.
 		$post_queries = $this->default_post_queries;
 
-		// Use deduplicated queries if deduplication is enabled for this post and this block instance.
+		// Deduplicate queries if deduplication is enabled for this post and this block instance.
 		$post_queries = new Variable_Post_Queries(
 			input: function () use ( $parsed_block ) {
 				$main_query = $this->main_query->query_object();
@@ -90,10 +90,10 @@ final class Query_Block_Context implements Feature {
 				return false;
 			},
 			test: new Comparison( [ 'compared' => true ] ),
-			is_true: new Deduplicated_Post_Queries(
-				used_post_ids: $this->used_post_ids,
-				posts_per_page: $per_page,
-				origin: $post_queries,
+			is_true: new Exclude_Queries(
+				$this->used_post_ids,
+				$per_page,
+				$post_queries,
 			),
 			is_false: $post_queries,
 		);
@@ -105,9 +105,6 @@ final class Query_Block_Context implements Feature {
 		$curated_posts = new Curated_Posts( backfill: $post_queries );
 		$post_ids      = $curated_posts->curated_block_query( $parsed_block['attrs'], $block_type )->post_ids();
 
-		// Record the post IDs included in this block for future deduplication.
-		$this->used_post_ids->record( $post_ids );
-
 		// Update context with the post IDs, or nullify the query.
 		if ( count( $post_ids ) > 0 ) {
 			$context['query']['include'] = $post_ids;
@@ -116,6 +113,9 @@ final class Query_Block_Context implements Feature {
 		} else {
 			$context['query'][ $this->stop_queries_var ] = true;
 		}
+
+		// Record the post IDs that were used in this request for future deduplication.
+		$this->used_post_ids->record( $post_ids );
 
 		return $context;
 	}
