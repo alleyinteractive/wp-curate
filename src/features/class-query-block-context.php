@@ -48,9 +48,9 @@ final class Query_Block_Context implements Feature {
 	/**
 	 * Filters the context provided to a 'wp-curate/query' block.
 	 *
-	 * @param array $context      Default context.
-	 * @param array $parsed_block Block being rendered.
-	 * @return array Updated context.
+	 * @param array{"query": array<string, mixed>}                           $context      Default context.
+	 * @param array{"blockName": string|null, "attrs": array<string, mixed>} $parsed_block Block being rendered.
+	 * @return array<string, mixed> Updated context.
 	 */
 	public function filter_query_context( $context, $parsed_block ) {
 		$block_type = $this->block_type_registry->get_registered( 'wp-curate/query' );
@@ -59,6 +59,7 @@ final class Query_Block_Context implements Feature {
 			! $block_type instanceof \WP_Block_Type
 			|| ! isset( $parsed_block['blockName'] )
 			|| $block_type->name !== $parsed_block['blockName']
+			|| ! is_array( $block_type->attributes )
 		) {
 			return $context;
 		}

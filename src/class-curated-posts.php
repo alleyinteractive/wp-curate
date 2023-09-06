@@ -28,11 +28,15 @@ final class Curated_Posts {
 	/**
 	 * Query for posts using block attributes.
 	 *
-	 * @param array         $attributes Block attributes.
-	 * @param WP_Block_Type $block_type Block type.
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param WP_Block_Type        $block_type Block type.
 	 * @return Post_Query
 	 */
 	public function curated_block_query( array $attributes, WP_Block_Type $block_type ): Post_Query {
+		if ( ! is_array( $block_type->attributes ) ) {
+			return new Post_IDs_Query( [] );
+		}
+
 		$include  = [];
 		$per_page = $attributes['numberOfPosts'] ?? $block_type->attributes['numberOfPosts']['default'];
 
@@ -90,6 +94,7 @@ final class Curated_Posts {
 
 		// Slice the number of posts per page.
 		$include = array_slice( $include, 0, $per_page );
+		$include = array_map( 'intval', $include );
 
 		return new Post_IDs_Query( $include );
 	}

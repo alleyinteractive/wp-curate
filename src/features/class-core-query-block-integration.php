@@ -32,11 +32,12 @@ final class Core_Query_Block_Integration implements Feature {
 	 * Please note that this will only influence the query that will be rendered on the
 	 * front-end. The editor preview is not affected by this filter.
 	 *
-	 * @param array    $query Array containing parameters for `WP_Query` as parsed by the block context.
-	 * @param WP_Block $block Block instance.
+	 * @param array<string, mixed> $query Array containing parameters for `WP_Query` as parsed by the block context.
+	 * @param WP_Block             $block Block instance.
+	 * @return array<string, mixed> Updated query arguments.
 	 */
 	public function filter_query_vars( $query, $block ) {
-		[ $found_rows, $include, $orderby ] = traverse(
+		[ $found_rows, $include, $orderby ] = (array) traverse(
 			$block,
 			[
 				'context.query.foundRows',

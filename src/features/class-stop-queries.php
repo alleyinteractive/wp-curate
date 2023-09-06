@@ -38,9 +38,9 @@ final class Stop_Queries implements Feature {
 	/**
 	 * Filters the arguments which will be passed to `WP_Query` for the Query Loop Block.
 	 *
-	 * @param array    $query Array containing parameters for `WP_Query` as parsed by the block context.
-	 * @param WP_Block $block Block instance.
-	 * @return array Updated query arguments.
+	 * @param array<string, mixed> $query Array containing parameters for `WP_Query` as parsed by the block context.
+	 * @param WP_Block             $block Block instance.
+	 * @return array<string, mixed> Updated query arguments.
 	 */
 	public function filter_query_loop_block_query_vars( $query, $block ) {
 		if ( isset( $block->context['query'][ $this->query_var ] ) ) {
