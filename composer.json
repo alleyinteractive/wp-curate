@@ -24,7 +24,7 @@
         "php": "^8.0",
         "alleyinteractive/composer-wordpress-autoloader": "^1.0",
         "alleyinteractive/traverse-reshape": "^2.0",
-        "alleyinteractive/wp-type-extensions": "dev-feature/deduping-classes-v2"
+        "alleyinteractive/wp-type-extensions": "dev-main"
     },
     "require-dev": {
         "alleyinteractive/alley-coding-standards": "^1.0",
