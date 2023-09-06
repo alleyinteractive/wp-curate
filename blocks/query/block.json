@@ -20,50 +20,60 @@
     "curation": "curation"
   },
   "attributes": {
-    "minNumberOfPosts": {
-      "type": "number",
-      "default": 1
+    "deduplication": {
+      "default": "inherit",
+      "enum": [
+        "inherit",
+        "never"
+      ],
+      "type": "string"
     },
     "maxNumberOfPosts": {
-      "type": "number",
-      "default": 10
+      "default": 10,
+      "type": "number"
+    },
+    "minNumberOfPosts": {
+      "default": 1,
+      "type": "number"
     },
     "numberOfPosts": {
-      "type": "number",
-      "default": 5
+      "default": 5,
+      "type": "number"
     },
     "offset": {
-      "type": "number",
-      "default": 0
+      "default": 0,
+      "type": "number"
     },
     "postTypes": {
-      "type": "array",
-      "default": ["post"],
+      "default": [
+        "post"
+      ],
       "items": {
         "type": "string"
-      }
-    },
-    "searchTerm": {
-      "type": "string",
-      "default": ""
-    },
-    "terms": {
-      "type": "object",
-      "default": {},
-      "items": {
-        "type": "array",
-        "default": [],
-        "items": {
-          "type": "object"
-        }
-      }
+      },
+      "type": "array"
     },
     "posts": {
-      "type": "array",
       "default": [],
       "items": {
         "type": "number"
-      }
+      },
+      "type": "array"
+    },
+    "searchTerm": {
+      "default": "",
+      "type": "string"
+    },
+    "terms": {
+      "default": {},
+      "items": {
+        "default": [],
+        "items": {
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "type": "object"
     }
   }
 }
