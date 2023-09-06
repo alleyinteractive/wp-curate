@@ -85,7 +85,7 @@ final class Curated_Posts {
 			}
 
 			$backfill = new Exclude_Queries(
-				new Post_IDs_Envelope( $include ),
+				new Post_IDs_Envelope( array_map( 'intval', $include ) ),
 				$per_page,
 				$this->backfill,
 			);
@@ -100,6 +100,6 @@ final class Curated_Posts {
 			}
 		}
 
-		return new Post_IDs_Query( $include );
+		return new Post_IDs_Query( array_map( 'intval', $include ) );
 	}
 }
