@@ -1,4 +1,5 @@
-import { PostPicker, TermSelector, useDebounce } from '@alleyinteractive/block-editor-tools';
+import { PostPicker, TermSelector } from '@alleyinteractive/block-editor-tools';
+import { useDebounce } from '@uidotdev/usehooks';
 import ApiFetch from '@wordpress/api-fetch';
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
@@ -121,7 +122,6 @@ export default function Edit({
       ];
     },
   );
-
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
   const [posts, setPosts] = useState<number[]>([]);
