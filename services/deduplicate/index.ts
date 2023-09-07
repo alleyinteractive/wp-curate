@@ -41,25 +41,6 @@ export function deduplicate(id: number | string): boolean {
 }
 
 /**
- * Checks if a curated post has been used already on this page. If so, return false. If not
- * add it to the list of curated ids and return true.
- *
- * @param {number|string} id The post id to check.
- * @returns boolean
- */
-export function curatedDeduplicate(id: number | string): boolean {
-  if (!id) {
-    return true;
-  }
-  const idNumber = typeof id === 'string' ? parseInt(id, 10) : id;
-  if (curatedIds.has(idNumber)) {
-    return false;
-  }
-  curatedIds.set(idNumber, true);
-  return true;
-}
-
-/**
  * Resets the list of used ids.
  */
 export function resetUsedIds() {
@@ -69,7 +50,6 @@ export function resetUsedIds() {
 
 export default {
   deduplicate,
-  curatedDeduplicate,
   resetUsedIds,
 };
 
@@ -148,6 +128,7 @@ export function mainDedupe() {
         do {
           if (filteredPosts[postIndex]) {
             backfillPost = filteredPosts[postIndex];
+            // TODO: check post and block settings for deduplication.
             isUnique = deduplicate(backfillPost);
           }
           postIndex += 1;
