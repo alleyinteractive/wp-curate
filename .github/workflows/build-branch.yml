@@ -9,3 +9,5 @@ on:
 jobs:
   built-branch:
     uses: alleyinteractive/.github/.github/workflows/built-branch.yml@main
+    with:
+      node: 18

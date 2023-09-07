@@ -1,6 +1,7 @@
 import { PostPicker, TermSelector } from '@alleyinteractive/block-editor-tools';
 import { useDebounce } from '@uidotdev/usehooks';
 import ApiFetch from '@wordpress/api-fetch';
+import classnames from 'classnames';
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
   PanelBody,
@@ -301,56 +302,45 @@ export default function Edit({
           initialOpen
         >
           {minNumberOfPosts !== undefined && minNumberOfPosts !== maxNumberOfPosts ? (
-            // @ts-ignore
-            <PanelRow>
+            <>
               { /* @ts-ignore */ }
               <RangeControl
                 label={__('Number of Posts', 'wp-curate')}
+                help={__('The maximum number of posts to show.', 'wp-curate')}
                 value={numberOfPosts}
                 onChange={(value) => setAttributes({ numberOfPosts: value })}
                 min={minNumberOfPosts}
                 max={maxNumberOfPosts}
               />
-            </PanelRow>
+            </>
           ) : null}
           { /* @ts-ignore */ }
-          <PanelRow>
-            { /* @ts-ignore */}
-            <RangeControl
-              label={__('Offset', 'wp-curate')}
-              onChange={(newValue) => setAttributes({ offset: newValue })}
-              value={offset}
-              min={0}
-              max={20}
-            />
-          </PanelRow>
-          { /* @ts-ignore */ }
-          <PanelRow
-            className="wp-curate-post-type-selector"
-          >
-            { /* @ts-ignore */ }
-            <SelectControl
-              label={__('Post Types', 'wp-curate')}
-              value={postTypes}
-              onChange={(newValue) => setAttributes({ postTypes: newValue })}
-              options={displayTypes}
-              multiple
-            />
-          </PanelRow>
-          { /* @ts-ignore */ }
+          <RangeControl
+            label={__('Offset', 'wp-curate')}
+            help={__('The number of posts to pass over.', 'wp-curate')}
+            onChange={(newValue) => setAttributes({ offset: newValue })}
+            value={offset}
+            min={0}
+            max={20}
+          />
+          <SelectControl
+            label={__('Post Types', 'wp-curate')}
+            value={postTypes}
+            onChange={(newValue) => setAttributes({ postTypes: newValue })}
+            options={displayTypes}
+            multiple
+          />
           {Object.keys(availableTaxonomies).length > 0 ? (
             allowedTaxonomies.map((taxonomy) => (
               <>
                 { /* @ts-ignore */ }
-                <PanelRow>
-                  { /* @ts-ignore */ }
-                  <TermSelector
-                    label={availableTaxonomies[taxonomy].name}
-                    subTypes={[taxonomy]}
-                    selected={terms[taxonomy] ?? []}
-                    onSelect={(newCategories: Term[]) => setTerms(taxonomy, newCategories)}
-                  />
-                </PanelRow>
+                <TermSelector
+                  label={availableTaxonomies[taxonomy].name}
+                  subTypes={[taxonomy]}
+                  selected={terms[taxonomy] ?? []}
+                  onSelect={(newCategories: Term[]) => setTerms(taxonomy, newCategories)}
+                  multiple
+                />
               </>
             ))
           ) : null}
@@ -398,15 +388,22 @@ export default function Edit({
         <PanelBody
           title={__('Manually Set Posts', 'wp-curate')}
           initialOpen
+          className="manual-posts"
         >
           {manualPosts.map((post, index) => (
             /* @ts-ignore */
-            <PanelRow>
+            <PanelRow className={classnames(
+              'manual-posts__container',
+              { 'manual-posts__container--selected': manualPosts[index] },
+            )}
+            >
+              <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
                 allowedTypes={allowedPostTypes}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] ?? 0}
+                className="manual-posts__picker"
               />
             </PanelRow>
           ))}
