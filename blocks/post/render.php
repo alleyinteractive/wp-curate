@@ -13,7 +13,4 @@
  * @package wp-curate
  */
 
-?>
-<p <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
-	<?php esc_html_e( 'Post - hello from a dynamic block!' ); ?>
-</p>
+echo $content;

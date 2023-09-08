@@ -30,7 +30,6 @@ export default function Edit({
       postTypes = [],
     } = {},
   } = queryParent;
-  console.log('attributes', attributes);
   const queryInclude = include.split(',').map((id: number | string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
   const selected = posts[index];

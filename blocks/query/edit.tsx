@@ -205,7 +205,7 @@ export default function Edit({
     let postIndex = 0;
     const allPosts: Array<number | undefined> = [];
 
-    const manualPostIdArray: Array<number | null> = manualPostIds.split(',').map((post) => parseInt(post, 10));
+    const manualPostIdArray: Array<number | null> = manualPostIds.split(',').map((post) => parseInt(post, 10)).slice(0, numberOfPosts);
     const filteredPosts = posts.filter((post) => !manualPostIdArray.includes(post));
     for (let i = 0; i < numberOfPosts; i += 1) {
       if (!manualPostIdArray[i]) {
