@@ -216,11 +216,6 @@ export default function Edit({
     setAttributes,
   ]);
 
-  const setAttributesAndDedupe = ((newAttributes: any) => {
-    setAttributes(newAttributes);
-    // mainDedupe();
-  });
-
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
@@ -230,7 +225,7 @@ export default function Edit({
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
     newManualPosts.splice(index, 1, id);
-    setAttributesAndDedupe({ posts: newManualPosts });
+    setAttributes({ posts: newManualPosts });
   };
 
   const setTerms = ((type: string, newTerms: Term[]) => {
@@ -246,7 +241,7 @@ export default function Edit({
       ...terms,
       [type]: cleanedTerms,
     };
-    setAttributesAndDedupe({ terms: newTermAttrs });
+    setAttributes({ terms: newTermAttrs });
   });
 
   for (let i = 0; i < numberOfPosts; i += 1) {
@@ -300,7 +295,7 @@ export default function Edit({
                 label={__('Number of Posts', 'wp-curate')}
                 help={__('The maximum number of posts to show.', 'wp-curate')}
                 value={numberOfPosts}
-                onChange={(value) => setAttributesAndDedupe({ numberOfPosts: value })}
+                onChange={(value) => setAttributes({ numberOfPosts: value })}
                 min={minNumberOfPosts}
                 max={maxNumberOfPosts}
               />
@@ -310,7 +305,7 @@ export default function Edit({
           <RangeControl
             label={__('Offset', 'wp-curate')}
             help={__('The number of posts to pass over.', 'wp-curate')}
-            onChange={(newValue) => setAttributesAndDedupe({ offset: newValue })}
+            onChange={(newValue) => setAttributes({ offset: newValue })}
             value={offset}
             min={0}
             max={20}
@@ -318,7 +313,7 @@ export default function Edit({
           <SelectControl
             label={__('Post Types', 'wp-curate')}
             value={postTypes}
-            onChange={(newValue) => setAttributesAndDedupe({ postTypes: newValue })}
+            onChange={(newValue) => setAttributes({ postTypes: newValue })}
             options={displayTypes}
             multiple
           />
@@ -339,7 +334,7 @@ export default function Edit({
           { /* @ts-ignore */ }
           <TextControl
             label={__('Search Term', 'wp-curate')}
-            onChange={(next) => setAttributesAndDedupe({ searchTerm: next })}
+            onChange={(next) => setAttributes({ searchTerm: next })}
             value={searchTerm as string}
           />
           <RadioControl
@@ -365,7 +360,7 @@ export default function Edit({
                 value: 'never',
               },
             ]}
-            onChange={(next) => setAttributesAndDedupe({ deduplication: next })}
+            onChange={(next) => setAttributes({ deduplication: next })}
             selected={deduplication as string}
           />
         </PanelBody>
