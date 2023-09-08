@@ -1,37 +1,41 @@
+import { PostPicker, TermSelector } from '@alleyinteractive/block-editor-tools';
+import { useDebounce } from '@uidotdev/usehooks';
+import ApiFetch from '@wordpress/api-fetch';
 import classnames from 'classnames';
-import { __ } from '@wordpress/i18n';
-import { useEffect, useState } from '@wordpress/element';
-
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
   PanelBody,
   PanelRow,
+  RadioControl,
   RangeControl,
   SelectControl,
   TextControl,
 } from '@wordpress/components';
-import ApiFetch from '@wordpress/api-fetch';
+import { useSelect } from '@wordpress/data';
+import { createInterpolateElement, useEffect, useState } from '@wordpress/element';
+import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
-import { PostPicker, TermSelector, useDebounce } from '@alleyinteractive/block-editor-tools';
+
 import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
 
 import './index.scss';
 
 interface EditProps {
   attributes: {
-    numberOfPosts?: number;
-    minNumberOfPosts?: number;
+    deduplication?: string;
     maxNumberOfPosts?: number;
+    minNumberOfPosts?: number;
+    numberOfPosts?: number;
     offset?: number;
-    postTypes?: string[];
     posts?: any[];
-    terms?: {
-      [key: string]: any[];
-    };
-    searchTerm?: string;
     query: {
       [key: string]: string | number | number[] | string[];
     }
+    postTypes?: string[];
+    searchTerm?: string;
+    terms?: {
+      [key: string]: any[];
+    };
   };
   setAttributes: (attributes: any) => void;
 }
@@ -81,14 +85,15 @@ interface Window {
  */
 export default function Edit({
   attributes: {
-    numberOfPosts = 5,
-    minNumberOfPosts = 1,
+    deduplication = 'inherit',
     maxNumberOfPosts = 10,
+    minNumberOfPosts = 1,
+    numberOfPosts = 5,
     offset = 0,
-    postTypes = ['post'],
     posts: manualPosts = [],
-    terms = {},
+    postTypes = ['post'],
     searchTerm,
+    terms = {},
   },
   setAttributes,
 }: EditProps) {
@@ -98,6 +103,26 @@ export default function Edit({
       allowedTaxonomies = [],
     } = {},
   } = (window as any as Window);
+
+  // @ts-ignore
+  const [isPostDeduplicating, postTypeObject] = useSelect(
+    (select) => {
+      // @ts-ignore
+      const editor = select('core/editor');
+
+      // @ts-ignore
+      const type = editor.getEditedPostAttribute('type');
+      // @ts-ignore
+      const meta = editor.getEditedPostAttribute('meta');
+
+      return [
+        // It's possible for usePostMetaValue() to run here before useEntityProp() is available.
+        Boolean(meta?.wp_curate_deduplication),
+        // @ts-ignore
+        type ? select('core').getPostType(type) : null,
+      ];
+    },
+  );
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
   const [posts, setPosts] = useState<number[]>([]);
@@ -320,11 +345,44 @@ export default function Edit({
             ))
           ) : null}
           { /* @ts-ignore */ }
-          <TextControl
-            label={__('Search Term', 'wp-curate')}
-            onChange={(next) => setAttributes({ searchTerm: next })}
-            value={searchTerm as string}
-          />
+          <PanelRow>
+            { /* @ts-ignore */ }
+            <TextControl
+              label={__('Search Term', 'wp-curate')}
+              onChange={(next) => setAttributes({ searchTerm: next })}
+              value={searchTerm as string}
+            />
+          </PanelRow>
+          { /* @ts-ignore */ }
+          <PanelRow>
+            { /* @ts-ignore */ }
+            <RadioControl
+              label={__('Deduplication', 'wp-curate')}
+              help={__('Customize whether posts that have already appeared in previous query blocks can appear again in this block.', 'wp-curate')}
+              options={[
+                {
+                  // @ts-ignore
+                  label: createInterpolateElement(
+                    sprintf(
+                      __('Inherit deduplication setting from this %1$s (currently %2$s)', 'wp-curate'),
+                      postTypeObject ? postTypeObject.labels.singular_name : 'post',
+                      `<strong>${isPostDeduplicating ? __('enabled', 'wp-curate') : __('disabled', 'wp-curate')}</strong>`,
+                    ),
+                    {
+                      strong: <strong />,
+                    },
+                  ),
+                  value: 'inherit',
+                },
+                {
+                  label: __('Never exclude posts appearing in previous query blocks', 'wp-curate'),
+                  value: 'never',
+                },
+              ]}
+              onChange={(next) => setAttributes({ deduplication: next })}
+              selected={deduplication as string}
+            />
+          </PanelRow>
         </PanelBody>
         { /* @ts-ignore */ }
         <PanelBody
