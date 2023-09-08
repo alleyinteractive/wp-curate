@@ -270,6 +270,7 @@ export default function Edit({
       'core/post-template',
       {},
       [
+        ['wp-curate/post-selector', {}],
         ['core/post-title', { isLink: true }],
         ['core/post-excerpt', {}],
       ],
