@@ -5,7 +5,7 @@
   "main": "wp-curate.php",
   "engines": {
     "node": "18",
-    "npm": "8"
+    "npm": "9"
   },
   "browserslist": [
     "defaults",
