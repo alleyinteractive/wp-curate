@@ -1,10 +1,13 @@
 import { __ } from '@wordpress/i18n';
-import { useBlockProps } from '@wordpress/block-editor';
+import classnames from 'classnames';
+import { BlockControls, InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { PostPicker } from '@alleyinteractive/block-editor-tools';
-import { select } from '@wordpress/data';
+import { select, useSelect } from '@wordpress/data';
+
+import './index.scss';
 
 /**
- * The wp-curate/post-selector block edit function.
+ * The wp-curate/post block edit function.
  *
  * @return {WPElement} Element to render.
  */
@@ -15,8 +18,9 @@ export default function Edit({
     query: {
       include = [],
     } = {},
-  }
+  },
 }) {
+
   const queryParentId = select('core/block-editor').getBlockParentsByBlockName(clientId, 'wp-curate/query')[0];
   const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {};
   const {
@@ -43,8 +47,20 @@ export default function Edit({
     updatePost(null);
   };
 
+  // Whether this block has any selected children.
+  const isParentOfSelectedBlock = useSelect((select) => (
+    select('core/block-editor').hasSelectedInnerBlock(clientId, true)
+  ), [clientId]);
+
   return (
-    <div {...useBlockProps()}>
+    <div
+      {...useBlockProps()}
+      className={classnames(
+        'wp-curate-post-block',
+        { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
+        { 'wp-curate-post-block--backfill': !selected },
+      )}
+    >
       <PostPicker
         allowedTypes={postTypes}
         onUpdate={updatePost}
@@ -52,6 +68,7 @@ export default function Edit({
         value={selected ?? 0}
         previewRender={() => null}
       />
+      <InnerBlocks />
     </div>
   );
 }

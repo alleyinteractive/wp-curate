@@ -1,13 +1,13 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 2,
-	"name": "wp-curate/post-selector",
+	"name": "wp-curate/post",
 	"version": "0.1.0",
-	"title": "Post Selector",
+	"title": "Post",
 	"category": "theme",
 	"icon": "admin-post",
 	"description": "Auto inserted block to allow setting a post inline",
-	"textdomain": "post-selector",
+	"textdomain": "wp-curate",
 	"editorScript": "file:index.ts",
 	"editorStyle": "file:index.css",
 	"style": [
@@ -16,6 +16,7 @@
 	"usesContext": ["postId", "query"],
 	"render": "file:render.php",
 	"supports": {
-	  "inserter": false
+	  "inserter": false,
+	  "__experimentalExposeControlsToChildren": true
 	}
   }

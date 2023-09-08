@@ -1,6 +1,6 @@
 <?php
 /**
- * The render callback for the wp-curate/post-selector block.
+ * The render callback for the wp-curate/post block.
  *
  * All of the parameters passed to the function where this file is being required are accessible in this scope:
  *
@@ -15,5 +15,5 @@
 
 ?>
 <p <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
-	<?php esc_html_e( 'Post Selector - hello from a dynamic block!' ); ?>
+	<?php esc_html_e( 'Post - hello from a dynamic block!' ); ?>
 </p>

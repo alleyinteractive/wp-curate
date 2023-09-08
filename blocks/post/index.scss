@@ -1,0 +1,11 @@
+.wp-curate-post-block {
+  padding: 2px;
+
+  &--selected {
+    border: 1px dashed #ccc;
+  }
+
+  &--backfill {
+    opacity: 50%;
+  }
+}
