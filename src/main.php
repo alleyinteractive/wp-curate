@@ -7,9 +7,9 @@
 
 namespace Alley\WP\WP_Curate;
 
-use Alley\WP\Default_Post_Queries;
-use Alley\WP\Global_Post_Query;
-use Alley\WP\Used_Post_IDs;
+use Alley\WP\Post_IDs\Used_Post_IDs;
+use Alley\WP\Post_Queries\Default_Post_Queries;
+use Alley\WP\Post_Query\Global_Post_Query;
 use Exception;
 use WP_Block_Type_Registry;
 
@@ -34,9 +34,10 @@ function main(): void {
 
 	$features[] = new Features\Core_Query_Block_Integration();
 	$features[] = new Features\Query_Block_Context(
-		default_post_queries: new Default_Post_Queries(),
-		used_post_ids: new Used_Post_IDs(),
+		post_queries: new Default_Post_Queries(),
+		history: new Used_Post_IDs(),
 		main_query: new Global_Post_Query( 'wp_query' ),
+		default_per_page: (int) get_option( 'posts_per_page', 10 ), // @phpstan-ignore-line
 		stop_queries_var: $stop_queries_var,
 		block_type_registry: WP_Block_Type_Registry::get_instance(),
 	);
