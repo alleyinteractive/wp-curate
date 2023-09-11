@@ -6,6 +6,7 @@ import { dispatch, select, useSelect } from '@wordpress/data';
 import NoRender from './norender';
 
 import './index.scss';
+import { __ } from '@wordpress/i18n';
 
 interface PostEditProps {
   clientId: string;
@@ -85,6 +86,9 @@ export default function Edit({
           value={selected ?? 0}
           previewRender={(NoRender)}
           className="wp-curate-post-block__post-picker"
+          selectText={__('Pin a post', 'wp-curate')}
+          resetText={__('Backfill post', 'wp-curate')}
+          replaceText={__('Pin a different post', 'wp-curate')}
         />
       ) : null}
       <InnerBlocks />
