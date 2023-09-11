@@ -13,4 +13,4 @@
  * @package wp-curate
  */
 
-echo $content;
+echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered by Gutenberg.

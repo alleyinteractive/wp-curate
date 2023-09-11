@@ -6,7 +6,7 @@
 	"title": "Post",
 	"category": "theme",
 	"icon": "admin-post",
-	"description": "Auto inserted block to allow setting a post inline",
+	"description": "Container block to allow setting a post inline",
 	"textdomain": "wp-curate",
 	"editorScript": "file:index.ts",
 	"editorStyle": "file:index.css",
@@ -16,7 +16,6 @@
 	"usesContext": ["postId", "query"],
 	"render": "file:render.php",
 	"supports": {
-	  "inserter": false,
-	  "__experimentalExposeControlsToChildren": true
+	  "inserter": false
 	}
   }
