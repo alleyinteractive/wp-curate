@@ -74,10 +74,8 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 
 		$pinned_posts = $attributes['posts'] ?? $block_type->attributes['posts']['default'];
 
-		$queries = new Pinned_Post_Queries(
-			pinned: new Legal_Object_IDs(
-				origin: new Post_IDs_Envelope( is_array( $pinned_posts ) ? $pinned_posts : [] ),
-			),
+		$queries = new Positioned_Post_Queries(
+			positioned: is_array( $pinned_posts ) ? $pinned_posts : [],
 			default_per_page: $args['posts_per_page'],
 			origin: $this->queries,
 		);
