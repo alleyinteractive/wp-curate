@@ -53,6 +53,21 @@ export default {
   resetUsedIds,
 };
 
+// Recursively find all query blocks.
+const getQueryBlocks = (blocks: Block[], out: Block[]) => {
+  blocks.forEach((block: Block) => {
+    if (block.name === 'wp-curate/query') {
+      out.push(block);
+    } else {
+      const { innerBlocks } = block;
+      if (!innerBlocks) {
+        return;
+      }
+      getQueryBlocks(innerBlocks, out);
+    }
+  });
+};
+
 /**
  * This is the main function to update all pinned posts. Call it whenever a pinned post
  * changes or the query settings change.
@@ -71,21 +86,9 @@ export function mainDedupe() {
   // @ts-ignore
   const blocks: Block[] = select('core/block-editor').getBlocks();
   const queryBlocks: Block[] = [];
-  blocks.forEach((block: Block) => {
-    if (block.name === 'wp-curate/query') {
-      queryBlocks.push(block);
-    } else {
-      const { innerBlocks } = block;
-      if (!innerBlocks) {
-        return;
-      }
-      innerBlocks.forEach((innerBlock) => {
-        if (innerBlock.name === 'wp-curate/query') {
-          queryBlocks.push(innerBlock);
-        }
-      });
-    }
-  });
+  // Loop through all blocks and find all query blocks.
+  getQueryBlocks(blocks, queryBlocks);
+  // Loop through all query blocks and find all pinned posts. Add them to the list of used ids.
   queryBlocks.forEach((queryBlock) => {
     const { attributes } = queryBlock;
     const { posts } = attributes;
@@ -95,6 +98,7 @@ export function mainDedupe() {
       }
     });
   });
+  // Loop through all query blocks and set backfilled posts in the open slots.
   queryBlocks.forEach((queryBlock) => {
     const { attributes } = queryBlock;
     const {
@@ -108,20 +112,26 @@ export function mainDedupe() {
     }
     const postTypeString = postTypes.join(',');
     let postIndex = 0;
+    // New array to hold our final list of posts.
     const allPosts: Array<number | undefined> = [];
+    // New array to hold the pinned posts in the order they should be.
     const manualPostIdArray: Array<number | null> = posts;
 
+    // Remove any pinned posts from the backfilled posts list.
     const filteredPosts = backfillPosts.filter((post) => !manualPostIdArray.includes(post));
+    // Fill out the array with nulls where there isn't a pinned post.
     for (let i = 0; i < numberOfPosts; i += 1) {
       if (!manualPostIdArray[i]) {
         manualPostIdArray[i] = null;
       }
     }
 
+    // Loop through the pinned posts/null and generate the final list.
     manualPostIdArray.forEach((post, index) => {
       let manualPost;
       let backfillPost;
       let isUnique = false;
+      // If there is a pinned post, use it. Otherwise, use the next unused backfilled post.
       if (manualPostIdArray[index]) {
         manualPost = manualPostIdArray[index];
       } else {
@@ -136,6 +146,7 @@ export function mainDedupe() {
       }
       allPosts.push(manualPost ?? backfillPost);
     });
+    // Set the query attribute to pass to the child blocks.
     const query = {
       perPage: numberOfPosts,
       postType: 'post',
@@ -143,6 +154,7 @@ export function mainDedupe() {
       include: allPosts.join(','),
       orderby: 'include',
     };
+    // Update the query block with the new query.
     // @ts-ignore
     dispatch('core/block-editor').updateBlockAttributes(queryBlock.clientId, { query, queryId: 0 });
   });
