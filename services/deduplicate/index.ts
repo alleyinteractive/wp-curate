@@ -9,6 +9,7 @@ let redo = false;
 interface Block {
   attributes: {
     backfillPosts?: number[];
+    deduplication?: string;
     numberOfPosts?: number;
     posts?: number[];
     postTypes?: string[];
@@ -38,6 +39,14 @@ export function deduplicate(id: number | string): boolean {
   }
   usedIds.set(idNumber, true);
   return true;
+}
+
+export function markUsed(id: number | string) {
+  if (!id) {
+    return;
+  }
+  const idNumber = typeof id === 'string' ? parseInt(id, 10) : id;
+  usedIds.set(idNumber, true);
 }
 
 /**
@@ -85,24 +94,35 @@ export function mainDedupe() {
   resetUsedIds();
   // @ts-ignore
   const blocks: Block[] = select('core/block-editor').getBlocks();
+  const {
+    wp_curate_deduplication: wpCurateDeduplication = true,
+    // @ts-ignore
+  } = select('core/editor').getEditedPostAttribute('meta');
+
   const queryBlocks: Block[] = [];
   // Loop through all blocks and find all query blocks.
   getQueryBlocks(blocks, queryBlocks);
   // Loop through all query blocks and find all pinned posts. Add them to the list of used ids.
-  queryBlocks.forEach((queryBlock) => {
-    const { attributes } = queryBlock;
-    const { posts } = attributes;
-    posts?.forEach((post) => {
-      if (post) {
-        deduplicate(post);
-      }
-    });
-  });
+  // Note: This means that a pinned post will be used only once on the page. It cannot be backfilled
+  // earlier on the page. The front end does not currently do this, so it will be commented out
+  // here to match. We should probably add a setting to allow this in both places.
+
+  // queryBlocks.forEach((queryBlock) => {
+  //   const { attributes } = queryBlock;
+  //   const { posts } = attributes;
+  //   posts?.forEach((post) => {
+  //     if (post) {
+  //       deduplicate(post);
+  //     }
+  //   });
+  // });
+
   // Loop through all query blocks and set backfilled posts in the open slots.
   queryBlocks.forEach((queryBlock) => {
     const { attributes } = queryBlock;
     const {
       backfillPosts = [],
+      deduplication = 'inherit',
       posts = [],
       numberOfPosts = 5,
       postTypes = ['post'],
@@ -132,14 +152,20 @@ export function mainDedupe() {
       let backfillPost;
       let isUnique = false;
       // If there is a pinned post, use it. Otherwise, use the next unused backfilled post.
-      if (manualPostIdArray[index]) {
+      if (manualPostIdArray[index] !== null) {
         manualPost = manualPostIdArray[index];
+        // @ts-ignore
+        markUsed(manualPost);
       } else {
         do {
           if (filteredPosts[postIndex]) {
             backfillPost = filteredPosts[postIndex];
-            // TODO: check post and block settings for deduplication.
-            isUnique = deduplicate(backfillPost);
+            if (wpCurateDeduplication && deduplication === 'inherit') {
+              isUnique = deduplicate(backfillPost);
+            } else {
+              isUnique = true;
+              markUsed(backfillPost);
+            }
           }
           postIndex += 1;
         } while (isUnique === false && postIndex <= filteredPosts.length);

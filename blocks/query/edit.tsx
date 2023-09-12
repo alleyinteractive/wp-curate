@@ -149,10 +149,6 @@ export default function Edit({
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
   const postTypeString = postTypes.join(',');
 
-  useEffect(() => {
-    mainDedupe();
-  }, [backfillPosts]);
-
   // Fetch available taxonomies.
   useEffect(() => {
     const fetchTaxonomies = async () => {
@@ -220,7 +216,15 @@ export default function Edit({
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
     mainDedupe();
-  }, [manualPostIds, backfillPosts, numberOfPosts, setAttributes, postTypeString]);
+  }, [
+    manualPostIds,
+    backfillPosts,
+    numberOfPosts,
+    setAttributes,
+    postTypeString,
+    isPostDeduplicating,
+    deduplication,
+  ]);
 
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
@@ -243,6 +247,13 @@ export default function Edit({
     };
     setAttributes({ terms: newTermAttrs });
   });
+
+  const setNumberOfPosts = (newValue: number) => {
+    setAttributes({
+      numberOfPosts: newValue,
+      posts: manualPosts.slice(0, newValue),
+    });
+  };
 
   for (let i = 0; i < numberOfPosts; i += 1) {
     if (!manualPosts[i]) {
@@ -295,7 +306,7 @@ export default function Edit({
                 label={__('Number of Posts', 'wp-curate')}
                 help={__('The maximum number of posts to show.', 'wp-curate')}
                 value={numberOfPosts}
-                onChange={(value) => setAttributes({ numberOfPosts: value })}
+                onChange={setNumberOfPosts}
                 min={minNumberOfPosts}
                 max={maxNumberOfPosts}
               />
