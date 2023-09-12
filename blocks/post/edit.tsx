@@ -2,11 +2,11 @@ import classnames from 'classnames';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { PostPicker } from '@alleyinteractive/block-editor-tools';
 import { dispatch, select, useSelect } from '@wordpress/data';
+import { __ } from '@wordpress/i18n';
 
 import NoRender from './norender';
 
 import './index.scss';
-import { __ } from '@wordpress/i18n';
 
 interface PostEditProps {
   clientId: string;
