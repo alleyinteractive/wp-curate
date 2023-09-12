@@ -1,7 +1,7 @@
 import { PostPicker, TermSelector } from '@alleyinteractive/block-editor-tools';
+import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import ApiFetch from '@wordpress/api-fetch';
-import classnames from 'classnames';
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
   PanelBody,
@@ -18,10 +18,15 @@ import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
 
+import {
+  mainDedupe,
+} from '../../services/deduplicate';
+
 import './index.scss';
 
 interface EditProps {
   attributes: {
+    backfillPosts?: number[];
     deduplication?: string;
     maxNumberOfPosts?: number;
     minNumberOfPosts?: number;
@@ -85,6 +90,7 @@ interface Window {
  */
 export default function Edit({
   attributes: {
+    backfillPosts = [],
     deduplication = 'inherit',
     maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
@@ -125,7 +131,6 @@ export default function Edit({
   );
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
-  const [posts, setPosts] = useState<number[]>([]);
   const [availableTaxonomies, setAvailableTaxonomies] = useState<Taxonomies>({});
   const [availableTypes, setAvailableTypes] = useState<Types>({});
 
@@ -172,6 +177,9 @@ export default function Edit({
 
   // Fetch "backfill" posts when categories, tags, or search term change.
   useEffect(() => {
+    if (Object.keys(availableTaxonomies).length <= 0) {
+      return;
+    }
     const fetchPosts = async () => {
       let path = addQueryArgs(
         '/wp/v2/posts',
@@ -179,6 +187,7 @@ export default function Edit({
           search: debouncedSearchTerm,
           offset,
           type: postTypeString,
+          per_page: 20,
         },
       );
       path += termQueryArgs;
@@ -190,50 +199,32 @@ export default function Edit({
         const postIds: number[] = (response as WP_REST_API_Posts).map(
           (post: WP_REST_API_Post) => post.id,
         );
-        setPosts(postIds);
+        setAttributes({ backfillPosts: postIds });
       });
     };
     fetchPosts();
-  }, [debouncedSearchTerm, termQueryArgs, offset, postTypeString]);
+  }, [
+    debouncedSearchTerm,
+    termQueryArgs,
+    offset,
+    postTypeString,
+    availableTaxonomies,
+    setAttributes,
+  ]);
 
-  // Update the query when the posts change.
+  // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    if (!posts.length) {
-      return;
-    }
-    let postIndex = 0;
-    const allPosts: Array<number | undefined> = [];
-
-    const manualPostIdArray: Array<number | null> = manualPostIds.split(',').map((post) => parseInt(post, 10));
-    const filteredPosts = posts.filter((post) => !manualPostIdArray.includes(post));
-    for (let i = 0; i < numberOfPosts; i += 1) {
-      if (!manualPostIdArray[i]) {
-        manualPostIdArray[i] = null;
-      }
-    }
-
-    manualPostIdArray.forEach((post, index) => {
-      let manualPost;
-      let backfillPost;
-
-      if (manualPostIdArray[index]) {
-        manualPost = manualPostIdArray[index];
-      } else {
-        backfillPost = filteredPosts[postIndex];
-        postIndex += 1;
-      }
-      allPosts.push(manualPost ?? backfillPost);
-    });
-    const query = {
-      perPage: numberOfPosts,
-      postType: 'post',
-      type: postTypeString,
-      include: allPosts.join(','),
-      orderby: 'include',
-    };
-    setAttributes({ query, queryId: 0 });
-  }, [manualPostIds, posts, numberOfPosts, setAttributes, postTypeString]);
+    mainDedupe();
+  }, [
+    manualPostIds,
+    backfillPosts,
+    numberOfPosts,
+    setAttributes,
+    postTypeString,
+    isPostDeduplicating,
+    deduplication,
+  ]);
 
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
@@ -256,6 +247,13 @@ export default function Edit({
     };
     setAttributes({ terms: newTermAttrs });
   });
+
+  const setNumberOfPosts = (newValue: number) => {
+    setAttributes({
+      numberOfPosts: newValue,
+      posts: manualPosts.slice(0, newValue),
+    });
+  };
 
   for (let i = 0; i < numberOfPosts; i += 1) {
     if (!manualPosts[i]) {
@@ -308,7 +306,7 @@ export default function Edit({
                 label={__('Number of Posts', 'wp-curate')}
                 help={__('The maximum number of posts to show.', 'wp-curate')}
                 value={numberOfPosts}
-                onChange={(value) => setAttributes({ numberOfPosts: value })}
+                onChange={setNumberOfPosts}
                 min={minNumberOfPosts}
                 max={maxNumberOfPosts}
               />
@@ -345,44 +343,37 @@ export default function Edit({
             ))
           ) : null}
           { /* @ts-ignore */ }
-          <PanelRow>
-            { /* @ts-ignore */ }
-            <TextControl
-              label={__('Search Term', 'wp-curate')}
-              onChange={(next) => setAttributes({ searchTerm: next })}
-              value={searchTerm as string}
-            />
-          </PanelRow>
-          { /* @ts-ignore */ }
-          <PanelRow>
-            { /* @ts-ignore */ }
-            <RadioControl
-              label={__('Deduplication', 'wp-curate')}
-              help={__('Customize whether posts that have already appeared in previous query blocks can appear again in this block.', 'wp-curate')}
-              options={[
-                {
-                  // @ts-ignore
-                  label: createInterpolateElement(
-                    sprintf(
-                      __('Inherit deduplication setting from this %1$s (currently %2$s)', 'wp-curate'),
-                      postTypeObject ? postTypeObject.labels.singular_name : 'post',
-                      `<strong>${isPostDeduplicating ? __('enabled', 'wp-curate') : __('disabled', 'wp-curate')}</strong>`,
-                    ),
-                    {
-                      strong: <strong />,
-                    },
+          <TextControl
+            label={__('Search Term', 'wp-curate')}
+            onChange={(next) => setAttributes({ searchTerm: next })}
+            value={searchTerm as string}
+          />
+          <RadioControl
+            label={__('Deduplication', 'wp-curate')}
+            help={__('Customize whether posts that have already appeared in previous query blocks can appear again in this block.', 'wp-curate')}
+            options={[
+              {
+                // @ts-ignore
+                label: createInterpolateElement(
+                  sprintf(
+                    __('Inherit deduplication setting from this %1$s (currently %2$s)', 'wp-curate'),
+                    postTypeObject ? postTypeObject.labels.singular_name : 'post',
+                    `<strong>${isPostDeduplicating ? __('enabled', 'wp-curate') : __('disabled', 'wp-curate')}</strong>`,
                   ),
-                  value: 'inherit',
-                },
-                {
-                  label: __('Never exclude posts appearing in previous query blocks', 'wp-curate'),
-                  value: 'never',
-                },
-              ]}
-              onChange={(next) => setAttributes({ deduplication: next })}
-              selected={deduplication as string}
-            />
-          </PanelRow>
+                  {
+                    strong: <strong />,
+                  },
+                ),
+                value: 'inherit',
+              },
+              {
+                label: __('Never exclude posts appearing in previous query blocks', 'wp-curate'),
+                value: 'never',
+              },
+            ]}
+            onChange={(next) => setAttributes({ deduplication: next })}
+            selected={deduplication as string}
+          />
         </PanelBody>
         { /* @ts-ignore */ }
         <PanelBody
