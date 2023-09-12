@@ -248,7 +248,7 @@ export default function Edit({
     setAttributes({ terms: newTermAttrs });
   });
 
-  const setNumberOfPosts = (newValue: number) => {
+  const setNumberOfPosts = (newValue?: number) => {
     setAttributes({
       numberOfPosts: newValue,
       posts: manualPosts.slice(0, newValue),
