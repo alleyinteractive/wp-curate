@@ -215,43 +215,6 @@ export default function Edit({
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-<<<<<<< HEAD
-    if (!posts.length) {
-      return;
-    }
-    let postIndex = 0;
-    const allPosts: Array<number | undefined> = [];
-
-    const manualPostIdArray: Array<number | null> = manualPostIds.split(',').map((post) => parseInt(post, 10)).slice(0, numberOfPosts);
-    const filteredPosts = posts.filter((post) => !manualPostIdArray.includes(post));
-    for (let i = 0; i < numberOfPosts; i += 1) {
-      if (!manualPostIdArray[i]) {
-        manualPostIdArray[i] = null;
-      }
-    }
-
-    manualPostIdArray.forEach((post, index) => {
-      let manualPost;
-      let backfillPost;
-
-      if (manualPostIdArray[index]) {
-        manualPost = manualPostIdArray[index];
-      } else {
-        backfillPost = filteredPosts[postIndex];
-        postIndex += 1;
-      }
-      allPosts.push(manualPost ?? backfillPost);
-    });
-    const query = {
-      perPage: numberOfPosts,
-      postType: 'post',
-      type: postTypeString,
-      include: allPosts.join(','),
-      orderby: 'include',
-    };
-    setAttributes({ query, queryId: 0 });
-  }, [manualPostIds, posts, numberOfPosts, setAttributes, postTypeString]);
-=======
     mainDedupe();
   }, [
     manualPostIds,
@@ -262,7 +225,6 @@ export default function Edit({
     isPostDeduplicating,
     deduplication,
   ]);
->>>>>>> origin/develop
 
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
