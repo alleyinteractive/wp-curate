@@ -10,6 +10,9 @@ namespace Alley\WP\WP_Curate;
 use Alley\WP\Post_IDs\Used_Post_IDs;
 use Alley\WP\Post_Queries\Default_Post_Queries;
 use Alley\WP\Post_Query\Global_Post_Query;
+use Alley\WP\Post_Query\Post_IDs_Query;
+use Alley\WP\Types\Post_Queries;
+use Alley\WP\Types\Post_Query;
 use Exception;
 use WP_Block_Type_Registry;
 
@@ -34,7 +37,23 @@ function main(): void {
 
 	$features[] = new Features\Core_Query_Block_Integration();
 	$features[] = new Features\Query_Block_Context(
-		post_queries: new Default_Post_Queries(),
+		post_queries: new Precompiled_Post_Queries(
+			main_query: new Global_Post_Query( 'wp_query' ),
+			curated_posts: new Plugin_Curated_Posts(
+				queries: new class implements Post_Queries {
+					/**
+					 * Query for posts using literal arguments.
+					 *
+					 * @param array<string, mixed> $args Query arguments.
+					 * @return Post_Query
+					 */
+					public function query( array $args ): Post_Query {
+						return new Post_IDs_Query( [] );
+					}
+				},
+			),
+			origin: new Default_Post_Queries(),
+		),
 		history: new Used_Post_IDs(),
 		main_query: new Global_Post_Query( 'wp_query' ),
 		default_per_page: (int) get_option( 'posts_per_page', 10 ), // @phpstan-ignore-line
