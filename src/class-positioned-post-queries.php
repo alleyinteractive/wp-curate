@@ -15,7 +15,7 @@ use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
 
 /**
- * ...
+ * Fills gaps in a map of positioned posts with dynamic posts.
  *
  * The given posts are injected into all queries, so this class is not safe to use with paginated queries.
  */
