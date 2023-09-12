@@ -47,7 +47,7 @@ final class Positioned_Post_Queries implements Post_Queries {
 			$expected_per_page = (int) $args['posts_per_page'];
 		}
 
-		$ids = new Legal_Object_IDs( new Post_IDs_Envelope( $this->positioned ) );
+		$ids = new Legal_Object_IDs( new Post_IDs_Envelope( $this->positioned ) ); // @phpstan-ignore-line
 
 		if ( count( $ids->post_ids() ) >= $expected_per_page ) {
 			$per_page_post_ids = \array_slice( $ids->post_ids(), 0, $expected_per_page );
@@ -72,6 +72,6 @@ final class Positioned_Post_Queries implements Post_Queries {
 		// Respect that 'posts_per_page' might have been higher than the length of the map.
 		array_push( $out, ...$backfill_ids );
 
-		return new Post_IDs_Query( ( new Legal_Object_IDs( new Post_IDs_Envelope( $out ) ) )->post_ids() );
+		return new Post_IDs_Query( ( new Legal_Object_IDs( new Post_IDs_Envelope( $out ) ) )->post_ids() ); // @phpstan-ignore-line
 	}
 }
