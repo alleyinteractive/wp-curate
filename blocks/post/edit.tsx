@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
-import { PostPicker, useParentBlock } from '@alleyinteractive/block-editor-tools';
-import { dispatch, useSelect } from '@wordpress/data';
+import { PostPicker } from '@alleyinteractive/block-editor-tools';
+import { dispatch, select, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 
 import NoRender from './norender';
@@ -19,13 +19,6 @@ interface PostEditProps {
   isSelected: boolean;
 }
 
-interface ParentBlock {
-  attributes?: {
-    posts: Array<number | null>;
-    postTypes: string[];
-  };
-}
-
 /**
  * The wp-curate/post block edit function.
  *
@@ -41,7 +34,10 @@ export default function Edit({
   },
   isSelected,
 }: PostEditProps) {
-  const queryParent: ParentBlock = useParentBlock(clientId) ?? {};
+  // @ts-ignore
+  const queryParentId = select('core/block-editor').getBlockParentsByBlockName(clientId, 'wp-curate/query')[0];
+  // @ts-ignore
+  const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {};
   const {
     attributes: {
       posts = [],
