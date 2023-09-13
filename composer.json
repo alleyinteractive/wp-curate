@@ -1,5 +1,6 @@
 {
     "name": "alleyinteractive/wp-curate",
+    "version": "0.1.0",
     "description": "Plugin to curate homepages and other landing pages",
     "type": "wordpress-plugin",
     "keywords": [

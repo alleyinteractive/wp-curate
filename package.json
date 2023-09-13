@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@alleyinteractive/block-editor-tools": "^0.3.3",
+    "@changesets/cli": "^2.26.2",
     "@types/jest": "^29.5.4",
     "@types/wordpress__block-editor": "^11.5.0",
     "@uidotdev/usehooks": "^2.2.0",
