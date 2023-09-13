@@ -1,0 +1,21 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "wp-curate/post",
+	"version": "0.1.0",
+	"title": "Post",
+	"category": "theme",
+	"icon": "admin-post",
+	"description": "Container block to allow setting a post inline",
+	"textdomain": "wp-curate",
+	"editorScript": "file:index.ts",
+	"editorStyle": "file:index.css",
+	"style": [
+		"file:style-index.css"
+	],
+	"usesContext": ["postId", "query"],
+	"render": "file:render.php",
+	"supports": {
+	  "inserter": false
+	}
+}

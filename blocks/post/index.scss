@@ -1,0 +1,17 @@
+.wp-curate-post-block {
+  padding: 2px;
+
+  &--selected {
+    outline: 1px dashed #ccc;
+    outline-offset: 0.5rem;
+  }
+
+  &--backfill .block-editor-inner-blocks {
+    opacity: 0.5;
+  }
+
+  &__post-picker {
+    margin-bottom: 0.5rem;
+    text-align: right;
+  }
+}

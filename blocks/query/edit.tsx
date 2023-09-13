@@ -248,7 +248,7 @@ export default function Edit({
     setAttributes({ terms: newTermAttrs });
   });
 
-  const setNumberOfPosts = (newValue: number) => {
+  const setNumberOfPosts = (newValue?: number) => {
     setAttributes({
       numberOfPosts: newValue,
       posts: manualPosts.slice(0, newValue),
@@ -268,8 +268,14 @@ export default function Edit({
       'core/post-template',
       {},
       [
-        ['core/post-title', { isLink: true }],
-        ['core/post-excerpt', {}],
+        [
+          'wp-curate/post',
+          {},
+          [
+            ['core/post-title', { isLink: true }],
+            ['core/post-excerpt', {}],
+          ],
+        ],
       ],
     ],
   ];
