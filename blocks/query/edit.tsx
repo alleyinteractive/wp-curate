@@ -380,34 +380,37 @@ export default function Edit({
             onChange={(next) => setAttributes({ searchTerm: next })}
             value={searchTerm as string}
           />
-          <RadioControl
-            label={__('Deduplication', 'wp-curate')}
-            help={__('Customize whether posts that have already appeared in previous query blocks can appear again in this block.', 'wp-curate')}
-            options={[
-              {
-                // @ts-ignore
-                label: createInterpolateElement(
-                  sprintf(
-                    __('Inherit deduplication setting from this %1$s (currently %2$s)', 'wp-curate'),
-                    postTypeObject ? postTypeObject.labels.singular_name : 'post',
-                    `<strong>${isPostDeduplicating ? __('enabled', 'wp-curate') : __('disabled', 'wp-curate')}</strong>`,
-                  ),
-                  {
-                    strong: <strong />,
-                  },
+        </PanelBody>
+      </InspectorControls>
+
+      { /* @ts-ignore */ }
+      <InspectorControls group="advanced">
+        <RadioControl
+          label={__('Deduplication', 'wp-curate')}
+          help={__('Customize whether posts that have already appeared in previous query blocks can appear again in this block.', 'wp-curate')}
+          options={[
+            {
+              // @ts-ignore
+              label: createInterpolateElement(
+                sprintf(
+                  __('Inherit deduplication setting from this %1$s (currently %2$s)', 'wp-curate'),
+                  postTypeObject ? postTypeObject.labels.singular_name : 'post',
+                  `<strong>${isPostDeduplicating ? __('enabled', 'wp-curate') : __('disabled', 'wp-curate')}</strong>`,
                 ),
-                value: 'inherit',
-              },
-              {
-                label: __('Never exclude posts appearing in previous query blocks', 'wp-curate'),
-                value: 'never',
-              },
-            ]}
-            onChange={(next) => setAttributes({ deduplication: next })}
-            selected={deduplication as string}
-          />
-        </PanelBody>
-        </PanelBody>
+                {
+                  strong: <strong />,
+                },
+              ),
+              value: 'inherit',
+            },
+            {
+              label: __('Never exclude posts appearing in previous query blocks', 'wp-curate'),
+              value: 'never',
+            },
+          ]}
+          onChange={(next) => setAttributes({ deduplication: next })}
+          selected={deduplication as string}
+        />
       </InspectorControls>
     </>
   );
