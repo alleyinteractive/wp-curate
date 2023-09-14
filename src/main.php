@@ -42,6 +42,8 @@ function main(): void {
 		block_type_registry: WP_Block_Type_Registry::get_instance(),
 	);
 
+	$features[] = new Features\Rest_Api();
+
 	foreach ( $features as $feature ) {
 		$feature->boot();
 	}
