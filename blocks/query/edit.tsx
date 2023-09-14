@@ -299,7 +299,33 @@ export default function Edit({
           template={TEMPLATE}
         />
       </div>
+
       <InspectorControls>
+        { /* @ts-ignore */ }
+        <PanelBody
+          title={__('Manually Set Posts', 'wp-curate')}
+          initialOpen
+          className="manual-posts"
+        >
+          {manualPosts.map((post, index) => (
+            /* @ts-ignore */
+            <PanelRow className={classnames(
+              'manual-posts__container',
+              { 'manual-posts__container--selected': manualPosts[index] },
+            )}
+            >
+              <span className="manual-posts__counter">{index + 1}</span>
+              <PostPicker
+                allowedTypes={allowedPostTypes}
+                onReset={() => setManualPost(0, index)}
+                onUpdate={(id: number) => { setManualPost(id, index); }}
+                value={manualPosts[index] ?? 0}
+                className="manual-posts__picker"
+              />
+            </PanelRow>
+          ))}
+        </PanelBody>
+
         { /* @ts-ignore */ }
         <PanelBody
           title={__('Block Settings', 'wp-curate')}
@@ -381,29 +407,6 @@ export default function Edit({
             selected={deduplication as string}
           />
         </PanelBody>
-        { /* @ts-ignore */ }
-        <PanelBody
-          title={__('Manually Set Posts', 'wp-curate')}
-          initialOpen
-          className="manual-posts"
-        >
-          {manualPosts.map((post, index) => (
-            /* @ts-ignore */
-            <PanelRow className={classnames(
-              'manual-posts__container',
-              { 'manual-posts__container--selected': manualPosts[index] },
-            )}
-            >
-              <span className="manual-posts__counter">{index + 1}</span>
-              <PostPicker
-                allowedTypes={allowedPostTypes}
-                onReset={() => setManualPost(0, index)}
-                onUpdate={(id: number) => { setManualPost(id, index); }}
-                value={manualPosts[index] ?? 0}
-                className="manual-posts__picker"
-              />
-            </PanelRow>
-          ))}
         </PanelBody>
       </InspectorControls>
     </>
