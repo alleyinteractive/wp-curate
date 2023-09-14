@@ -328,7 +328,7 @@ export default function Edit({
 
         { /* @ts-ignore */ }
         <PanelBody
-          title={__('Block Settings', 'wp-curate')}
+          title={__('Filters', 'wp-curate')}
           initialOpen
         >
           {minNumberOfPosts !== undefined && minNumberOfPosts !== maxNumberOfPosts ? (
