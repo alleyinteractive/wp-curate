@@ -18,6 +18,7 @@ use Alley\WP\Types\Post_Query;
 use Alley\WP\WP_Curate\Must_Include_Curated_Posts;
 use Alley\WP\WP_Curate\Plugin_Curated_Posts;
 use Alley\WP\WP_Curate\Recorded_Curated_Posts;
+use WP_Block;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
 
@@ -48,7 +49,7 @@ final class Query_Block_Context implements Feature {
 	 * Boot the feature.
 	 */
 	public function boot(): void {
-		add_filter( 'render_block_context', [ $this, 'filter_query_context' ], 10, 2 );
+		add_filter( 'render_block_context', [ $this, 'filter_query_context' ], 10, 3 );
 	}
 
 	/**
@@ -56,52 +57,72 @@ final class Query_Block_Context implements Feature {
 	 *
 	 * @param array<string, mixed>                 $context      Default context.
 	 * @param array{"attrs": array<string, mixed>} $parsed_block Block being rendered.
+	 * @param WP_Block|null                        $parent_block Parent block, if any.
 	 * @return array<string, mixed> Updated context.
 	 */
-	public function filter_query_context( $context, $parsed_block ) {
-		$current_block     = new Parsed_Block( $parsed_block );
-		$plugin_block_type = $this->block_type_registry->get_registered( 'wp-curate/query' );
+	public function filter_query_context( $context, $parsed_block, $parent_block ) {
+		$current_block      = new Parsed_Block( $parsed_block );
+		$current_block_type = $this->block_type_registry->get_registered( $current_block->block_name() );
+		$plugin_block_type  = $this->block_type_registry->get_registered( 'wp-curate/query' );
 
-		if ( ! $plugin_block_type instanceof WP_Block_Type || $current_block->block_name() !== $plugin_block_type->name ) {
-			return $context;
-		}
+		// Provide 'query' context to the plugin's query block.
+		if ( $plugin_block_type instanceof WP_Block_Type && $current_block->block_name() === $plugin_block_type->name ) {
+			$curated_posts = new Recorded_Curated_Posts(
+				// Deduplication is achieved by both recording to and excluding from the same place.
+				history: $this->history,
+				origin: new Must_Include_Curated_Posts(
+					qv: $this->stop_queries_var,
+					origin: new Plugin_Curated_Posts(
+						queries: new Variable_Post_Queries(
+							input: function () use ( $parsed_block ) {
+								$main_query = $this->main_query->query_object();
 
-		$curated_posts = new Recorded_Curated_Posts(
-			// Deduplication is achieved by both recording to and excluding from the same place.
-			history: $this->history,
-			origin: new Must_Include_Curated_Posts(
-				qv: $this->stop_queries_var,
-				origin: new Plugin_Curated_Posts(
-					queries: new Variable_Post_Queries(
-						input: function () use ( $parsed_block ) {
-							$main_query = $this->main_query->query_object();
-
-							if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
-								return false;
-							}
-
-							if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
-								$post_level_deduplication = get_post_meta( $main_query->get_queried_object_id(), 'wp_curate_deduplication', true );
-
-								if ( true === (bool) $post_level_deduplication ) {
-									return true;
+								if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
+									return false;
 								}
-							}
 
-							return false;
-						},
-						test: new Comparison( [ 'compared' => true ] ),
-						is_true: new Exclude_Queries(
-							$this->history,
-							$this->default_per_page,
-							$this->post_queries,
+								if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
+									$post_level_deduplication = get_post_meta( $main_query->get_queried_object_id(), 'wp_curate_deduplication', true );
+
+									if ( true === (bool) $post_level_deduplication ) {
+										return true;
+									}
+								}
+
+								return false;
+							},
+							test: new Comparison( [ 'compared' => true ] ),
+							is_true: new Exclude_Queries(
+								$this->history,
+								$this->default_per_page,
+								$this->post_queries,
+							),
+							is_false: $this->post_queries,
 						),
-						is_false: $this->post_queries,
 					),
 				),
-			),
-		);
+			);
 
-		return $curated_posts->with_query_context( $context, $parsed_block['attrs'], $plugin_block_type );
+			$context = $curated_posts->with_query_context( $context, $parsed_block['attrs'], $plugin_block_type );
+		}
+
+		/*
+		 * Ensure that immediate children of the plugin's query block are provided the 'query'
+		 * context. This is necessary because of a quirk in how the 'render_block_context' filter is
+		 * applied to inner blocks: When context is added to the query block via the filter, it
+		 * isn't passed to its inner blocks, unlike context added to a top-level query block.
+		 */
+		if (
+			$parent_block instanceof WP_Block
+			&& $plugin_block_type instanceof WP_Block_Type
+			&& $parent_block->name === $plugin_block_type->name
+			&& in_array( 'query', $current_block_type->uses_context, true )
+			&& isset( $parent_block->context['query'] )
+			&& ! isset( $context['query'] )
+		) {
+			$context['query'] = $parent_block->context['query'];
+		}
+
+		return $context;
 	}
 }
