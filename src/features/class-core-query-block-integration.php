@@ -37,18 +37,24 @@ final class Core_Query_Block_Integration implements Feature {
 	 * @return array<string, mixed> Updated query arguments.
 	 */
 	public function filter_query_vars( $query, $block ) {
-		[ $found_rows, $include, $orderby ] = (array) traverse(
+		[ $found_rows, $include, $orderby, $post_type ] = (array) traverse(
 			$block,
 			[
 				'context.query.foundRows',
 				'context.query.include',
 				'context.query.orderby',
+				'context.query.postType',
 			],
 		);
 
 		// Make all query blocks 'no_found_rows => true' unless attributes include '"foundRows": true'.
 		if ( true !== $found_rows ) {
 			$query['no_found_rows'] = true;
+		}
+
+		// Support arrays of post types.
+		if ( is_array( $post_type ) ) {
+			$query['post_type'] = array_filter( $post_type, 'is_post_type_viewable' );
 		}
 
 		if ( is_array( $include ) ) {

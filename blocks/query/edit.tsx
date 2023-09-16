@@ -1,4 +1,4 @@
-import { PostPicker, TermSelector } from '@alleyinteractive/block-editor-tools';
+import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import ApiFetch from '@wordpress/api-fetch';
@@ -8,7 +8,6 @@ import {
   PanelRow,
   RadioControl,
   RangeControl,
-  SelectControl,
   TextControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
@@ -353,12 +352,11 @@ export default function Edit({
             min={0}
             max={20}
           />
-          <SelectControl
+          <Checkboxes
             label={__('Post Types', 'wp-curate')}
             value={postTypes}
             onChange={(newValue) => setAttributes({ postTypes: newValue })}
             options={displayTypes}
-            multiple
           />
           {Object.keys(availableTaxonomies).length > 0 ? (
             allowedTaxonomies.map((taxonomy) => (
