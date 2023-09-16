@@ -302,32 +302,7 @@ export default function Edit({
       <InspectorControls>
         { /* @ts-ignore */ }
         <PanelBody
-          title={__('Manually Set Posts', 'wp-curate')}
-          initialOpen
-          className="manual-posts"
-        >
-          {manualPosts.map((post, index) => (
-            /* @ts-ignore */
-            <PanelRow className={classnames(
-              'manual-posts__container',
-              { 'manual-posts__container--selected': manualPosts[index] },
-            )}
-            >
-              <span className="manual-posts__counter">{index + 1}</span>
-              <PostPicker
-                allowedTypes={allowedPostTypes}
-                onReset={() => setManualPost(0, index)}
-                onUpdate={(id: number) => { setManualPost(id, index); }}
-                value={manualPosts[index] ?? 0}
-                className="manual-posts__picker"
-              />
-            </PanelRow>
-          ))}
-        </PanelBody>
-
-        { /* @ts-ignore */ }
-        <PanelBody
-          title={__('Filters', 'wp-curate')}
+          title={__('Setup', 'wp-curate')}
           initialOpen
         >
           {minNumberOfPosts !== undefined && minNumberOfPosts !== maxNumberOfPosts ? (
@@ -352,6 +327,38 @@ export default function Edit({
             min={0}
             max={20}
           />
+        </PanelBody>
+
+        { /* @ts-ignore */ }
+        <PanelBody
+          title={__('Select Posts', 'wp-curate')}
+          initialOpen={false}
+          className="manual-posts"
+        >
+          {manualPosts.map((post, index) => (
+            /* @ts-ignore */
+            <PanelRow className={classnames(
+              'manual-posts__container',
+              { 'manual-posts__container--selected': manualPosts[index] },
+            )}
+            >
+              <span className="manual-posts__counter">{index + 1}</span>
+              <PostPicker
+                allowedTypes={allowedPostTypes}
+                onReset={() => setManualPost(0, index)}
+                onUpdate={(id: number) => { setManualPost(id, index); }}
+                value={manualPosts[index] ?? 0}
+                className="manual-posts__picker"
+              />
+            </PanelRow>
+          ))}
+        </PanelBody>
+
+        { /* @ts-ignore */ }
+        <PanelBody
+          title={__('Query Parameters', 'wp-curate')}
+          initialOpen={false}
+        >
           <Checkboxes
             label={__('Post Types', 'wp-curate')}
             value={postTypes}
