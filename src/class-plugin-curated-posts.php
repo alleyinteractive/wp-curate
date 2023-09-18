@@ -81,9 +81,10 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 		);
 
 		$context['query'] = [
-			'perPage' => $args['posts_per_page'],
-			'include' => $queries->query( $args )->post_ids(),
-			'orderby' => 'post__in',
+			'perPage'   => $args['posts_per_page'],
+			'include'   => $queries->query( $args )->post_ids(),
+			'orderby'   => 'post__in',
+			'postType'  => $args['post_type'],
 		];
 
 		return $context;
