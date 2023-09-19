@@ -1,0 +1,10 @@
+name: Built Release
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  built-release:
+    uses: alleyinteractive/.github/.github/workflows/built-release.yml@main
