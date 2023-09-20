@@ -97,7 +97,7 @@ export function mainDedupe() {
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
     // @ts-ignore
-  } = select('core/editor').getEditedPostAttribute('meta');
+  } = select('core/editor').getEditedPostAttribute('meta') || {};
 
   const queryBlocks: Block[] = [];
   // Loop through all blocks and find all query blocks.
