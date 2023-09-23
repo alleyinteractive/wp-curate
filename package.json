@@ -39,7 +39,7 @@
     "@alleyinteractive/block-editor-tools": "^0.3.3",
     "@types/jest": "^29.5.5",
     "@types/wordpress__block-editor": "^11.5.0",
-    "@uidotdev/usehooks": "^2.2.0",
+    "@uidotdev/usehooks": "^2.3.1",
     "@wordpress/a11y": "^3.30.0",
     "@wordpress/annotations": "^2.30.0",
     "@wordpress/api-fetch": "^6.27.0",
