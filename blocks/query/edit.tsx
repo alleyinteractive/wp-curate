@@ -11,7 +11,7 @@ import {
   TextControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
-import { createInterpolateElement, useEffect, useState } from '@wordpress/element';
+import { Fragment, createInterpolateElement, useEffect, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
@@ -341,6 +341,7 @@ export default function Edit({
               'manual-posts__container',
               { 'manual-posts__container--selected': manualPosts[index] },
             )}
+            key={index}
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
@@ -367,7 +368,7 @@ export default function Edit({
           />
           {Object.keys(availableTaxonomies).length > 0 ? (
             allowedTaxonomies.map((taxonomy) => (
-              <>
+              <Fragment key={taxonomy}>
                 { /* @ts-ignore */ }
                 <TermSelector
                   label={availableTaxonomies[taxonomy].name}
@@ -376,7 +377,7 @@ export default function Edit({
                   onSelect={(newCategories: Term[]) => setTerms(taxonomy, newCategories)}
                   multiple
                 />
-              </>
+              </Fragment>
             ))
           ) : null}
           { /* @ts-ignore */ }
