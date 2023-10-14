@@ -11,7 +11,12 @@ import {
   TextControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
-import { Fragment, createInterpolateElement, useEffect, useState } from '@wordpress/element';
+import {
+  Fragment,
+  createInterpolateElement,
+  useEffect,
+  useState,
+} from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
