@@ -7,8 +7,6 @@
 
 namespace Alley\WP\WP_Curate;
 
-use Alley\WP\Legal_Object_IDs;
-use Alley\WP\Post_IDs\Post_IDs_Envelope;
 use Alley\WP\Types\Post_Queries;
 use WP_Block_Type;
 
@@ -81,10 +79,10 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 		);
 
 		$context['query'] = [
-			'perPage'   => $args['posts_per_page'],
-			'include'   => $queries->query( $args )->post_ids(),
-			'orderby'   => 'post__in',
-			'postType'  => $args['post_type'],
+			'perPage'  => $args['posts_per_page'],
+			'include'  => $queries->query( $args )->post_ids(),
+			'orderby'  => 'post__in',
+			'postType' => $args['post_type'],
 		];
 
 		return $context;

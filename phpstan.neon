@@ -5,16 +5,11 @@ parameters:
 	# Level 9 is the highest level
 	level: max
 
+	# Allow generics
+	checkGenericClassInNonGenericObjectType: false
+
 	paths:
 		- blocks/
 		- entries/
 		- src/
 		- wp-curate.php
-
-#    ignoreErrors:
-#        - '#PHPDoc tag @var#'
-#
-#    excludePaths:
-#        - ./*/*/FileToBeExcluded.php
-#
-#    checkMissingIterableValueType: false

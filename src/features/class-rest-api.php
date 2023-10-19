@@ -8,6 +8,7 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
+use WP_REST_Request;
 
 /**
  * Look for a special query var that indicates a query should not run.
@@ -29,15 +30,16 @@ final class Rest_Api implements Feature {
 	 * Add post_type to rest post query if the type param is set.
 	 *
 	 * @param array<array<int, string>|string> $query_args The existing query args.
-	 * @param \WP_REST_Request                 $request The REST request.
+	 * @param WP_REST_Request                  $request The REST request.
 	 * @return array<array<int, string>|string>
 	 */
-	public function add_type_param( $query_args, $request ): array { // @phpstan-ignore-line
+	public function add_type_param( $query_args, $request ): array {
 		if ( ! empty( $request->get_param( 'type' ) ) && is_string( $request->get_param( 'type' ) ) ) {
 			$types                   = explode( ',', $request->get_param( 'type' ) );
 			$types                   = array_filter( $types, 'post_type_exists' );
 			$query_args['post_type'] = $types;
 		}
+
 		return $query_args;
 	}
 }

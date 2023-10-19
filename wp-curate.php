@@ -7,7 +7,7 @@
  * Author: Alley Interactive
  * Author URI: https://github.com/alleyinteractive/wp-curate
  * Requires at least: 5.9
- * Tested up to: 6.2
+ * Tested up to: 6.3
  *
  * Text Domain: wp-curate
  * Domain Path: /languages/
@@ -35,7 +35,7 @@ if ( ! file_exists( __DIR__ . '/vendor/wordpress-autoload.php' ) ) {
 	if ( ! class_exists( \Composer\InstalledVersions::class ) ) {
 		\add_action(
 			'admin_notices',
-			function() {
+			function () {
 				?>
 				<div class="notice notice-error">
 					<p><?php esc_html_e( 'Composer is not installed and wp-curate cannot load. Try using a `*-built` branch if the plugin is being loaded as a submodule.', 'wp-curate' ); ?></p>

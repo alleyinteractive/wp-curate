@@ -60,7 +60,7 @@ final class Query_Block_Context implements Feature {
 	 * @param WP_Block|null                        $parent_block Parent block, if any.
 	 * @return array<string, mixed> Updated context.
 	 */
-	public function filter_query_context( $context, $parsed_block, $parent_block ) {
+	public function filter_query_context( $context, $parsed_block, $parent_block ): array {
 		$current_block      = new Parsed_Block( $parsed_block );
 		$current_block_type = $this->block_type_registry->get_registered( (string) $current_block->block_name() );
 		$plugin_block_type  = $this->block_type_registry->get_registered( 'wp-curate/query' );
