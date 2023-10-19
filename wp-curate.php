@@ -6,11 +6,10 @@
  * Version: 1.1.0
  * Author: Alley Interactive
  * Author URI: https://github.com/alleyinteractive/wp-curate
- * Requires at least: 5.9
+ * Requires at least: 6.3
  * Tested up to: 6.3
  *
  * Text Domain: wp-curate
- * Domain Path: /languages/
  *
  * @package wp-curate
  */

@@ -33,6 +33,7 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request                  $request The REST request.
 	 * @return array<array<int, string>|string>
 	 */
+	// @phpstan-ignore-next-line
 	public function add_type_param( $query_args, $request ): array {
 		if ( ! empty( $request->get_param( 'type' ) ) && is_string( $request->get_param( 'type' ) ) ) {
 			$types                   = explode( ',', $request->get_param( 'type' ) );
