@@ -34,9 +34,11 @@ final class Rest_Api implements Feature {
 	 * @return array<array<int, string>|string>
 	 */
 	// @phpstan-ignore-next-line
-	public function add_type_param( $query_args, $request ): array {
-		if ( ! empty( $request->get_param( 'type' ) ) && is_string( $request->get_param( 'type' ) ) ) {
-			$types                   = explode( ',', $request->get_param( 'type' ) );
+	public function add_type_param( $query_args, $request ): array { // phpcs:ignore Squiz.Commenting.FunctionComment.WrongStyle
+		$type = $request->get_param( 'type' );
+
+		if ( ! empty( $type ) && is_string( $type ) ) {
+			$types                   = explode( ',', $type );
 			$types                   = array_filter( $types, 'post_type_exists' );
 			$query_args['post_type'] = $types;
 		}
