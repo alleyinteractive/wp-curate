@@ -53,6 +53,13 @@
       },
       "type": "array"
     },
+    "manualPosts": {
+      "default": [],
+      "items": {
+        "type": "number"
+      },
+      "type": "array"
+    },
     "posts": {
       "default": [],
       "items": {
