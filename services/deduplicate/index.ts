@@ -11,7 +11,7 @@ interface Block {
     backfillPosts?: number[];
     deduplication?: string;
     numberOfPosts?: number;
-    posts?: number[];
+    manualPosts?: any[];
     postTypes?: string[];
     query?: {
       include?: number[];
@@ -123,7 +123,7 @@ export function mainDedupe() {
     const {
       backfillPosts = [],
       deduplication = 'inherit',
-      posts = [],
+      manualPosts = [],
       numberOfPosts = 5,
       postTypes = ['post'],
     } = attributes;
@@ -132,13 +132,16 @@ export function mainDedupe() {
     }
     const postTypeString = postTypes.join(',');
     let postIndex = 0;
+
     // New array to hold our final list of posts.
-    const allPosts: Array<number | undefined> = [];
+    const allPostIds: Array<number | undefined> = [];
+
     // New array to hold the pinned posts in the order they should be.
-    const manualPostIdArray: Array<number | null> = posts;
+    const manualPostIdArray: Array<number | null> = manualPosts;
 
     // Remove any pinned posts from the backfilled posts list.
     const filteredPosts = backfillPosts.filter((post) => !manualPostIdArray.includes(post));
+
     // Fill out the array with nulls where there isn't a pinned post.
     for (let i = 0; i < numberOfPosts; i += 1) {
       if (!manualPostIdArray[i]) {
@@ -147,10 +150,11 @@ export function mainDedupe() {
     }
 
     // Loop through the pinned posts/null and generate the final list.
-    manualPostIdArray.forEach((post, index) => {
+    manualPostIdArray.forEach((_post, index) => {
       let manualPost;
       let backfillPost;
       let isUnique = false;
+
       // If there is a pinned post, use it. Otherwise, use the next unused backfilled post.
       if (manualPostIdArray[index] !== null) {
         manualPost = manualPostIdArray[index];
@@ -170,21 +174,31 @@ export function mainDedupe() {
           postIndex += 1;
         } while (isUnique === false && postIndex <= filteredPosts.length);
       }
-      allPosts.push(manualPost ?? backfillPost);
+      allPostIds.push(manualPost || backfillPost);
     });
-    // Set the query attribute to pass to the child blocks.
-    const query = {
-      perPage: numberOfPosts,
-      postType: 'post',
-      type: postTypeString,
-      include: allPosts.join(','),
-      orderby: 'include',
-    };
+
     // Update the query block with the new query.
     // @ts-ignore
-    dispatch('core/block-editor').updateBlockAttributes(queryBlock.clientId, { query, queryId: 0 });
+    dispatch('core/block-editor')
+      .updateBlockAttributes(
+        queryBlock.clientId,
+        {
+          // Set the query attribute to pass to the child blocks.
+          query: {
+            perPage: numberOfPosts,
+            postType: 'post',
+            type: postTypeString,
+            include: allPostIds.join(','),
+            orderby: 'include',
+          },
+          queryId: 0,
+          posts: allPostIds,
+        },
+      );
   });
+
   running = false;
+
   if (redo) {
     // Another run has been requested. Let's run it.
     mainDedupe();
