@@ -6,8 +6,7 @@ interface EditProps {
     minNumberOfPosts?: number;
     numberOfPosts?: number;
     offset?: number;
-    posts?: number[];
-    manualPosts?: any[];
+    posts?: any[];
     query: {
       [key: string]: string | number | number[] | string[];
     }

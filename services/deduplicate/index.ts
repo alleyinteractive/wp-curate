@@ -11,7 +11,7 @@ interface Block {
     backfillPosts?: number[];
     deduplication?: string;
     numberOfPosts?: number;
-    manualPosts?: any[];
+    posts?: number[];
     postTypes?: string[];
     query?: {
       include?: number[];
@@ -123,7 +123,7 @@ export function mainDedupe() {
     const {
       backfillPosts = [],
       deduplication = 'inherit',
-      manualPosts = [],
+      posts = [],
       numberOfPosts = 5,
       postTypes = ['post'],
     } = attributes;
@@ -137,7 +137,7 @@ export function mainDedupe() {
     const allPostIds: Array<number | undefined> = [];
 
     // New array to hold the pinned posts in the order they should be.
-    const manualPostIdArray: Array<number | null> = manualPosts;
+    const manualPostIdArray: Array<number | null> = posts;
 
     // Remove any pinned posts from the backfilled posts list.
     const filteredPosts = backfillPosts.filter((post) => !manualPostIdArray.includes(post));
@@ -192,7 +192,6 @@ export function mainDedupe() {
             orderby: 'include',
           },
           queryId: 0,
-          posts: allPostIds,
         },
       );
   });

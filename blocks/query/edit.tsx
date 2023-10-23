@@ -55,7 +55,7 @@ export default function Edit({
     minNumberOfPosts = 1,
     numberOfPosts = 5,
     offset = 0,
-    manualPosts = [],
+    posts: manualPosts = [],
     postTypes = ['post'],
     searchTerm = '',
     terms = {},
@@ -181,7 +181,7 @@ export default function Edit({
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
     newManualPosts.splice(index, 1, id);
-    setAttributes({ manualPosts: newManualPosts });
+    setAttributes({ posts: newManualPosts });
   };
 
   const setTerms = ((type: string, newTerms: Term[]) => {
@@ -203,7 +203,7 @@ export default function Edit({
   const setNumberOfPosts = (newValue?: number) => {
     setAttributes({
       numberOfPosts: newValue,
-      manualPosts: manualPosts.slice(0, newValue),
+      posts: manualPosts.slice(0, newValue),
     });
   };
 
