@@ -345,7 +345,7 @@ export default function Edit({
                   <SelectControl
                     label={sprintf(
                       __('%s Relation', 'wp-curate'),
-                      availableTaxonomies[taxonomy].name || taxonomy
+                      availableTaxonomies[taxonomy].name || taxonomy,
                     )}
                     help={__('AND: Posts must have all selected terms. OR: Posts may have one or more selected terms.', 'wp-curate')}
                     options={[
