@@ -51,7 +51,7 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 
 		if ( isset( $attributes['terms'] ) && is_array( $attributes['terms'] ) && count( $attributes['terms'] ) > 0 ) {
 			$args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-				'relation' => 'AND',
+				'relation' => $attributes['taxRelation'] ?? 'AND',
 			];
 
 			foreach ( $attributes['terms'] as $taxonomy => $terms ) {
@@ -59,6 +59,7 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 					$args['tax_query'][] = [
 						'taxonomy' => $taxonomy,
 						'terms'    => array_column( $terms, 'id' ),
+						'operator' => $attributes['termsRelation'][ $taxonomy ] ?? 'AND',
 					];
 				}
 			}
