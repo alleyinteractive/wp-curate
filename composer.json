@@ -1,65 +1,65 @@
 {
-    "name": "alleyinteractive/wp-curate",
-    "description": "Plugin to curate homepages and other landing pages",
-    "type": "wordpress-plugin",
-    "keywords": [
-        "alleyinteractive",
-        "wp-curate"
-    ],
-    "homepage": "https://github.com/alleyinteractive/wp-curate",
-    "license": "GPL-2.0-or-later",
-    "authors": [
-        {
-            "name": "Alley Interactive",
-            "email": "info@alley.com"
-        }
-    ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:alleyinteractive/wp-type-extensions.git"
-        }
-    ],
-    "require": {
-        "php": "^8.0",
-        "alleyinteractive/composer-wordpress-autoloader": "^1.0",
-        "alleyinteractive/traverse-reshape": "^2.0",
-        "alleyinteractive/wp-type-extensions": "dev-main"
-    },
-    "require-dev": {
-        "alleyinteractive/alley-coding-standards": "^2.0",
-        "mantle-framework/testkit": "^0.12",
-        "szepeviktor/phpstan-wordpress": "^1.1"
-    },
-    "config": {
-        "allow-plugins": {
-            "alleyinteractive/composer-wordpress-autoloader": true,
-            "dealerdirect/phpcodesniffer-composer-installer": true,
-            "pestphp/pest-plugin": true
-        },
-        "sort-packages": true
-    },
-    "extra": {
-        "wordpress-autoloader": {
-            "autoload": {
-                "Alley\\WP\\WP_Curate": "src"
-            },
-            "autoload-dev": {
-                "Alley\\WP\\WP_Curate\\Tests": "tests"
-            }
-        }
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "scripts": {
-        "phpcbf": "phpcbf .",
-        "phpcs": "phpcs .",
-        "phpunit": "phpunit",
-        "phpstan": "phpstan --memory-limit=512M",
-        "test": [
-            "@phpcs",
-            "@phpstan",
-            "@phpunit"
-        ]
+  "name": "alleyinteractive/wp-curate",
+  "description": "Plugin to curate homepages and other landing pages",
+  "type": "wordpress-plugin",
+  "keywords": [
+    "alleyinteractive",
+    "wp-curate"
+  ],
+  "homepage": "https://github.com/alleyinteractive/wp-curate",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Alley Interactive",
+      "email": "info@alley.com"
     }
+  ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "git@github.com:alleyinteractive/wp-type-extensions.git"
+    }
+  ],
+  "require": {
+    "php": "^8.1",
+    "alleyinteractive/composer-wordpress-autoloader": "^1.0",
+    "alleyinteractive/traverse-reshape": "^2.0",
+    "alleyinteractive/wp-type-extensions": "dev-main"
+  },
+  "require-dev": {
+    "alleyinteractive/alley-coding-standards": "^2.0",
+    "mantle-framework/testkit": "^0.12",
+    "szepeviktor/phpstan-wordpress": "^1.1"
+  },
+  "config": {
+    "allow-plugins": {
+      "alleyinteractive/composer-wordpress-autoloader": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "pestphp/pest-plugin": true
+    },
+    "sort-packages": true
+  },
+  "extra": {
+    "wordpress-autoloader": {
+      "autoload": {
+        "Alley\\WP\\WP_Curate": "src"
+      },
+      "autoload-dev": {
+        "Alley\\WP\\WP_Curate\\Tests": "tests"
+      }
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "scripts": {
+    "phpcbf": "phpcbf .",
+    "phpcs": "phpcs .",
+    "phpunit": "phpunit",
+    "phpstan": "phpstan --memory-limit=512M",
+    "test": [
+      "@phpcs",
+      "@phpstan",
+      "@phpunit"
+    ]
+  }
 }

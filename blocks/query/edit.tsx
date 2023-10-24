@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -16,6 +17,7 @@ import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
+import { Template } from '@wordpress/blocks';
 
 import {
   mainDedupe,
@@ -191,7 +193,6 @@ export default function Edit({
       );
       path += termQueryArgs;
 
-      // setLoading(true);
       ApiFetch({
         path,
       }).then((response) => {
@@ -261,7 +262,6 @@ export default function Edit({
   }
   manualPosts = manualPosts.slice(0, numberOfPosts); // eslint-disable-line no-param-reassign
 
-  // @ts-ignore
   const TEMPLATE: Template[] = [
     [
       'core/post-template',
@@ -329,7 +329,6 @@ export default function Edit({
           />
         </PanelBody>
 
-        { /* @ts-ignore */ }
         <PanelBody
           title={__('Select Posts', 'wp-curate')}
           initialOpen={false}
@@ -354,7 +353,6 @@ export default function Edit({
           ))}
         </PanelBody>
 
-        { /* @ts-ignore */ }
         <PanelBody
           title={__('Query Parameters', 'wp-curate')}
           initialOpen={false}

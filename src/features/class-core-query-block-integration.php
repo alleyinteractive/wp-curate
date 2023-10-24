@@ -36,7 +36,7 @@ final class Core_Query_Block_Integration implements Feature {
 	 * @param WP_Block             $block Block instance.
 	 * @return array<string, mixed> Updated query arguments.
 	 */
-	public function filter_query_vars( $query, $block ) {
+	public function filter_query_vars( $query, $block ): array {
 		[ $found_rows, $include, $orderby, $post_type ] = (array) traverse(
 			$block,
 			[
