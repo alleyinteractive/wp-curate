@@ -39,7 +39,6 @@ function register_slotfills_scripts(): void {
 		);
 		wp_set_script_translations( 'wp-curate_slotfills', 'wp-curate' );
 	}
-
 }
 add_action( 'init', __NAMESPACE__ . '\register_slotfills_scripts' );
 

@@ -59,15 +59,14 @@ final class Positioned_Post_Queries implements Post_Queries {
 
 		$backfill     = new Exclude_Queries( $ids, $args['posts_per_page'], $this->origin );
 		$backfill_ids = $backfill->query( $args )->post_ids();
-
-		$out = $this->positioned;
+		$out          = $this->positioned;
 
 		// Insert dynamic posts into the available slots in the map of positioned posts.
 		do {
 			if ( null === current( $out ) ) {
 				$out[ key( $out ) ] = array_shift( $backfill_ids );
 			}
-		} while ( next( $out ) !== false && count( $backfill_ids ) > 0 );
+		} while ( next( $out ) !== false && count( $backfill_ids ) > 0 ); // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
 
 		// Respect that 'posts_per_page' might have been higher than the length of the map.
 		array_push( $out, ...$backfill_ids );

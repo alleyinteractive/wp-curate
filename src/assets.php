@@ -33,11 +33,11 @@ function action_wp_enqueue_scripts(): void {
 	*/
 
 	// wp_enqueue_script(
-	// 	'wp-curate-example-entry',
-	// 	get_entry_asset_url( 'example-entry' ),
-	// 	get_asset_dependency_array( 'example-entry' ),
-	// 	get_asset_version( 'example-entry' ),
-	// 	true
+	//  'wp-curate-example-entry',
+	//  get_entry_asset_url( 'example-entry' ),
+	//  get_asset_dependency_array( 'example-entry' ),
+	//  get_asset_version( 'example-entry' ),
+	//  true
 	// );
 	// wp_set_script_translations( 'wp-curate-example-entry', 'wp-curate' );
 }
@@ -57,11 +57,11 @@ function action_admin_enqueue_scripts(): void {
 	*/
 
 	// wp_enqueue_script(
-	// 	'wp-curate-admin-handle',
-	// 	get_entry_asset_url( 'admin-handle' ),
-	// 	get_asset_dependency_array( 'admin-handle' ),
-	// 	get_asset_version( 'admin-handle' ),
-	// 	true
+	//  'wp-curate-admin-handle',
+	//  get_entry_asset_url( 'admin-handle' ),
+	//  get_asset_dependency_array( 'admin-handle' ),
+	//  get_asset_version( 'admin-handle' ),
+	//  true
 	// );
 	// wp_set_script_translations( 'wp-curate-admin-handle', 'wp-curate' );
 }
@@ -81,11 +81,11 @@ function action_enqueue_block_editor_assets(): void {
 	*/
 
 	// wp_enqueue_script(
-	// 	'wp-curate-slotfills',
-	// 	get_entry_asset_url( 'slotfills' ),
-	// 	get_asset_dependency_array( 'slotfills' ),
-	// 	get_asset_version( 'slotfills' ),
-	// 	true
+	//  'wp-curate-slotfills',
+	//  get_entry_asset_url( 'slotfills' ),
+	//  get_asset_dependency_array( 'slotfills' ),
+	//  get_asset_version( 'slotfills' ),
+	//  true
 	// );
 	// wp_set_script_translations( 'wp-curate-slotfills', 'wp-curate' );
 }
@@ -96,7 +96,7 @@ function action_enqueue_block_editor_assets(): void {
  * @param string $path The file path to validate.
  * @return bool        True if the path is valid and the file exists.
  */
-function validate_path( string $path ) : bool {
+function validate_path( string $path ): bool {
 	return 0 === validate_file( $path ) && file_exists( $path );
 }
 
@@ -152,7 +152,7 @@ function get_entry_asset_map( string $dir_entry_name ): array {
  *
  * @return array<int, string> The asset's dependency array.
  */
-function get_asset_dependency_array( string $dir_entry_name ) : array {
+function get_asset_dependency_array( string $dir_entry_name ): array {
 	$asset_arr = get_entry_asset_map( $dir_entry_name );
 	return $asset_arr['dependencies'] ?? [];
 }
@@ -164,7 +164,7 @@ function get_asset_dependency_array( string $dir_entry_name ) : array {
  *
  * @return string The asset's version hash.
  */
-function get_asset_version( string $dir_entry_name ) : string {
+function get_asset_version( string $dir_entry_name ): string {
 	$asset_arr = get_entry_asset_map( $dir_entry_name );
 	return $asset_arr['version'] ?? '1.0';
 }

@@ -10,13 +10,10 @@ namespace Alley\WP\WP_Curate;
 use Alley\WP\Post_IDs\Used_Post_IDs;
 use Alley\WP\Post_Queries\Default_Post_Queries;
 use Alley\WP\Post_Query\Global_Post_Query;
-use Exception;
 use WP_Block_Type_Registry;
 
 /**
  * Instantiate the plugin.
- *
- * @throws Exception For bad parameters.
  */
 function main(): void {
 	$stop_queries_var = 'wp_curate_stop_queries';
