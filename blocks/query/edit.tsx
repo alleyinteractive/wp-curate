@@ -9,6 +9,7 @@ import {
   PanelRow,
   RadioControl,
   RangeControl,
+  SelectControl,
   TextControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
@@ -59,6 +60,8 @@ export default function Edit({
     postTypes = ['post'],
     searchTerm = '',
     terms = {},
+    termRelations = {},
+    taxRelation = 'AND',
   },
   setAttributes,
 }: EditProps) {
@@ -93,16 +96,27 @@ export default function Edit({
   const [availableTaxonomies, setAvailableTaxonomies] = useState<Taxonomies>({});
   const [availableTypes, setAvailableTypes] = useState<Types>({});
 
+  const taxCount = allowedTaxonomies.reduce((acc: number, taxonomy: string) => {
+    const hasTax = terms[taxonomy]?.length > 0 ? 1 : 0;
+    return acc + hasTax;
+  }, 0);
+
   let termQueryArgs = '';
   if (Object.keys(availableTaxonomies).length > 0) {
     allowedTaxonomies.forEach((taxonomy) => {
       if (terms[taxonomy]?.length > 0) {
         const restBase = availableTaxonomies[taxonomy].rest_base;
         if (restBase) {
-          termQueryArgs += `&${restBase}=${terms[taxonomy].map((term) => term.id).join(',')}`;
+          termQueryArgs += `&${restBase}[terms]=${terms[taxonomy].map((term) => term.id).join(',')}`;
+          if (termRelations[taxonomy] !== '' && typeof termRelations[taxonomy] !== 'undefined') {
+            termQueryArgs += `&${restBase}[operator]=${termRelations[taxonomy]}`;
+          }
         }
       }
     });
+    if (taxCount > 1) {
+      termQueryArgs += `&tax_relation=${taxRelation}`;
+    }
   }
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
@@ -198,6 +212,14 @@ export default function Edit({
       [type]: cleanedTerms,
     };
     setAttributes({ terms: newTermAttrs });
+  });
+
+  const setTermRelation = ((type: string, relation: string) => {
+    const newTermRelationAttrs = {
+      ...termRelations,
+      [type]: relation,
+    };
+    setAttributes({ termRelations: newTermRelationAttrs });
   });
 
   const setNumberOfPosts = (newValue?: number) => {
@@ -319,9 +341,49 @@ export default function Edit({
                   onSelect={(newCategories: Term[]) => setTerms(taxonomy, newCategories)}
                   multiple
                 />
+                {terms[taxonomy]?.length > 1 ? (
+                  <SelectControl
+                    label={sprintf(
+                      __('%s Relation', 'wp-curate'),
+                      availableTaxonomies[taxonomy].name || taxonomy
+                    )}
+                    help={__('AND: Posts must have all selected terms. OR: Posts may have one or more selected terms.', 'wp-curate')}
+                    options={[
+                      {
+                        label: __('AND', 'wp-curate'),
+                        value: 'AND',
+                      },
+                      {
+                        label: __('OR', 'wp-curate'),
+                        value: 'OR',
+                      },
+                    ]}
+                    onChange={(newValue) => setTermRelation(taxonomy, newValue)}
+                    value={termRelations[taxonomy]}
+                  />
+                ) : null}
+                <hr />
               </>
             ))
           ) : null}
+          {taxCount > 1 ? (
+            <SelectControl
+              label={__('Taxonomy Relation', 'wp-curate')}
+              help={__('AND: Posts must meet all selected taxonomy requirements. OR: Posts may have meet one or more selected taxonomy requirements.', 'wp-curate')}
+              options={[
+                {
+                  label: __('AND', 'wp-curate'),
+                  value: 'AND',
+                },
+                {
+                  label: __('OR', 'wp-curate'),
+                  value: 'OR',
+                },
+              ]}
+              onChange={(newValue) => setAttributes({ taxRelation: newValue })}
+              value={taxRelation}
+            />
+          ) : null }
           <TextControl
             label={__('Search Term', 'wp-curate')}
             onChange={(next) => setAttributes({ searchTerm: next })}

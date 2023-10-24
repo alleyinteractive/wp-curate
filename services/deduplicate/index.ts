@@ -121,13 +121,13 @@ export function mainDedupe() {
   queryBlocks.forEach((queryBlock) => {
     const { attributes } = queryBlock;
     const {
-      backfillPosts = [],
+      backfillPosts = null,
       deduplication = 'inherit',
       posts = [],
       numberOfPosts = 5,
       postTypes = ['post'],
     } = attributes;
-    if (!backfillPosts.length) {
+    if (!backfillPosts) {
       return;
     }
     const postTypeString = postTypes.join(',');
