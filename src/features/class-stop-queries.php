@@ -42,7 +42,7 @@ final class Stop_Queries implements Feature {
 	 * @param WP_Block             $block Block instance.
 	 * @return array<string, mixed> Updated query arguments.
 	 */
-	public function filter_query_loop_block_query_vars( $query, $block ) {
+	public function filter_query_loop_block_query_vars( $query, $block ): array {
 		if ( isset( $block->context['query'][ $this->query_var ] ) ) {
 			$query[ $this->query_var ] = $block->context['query'][ $this->query_var ];
 		}
@@ -53,7 +53,7 @@ final class Stop_Queries implements Feature {
 	/**
 	 * Filters the posts array before the query takes place.
 	 *
-	 * @param WP_Post[]|int[]|null $posts An array of post data or null.
+	 * @param WP_Post[]|int[]|null $posts An array of post objects, post ids, or null.
 	 * @param WP_Query             $query The WP_Query instance.
 	 * @return  WP_Post[]|int[]|null Updated post data.
 	 */

@@ -5,7 +5,6 @@
  * @package wp-curate
  */
 
-use Byline_Manager\Models\Profile;
 use Alley\WP\WP_Curate\Supported_Post_Types;
 
 /**

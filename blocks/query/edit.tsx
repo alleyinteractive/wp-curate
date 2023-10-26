@@ -1,13 +1,15 @@
+/* eslint-disable camelcase */
 import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
-import ApiFetch from '@wordpress/api-fetch';
+import apiFetch from '@wordpress/api-fetch';
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import {
   PanelBody,
   PanelRow,
   RadioControl,
   RangeControl,
+  SelectControl,
   TextControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
@@ -16,61 +18,22 @@ import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
+import { Template } from '@wordpress/blocks';
+import type {
+  EditProps,
+  Option,
+  Taxonomies,
+  Term,
+  Types,
+} from './types';
 
 import {
   mainDedupe,
 } from '../../services/deduplicate';
 
+import buildTermQueryArgs from '../../services/buildTermQueryArgs';
+
 import './index.scss';
-
-interface EditProps {
-  attributes: {
-    backfillPosts?: number[];
-    deduplication?: string;
-    maxNumberOfPosts?: number;
-    minNumberOfPosts?: number;
-    numberOfPosts?: number;
-    offset?: number;
-    posts?: any[];
-    query: {
-      [key: string]: string | number | number[] | string[];
-    }
-    postTypes?: string[];
-    searchTerm?: string;
-    terms?: {
-      [key: string]: any[];
-    };
-  };
-  setAttributes: (attributes: any) => void;
-}
-
-interface Taxonomies {
-  [key: string]: {
-    name: string;
-    slug: string;
-    rest_base: string;
-  };
-}
-
-interface Types {
-  [key: string]: {
-    name: string;
-    slug: string;
-    rest_base: string;
-  };
-}
-
-interface Option {
-  label: string;
-  value: string;
-}
-
-interface Term {
-  id: number;
-  title: string;
-  url: string;
-  type: string;
-}
 
 interface Window {
   wpCurateQueryBlock: {
@@ -97,8 +60,10 @@ export default function Edit({
     offset = 0,
     posts: manualPosts = [],
     postTypes = ['post'],
-    searchTerm,
+    searchTerm = '',
     terms = {},
+    termRelations = {},
+    taxRelation = 'AND',
   },
   setAttributes,
 }: EditProps) {
@@ -108,6 +73,17 @@ export default function Edit({
       allowedTaxonomies = [],
     } = {},
   } = (window as any as Window);
+
+  const andOrOptions = [
+    {
+      label: __('AND', 'wp-curate'),
+      value: 'AND',
+    },
+    {
+      label: __('OR', 'wp-curate'),
+      value: 'OR',
+    },
+  ];
 
   // @ts-ignore
   const [isPostDeduplicating, postTypeObject] = useSelect(
@@ -133,17 +109,15 @@ export default function Edit({
   const [availableTaxonomies, setAvailableTaxonomies] = useState<Taxonomies>({});
   const [availableTypes, setAvailableTypes] = useState<Types>({});
 
-  let termQueryArgs = '';
-  if (Object.keys(availableTaxonomies).length > 0) {
-    allowedTaxonomies.forEach((taxonomy) => {
-      if (terms[taxonomy]?.length > 0) {
-        const restBase = availableTaxonomies[taxonomy].rest_base;
-        if (restBase) {
-          termQueryArgs += `&${restBase}=${terms[taxonomy].map((term) => term.id).join(',')}`;
-        }
-      }
-    });
-  }
+  const taxCount = allowedTaxonomies.filter((taxonomy: string) => terms[taxonomy]?.length > 0).length; // eslint-disable-line max-len
+
+  const termQueryArgs = buildTermQueryArgs(
+    allowedTaxonomies,
+    terms,
+    availableTaxonomies,
+    termRelations,
+    taxRelation,
+  );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
   const postTypeString = postTypes.join(',');
@@ -151,10 +125,7 @@ export default function Edit({
   // Fetch available taxonomies.
   useEffect(() => {
     const fetchTaxonomies = async () => {
-      const path = '/wp/v2/taxonomies';
-      ApiFetch({
-        path,
-      }).then((response) => {
+      apiFetch({ path: '/wp/v2/taxonomies' }).then((response) => {
         setAvailableTaxonomies(response as Taxonomies);
       });
     };
@@ -164,10 +135,7 @@ export default function Edit({
   // Fetch available post types.
   useEffect(() => {
     const fetchTypes = async () => {
-      const path = '/wp/v2/types';
-      ApiFetch({
-        path,
-      }).then((response) => {
+      apiFetch({ path: '/wp/v2/types' }).then((response) => {
         setAvailableTypes(response as Types);
       });
     };
@@ -189,10 +157,9 @@ export default function Edit({
           per_page: 20,
         },
       );
-      path += termQueryArgs;
+      path += `&${termQueryArgs}`;
 
-      // setLoading(true);
-      ApiFetch({
+      apiFetch({
         path,
       }).then((response) => {
         const postIds: number[] = (response as WP_REST_API_Posts).map(
@@ -247,6 +214,14 @@ export default function Edit({
     setAttributes({ terms: newTermAttrs });
   });
 
+  const setTermRelation = ((type: string, relation: string) => {
+    const newTermRelationAttrs = {
+      ...termRelations,
+      [type]: relation,
+    };
+    setAttributes({ termRelations: newTermRelationAttrs });
+  });
+
   const setNumberOfPosts = (newValue?: number) => {
     setAttributes({
       numberOfPosts: newValue,
@@ -259,9 +234,9 @@ export default function Edit({
       manualPosts[i] = null; // eslint-disable-line no-param-reassign
     }
   }
+
   manualPosts = manualPosts.slice(0, numberOfPosts); // eslint-disable-line no-param-reassign
 
-  // @ts-ignore
   const TEMPLATE: Template[] = [
     [
       'core/post-template',
@@ -294,31 +269,24 @@ export default function Edit({
   return (
     <>
       <div {...useBlockProps()}>
-        <InnerBlocks
-          template={TEMPLATE}
-        />
+        <InnerBlocks template={TEMPLATE} />
       </div>
 
       <InspectorControls>
-        { /* @ts-ignore */ }
         <PanelBody
           title={__('Setup', 'wp-curate')}
           initialOpen
         >
           {minNumberOfPosts !== undefined && minNumberOfPosts !== maxNumberOfPosts ? (
-            <>
-              { /* @ts-ignore */ }
-              <RangeControl
-                label={__('Number of Posts', 'wp-curate')}
-                help={__('The maximum number of posts to show.', 'wp-curate')}
-                value={numberOfPosts}
-                onChange={setNumberOfPosts}
-                min={minNumberOfPosts}
-                max={maxNumberOfPosts}
-              />
-            </>
+            <RangeControl
+              label={__('Number of Posts', 'wp-curate')}
+              help={__('The maximum number of posts to show.', 'wp-curate')}
+              value={numberOfPosts}
+              onChange={setNumberOfPosts}
+              min={minNumberOfPosts}
+              max={maxNumberOfPosts}
+            />
           ) : null}
-          { /* @ts-ignore */ }
           <RangeControl
             label={__('Offset', 'wp-curate')}
             help={__('The number of posts to pass over.', 'wp-curate')}
@@ -329,14 +297,12 @@ export default function Edit({
           />
         </PanelBody>
 
-        { /* @ts-ignore */ }
         <PanelBody
           title={__('Select Posts', 'wp-curate')}
           initialOpen={false}
           className="manual-posts"
         >
-          {manualPosts.map((post, index) => (
-            /* @ts-ignore */
+          {manualPosts.map((_post, index) => (
             <PanelRow className={classnames(
               'manual-posts__container',
               { 'manual-posts__container--selected': manualPosts[index] },
@@ -347,14 +313,13 @@ export default function Edit({
                 allowedTypes={allowedPostTypes}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
-                value={manualPosts[index] ?? 0}
+                value={manualPosts[index] || 0}
                 className="manual-posts__picker"
               />
             </PanelRow>
           ))}
         </PanelBody>
 
-        { /* @ts-ignore */ }
         <PanelBody
           title={__('Query Parameters', 'wp-curate')}
           initialOpen={false}
@@ -370,20 +335,41 @@ export default function Edit({
               <>
                 { /* @ts-ignore */ }
                 <TermSelector
-                  label={availableTaxonomies[taxonomy].name}
+                  label={availableTaxonomies[taxonomy].name || taxonomy}
                   subTypes={[taxonomy]}
                   selected={terms[taxonomy] ?? []}
                   onSelect={(newCategories: Term[]) => setTerms(taxonomy, newCategories)}
                   multiple
                 />
+                {terms[taxonomy]?.length > 1 ? (
+                  <SelectControl
+                    label={sprintf(
+                      __('%s Relation', 'wp-curate'),
+                      availableTaxonomies[taxonomy].name || taxonomy,
+                    )}
+                    help={__('AND: Posts must have all selected terms. OR: Posts may have one or more selected terms.', 'wp-curate')}
+                    options={andOrOptions}
+                    onChange={(newValue) => setTermRelation(taxonomy, newValue)}
+                    value={termRelations[taxonomy] ?? 'OR'}
+                  />
+                ) : null}
+                <hr />
               </>
             ))
           ) : null}
-          { /* @ts-ignore */ }
+          {taxCount > 1 ? (
+            <SelectControl
+              label={__('Taxonomy Relation', 'wp-curate')}
+              help={__('AND: Posts must meet all selected taxonomy requirements. OR: Posts may have meet one or more selected taxonomy requirements.', 'wp-curate')}
+              options={andOrOptions}
+              onChange={(newValue) => setAttributes({ taxRelation: newValue })}
+              value={taxRelation}
+            />
+          ) : null }
           <TextControl
             label={__('Search Term', 'wp-curate')}
             onChange={(next) => setAttributes({ searchTerm: next })}
-            value={searchTerm as string}
+            value={searchTerm}
           />
         </PanelBody>
       </InspectorControls>
