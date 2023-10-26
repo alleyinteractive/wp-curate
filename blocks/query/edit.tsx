@@ -109,10 +109,7 @@ export default function Edit({
   const [availableTaxonomies, setAvailableTaxonomies] = useState<Taxonomies>({});
   const [availableTypes, setAvailableTypes] = useState<Types>({});
 
-  const taxCount = allowedTaxonomies.reduce((acc: number, taxonomy: string) => {
-    const hasTax = terms[taxonomy]?.length > 0 ? 1 : 0;
-    return acc + hasTax;
-  }, 0);
+  const taxCount = allowedTaxonomies.filter((taxonomy: string) => terms[taxonomy]?.length > 0).length; // eslint-disable-line max-len
 
   const termQueryArgs = buildTermQueryArgs(
     allowedTaxonomies,

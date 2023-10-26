@@ -8,17 +8,15 @@
  * @param string taxRelation The AND/OR relation used for all the terms.
  * @returns string The term query args.
  */
-export default function buildTermQueryArts(
+export default function buildTermQueryArgs(
   allowedTaxonomies: string[],
   terms: { [key: string]: any[] },
   availableTaxonomies: { [key: string]: any },
   termRelations: { [key: string]: string },
   taxRelation: string,
 ): string {
-  const taxCount = allowedTaxonomies.reduce((acc: number, taxonomy: string) => {
-    const hasTax = terms[taxonomy]?.length > 0 ? 1 : 0;
-    return acc + hasTax;
-  }, 0);
+  const taxCount = allowedTaxonomies.filter((taxonomy: string) => terms[taxonomy]?.length > 0).length; // eslint-disable-line max-len
+
   const termQueryArgs: string[] = [];
   if (Object.keys(availableTaxonomies).length > 0) {
     allowedTaxonomies.forEach((taxonomy) => {
