@@ -31,6 +31,8 @@ import {
   mainDedupe,
 } from '../../services/deduplicate';
 
+import buildTermQueryArgs from '../../services/buildTermQueryArgs';
+
 import './index.scss';
 
 interface Window {
@@ -72,6 +74,17 @@ export default function Edit({
     } = {},
   } = (window as any as Window);
 
+  const andOrOptions = [
+    {
+      label: __('AND', 'wp-curate'),
+      value: 'AND',
+    },
+    {
+      label: __('OR', 'wp-curate'),
+      value: 'OR',
+    },
+  ];
+
   // @ts-ignore
   const [isPostDeduplicating, postTypeObject] = useSelect(
     (select) => {
@@ -101,23 +114,13 @@ export default function Edit({
     return acc + hasTax;
   }, 0);
 
-  let termQueryArgs = '';
-  if (Object.keys(availableTaxonomies).length > 0) {
-    allowedTaxonomies.forEach((taxonomy) => {
-      if (terms[taxonomy]?.length > 0) {
-        const restBase = availableTaxonomies[taxonomy].rest_base;
-        if (restBase) {
-          termQueryArgs += `&${restBase}[terms]=${terms[taxonomy].map((term) => term.id).join(',')}`;
-          if (termRelations[taxonomy] !== '' && typeof termRelations[taxonomy] !== 'undefined') {
-            termQueryArgs += `&${restBase}[operator]=${termRelations[taxonomy]}`;
-          }
-        }
-      }
-    });
-    if (taxCount > 1) {
-      termQueryArgs += `&tax_relation=${taxRelation}`;
-    }
-  }
+  const termQueryArgs = buildTermQueryArgs(
+    allowedTaxonomies,
+    terms,
+    availableTaxonomies,
+    termRelations,
+    taxRelation,
+  );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
   const postTypeString = postTypes.join(',');
@@ -157,7 +160,7 @@ export default function Edit({
           per_page: 20,
         },
       );
-      path += termQueryArgs;
+      path += `&${termQueryArgs}`;
 
       apiFetch({
         path,
@@ -348,18 +351,9 @@ export default function Edit({
                       availableTaxonomies[taxonomy].name || taxonomy,
                     )}
                     help={__('AND: Posts must have all selected terms. OR: Posts may have one or more selected terms.', 'wp-curate')}
-                    options={[
-                      {
-                        label: __('AND', 'wp-curate'),
-                        value: 'AND',
-                      },
-                      {
-                        label: __('OR', 'wp-curate'),
-                        value: 'OR',
-                      },
-                    ]}
+                    options={andOrOptions}
                     onChange={(newValue) => setTermRelation(taxonomy, newValue)}
-                    value={termRelations[taxonomy]}
+                    value={termRelations[taxonomy] ?? 'OR'}
                   />
                 ) : null}
                 <hr />
@@ -370,16 +364,7 @@ export default function Edit({
             <SelectControl
               label={__('Taxonomy Relation', 'wp-curate')}
               help={__('AND: Posts must meet all selected taxonomy requirements. OR: Posts may have meet one or more selected taxonomy requirements.', 'wp-curate')}
-              options={[
-                {
-                  label: __('AND', 'wp-curate'),
-                  value: 'AND',
-                },
-                {
-                  label: __('OR', 'wp-curate'),
-                  value: 'OR',
-                },
-              ]}
+              options={andOrOptions}
               onChange={(newValue) => setAttributes({ taxRelation: newValue })}
               value={taxRelation}
             />
