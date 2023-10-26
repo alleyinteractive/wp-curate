@@ -59,7 +59,7 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 					$args['tax_query'][] = [
 						'taxonomy' => $taxonomy,
 						'terms'    => array_column( $terms, 'id' ),
-						'operator' => $attributes['termsRelation'][ $taxonomy ] ?? 'AND',
+						'operator' => is_array( $attributes['termRelations'] ) ? $attributes['termRelations'][ $taxonomy ] ?? 'AND' : 'AND',
 					];
 				}
 			}
