@@ -20,7 +20,6 @@ final class Supported_Post_Types {
 
 	/**
 	 * Set up.
-	 *
 	 */
 	public function __construct() {
 		$this->initialize_supported_post_types();
