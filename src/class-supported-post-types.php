@@ -49,7 +49,7 @@ final class Supported_Post_Types {
 	 *
 	 * @return string|false
 	 */
-	public function get_current_post_type(): string | false {
+	public function get_current_post_type(): string|false {
 		$post_type = '';
 
 		// Ensure we are in the admin before proceeding.
