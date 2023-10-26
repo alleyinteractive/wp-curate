@@ -14,7 +14,7 @@ final class Supported_Post_Types {
 	/**
 	 * Stores the supported types.
 	 *
-	 * @var array
+	 * @var string[]
 	 */
 	private array $supported_post_types;
 
@@ -29,7 +29,7 @@ final class Supported_Post_Types {
 	/**
 	 * Initialize the supported post types.
 	 */
-	public function initialize_supported_post_types() {
+	public function initialize_supported_post_types(): void {
 		// Get all post types.
 		$post_types                 = get_post_types( [], 'objects' );
 		$supported_post_types       = array_filter( $post_types, fn( $type ) => $type->public && use_block_editor_for_post_type( $type->name ) );
@@ -39,7 +39,7 @@ final class Supported_Post_Types {
 	/**
 	 * Get the supported post types.
 	 *
-	 * @return array
+	 * @return string[]
 	 */
 	public function get_supported_post_types() {
 		return apply_filters( 'wp_curate_supported_post_types', $this->supported_post_types );
@@ -48,9 +48,9 @@ final class Supported_Post_Types {
 	/**
 	 * Get the current post type.
 	 *
-	 * @return string
+	 * @return string|false
 	 */
-	public function get_current_post_type() {
+	public function get_current_post_type(): string | false {
 		$post_type = '';
 
 		// Ensure we are in the admin before proceeding.
