@@ -41,7 +41,7 @@ final class Supported_Post_Types {
 	 *
 	 * @return string[]
 	 */
-	public function get_supported_post_types() {
+	public function get_supported_post_types(): array {
 		return apply_filters( 'wp_curate_supported_post_types', $this->supported_post_types );
 	}
 
