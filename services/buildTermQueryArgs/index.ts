@@ -1,3 +1,11 @@
+interface Types {
+  [key: string]: {
+    name: string;
+    slug: string;
+    rest_base: string;
+  };
+}
+
 /**
  * Builds the term query args for the WP REST API.
  *
@@ -11,7 +19,7 @@
 export default function buildTermQueryArgs(
   allowedTaxonomies: string[],
   terms: { [key: string]: any[] },
-  availableTaxonomies: { [key: string]: any },
+  availableTaxonomies: Types,
   termRelations: { [key: string]: string },
   taxRelation: string,
 ): string {
