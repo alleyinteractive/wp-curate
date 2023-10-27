@@ -9,6 +9,7 @@ import {
   PanelRow,
   RadioControl,
   RangeControl,
+  SelectControl,
   TextControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
@@ -34,6 +35,8 @@ import type {
 import {
   mainDedupe,
 } from '../../services/deduplicate';
+
+import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 
 import './index.scss';
 
@@ -64,6 +67,8 @@ export default function Edit({
     postTypes = ['post'],
     searchTerm = '',
     terms = {},
+    termRelations = {},
+    taxRelation = 'AND',
   },
   setAttributes,
 }: EditProps) {
@@ -73,6 +78,17 @@ export default function Edit({
       allowedTaxonomies = [],
     } = {},
   } = (window as any as Window);
+
+  const andOrOptions = [
+    {
+      label: __('AND', 'wp-curate'),
+      value: 'AND',
+    },
+    {
+      label: __('OR', 'wp-curate'),
+      value: 'OR',
+    },
+  ];
 
   // @ts-ignore
   const [isPostDeduplicating, postTypeObject] = useSelect(
@@ -98,17 +114,15 @@ export default function Edit({
   const [availableTaxonomies, setAvailableTaxonomies] = useState<Taxonomies>({});
   const [availableTypes, setAvailableTypes] = useState<Types>({});
 
-  let termQueryArgs = '';
-  if (Object.keys(availableTaxonomies).length > 0) {
-    allowedTaxonomies.forEach((taxonomy) => {
-      if (terms[taxonomy]?.length > 0) {
-        const restBase = availableTaxonomies[taxonomy].rest_base;
-        if (restBase) {
-          termQueryArgs += `&${restBase}=${terms[taxonomy].map((term) => term.id).join(',')}`;
-        }
-      }
-    });
-  }
+  const taxCount = allowedTaxonomies.filter((taxonomy: string) => terms[taxonomy]?.length > 0).length; // eslint-disable-line max-len
+
+  const termQueryArgs = buildTermQueryArgs(
+    allowedTaxonomies,
+    terms,
+    availableTaxonomies,
+    termRelations,
+    taxRelation,
+  );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
   const postTypeString = postTypes.join(',');
@@ -148,7 +162,7 @@ export default function Edit({
           per_page: 20,
         },
       );
-      path += termQueryArgs;
+      path += `&${termQueryArgs}`;
 
       apiFetch({
         path,
@@ -203,6 +217,14 @@ export default function Edit({
       [type]: cleanedTerms,
     };
     setAttributes({ terms: newTermAttrs });
+  });
+
+  const setTermRelation = ((type: string, relation: string) => {
+    const newTermRelationAttrs = {
+      ...termRelations,
+      [type]: relation,
+    };
+    setAttributes({ termRelations: newTermRelationAttrs });
   });
 
   const setNumberOfPosts = (newValue?: number) => {
@@ -286,11 +308,13 @@ export default function Edit({
           className="manual-posts"
         >
           {manualPosts.map((_post, index) => (
-            <PanelRow className={classnames(
-              'manual-posts__container',
-              { 'manual-posts__container--selected': manualPosts[index] },
-            )}
-            key={index}
+            <PanelRow
+              // eslint-disable-next-line react/no-array-index-key
+              key={index}
+              className={classnames(
+                'manual-posts__container',
+                { 'manual-posts__container--selected': manualPosts[index] },
+              )}
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
@@ -325,9 +349,31 @@ export default function Edit({
                   onSelect={(newCategories: Term[]) => setTerms(taxonomy, newCategories)}
                   multiple
                 />
+                {terms[taxonomy]?.length > 1 ? (
+                  <SelectControl
+                    label={sprintf(
+                      __('%s Relation', 'wp-curate'),
+                      availableTaxonomies[taxonomy].name || taxonomy,
+                    )}
+                    help={__('AND: Posts must have all selected terms. OR: Posts may have one or more selected terms.', 'wp-curate')}
+                    options={andOrOptions}
+                    onChange={(newValue) => setTermRelation(taxonomy, newValue)}
+                    value={termRelations[taxonomy] ?? 'OR'}
+                  />
+                ) : null}
+                <hr />
               </Fragment>
             ))
           ) : null}
+          {taxCount > 1 ? (
+            <SelectControl
+              label={__('Taxonomy Relation', 'wp-curate')}
+              help={__('AND: Posts must meet all selected taxonomy requirements. OR: Posts may have meet one or more selected taxonomy requirements.', 'wp-curate')}
+              options={andOrOptions}
+              onChange={(newValue) => setAttributes({ taxRelation: newValue })}
+              value={taxRelation}
+            />
+          ) : null }
           <TextControl
             label={__('Search Term', 'wp-curate')}
             onChange={(next) => setAttributes({ searchTerm: next })}

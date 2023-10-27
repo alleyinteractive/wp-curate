@@ -74,6 +74,26 @@
         "type": "array"
       },
       "type": "object"
+    },
+    "termRelations": {
+      "default": {},
+      "items": {
+        "default": "AND",
+        "enum": [
+          "AND",
+          "OR"
+        ],
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "taxRelation": {
+      "default": "AND",
+      "enum": [
+        "AND",
+        "OR"
+      ],
+      "type": "string"
     }
   }
 }

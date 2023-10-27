@@ -15,6 +15,10 @@ interface EditProps {
     terms?: {
       [key: string]: any[];
     };
+    termRelations?: {
+      [key: string]: string;
+    };
+    taxRelation?: string;
   };
   setAttributes: (attributes: any) => void;
 }
