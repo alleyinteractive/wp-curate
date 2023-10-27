@@ -42,6 +42,11 @@ final class Supported_Post_Types {
 	 * @return string[]
 	 */
 	public function get_supported_post_types(): array {
+		/**
+		 * Filter the WP Curate supported post types.
+		 *
+		 * @param string[] $supported_post_types The supported post types.
+		 */
 		return apply_filters( 'wp_curate_supported_post_types', $this->supported_post_types );
 	}
 
@@ -63,9 +68,13 @@ final class Supported_Post_Types {
 				$post_id   = absint( $_GET['post'] );
 				$post_type = get_post_type( $post_id );
 			// phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected, WordPress.Security.NonceVerification.NoNonceVerification, WordPress.Security.NonceVerification.Recommended
-			} elseif ( 'post-new.php' === $pagenow && ! empty( $_GET['post_type'] ) ) {
-				// phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected, WordPress.Security.NonceVerification.Recommended
-				$post_type = sanitize_text_field( $_GET['post_type'] );
+			} elseif ( 'post-new.php' === $pagenow ) {
+				if ( ! empty( $_GET['post_type'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					$post_type = sanitize_text_field( $_GET['post_type'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				} else {
+					// Default to post.
+					$post_type = 'post';
+				}
 			}
 		}
 		return $post_type;
