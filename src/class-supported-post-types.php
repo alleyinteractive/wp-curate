@@ -55,7 +55,7 @@ final class Supported_Post_Types {
 	/**
 	 * Load in the supported post types.
 	 *
-	 * Load a block or slotfill using WP Curate supported post types, or custon ones.
+	 * Load a block or slotfill using WP Curate supported post types, or custom ones.
 	 *
 	 * @param string[] $post_types The post types to load. Defaults to the supported post types.
 	 * @return bool
