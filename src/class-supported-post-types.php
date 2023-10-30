@@ -32,7 +32,7 @@ final class Supported_Post_Types {
 		// Get all post types.
 		$post_types                 = get_post_types( [], 'objects' );
 		$supported_post_types       = array_filter( $post_types, fn( $type ) => $type->public && use_block_editor_for_post_type( $type->name ) );
-		$this->supported_post_types = ( wp_list_pluck( $supported_post_types, 'name' ) );
+		$this->supported_post_types = array_keys( wp_list_pluck( $supported_post_types, 'name' ) );
 		$this->register_post_meta();
 	}
 
