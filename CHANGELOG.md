@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.4.0 - 2023-10-30
+
+- Bug fix: prevents error if `termRelations` attribute is not set.
+
 ## 1.3.0 - 2023-10-26
 
 - Only show the blocks and register the meta on supported post types.
