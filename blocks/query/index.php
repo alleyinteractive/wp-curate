@@ -5,19 +5,17 @@
  * @package wp-curate
  */
 
+declare(strict_types=1);
+
 use Alley\WP\WP_Curate\Supported_Post_Types;
 
 /**
- * Registers the block using the metadata loaded from the `block.json` file.
- * Behind the scenes, it registers also all assets so they can be enqueued
- * through the block editor in the corresponding context.
- *
- * @see https://developer.wordpress.org/reference/functions/register_block_type/
+ * Registers the wp-curate/query block using the metadata loaded from the `block.json` file.
  */
 function wp_curate_query_block_init(): void {
 	$supported_post_types = new Supported_Post_Types();
 
-	if ( ! in_array( $supported_post_types->get_current_post_type(), $supported_post_types->get_supported_post_types(), true ) ) {
+	if ( ! $supported_post_types->load() ) {
 		return;
 	}
 
@@ -31,11 +29,15 @@ function wp_curate_query_block_init(): void {
 
 	/**
 	 * Filter the post types that can be used in the Query block.
+	 *
+	 * @param string[] $allowed_post_types The post types that can be used in the Query block.
 	 */
 	$allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
 
 	/**
 	 * Filter the taxonomies that can be used in the Query block.
+	 *
+	 * @param string[] $allowed_taxonomies The taxonomies that can be used in the Query block.
 	 */
 	$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
 

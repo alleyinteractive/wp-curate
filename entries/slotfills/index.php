@@ -7,6 +7,8 @@
  * @package wp-curate
  */
 
+declare(strict_types=1);
+
 namespace Alley\WP\WP_Curate;
 
 /**
@@ -14,15 +16,16 @@ namespace Alley\WP\WP_Curate;
  * the corresponding context.
  */
 function register_slotfills_scripts(): void {
+	$supported_post_types = new Supported_Post_Types();
+
 	/**
 	 * Filter the post types that will show the "Enable Deduplication" slotfill.
 	 *
-	 * @param array $allowed_post_types The post types that will show the "Enable Deduplication" slotfill.
+	 * @param array $allowed_post_types The post types that will show the "Enable Deduplication" slotfill. Defaults to the supported post types.
 	 */
-	$allowed_post_types = apply_filters( 'wp_curate_duduplication_slotfill_post_types', [ 'page', 'post' ] );
+	$allowed_post_types = apply_filters( 'wp_curate_duduplication_slotfill_post_types', $supported_post_types->get_supported_post_types() );
 
-	$supported_post_types = new Supported_Post_Types();
-	if ( ! in_array( $supported_post_types->get_current_post_type(), $allowed_post_types, true ) ) {
+	if ( ! $supported_post_types->load( $allowed_post_types ) ) {
 		return;
 	}
 

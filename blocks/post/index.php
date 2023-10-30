@@ -5,6 +5,8 @@
  * @package wp-curate
  */
 
+declare(strict_types=1);
+
 use Alley\WP\WP_Curate\Supported_Post_Types;
 
 /**
@@ -12,7 +14,8 @@ use Alley\WP\WP_Curate\Supported_Post_Types;
  */
 function wp_curate_post_block_init(): void {
 	$supported_post_types = new Supported_Post_Types();
-	if ( ! in_array( $supported_post_types->get_current_post_type(), $supported_post_types->get_supported_post_types(), true ) ) {
+
+	if ( ! $supported_post_types->load() ) {
 		return;
 	}
 

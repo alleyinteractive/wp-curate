@@ -5,6 +5,8 @@
  * @package wp-curate
  */
 
+declare(strict_types=1);
+
 namespace Alley\WP\WP_Curate;
 
 /**
@@ -51,11 +53,41 @@ final class Supported_Post_Types {
 	}
 
 	/**
+	 * Load in the supported post types.
+	 *
+	 * Load a block or slotfill using WP Curate supported post types, or custon ones.
+	 *
+	 * @param string[] $post_types The post types to load. Defaults to the supported post types.
+	 * @return bool
+	 */
+	public function load( array $post_types = [] ): bool {
+		$retval = true;
+
+		if ( empty( $post_types ) ) {
+			$post_types = $this->get_supported_post_types();
+		}
+
+		if ( ! in_array( $this->get_current_post_type(), $post_types, true ) ) {
+			$retval = false;
+		}
+
+		/**
+		 * Load WP Curate block or slotfill.
+		 *
+		 * @param bool $retval Whether or not to load the block.
+		 * @param string[] $supported_post_types The supported post types.
+		 */
+		return apply_filters( 'wp_curate_load', $retval, $post_types );
+	}
+
+	/**
 	 * Get the current post type.
 	 *
-	 * @return string|false
+	 * @global string $pagenow The filename of the current screen.
+	 *
+	 * @return string
 	 */
-	public function get_current_post_type(): string|false {
+	public function get_current_post_type(): string {
 		$post_type = '';
 
 		// Ensure we are in the admin before proceeding.
@@ -65,8 +97,11 @@ final class Supported_Post_Types {
 			// phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected, WordPress.Security.NonceVerification.NoNonceVerification, WordPress.Security.NonceVerification.Recommended
 			if ( 'post.php' === $pagenow && ! empty( $_GET['post'] ) ) {
 				// phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected, WordPress.Security.NonceVerification.Recommended
-				$post_id   = absint( $_GET['post'] );
-				$post_type = get_post_type( $post_id );
+				$post_type = get_post_type( absint( $_GET['post'] ) );
+
+				if ( ! $post_type ) {
+					$post_type = '';
+				}
 			// phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected, WordPress.Security.NonceVerification.NoNonceVerification, WordPress.Security.NonceVerification.Recommended
 			} elseif ( 'post-new.php' === $pagenow ) {
 				if ( ! empty( $_GET['post_type'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -77,6 +112,7 @@ final class Supported_Post_Types {
 				}
 			}
 		}
+
 		return $post_type;
 	}
 
