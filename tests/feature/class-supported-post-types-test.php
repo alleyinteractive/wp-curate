@@ -33,10 +33,11 @@ class Supported_Post_Types_Test extends Test_Case {
 		remove_filter( 'wp_curate_supported_post_types', fn () => [ 'page' ] );
 	}
 
-	public function test_returning_load(): void {
+	public function test_returning_default_load(): void {
 		$post_types = new Supported_Post_Types();
 
-		$this->assertFalse( $post_types->load() );
+		$this->assertTrue( $post_types->load() );
+		$this->assertTrue( $post_types->load( [ 'page' ] ) );
 	}
 
 	public function test_hooking_into_load(): void {
