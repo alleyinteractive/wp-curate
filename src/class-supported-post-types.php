@@ -53,9 +53,9 @@ final class Supported_Post_Types {
 	}
 
 	/**
-	 * Load in the supported post types.
+	 * Load WP Curate block or slotfill using supported post types.
 	 *
-	 * Load a block or slotfill using WP Curate supported post types, or custom ones.
+	 * Remove the block/slotfill from the post editor only. Allowing it to be used in other contexts.
 	 *
 	 * @param string[] $post_types The post types to load. Defaults to the supported post types.
 	 * @return bool
@@ -67,17 +67,17 @@ final class Supported_Post_Types {
 			$post_types = $this->get_supported_post_types();
 		}
 
-		if ( ! in_array( $this->get_current_post_type(), $post_types, true ) ) {
+		if ( is_admin() && ! in_array( $this->get_current_post_type(), $post_types, true ) ) {
 			$retval = false;
 		}
 
 		/**
 		 * Load WP Curate block or slotfill.
 		 *
-		 * @param bool $retval Whether or not to load the block.
-		 * @param string[] $supported_post_types The supported post types.
+		 * @param bool $retval Whether or not to load WP Curate block or slotfill.
+		 * @param Supported_Post_Types $instance The Supported_Post_Types instance.
 		 */
-		return apply_filters( 'wp_curate_load', $retval, $post_types );
+		return apply_filters( 'wp_curate_load', $retval, $this );
 	}
 
 	/**
