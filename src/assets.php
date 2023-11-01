@@ -31,15 +31,6 @@ function action_wp_enqueue_scripts(): void {
 	|     https://github.com/alleyinteractive/wp-asset-manager
 	|
 	*/
-
-	// wp_enqueue_script(
-	//  'wp-curate-example-entry',
-	//  get_entry_asset_url( 'example-entry' ),
-	//  get_asset_dependency_array( 'example-entry' ),
-	//  get_asset_version( 'example-entry' ),
-	//  true
-	// );
-	// wp_set_script_translations( 'wp-curate-example-entry', 'wp-curate' );
 }
 
 /**
@@ -55,15 +46,6 @@ function action_admin_enqueue_scripts(): void {
 	| assets that are loaded only in the WordPress admin.
 	|
 	*/
-
-	// wp_enqueue_script(
-	//  'wp-curate-admin-handle',
-	//  get_entry_asset_url( 'admin-handle' ),
-	//  get_asset_dependency_array( 'admin-handle' ),
-	//  get_asset_version( 'admin-handle' ),
-	//  true
-	// );
-	// wp_set_script_translations( 'wp-curate-admin-handle', 'wp-curate' );
 }
 
 /**
@@ -79,15 +61,6 @@ function action_enqueue_block_editor_assets(): void {
 	| enqueue assets that are loaded in the block editor.
 	|
 	*/
-
-	// wp_enqueue_script(
-	//  'wp-curate-slotfills',
-	//  get_entry_asset_url( 'slotfills' ),
-	//  get_asset_dependency_array( 'slotfills' ),
-	//  get_asset_version( 'slotfills' ),
-	//  true
-	// );
-	// wp_set_script_translations( 'wp-curate-slotfills', 'wp-curate' );
 }
 
 /**
