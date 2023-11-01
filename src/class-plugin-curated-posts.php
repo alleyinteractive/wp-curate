@@ -72,7 +72,7 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 		if ( is_string( $search_term ) && strlen( $search_term ) > 0 ) {
 			$args['s'] = $search_term;
 		}
-		$args['post__not_in'] = [ get_the_id() ]; // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn
+		$args['post__not_in'] = [ get_the_id() ]; // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in
 
 		$pinned_posts = $attributes['posts'] ?? $block_type->attributes['posts']['default'];
 
