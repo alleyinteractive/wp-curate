@@ -2,6 +2,11 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.4.2 - 2023-11-01
+
+- Bug fix: PHP tax_query wants `AND` or `IN` for `operator`. REST API wants `AND` or `OR`.
+- Default operator should be `OR`/`IN`.
+
 ## 1.4.1 - 2023-11-01
 
 - Bug fix: allow blocks when no post type is defined.
