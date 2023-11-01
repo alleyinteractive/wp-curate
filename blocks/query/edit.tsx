@@ -91,7 +91,7 @@ export default function Edit({
   ];
 
   // @ts-ignore
-  const [isPostDeduplicating, postTypeObject, postId] = useSelect(
+  const [isPostDeduplicating, postTypeObject] = useSelect(
     (select) => {
       // @ts-ignore
       const editor = select('core/editor');
@@ -100,8 +100,6 @@ export default function Edit({
       const type = editor.getEditedPostAttribute('type');
       // @ts-ignore
       const meta = editor.getEditedPostAttribute('meta');
-      // @ts-ignore
-      const id = editor.getEditedPostAttribute('id');
 
       return [
         // It's possible for usePostMetaValue() to run here before useEntityProp() is available.
@@ -164,7 +162,6 @@ export default function Edit({
           type: postTypeString,
           status: 'publish',
           per_page: 20,
-          exclude: postId,
         },
       );
       path += `&${termQueryArgs}`;
@@ -186,7 +183,6 @@ export default function Edit({
     postTypeString,
     availableTaxonomies,
     setAttributes,
-    postId,
   ]);
 
   // Update the query when the backfillPosts change.
