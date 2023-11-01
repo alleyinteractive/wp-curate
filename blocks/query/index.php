@@ -5,6 +5,8 @@
  * @package wp-curate
  */
 
+use Alley\WP\WP_Curate\Supported_Post_Types;
+
 /**
  * Registers the block using the metadata loaded from the `block.json` file.
  * Behind the scenes, it registers also all assets so they can be enqueued
@@ -13,6 +15,12 @@
  * @see https://developer.wordpress.org/reference/functions/register_block_type/
  */
 function wp_curate_query_block_init(): void {
+	$supported_post_types = new Supported_Post_Types();
+
+	if ( ! in_array( $supported_post_types->get_current_post_type(), $supported_post_types->get_supported_post_types(), true ) ) {
+		return;
+	}
+
 	// Register the block by passing the location of block.json.
 	register_block_type(
 		__DIR__,

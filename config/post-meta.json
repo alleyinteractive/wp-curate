@@ -1,8 +1,0 @@
-{
-  "wp_curate_deduplication": {
-    "post_types": [
-      "all"
-    ],
-    "type": "boolean"
-  }
-}

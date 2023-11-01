@@ -13,7 +13,12 @@ import {
   TextControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
-import { createInterpolateElement, useEffect, useState } from '@wordpress/element';
+import {
+  Fragment,
+  createInterpolateElement,
+  useEffect,
+  useState,
+} from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
@@ -309,10 +314,13 @@ export default function Edit({
           className="manual-posts"
         >
           {manualPosts.map((_post, index) => (
-            <PanelRow className={classnames(
-              'manual-posts__container',
-              { 'manual-posts__container--selected': manualPosts[index] },
-            )}
+            <PanelRow
+              // eslint-disable-next-line react/no-array-index-key
+              key={index}
+              className={classnames(
+                'manual-posts__container',
+                { 'manual-posts__container--selected': manualPosts[index] },
+              )}
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
@@ -338,7 +346,7 @@ export default function Edit({
           />
           {Object.keys(availableTaxonomies).length > 0 ? (
             allowedTaxonomies.map((taxonomy) => (
-              <>
+              <Fragment key={taxonomy}>
                 { /* @ts-ignore */ }
                 <TermSelector
                   label={availableTaxonomies[taxonomy].name || taxonomy}
@@ -360,7 +368,7 @@ export default function Edit({
                   />
                 ) : null}
                 <hr />
-              </>
+              </Fragment>
             ))
           ) : null}
           {taxCount > 1 ? (
