@@ -106,7 +106,6 @@ export default function Edit({
         Boolean(meta?.wp_curate_deduplication),
         // @ts-ignore
         type ? select('core').getPostType(type) : null,
-        id,
       ];
     },
   );
