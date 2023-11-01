@@ -56,10 +56,12 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 
 			foreach ( $attributes['terms'] as $taxonomy => $terms ) {
 				if ( taxonomy_exists( $taxonomy ) && is_array( $terms ) && count( $terms ) > 0 ) {
+					$operator            = isset( $attributes['termRelations'] ) && is_array( $attributes['termRelations'] ) ? $attributes['termRelations'][ $taxonomy ] ?? 'AND' : 'OR';
 					$args['tax_query'][] = [
 						'taxonomy' => $taxonomy,
 						'terms'    => array_column( $terms, 'id' ),
-						'operator' => is_array( $attributes['termRelations'] ) ? $attributes['termRelations'][ $taxonomy ] ?? 'AND' : 'AND',
+						// Note: Tax_query wants 'AND' or 'IN' for operator. The REST API wants 'AND' or 'OR'.
+						'operator' => 'OR' === $operator ? 'IN' : $operator,
 					];
 				}
 			}
@@ -70,6 +72,7 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 		if ( is_string( $search_term ) && strlen( $search_term ) > 0 ) {
 			$args['s'] = $search_term;
 		}
+		$args[ 'post__not_in' ] = [ get_the_id() ];
 
 		$pinned_posts = $attributes['posts'] ?? $block_type->attributes['posts']['default'];
 
