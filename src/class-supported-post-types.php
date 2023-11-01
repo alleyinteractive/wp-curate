@@ -93,4 +93,13 @@ final class Supported_Post_Types {
 			]
 		);
 	}
+
+	/**
+	 * Should we register the block in the current context.
+	 *
+	 * @return boolean
+	 */
+	public function should_register_block(): bool {
+		return empty( $this->get_current_post_type() ) || in_array( $this->get_current_post_type(), $this->get_supported_post_types(), true );
+	}
 }
