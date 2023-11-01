@@ -22,7 +22,7 @@ function register_slotfills_scripts(): void {
 	$allowed_post_types = apply_filters( 'wp_curate_duduplication_slotfill_post_types', [ 'page', 'post' ] );
 
 	$supported_post_types = new Supported_Post_Types();
-	if ( ! in_array( $supported_post_types->get_current_post_type(), $allowed_post_types, true ) ) {
+	if ( ! $supported_post_types->should_register_block() ) {
 		return;
 	}
 
