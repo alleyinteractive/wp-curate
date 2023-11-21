@@ -6,7 +6,7 @@ import { usePostMetaValue } from '@alleyinteractive/block-editor-tools';
 /**
  * The following code is a temporary fix.
  *
- * Once the issue linked below is taken care of, this code can be removed.
+ * Once the issue linked below is resolved, this code can be removed.
  * @link https://github.com/alleyinteractive/alley-scripts/issues/473
  */
 // @ts-ignore This is a temporary assignment.
