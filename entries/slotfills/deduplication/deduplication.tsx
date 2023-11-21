@@ -3,6 +3,18 @@ import { PluginDocumentSettingPanel } from '@wordpress/edit-post';
 import { __ } from '@wordpress/i18n';
 import { usePostMetaValue } from '@alleyinteractive/block-editor-tools';
 
+/**
+ * The following code is a temporary fix.
+ *
+ * Once the issue linked below is taken care of, this code can be removed.
+ * @link https://github.com/alleyinteractive/alley-scripts/issues/473
+ */
+// @ts-ignore This is a temporary assignment.
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { cloneDeep } from 'lodash';
+// @ts-ignore This is a temporary assignment.
+window.cloneDeepTemp = cloneDeep;
+
 function Deduplication() {
   const [deduplication, setDeduplication] = usePostMetaValue('wp_curate_deduplication');
 
