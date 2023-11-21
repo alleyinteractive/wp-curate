@@ -12,11 +12,20 @@ import { usePostMetaValue } from '@alleyinteractive/block-editor-tools';
 // @ts-ignore This is a temporary assignment.
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { cloneDeep } from 'lodash';
+import { useSelect } from '@wordpress/data';
+import countBlocksByName from '@/services/countBlocksByName';
 // @ts-ignore This is a temporary assignment.
 window.cloneDeepTemp = cloneDeep;
 
 function Deduplication() {
   const [deduplication, setDeduplication] = usePostMetaValue('wp_curate_deduplication');
+  // @ts-ignore - useSelect doesn't export proper types
+  const blocks = useSelect((select) => select('core/block-editor').getBlocks(), []);
+  const queryBlocksFound = countBlocksByName(blocks, 'wp-curate/query');
+
+  if (queryBlocksFound < 2) {
+    return null;
+  }
 
   return (
     <PluginDocumentSettingPanel
