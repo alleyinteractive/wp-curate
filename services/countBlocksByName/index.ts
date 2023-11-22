@@ -9,20 +9,21 @@ interface Block {
  *
  * @param blocks An array of blocks.
  * @param blockName The name of the block to count.
- * @param result The result of the count.
+ * @param count The current count.
  */
 export default function countBlocksByName(
   blocks: Block[],
   blockName: string,
-  result: Block[] | [{}] = [],
+  count = 0,
 ): number {
+  let newCount = count;
   for (const block of blocks) {
     if (block.name === blockName) {
-      result.push(block);
+      newCount += 1;
     }
     if (block.innerBlocks && block.innerBlocks.length > 0) {
-      countBlocksByName(block.innerBlocks, blockName, result);
+      newCount = countBlocksByName(block.innerBlocks, blockName, newCount);
     }
   }
-  return result.length;
+  return newCount;
 }
