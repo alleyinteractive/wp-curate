@@ -16,7 +16,8 @@ use Alley\WP\WP_Curate\Supported_Post_Types;
  */
 function wp_curate_query_block_init(): void {
 	$supported_post_types = new Supported_Post_Types();
-	if ( ! in_array( $supported_post_types->get_current_post_type(), $supported_post_types->get_supported_post_types(), true ) ) {
+
+	if ( ! $supported_post_types->should_register_block() ) {
 		return;
 	}
 

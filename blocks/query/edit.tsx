@@ -159,6 +159,7 @@ export default function Edit({
           search: debouncedSearchTerm,
           offset,
           type: postTypeString,
+          status: 'publish',
           per_page: 20,
         },
       );
