@@ -7,7 +7,7 @@ describe('countBlocksByName', () => {
     expect(count).toBe(3);
   });
 
-  it('it should return 0 when there are no query blcoks', () => {
+  it('should return 0 when there are no query blocks', () => {
     const count = countBlocksByName(blocksWithNoQueryBlocks, 'wp-curate/query');
     expect(count).toBe(0);
   });
