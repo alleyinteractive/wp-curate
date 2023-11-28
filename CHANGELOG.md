@@ -2,6 +2,11 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.4.3 - 2023-11-28
+
+- Bug fix: Adds in a temporary fix for https://github.com/alleyinteractive/alley-scripts/issues/473
+- Bug fix: Lock [nunomaduro/collision](https://github.com/nunomaduro/collision) at v6.0. Fixes failing tests via Github Actions.
+
 ## 1.4.2 - 2023-11-01
 
 - Bug fix: PHP tax_query wants `AND` or `IN` for `operator`. REST API wants `AND` or `OR`.
