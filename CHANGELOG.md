@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.4.4 - 2023-12-04
+
+- Bug fix: Update to the `Parsed_Block` new namespace.
+
 ## 1.4.3 - 2023-11-28
 
 - Bug fix: Adds in a temporary fix for https://github.com/alleyinteractive/alley-scripts/issues/473
