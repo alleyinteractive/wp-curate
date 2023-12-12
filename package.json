@@ -4,8 +4,8 @@
   "license": "GPL-2.0-or-later",
   "main": "wp-curate.php",
   "engines": {
-    "node": "18",
-    "npm": "9"
+    "node": ">=18",
+    "npm": ">=9"
   },
   "browserslist": [
     "defaults",

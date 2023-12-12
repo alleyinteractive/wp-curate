@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.4.5 - 2023-12-12
+
+- Bug fix: Adds support to Windows file path validation with `validate_file` function.
+
 ## 1.4.4 - 2023-12-04
 
 - Bug fix: Update to the `Parsed_Block` new namespace.
