@@ -3,11 +3,11 @@
  * Plugin Name: WP Curate
  * Plugin URI: https://github.com/alleyinteractive/wp-curate
  * Description: Plugin to curate homepages and other landing pages
- * Version: 1.4.5
+ * Version: 1.5.0
  * Author: Alley Interactive
  * Author URI: https://github.com/alleyinteractive/wp-curate
- * Requires at least: 6.3
- * Tested up to: 6.3
+ * Requires at least: 6.4
+ * Tested up to: 6.4
  *
  * Text Domain: wp-curate
  *
