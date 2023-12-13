@@ -10,4 +10,4 @@ jobs:
   built-tag:
     uses: alleyinteractive/.github/.github/workflows/built-tag.yml@main
     with:
-      node: 18
+      node: 20
