@@ -51,7 +51,7 @@
     "@wordpress/i18n": "^4.42.13",
     "@wordpress/plugins": "^6.10.13",
     "@wordpress/url": "^3.43.13",
-    "classnames": "^2.3.2",
+    "classnames": "^2.5.1",
     "dompurify": "^3.0.6",
     "prop-types": "^15.8.1",
     "react": "18.2.0",
