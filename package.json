@@ -61,7 +61,7 @@
     "@alleyinteractive/build-tool": "^0.1.3",
     "@alleyinteractive/eslint-config": "^0.1.5",
     "@alleyinteractive/stylelint-config": "^0.0.2",
-    "@babel/preset-env": "^7.23.3",
+    "@babel/preset-env": "^7.23.7",
     "@types/wordpress__edit-post": "^7.5.1",
     "@types/wordpress__plugins": "^3.0.0",
     "@wordpress/babel-preset-default": "^7.26.13",
