@@ -83,6 +83,7 @@ export default function Edit({
       },
     )}
     >
+      <InnerBlocks />
       {isParentOfSelectedBlock || isSelected ? (
         <PostPicker
           allowedTypes={postTypes}
@@ -96,7 +97,6 @@ export default function Edit({
           replaceText={__('Pin a different post', 'wp-curate')}
         />
       ) : null}
-      <InnerBlocks />
     </div>
   );
 }
