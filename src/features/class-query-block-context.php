@@ -8,7 +8,7 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\Validator\Comparison;
-use Alley\WP\Parsed_Block;
+use Alley\WP\Blocks\Parsed_Block;
 use Alley\WP\Post_IDs\Used_Post_IDs;
 use Alley\WP\Post_Queries\Exclude_Queries;
 use Alley\WP\Post_Queries\Variable_Post_Queries;

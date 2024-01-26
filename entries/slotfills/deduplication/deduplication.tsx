@@ -9,13 +9,8 @@ import { usePostMetaValue } from '@alleyinteractive/block-editor-tools';
  * Once the issue linked below is resolved, this code can be removed.
  * @link https://github.com/alleyinteractive/alley-scripts/issues/473
  */
-// @ts-ignore This is a temporary assignment.
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { cloneDeep } from 'lodash';
 import { useSelect } from '@wordpress/data';
-import countBlocksByName from '@/services/countBlocksByName';
-// @ts-ignore This is a temporary assignment.
-window.cloneDeepTemp = cloneDeep;
+import countBlocksByName from '../../../services/countBlocksByName';
 
 function Deduplication() {
   const [deduplication, setDeduplication] = usePostMetaValue('wp_curate_deduplication');

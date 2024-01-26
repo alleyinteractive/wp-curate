@@ -37,7 +37,12 @@ export default function Edit({
   // @ts-ignore
   const queryParentId = select('core/block-editor').getBlockParentsByBlockName(clientId, 'wp-curate/query')[0];
   // @ts-ignore
-  const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {};
+  const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {
+    attributes: {
+      posts: [],
+      postTypes: [],
+    },
+  };
   const {
     attributes: {
       posts = [],
@@ -78,6 +83,7 @@ export default function Edit({
       },
     )}
     >
+      <InnerBlocks />
       {isParentOfSelectedBlock || isSelected ? (
         <PostPicker
           allowedTypes={postTypes}
@@ -91,7 +97,6 @@ export default function Edit({
           replaceText={__('Pin a different post', 'wp-curate')}
         />
       ) : null}
-      <InnerBlocks />
     </div>
   );
 }

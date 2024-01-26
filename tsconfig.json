@@ -10,9 +10,6 @@
     "moduleResolution": "node",
     "noImplicitAny": true,
     "outDir": "build",
-    "paths": {
-      "@/*": ["*"]
-    },
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,

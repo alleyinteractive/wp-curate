@@ -2,6 +2,22 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.5.1 - 2023-01-25
+
+- Bug Fix: Avoid BlockControl toolbar obstructing PostPicker button when Post inner blocks are selected.
+
+## 1.5.0 - 2023-12-13
+
+- Enhancement: Bumps tested up to and requires WP to 6.4.
+
+## 1.4.5 - 2023-12-12
+
+- Bug fix: Adds support to Windows file path validation with `validate_file` function.
+
+## 1.4.4 - 2023-12-04
+
+- Bug fix: Update to the `Parsed_Block` new namespace.
+
 ## 1.4.3 - 2023-11-28
 
 - Bug fix: Adds in a temporary fix for https://github.com/alleyinteractive/alley-scripts/issues/473

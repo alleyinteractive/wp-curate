@@ -70,7 +70,7 @@ function action_enqueue_block_editor_assets(): void {
  * @return bool        True if the path is valid and the file exists.
  */
 function validate_path( string $path ): bool {
-	return 0 === validate_file( $path ) && file_exists( $path );
+	return ( 0 === validate_file( $path ) || 2 === validate_file( $path ) ) && file_exists( $path );
 }
 
 /**
@@ -173,7 +173,7 @@ function load_scripts(): void {
 
 	if ( ! empty( $files ) ) {
 		foreach ( $files as $path ) {
-			if ( 0 === validate_file( $path ) && file_exists( $path ) ) {
+			if ( validate_path( $path ) ) {
 				require_once $path;  // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.IncludingFile, WordPressVIPMinimum.Files.IncludingFile.UsingVariable
 			}
 		}

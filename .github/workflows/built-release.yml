@@ -8,3 +8,6 @@ on:
 jobs:
   built-release:
     uses: alleyinteractive/.github/.github/workflows/built-release.yml@main
+    with:
+      node: 20
+      php: 8.2
