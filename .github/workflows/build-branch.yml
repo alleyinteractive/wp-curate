@@ -11,4 +11,4 @@ jobs:
     uses: alleyinteractive/.github/.github/workflows/built-branch.yml@main
     with:
       node: 20
-      php: 8.2
+      php: 8.1
