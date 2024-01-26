@@ -2,7 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
-## 1.5.1 - 2023-01-25
+## 1.6.0 - 2024-01-26
+- Change GitHub actions back to PHP 8.1 so that sites are not required to run 8.2 yet.
+
+## 1.5.1 - 2024-01-25
 
 - Bug Fix: Avoid BlockControl toolbar obstructing PostPicker button when Post inner blocks are selected.
 
