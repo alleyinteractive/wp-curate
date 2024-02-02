@@ -2,7 +2,13 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.6.1 - 2024-02-02
+
+- Make nunomaduro/collision a dev dependency.
+- Switch alleyinteractive/wp-type-extensions to tagged version.
+
 ## 1.6.0 - 2024-01-26
+
 - Change GitHub actions back to PHP 8.1 so that sites are not required to run 8.2 yet.
 
 ## 1.5.1 - 2024-01-25
