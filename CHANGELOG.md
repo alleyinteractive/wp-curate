@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.6.2 - 2024-02-08
+
+- Bug Fix: Add intentional spacing before PostPicker buttons.
+
 ## 1.6.1 - 2024-02-02
 
 - Make nunomaduro/collision a dev dependency.
