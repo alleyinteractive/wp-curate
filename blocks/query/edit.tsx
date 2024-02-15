@@ -201,7 +201,7 @@ export default function Edit({
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
     // If the post is already in the list, remove it.
-    if (newManualPosts.includes(id)) {
+    if (id !== null && newManualPosts.includes(id)) {
       newManualPosts.splice(newManualPosts.indexOf(id), 1, null);
     }
     newManualPosts.splice(index, 1, id);
