@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.6.3 - 2024-02-14
+
+- Bug Fix: Selecting a post more than once in a Query block causes empty slots at the end.
+
 ## 1.6.2 - 2024-02-08
 
 - Bug Fix: Add intentional spacing before PostPicker buttons.
