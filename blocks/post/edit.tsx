@@ -55,6 +55,10 @@ export default function Edit({
 
   const updatePost = (post: number | null) => {
     const newPosts = [...posts];
+    // If the post is already in the list, remove it.
+    if (post !== null && newPosts.includes(post)) {
+      newPosts.splice(newPosts.indexOf(post), 1, null);
+    }
     newPosts[index] = post;
     // @ts-ignore
     dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
