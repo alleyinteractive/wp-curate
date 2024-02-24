@@ -52,7 +52,7 @@
     "@wordpress/plugins": "^6.10.13",
     "@wordpress/url": "^3.43.13",
     "classnames": "^2.5.1",
-    "dompurify": "^3.0.8",
+    "dompurify": "^3.0.9",
     "prop-types": "^15.8.1",
     "react": "18.2.0",
     "react-dom": "18.2.0"
