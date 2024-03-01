@@ -158,7 +158,7 @@ export default function Edit({
     }
     const fetchPosts = async () => {
       let path = addQueryArgs(
-        '/wp/v2/posts',
+        '/wp-curate/v1/posts',
         {
           search: debouncedSearchTerm,
           offset,

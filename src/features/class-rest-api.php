@@ -23,26 +23,62 @@ final class Rest_Api implements Feature {
 	 * Boot the feature.
 	 */
 	public function boot(): void {
-		add_filter( 'rest_post_query', [ $this, 'add_type_param' ], 10, 2 );
+		add_action( 'rest_api_init', [ $this, 'register_endpoints' ] );
 	}
 
 	/**
-	 * Add post_type to rest post query if the type param is set.
+	 * Sets up the endpoint.
 	 *
-	 * @param array<array<int, string>|string> $query_args The existing query args.
-	 * @param WP_REST_Request                  $request The REST request.
-	 * @return array<array<int, string>|string>
+	 * @return void
 	 */
-	// @phpstan-ignore-next-line
-	public function add_type_param( $query_args, $request ): array { // phpcs:ignore Squiz.Commenting.FunctionComment.WrongStyle
-		$type = $request->get_param( 'type' );
+	public function register_endpoints(): void {
+		register_rest_route(
+			'wp-curate/v1',
+			'/posts/',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'get_posts' ],
+				'permission_callback' => function () {
+					return true;
+					return current_user_can( 'edit_posts' );
+				},
+			]
+		);
+	}
 
-		if ( ! empty( $type ) && is_string( $type ) ) {
-			$types                   = explode( ',', $type );
-			$types                   = array_filter( $types, 'post_type_exists' );
-			$query_args['post_type'] = $types;
+	/**
+	 * Gets the posts.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @return array
+	 */
+	public function get_posts( WP_REST_Request $request ): array {
+		$search_term    = $request->get_param( 'search' ) ?? '';
+		$offset         = $request->get_param( 'offset' ) ?? 0;
+		$postTypeString = $request->get_param( 'post_type' ) ?? 'post';
+		$per_page       = $request->get_param( 'per_page' ) ?? 20;
+		$trending       = $request->get_param( 'trending' ) ?? false;
+
+		$post_types         = explode( ',', $postTypeString );
+		$allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
+
+		$post_types = array_filter( $post_types, function ( $post_type ) use ( $allowed_post_types ) {
+			return in_array( $post_type, $allowed_post_types, true );
+		} );
+
+		$args = [
+			'post_type'      => $post_types,
+			'posts_per_page' => $per_page,
+			'offset'         => $offset,
+		];
+		if ( ! empty( $search_term ) ) {
+			$args['s'] = $search_term;
 		}
 
-		return $query_args;
+		$query = new \WP_Query( $args );
+
+		$posts = [];
+
+		return $query->posts;
 	}
 }
