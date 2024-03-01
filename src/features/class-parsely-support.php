@@ -14,17 +14,72 @@ use Alley\WP\Types\Feature;
  */
 final class Parsely_Support implements Feature {
 	/**
+	 * Store the parsely object.
+	 *
+	 * @var \Parsely\Parsely
+	 */
+	private $parsely;
+
+	/**
 	 * Set up.
 	 */
 	public function __construct() {}
 
-    /**
+	/**
 	 * Boot the feature.
 	 */
 	public function boot(): void {
-        if ( ! class_exists( 'Parsely\Parsely' ) ) {
-            return;
-        }
-        add_filter( 'wp_curate_use_parsely', '__return_true' );
+		if ( ! class_exists( 'Parsely\Parsely' ) ) {
+			return;
+		}
+		$this->parsely = new \Parsely\Parsely();
+		if ( ! $this->parsely->api_secret_is_set() ) {
+			return;
+		}
+		add_filter( 'wp_curate_use_parsely', '__return_true' );
+		add_filter( 'wp_curate_trending_posts_query', [ $this, 'add_parsely_trending_posts_query' ], 10, 2 );
+	}
+
+	/**
+	 * Gets the trending posts from Parsely.
+	 *
+	 * @param array $posts The posts, which should be an empty array.
+	 * @param array $args The WP_Query args.
+	 * @return array Array of post IDs.
+	 */
+	public function add_parsely_trending_posts_query( $posts, $args ) {
+		// TODO: Add failover if we're not on production.
+		$api          = new \Parsely\RemoteAPI\Analytics_Posts_API( $this->parsely );
+		$parsely_args = [
+			'limit'        => $args['posts_per_page'],
+			'sort'         => 'views',
+			'period_start' => '1d',
+			'period_end'   => 'now',
+		];
+		$cache_key    = 'parsely_trending_posts_' . md5( wp_json_encode( $parsely_args ) );
+		$ids          = wp_cache_get( $cache_key );
+		if ( false === $ids ) {
+			$posts = $api->get_posts_analytics( $parsely_args );
+			$ids   = array_map(
+				function ( $post ) {
+					// Check if the metadata contains post_id, if not, use the URL to get the post ID.
+					$metadata = json_decode( $post['metadata'] ?? '', true );
+					if ( ! empty( $post['metadata'] ) && isset( $metadata['post_id'] ) ) {
+						$post_id = intval( $metadata['post_id'] );
+					} else {
+						if ( function_exists( 'wpcom_vip_url_to_postid' ) ) {
+							$post_id = wpcom_vip_url_to_postid( $post['url'] );
+						} else {
+							$post_id = url_to_postid( $post['url'] ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.url_to_postid_url_to_postid
+						}
+					}
+					return $post_id;
+				},
+				$posts
+			);
+			wp_cache_set( $cache_key, $ids, '', 10 * MINUTE_IN_SECONDS );
+		}
+
+		return( $ids );
 	}
 }
