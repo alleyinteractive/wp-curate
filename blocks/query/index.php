@@ -45,6 +45,7 @@ function wp_curate_query_block_init(): void {
 		[
 			'allowedPostTypes'  => $allowed_post_types,
 			'allowedTaxonomies' => $allowed_taxonomies,
+			'useParsely'        => apply_filters( 'wp_curate_use_parsely', false ) ? 'true' : 'false',
 		]
 	);
 }

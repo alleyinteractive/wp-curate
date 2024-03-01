@@ -19,6 +19,7 @@ interface EditProps {
       [key: string]: string;
     };
     taxRelation?: string;
+    trending?: boolean;
   };
   setAttributes: (attributes: any) => void;
 }

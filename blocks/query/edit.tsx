@@ -11,6 +11,7 @@ import {
   RangeControl,
   SelectControl,
   TextControl,
+  ToggleControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import {
@@ -44,6 +45,7 @@ interface Window {
   wpCurateQueryBlock: {
     allowedPostTypes: Array<string>;
     allowedTaxonomies: Array<string>;
+    useParsely: string,
   };
 }
 
@@ -69,6 +71,7 @@ export default function Edit({
     terms = {},
     termRelations = {},
     taxRelation = 'AND',
+    trending = false,
   },
   setAttributes,
 }: EditProps) {
@@ -76,6 +79,7 @@ export default function Edit({
     wpCurateQueryBlock: {
       allowedPostTypes = [],
       allowedTaxonomies = [],
+      useParsely = 'false',
     } = {},
   } = (window as any as Window);
 
@@ -161,6 +165,7 @@ export default function Edit({
           type: postTypeString,
           status: 'publish',
           per_page: 20,
+          trending,
         },
       );
       path += `&${termQueryArgs}`;
@@ -181,6 +186,7 @@ export default function Edit({
     offset,
     postTypeString,
     availableTaxonomies,
+    trending,
     setAttributes,
   ]);
 
@@ -384,6 +390,14 @@ export default function Edit({
             onChange={(next) => setAttributes({ searchTerm: next })}
             value={searchTerm}
           />
+          { useParsely === 'true' ? (
+            <ToggleControl
+              label={__('Show Trending Content from Parsely', 'wp-curate')}
+              help={__('If enabled, the block will show trending content from Parsely.', 'wp-curate')}
+              checked={trending}
+              onChange={(next) => setAttributes({ trending: next })}
+            />
+          ) : null }
         </PanelBody>
       </InspectorControls>
 

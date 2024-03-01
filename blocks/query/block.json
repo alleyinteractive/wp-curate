@@ -94,6 +94,10 @@
         "OR"
       ],
       "type": "string"
+    },
+    "trending": {
+      "default": false,
+      "type": "boolean"
     }
   }
 }
