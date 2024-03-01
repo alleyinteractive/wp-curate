@@ -58,6 +58,31 @@ final class Rest_Api implements Feature {
 		$postTypeString = $request->get_param( 'post_type' ) ?? 'post';
 		$per_page       = $request->get_param( 'per_page' ) ?? 20;
 		$trending       = $request->get_param( 'trending' ) ?? false;
+		$tax_relation   = $request->get_param( 'tax_relation' ) ?? 'OR';
+
+		$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
+		$taxonomies = array_map( 'get_taxonomy', $allowed_taxonomies );
+		$tax_query = [];
+		foreach ( $taxonomies as $taxonomy ) {
+			$tax_param = $request->get_param( $taxonomy->rest_base );
+			$terms = $tax_param['terms'] ?? [];
+			$operator = $tax_param['operator'] ?? 'OR';
+			if ( empty( $terms ) ) {
+				continue;
+			}
+			$terms = explode( ',', $terms );
+			$terms = array_map( 'intval', $terms );
+			$terms = array_filter( $terms, 'term_exists' );
+			$tax_query[] = [
+				'taxonomy' => $taxonomy->name,
+				'field'    => 'term_id',
+				'terms'    => $terms,
+				'operator' => 'AND' === $operator ? 'AND' : 'IN',
+			];
+		}
+		if ( ! empty( $tax_query ) && 1 < count( $tax_query ) ) {
+			$tax_query['relation'] = $tax_relation;
+		}
 
 		$post_types         = explode( ',', $postTypeString );
 		$allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
@@ -67,18 +92,19 @@ final class Rest_Api implements Feature {
 		} );
 
 		$args = [
-			'post_type'      => $post_types,
-			'posts_per_page' => $per_page,
-			'offset'         => $offset,
+			'post_type'           => $post_types,
+			'posts_per_page'      => $per_page,
+			'offset'              => $offset,
+			'ignore_sticky_posts' => true,
 		];
 		if ( ! empty( $search_term ) ) {
 			$args['s'] = $search_term;
 		}
+		if ( ! empty( $tax_query ) ) {
+			$args['tax_query'] = $tax_query;
+		}
 
 		$query = new \WP_Query( $args );
-
-		$posts = [];
-
-		return $query->posts;
+		return wp_list_pluck( $query->posts, 'ID' );
 	}
 }

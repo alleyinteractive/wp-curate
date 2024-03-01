@@ -173,10 +173,7 @@ export default function Edit({
       apiFetch({
         path,
       }).then((response) => {
-        const postIds: number[] = (response as WP_REST_API_Posts).map(
-          (post: WP_REST_API_Post) => post.id,
-        );
-        setAttributes({ backfillPosts: postIds });
+        setAttributes({ backfillPosts: response as Array<number> });
       });
     };
     fetchPosts();
