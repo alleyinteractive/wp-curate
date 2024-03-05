@@ -49,15 +49,19 @@ final class Rest_Api implements Feature {
 	 * Gets the posts.
 	 *
 	 * @param WP_REST_Request $request The request object.
-	 * @return array
+	 * @return array<int> The post IDs.
 	 */
-	public function get_posts( WP_REST_Request $request ): array {
+	public function get_posts( WP_REST_Request $request ): array { // @phpstan-ignore-line
 		$search_term      = $request->get_param( 'search' ) ?? '';
 		$offset           = $request->get_param( 'offset' ) ?? 0;
 		$post_type_string = $request->get_param( 'post_type' ) ?? 'post';
 		$per_page         = $request->get_param( 'per_page' ) ?? 20;
 		$trending         = 'true' === $request->get_param( 'trending' ) ? true : false;
 		$tax_relation     = $request->get_param( 'tax_relation' ) ?? 'OR';
+
+		if ( ! is_string( $post_type_string ) ) {
+			$post_type_string = 'post';
+		}
 
 		/**
 		 * Filters the allowed taxonomies.
@@ -67,17 +71,25 @@ final class Rest_Api implements Feature {
 		 */
 		$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
 		$taxonomies         = array_map( 'get_taxonomy', $allowed_taxonomies );
+		$taxonomies         = array_filter( $taxonomies, 'is_object' );
 		$tax_query          = [];
 		foreach ( $taxonomies as $taxonomy ) {
-			$tax_param = $request->get_param( $taxonomy->rest_base );
-			$terms     = $tax_param['terms'] ?? [];
-			$operator  = $tax_param['operator'] ?? 'OR';
+			$rest_base = $taxonomy->rest_base;
+			if ( empty( $rest_base ) || ! is_string( $rest_base ) ) {
+				continue;
+			}
+			$tax_param = $request->get_param( $rest_base );
+			if ( ! is_array( $tax_param ) ) {
+				continue;
+			}
+			$terms     = isset( $tax_param['terms'] ) ? $tax_param['terms'] : [];
+			$operator  = isset( $tax_param['operator'] ) ? $tax_param['operator'] : 'OR';
 			if ( empty( $terms ) ) {
 				continue;
 			}
 			$terms       = explode( ',', $terms );
 			$terms       = array_map( 'intval', $terms );
-			$terms       = array_filter( $terms, 'term_exists' );
+			$terms       = array_filter( $terms, 'term_exists' ); // @phpstan-ignore-line
 			$tax_query[] = [
 				'taxonomy' => $taxonomy->name,
 				'field'    => 'term_id',
@@ -132,6 +144,6 @@ final class Rest_Api implements Feature {
 			$query = new \WP_Query( $args );
 			$posts = $query->posts;
 		}
-		return $posts;
+		return array_map( 'intval', $posts ); // @phpstan-ignore-line
 	}
 }
