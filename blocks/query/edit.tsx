@@ -23,7 +23,6 @@ import {
 import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
-import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
 import { Template } from '@wordpress/blocks';
 import type {
   EditProps,
