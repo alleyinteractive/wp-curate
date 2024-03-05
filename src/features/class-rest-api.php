@@ -51,8 +51,7 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request $request The request object.
 	 * @return array<int> The post IDs.
 	 */
-	public function get_posts( WP_REST_Request $request ): array {
-		// @phpstan-ignore-line
+	public function get_posts( WP_REST_Request $request ): array { // phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.ContentAfterBrace @phpstan-ignore-line
 		$search_term      = $request->get_param( 'search' ) ?? '';
 		$offset           = $request->get_param( 'offset' ) ?? 0;
 		$post_type_string = $request->get_param( 'post_type' ) ?? 'post';
