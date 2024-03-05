@@ -10,7 +10,7 @@ namespace Alley\WP\WP_Curate\Features;
 use Alley\WP\Types\Feature;
 
 /**
- * Add support for Parsely, if the plugin in installed.
+ * Add support for Parsely, if the plugin is installed.
  */
 final class Parsely_Support implements Feature {
 	/**
@@ -25,7 +25,9 @@ final class Parsely_Support implements Feature {
 		if ( ! class_exists( 'Parsely\Parsely' ) ) {
 			return;
 		}
+		// Elsewhere in the plugin, we'll use $GLOBALS['parsely'], but it is not available here.
 		$parsely = new \Parsely\Parsely();
+		// If we don't have the API secret, we can't use the Parsely API.
 		if ( ! $parsely->api_secret_is_set() ) {
 			return;
 		}
@@ -57,19 +59,26 @@ final class Parsely_Support implements Feature {
 	 */
 	public function get_trending_posts( $args ) {
 		// TODO: Add failover if we're not on production.
+		/**
+		 * Filter the period start for the Parsely API.
+		 *
+		 * @param string $period_start The period start.
+		 * @return string The period start.
+		 */
+		$period_start = apply_filters( 'wp_curate_parsely_period_start', '1d' );
 		$parsely_args = [
 			'limit'        => $args['posts_per_page'],
 			'sort'         => 'views',
-			'period_start' => '1d',
+			'period_start' => $period_start,
 			'period_end'   => 'now',
 		];
 		if ( isset( $args['tax_query'] ) ) {
 			foreach ( $args['tax_query'] as $tax_query ) {
 				if ( isset( $tax_query['taxonomy'] ) && 'category' === $tax_query['taxonomy'] ) {
-					$parsely_args['section'] = implode( ', ', $this->get_slugs_from_ids( $tax_query['terms'], $tax_query['taxonomy'] ) );
+					$parsely_args['section'] = implode( ', ', $this->get_slugs_from_term_ids( $tax_query['terms'], $tax_query['taxonomy'] ) );
 				}
 				if ( isset( $tax_query['taxonomy'] ) && 'post_tag' === $tax_query['taxonomy'] ) {
-					$parsely_args['tag'] = implode( ', ', $this->get_slugs_from_ids( $tax_query['terms'], $tax_query['taxonomy'] ) );
+					$parsely_args['tag'] = implode( ', ', $this->get_slugs_from_term_ids( $tax_query['terms'], $tax_query['taxonomy'] ) );
 				}
 			}
 		}
@@ -91,7 +100,14 @@ final class Parsely_Support implements Feature {
 							$post_id = url_to_postid( $post['url'] ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.url_to_postid_url_to_postid
 						}
 					}
-					return $post_id;
+					/**
+					 * Filters the post ID derived from Parsely post object.
+					 *
+					 * @param int $post_id The post ID.
+					 * @param array $post The Parsely post object.
+					 * @return int The post ID.
+					 */
+					return apply_filters( 'wp_curate_parsely_post_to_post_id', $post_id, $post );;
 				},
 				$posts
 			);
@@ -108,7 +124,7 @@ final class Parsely_Support implements Feature {
 	 * @param array $taxonomy The taxonomy.
 	 * @return array The list of term slugs.
 	 */
-	private function get_slugs_from_ids( $ids, $taxonomy ) {
+	private function get_slugs_from_term_ids( $ids, $taxonomy ) {
 		$terms = array_map(
 			function ( $id ) use ( $taxonomy ) {
 				$term = get_term( $id, $taxonomy );

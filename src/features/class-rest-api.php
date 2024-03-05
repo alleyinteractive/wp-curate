@@ -59,6 +59,11 @@ final class Rest_Api implements Feature {
 		$trending         = 'true' === $request->get_param( 'trending' ) ? true : false;
 		$tax_relation     = $request->get_param( 'tax_relation' ) ?? 'OR';
 
+		/**
+		 * Filters the allowed taxonomies.
+		 * @param array<string> $allowed_taxonomies The allowed taxonomies.
+		 * @return array<string> The allowed taxonomies.
+		 */
 		$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
 		$taxonomies         = array_map( 'get_taxonomy', $allowed_taxonomies );
 		$tax_query          = [];
@@ -84,6 +89,12 @@ final class Rest_Api implements Feature {
 		}
 
 		$post_types         = explode( ',', $post_type_string );
+		/**
+		 * Filters the allowed post types.
+		 *
+		 * @param array<string> $allowed_post_types The allowed post types.
+		 * @return array<string> The allowed post types.
+		 */
 		$allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
 
 		$post_types = array_filter(
@@ -108,6 +119,12 @@ final class Rest_Api implements Feature {
 		}
 
 		if ( $trending ) {
+			/**
+			 * Filters the trending posts query.
+			 *
+			 * @param array<string, mixed> $posts The posts.
+			 * @param array<string, mixed> $args The arguments.
+			 */
 			$posts = apply_filters( 'wp_curate_trending_posts_query', [], $args );
 		}
 		if ( empty( $posts ) ) {
