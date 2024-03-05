@@ -32,6 +32,8 @@ final class Trending_Post_Queries implements Post_Queries {
 	 * @return Post_Query
 	 */
 	public function query( array $args ): Post_Query {
+		// TODO: Check args or something to see if we should pull trending posts.
+		// If not, return the original query.
 		$parsely = new Parsely_Support();
 		$trending = $parsely->get_trending_posts( $args );
 		if ( ! empty( $trending ) ) {
