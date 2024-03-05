@@ -5,7 +5,7 @@
  * @package wp-type-extensions
  */
 
- namespace Alley\WP\WP_Curate;
+namespace Alley\WP\WP_Curate;
 
 use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
@@ -32,21 +32,21 @@ final class Trending_Post_Queries implements Post_Queries {
 	 * @return Post_Query
 	 */
 	public function query( array $args ): Post_Query {
-		// TODO: Check args or something to see if we should pull trending posts.
-		// If not, return the original query.
-		$parsely = new Parsely_Support();
-		$trending = $parsely->get_trending_posts( $args );
-		if ( ! empty( $trending ) ) {
-			return new WP_Query_Envelope(
-				new \WP_Query(
-					[
-						'post__in'            => $trending,
-						'post_type'           => 'any',
-						'ignore_sticky_posts' => true,
-						'orderby'             => 'post__in',
-					]
-				)
-			);
+		if ( 'trending' === $args['orderby'] ) {
+			$parsely  = new Parsely_Support();
+			$trending = $parsely->get_trending_posts( $args );
+			if ( ! empty( $trending ) ) {
+				return new WP_Query_Envelope(
+					new \WP_Query(
+						[
+							'post__in'            => $trending,
+							'post_type'           => 'any',
+							'ignore_sticky_posts' => true,
+							'orderby'             => 'post__in',
+						]
+					)
+				);
+			}
 		}
 
 		return $this->origin->query( $args );

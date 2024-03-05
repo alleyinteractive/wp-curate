@@ -98,7 +98,7 @@ final class Rest_Api implements Feature {
 			'posts_per_page'      => $per_page,
 			'offset'              => $offset,
 			'ignore_sticky_posts' => true,
-			'fields'  		      => 'ids',
+			'fields'              => 'ids',
 		];
 		if ( ! empty( $search_term ) ) {
 			$args['s'] = $search_term;
