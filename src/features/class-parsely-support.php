@@ -14,13 +14,6 @@ use Alley\WP\Types\Feature;
  */
 final class Parsely_Support implements Feature {
 	/**
-	 * Store the parsely object.
-	 *
-	 * @var \Parsely\Parsely
-	 */
-	private $parsely;
-
-	/**
 	 * Set up.
 	 */
 	public function __construct() {}
@@ -32,8 +25,8 @@ final class Parsely_Support implements Feature {
 		if ( ! class_exists( 'Parsely\Parsely' ) ) {
 			return;
 		}
-		$this->parsely = new \Parsely\Parsely();
-		if ( ! $this->parsely->api_secret_is_set() ) {
+		$parsely = new \Parsely\Parsely();
+		if ( ! $parsely->api_secret_is_set() ) {
 			return;
 		}
 		add_filter( 'wp_curate_use_parsely', '__return_true' );
@@ -48,8 +41,12 @@ final class Parsely_Support implements Feature {
 	 * @return array Array of post IDs.
 	 */
 	public function add_parsely_trending_posts_query( $posts, $args ) {
+		$trending_posts = $this->get_trending_posts( $args );
+		return $trending_posts;
+	}
+
+	public function get_trending_posts( $args ) {
 		// TODO: Add failover if we're not on production.
-		$api          = new \Parsely\RemoteAPI\Analytics_Posts_API( $this->parsely );
 		$parsely_args = [
 			'limit'        => $args['posts_per_page'],
 			'sort'         => 'views',
@@ -59,6 +56,7 @@ final class Parsely_Support implements Feature {
 		$cache_key    = 'parsely_trending_posts_' . md5( wp_json_encode( $parsely_args ) );
 		$ids          = wp_cache_get( $cache_key );
 		if ( false === $ids ) {
+			$api   = new \Parsely\RemoteAPI\Analytics_Posts_API( $GLOBALS['parsely'] );
 			$posts = $api->get_posts_analytics( $parsely_args );
 			$ids   = array_map(
 				function ( $post ) {

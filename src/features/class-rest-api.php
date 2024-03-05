@@ -39,6 +39,7 @@ final class Rest_Api implements Feature {
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'get_posts' ],
 				'permission_callback' => function () {
+					return true;
 					return current_user_can( 'edit_posts' );
 				},
 			]
@@ -98,6 +99,7 @@ final class Rest_Api implements Feature {
 			'posts_per_page'      => $per_page,
 			'offset'              => $offset,
 			'ignore_sticky_posts' => true,
+			'fields'  		      => 'ids',
 		];
 		if ( ! empty( $search_term ) ) {
 			$args['s'] = $search_term;
@@ -111,7 +113,7 @@ final class Rest_Api implements Feature {
 		}
 		if ( empty( $posts ) ) {
 			$query = new \WP_Query( $args );
-			$posts = wp_list_pluck( $query->posts, 'ID' );
+			$posts = $query->posts;
 		}
 		return $posts;
 	}

@@ -11,6 +11,7 @@ use Alley\Validator\Comparison;
 use Alley\WP\Blocks\Parsed_Block;
 use Alley\WP\Post_IDs\Used_Post_IDs;
 use Alley\WP\Post_Queries\Exclude_Queries;
+use Alley\WP\WP_Curate\Trending_Post_Queries;
 use Alley\WP\Post_Queries\Variable_Post_Queries;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_Queries;
@@ -73,31 +74,33 @@ final class Query_Block_Context implements Feature {
 				origin: new Must_Include_Curated_Posts(
 					qv: $this->stop_queries_var,
 					origin: new Plugin_Curated_Posts(
-						queries: new Variable_Post_Queries(
-							input: function () use ( $parsed_block ) {
-								$main_query = $this->main_query->query_object();
+						queries: new Trending_Post_Queries(
+							origin: new Variable_Post_Queries(
+								input: function () use ( $parsed_block ) {
+									$main_query = $this->main_query->query_object();
 
-								if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
-									return false;
-								}
-
-								if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
-									$post_level_deduplication = get_post_meta( $main_query->get_queried_object_id(), 'wp_curate_deduplication', true );
-
-									if ( true === (bool) $post_level_deduplication ) {
-										return true;
+									if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
+										return false;
 									}
-								}
 
-								return false;
-							},
-							test: new Comparison( [ 'compared' => true ] ),
-							is_true: new Exclude_Queries(
-								$this->history,
-								$this->default_per_page,
-								$this->post_queries,
+									if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
+										$post_level_deduplication = get_post_meta( $main_query->get_queried_object_id(), 'wp_curate_deduplication', true );
+
+										if ( true === (bool) $post_level_deduplication ) {
+											return true;
+										}
+									}
+
+									return false;
+								},
+								test: new Comparison( [ 'compared' => true ] ),
+								is_true: new Exclude_Queries(
+									$this->history,
+									$this->default_per_page,
+									$this->post_queries,
+								),
+								is_false: $this->post_queries,
 							),
-							is_false: $this->post_queries,
 						),
 					),
 				),
