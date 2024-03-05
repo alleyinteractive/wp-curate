@@ -93,12 +93,11 @@ final class Parsely_Support implements Feature {
 					$metadata = json_decode( $post['metadata'] ?? '', true );
 					if ( ! empty( $post['metadata'] ) && isset( $metadata['post_id'] ) ) {
 						$post_id = intval( $metadata['post_id'] );
-					} else {
-						if ( function_exists( 'wpcom_vip_url_to_postid' ) ) {
+					} elseif ( function_exists( 'wpcom_vip_url_to_postid' ) ) {
 							$post_id = wpcom_vip_url_to_postid( $post['url'] );
-						} else {
-							$post_id = url_to_postid( $post['url'] ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.url_to_postid_url_to_postid
-						}
+					} else {
+						$post_id = url_to_postid( $post['url'] ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.url_to_postid_url_to_postid
+
 					}
 					/**
 					 * Filters the post ID derived from Parsely post object.
@@ -107,7 +106,7 @@ final class Parsely_Support implements Feature {
 					 * @param array $post The Parsely post object.
 					 * @return int The post ID.
 					 */
-					return apply_filters( 'wp_curate_parsely_post_to_post_id', $post_id, $post );;
+					return apply_filters( 'wp_curate_parsely_post_to_post_id', $post_id, $post );
 				},
 				$posts
 			);
@@ -134,5 +133,4 @@ final class Parsely_Support implements Feature {
 		);
 		return $terms;
 	}
-
 }

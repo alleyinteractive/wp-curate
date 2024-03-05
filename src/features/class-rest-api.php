@@ -61,6 +61,7 @@ final class Rest_Api implements Feature {
 
 		/**
 		 * Filters the allowed taxonomies.
+		 *
 		 * @param array<string> $allowed_taxonomies The allowed taxonomies.
 		 * @return array<string> The allowed taxonomies.
 		 */
@@ -88,7 +89,7 @@ final class Rest_Api implements Feature {
 			$tax_query['relation'] = $tax_relation;
 		}
 
-		$post_types         = explode( ',', $post_type_string );
+		$post_types = explode( ',', $post_type_string );
 		/**
 		 * Filters the allowed post types.
 		 *
