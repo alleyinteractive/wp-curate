@@ -11,6 +11,7 @@ use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
 use Alley\WP\Post_Query\WP_Query_Envelope;
 use Alley\WP\WP_Curate\Features\Parsely_Support;
+use Alley\WP\Post_Query\Post_IDs_Query;
 
 /**
  * Pull trending posts from Parsely.
@@ -19,10 +20,12 @@ final class Trending_Post_Queries implements Post_Queries {
 	/**
 	 * Set up.
 	 *
-	 * @param Post_Queries $origin Post_Queries object.
+	 * @param Post_Queries    $origin Post_Queries object.
+	 * @param Parsely_Support $parsely Parsely_Support object.
 	 */
 	public function __construct(
 		private readonly Post_Queries $origin,
+		private readonly Parsely_Support $parsely
 	) {}
 
 	/**
@@ -32,20 +35,10 @@ final class Trending_Post_Queries implements Post_Queries {
 	 * @return Post_Query
 	 */
 	public function query( array $args ): Post_Query {
-		if ( 'trending' === $args['orderby'] ) {
-			$parsely  = new Parsely_Support();
-			$trending = $parsely->get_trending_posts( $args );
+		if ( isset( $args['orderby'] ) && 'trending' === $args['orderby'] ) {
+			$trending = $this->parsely->get_trending_posts( $args );
 			if ( ! empty( $trending ) ) {
-				return new WP_Query_Envelope(
-					new \WP_Query(
-						[
-							'post__in'            => $trending,
-							'post_type'           => 'any',
-							'ignore_sticky_posts' => true,
-							'orderby'             => 'post__in',
-						]
-					)
-				);
+				return new Post_IDs_Query( $trending );
 			}
 		}
 

@@ -64,11 +64,10 @@ final class Parsely_Support implements Feature {
 		 * Filter the period start for the Parsely API.
 		 *
 		 * @param string $period_start The period start.
-		 * @return string The period start.
 		 */
 		$period_start = apply_filters( 'wp_curate_parsely_period_start', '1d' );
 		$parsely_args = [
-			'limit'        => $args['posts_per_page'],
+			'limit'        => $args['posts_per_page'] ?? 20,
 			'sort'         => 'views',
 			'period_start' => $period_start,
 			'period_end'   => 'now',
@@ -93,9 +92,9 @@ final class Parsely_Support implements Feature {
 					// Check if the metadata contains post_id, if not, use the URL to get the post ID.
 					$metadata = json_decode( $post['metadata'] ?? '', true );
 					if ( is_array( $metadata ) && ! empty( $metadata ) && isset( $metadata['post_id'] ) ) {
-						$post_id = intval( $metadata['post_id'] );
+						$post_id = (int) $metadata['post_id'];
 					} elseif ( function_exists( 'wpcom_vip_url_to_postid' ) ) {
-							$post_id = wpcom_vip_url_to_postid( $post['url'] );
+						$post_id = wpcom_vip_url_to_postid( $post['url'] );
 					} else {
 						$post_id = url_to_postid( $post['url'] ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.url_to_postid_url_to_postid
 					}
@@ -104,7 +103,6 @@ final class Parsely_Support implements Feature {
 					 *
 					 * @param int $post_id The post ID.
 					 * @param array $post The Parsely post object.
-					 * @return int The post ID.
 					 */
 					return apply_filters( 'wp_curate_parsely_post_to_post_id', $post_id, $post );
 				},
@@ -114,7 +112,7 @@ final class Parsely_Support implements Feature {
 		}
 		$ids = array_map( 'intval', $ids ); // @phpstan-ignore-line
 
-		return( $ids );
+		return $ids;
 	}
 
 	/**

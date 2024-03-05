@@ -16,6 +16,7 @@ use Alley\WP\Post_Queries\Variable_Post_Queries;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
+use Alley\WP\WP_Curate\Features\Parsely_Support;
 use Alley\WP\WP_Curate\Must_Include_Curated_Posts;
 use Alley\WP\WP_Curate\Plugin_Curated_Posts;
 use Alley\WP\WP_Curate\Recorded_Curated_Posts;
@@ -75,6 +76,7 @@ final class Query_Block_Context implements Feature {
 					qv: $this->stop_queries_var,
 					origin: new Plugin_Curated_Posts(
 						queries: new Trending_Post_Queries(
+							parsely: new Parsely_Support(),
 							origin: new Variable_Post_Queries(
 								input: function () use ( $parsed_block ) {
 									$main_query = $this->main_query->query_object();

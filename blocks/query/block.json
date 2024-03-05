@@ -95,9 +95,13 @@
       ],
       "type": "string"
     },
-    "trending": {
-      "default": false,
-      "type": "boolean"
+    "orderby": {
+      "default": "date",
+      "enum": [
+        "date",
+        "trending"
+      ],
+      "type": "string"
     }
   }
 }
