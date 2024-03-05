@@ -51,7 +51,8 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request $request The request object.
 	 * @return array<int> The post IDs.
 	 */
-	public function get_posts( WP_REST_Request $request ): array { // @phpstan-ignore-line
+	public function get_posts( WP_REST_Request $request ): array {
+		// @phpstan-ignore-line
 		$search_term      = $request->get_param( 'search' ) ?? '';
 		$offset           = $request->get_param( 'offset' ) ?? 0;
 		$post_type_string = $request->get_param( 'post_type' ) ?? 'post';
@@ -82,8 +83,8 @@ final class Rest_Api implements Feature {
 			if ( ! is_array( $tax_param ) ) {
 				continue;
 			}
-			$terms     = isset( $tax_param['terms'] ) ? $tax_param['terms'] : [];
-			$operator  = isset( $tax_param['operator'] ) ? $tax_param['operator'] : 'OR';
+			$terms    = isset( $tax_param['terms'] ) ? $tax_param['terms'] : [];
+			$operator = isset( $tax_param['operator'] ) ? $tax_param['operator'] : 'OR';
 			if ( empty( $terms ) ) {
 				continue;
 			}

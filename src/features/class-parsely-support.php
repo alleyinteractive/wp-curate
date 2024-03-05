@@ -39,7 +39,7 @@ final class Parsely_Support implements Feature {
 	/**
 	 * Gets the trending posts from Parsely.
 	 *
-	 * @param array<number> $posts The posts, which should be an empty array.
+	 * @param array<number>        $posts The posts, which should be an empty array.
 	 * @param array<string, mixed> $args The WP_Query args.
 	 * @return array<number> Array of post IDs.
 	 */
@@ -121,7 +121,7 @@ final class Parsely_Support implements Feature {
 	 * Get slugs from term IDs.
 	 *
 	 * @param array<int> $ids The list of term ids.
-	 * @param string $taxonomy The taxonomy.
+	 * @param string     $taxonomy The taxonomy.
 	 * @return array<string> The list of term slugs.
 	 */
 	private function get_slugs_from_term_ids( $ids, $taxonomy ) {
