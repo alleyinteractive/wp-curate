@@ -89,7 +89,7 @@ final class Parsely_Support implements Feature {
 		}
 		$cache_key = 'parsely_trending_posts_' . md5( wp_json_encode( $parsely_args ) ); // @phpstan-ignore-line - wp_Json_encode not likely to return false.
 		$ids       = wp_cache_get( $cache_key );
-		if ( false === $ids ) {
+		if ( false === $ids || ! is_array( $ids ) ) {
 			$api   = new Analytics_Posts_API( $GLOBALS['parsely'] ); // @phpstan-ignore-line
 			$posts = $api->get_posts_analytics( $parsely_args ); // @phpstan-ignore-line
 			$ids   = array_map(
@@ -124,7 +124,6 @@ final class Parsely_Support implements Feature {
 		 * @param array<string, mixed> $args The WP_Query args.
 		 */
 		$ids = apply_filters( 'wp_curate_parsely_trending_posts', $ids, $parsely_args, $args );
-		$ids = array_map( 'intval', $ids ); // @phpstan-ignore-line - yes phpstan, 'invtal' is a function.
 
 		return $ids;
 	}
