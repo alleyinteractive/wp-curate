@@ -69,8 +69,8 @@ final class Rest_Api implements Feature {
 		 * @param array<string> $allowed_taxonomies The allowed taxonomies.
 		 */
 		$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
-		$allowed_taxonomies = array_filter( $allowed_taxonomies, 'taxonomy_exists' );
 		$taxonomies         = array_map( 'get_taxonomy', $allowed_taxonomies );
+		$taxonomies         = array_filter( $taxonomies, 'is_object' );
 		$tax_query          = [];
 		foreach ( $taxonomies as $taxonomy ) {
 			$rest_base = $taxonomy->rest_base;
@@ -134,6 +134,7 @@ final class Rest_Api implements Feature {
 			 * Filters the trending posts query.
 			 *
 			 * @param array<string, mixed> $posts The posts.
+			 * @param array<string, mixed> $args The WP_Query arguments.
 			 */
 			$posts = apply_filters( 'wp_curate_trending_posts_query', [], $args );
 		}

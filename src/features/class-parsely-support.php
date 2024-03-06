@@ -56,10 +56,11 @@ final class Parsely_Support implements Feature {
 	 * Gets the trending posts from Parsely.
 	 *
 	 * @param array<string, mixed> $args The WP_Query args.
-	 * @return array<number> An array of post IDs.
+	 * @return array<int> An array of post IDs.
 	 */
 	public function get_trending_posts( array $args ): array {
 		// TODO: Add failover if we're not on production.
+		$parsely_options = $GLOBALS['parsely']->get_options();
 		/**
 		 * Filter the period start for the Parsely API.
 		 *
@@ -74,12 +75,17 @@ final class Parsely_Support implements Feature {
 		];
 		if ( isset( $args['tax_query'] ) && is_array( $args['tax_query'] ) ) {
 			foreach ( $args['tax_query'] as $tax_query ) {
-				if ( isset( $tax_query['taxonomy'] ) && 'category' === $tax_query['taxonomy'] ) {
+				if ( isset( $tax_query['taxonomy'] ) && $parsely_options['custom_taxonomy_section'] === $tax_query['taxonomy'] ) {
 					$parsely_args['section'] = implode( ', ', $this->get_slugs_from_term_ids( $tax_query['terms'], $tax_query['taxonomy'] ) );
 				}
 				if ( isset( $tax_query['taxonomy'] ) && 'post_tag' === $tax_query['taxonomy'] ) {
 					$parsely_args['tag'] = implode( ', ', $this->get_slugs_from_term_ids( $tax_query['terms'], $tax_query['taxonomy'] ) );
 				}
+			}
+			if ( $parsely_options['cats_as_tags'] ) {
+				$tags                = explode( ', ', $parsely_args['tag'] ?? '' );
+				$sections            = explode( ', ', $parsely_args['section'] ?? '' );
+				$parsely_args['tag'] = implode( ', ', array_merge( $tags, $sections ) );
 			}
 		}
 		$cache_key = 'parsely_trending_posts_' . md5( wp_json_encode( $parsely_args ) ); // @phpstan-ignore-line - wp_Json_encode not likely to return false.
@@ -110,7 +116,7 @@ final class Parsely_Support implements Feature {
 			);
 			wp_cache_set( $cache_key, $ids, '', 10 * MINUTE_IN_SECONDS );
 		}
-		$ids = array_map( 'intval', $ids ); // @phpstan-ignore-line
+		$ids = array_map( 'intval', $ids ); // @phpstan-ignore-line - yes phpstan, 'invtal' is a function.
 
 		return $ids;
 	}

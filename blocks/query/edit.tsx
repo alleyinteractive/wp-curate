@@ -70,7 +70,7 @@ export default function Edit({
     terms = {},
     termRelations = {},
     taxRelation = 'AND',
-    trending = false,
+    orderby = 'date',
   },
   setAttributes,
 }: EditProps) {
@@ -164,7 +164,7 @@ export default function Edit({
           type: postTypeString,
           status: 'publish',
           per_page: 20,
-          trending,
+          orderby,
         },
       );
       path += `&${termQueryArgs}`;
@@ -182,7 +182,7 @@ export default function Edit({
     offset,
     postTypeString,
     availableTaxonomies,
-    trending,
+    orderby,
     setAttributes,
   ]);
 
@@ -390,8 +390,8 @@ export default function Edit({
             <ToggleControl
               label={__('Show Trending Content from Parsely', 'wp-curate')}
               help={__('If enabled, the block will show trending content from Parsely.', 'wp-curate')}
-              checked={trending}
-              onChange={(next) => setAttributes({ trending: next })}
+              checked={orderby === 'trending'}
+              onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date' })}
             />
           ) : null }
         </PanelBody>
