@@ -48,14 +48,14 @@ function wp_curate_query_block_init(): void {
 	 *
 	 * @param bool $use_parsely Whether to use Parsely.
 	 */
-	$use_parsley = apply_filters( 'wp_curate_use_parsely', false );
+	$parsely_available = apply_filters( 'wp_curate_use_parsely', false );
 	wp_localize_script(
 		'wp-curate-query-editor-script',
 		'wpCurateQueryBlock',
 		[
 			'allowedPostTypes'  => $allowed_post_types,
 			'allowedTaxonomies' => $allowed_taxonomies,
-			'useParsely'        => $use_parsley ? 'true' : 'false',
+			'parselyAvailable'  => $parsely_available ? 'true' : 'false',
 		]
 	);
 }

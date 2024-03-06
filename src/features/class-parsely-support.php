@@ -9,6 +9,7 @@ namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
 use Parsely\RemoteAPI\Analytics_Posts_API;
+use Parsely\Parsely;
 
 /**
  * Add support for Parsely, if the plugin is installed.
@@ -59,18 +60,33 @@ final class Parsely_Support implements Feature {
 	 * @return array<int> An array of post IDs.
 	 */
 	public function get_trending_posts( array $args ): array {
+		if ( ! class_exists( '\Parsely\Parsely' ) || ! isset( $GLOBALS['parsely'] ) || ! $GLOBALS['parsely'] instanceof Parsely ) {
+			return [];
+		}
+		if ( ! class_exists( '\Parsely\RemoteAPI\Analytics_Posts_API' ) ) {
+			return [];
+		}
+
 		$parsely_options = $GLOBALS['parsely']->get_options();
 		/**
 		 * Filter the period start for the Parsely API.
 		 *
 		 * @param string $period_start The period start.
+		 * @param array<string, mixed> $args The WP_Query args.
 		 */
-		$period_start = apply_filters( 'wp_curate_parsely_period_start', '1d' );
+		$period_start = apply_filters( 'wp_curate_parsely_period_start', '1d', $args );
+		/**
+		 * Filter the period end for the Parsely API.
+		 *
+		 * @param string $period_end The period end.
+		 * @param array<string, mixed> $args The WP_Query args.
+		 */
+		$period_end   = apply_filters( 'wp_curate_parsely_period_end', 'now', $args );
 		$parsely_args = [
-			'limit'        => $args['posts_per_page'] ?? 20,
+			'limit'        => $args['posts_per_page'] ?? get_option( 'posts_per_page' ),
 			'sort'         => 'views',
 			'period_start' => $period_start,
-			'period_end'   => 'now',
+			'period_end'   => $period_end,
 		];
 		if ( isset( $args['tax_query'] ) && is_array( $args['tax_query'] ) ) {
 			foreach ( $args['tax_query'] as $tax_query ) {
@@ -90,13 +106,13 @@ final class Parsely_Support implements Feature {
 		$cache_key = 'parsely_trending_posts_' . md5( wp_json_encode( $parsely_args ) ); // @phpstan-ignore-line - wp_Json_encode not likely to return false.
 		$ids       = wp_cache_get( $cache_key );
 		if ( false === $ids || ! is_array( $ids ) ) {
-			$api   = new Analytics_Posts_API( $GLOBALS['parsely'] ); // @phpstan-ignore-line
-			$posts = $api->get_posts_analytics( $parsely_args ); // @phpstan-ignore-line
+			$api   = new Analytics_Posts_API( $GLOBALS['parsely'] );
+			$posts = $api->get_posts_analytics( $parsely_args );
 			$ids   = array_map(
 				function ( $post ) {
 					// Check if the metadata contains post_id, if not, use the URL to get the post ID.
 					$metadata = json_decode( $post['metadata'] ?? '', true );
-					if ( is_array( $metadata ) && ! empty( $metadata ) && isset( $metadata['post_id'] ) ) {
+					if ( is_array( $metadata ) && isset( $metadata['post_id'] ) ) {
 						$post_id = (int) $metadata['post_id'];
 					} elseif ( function_exists( 'wpcom_vip_url_to_postid' ) ) {
 						$post_id = wpcom_vip_url_to_postid( $post['url'] );
@@ -113,7 +129,17 @@ final class Parsely_Support implements Feature {
 				},
 				$posts
 			);
-			wp_cache_set( $cache_key, $ids, '', 10 * MINUTE_IN_SECONDS );
+			/**
+			 * Filters the cache duration for the trending posts from Parsely.
+			 *
+			 * @param int $cache_duration The cache duration.
+			 * @param array<string, mixed> $args The WP_Query args.
+			 */
+			$cache_duration = apply_filters( 'wp_curate_parsely_trending_posts_cache_duration', 10 * MINUTE_IN_SECONDS, $args );
+			if ( 300 > $cache_duration ) {
+				$cache_duration = 300;
+			}
+			wp_cache_set( $cache_key, $ids, '', $cache_duration ); // phpcs:ignore WordPressVIPMinimum.Performance.LowExpiryCacheTime.CacheTimeUndetermined
 		}
 
 		/**

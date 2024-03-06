@@ -44,7 +44,7 @@ interface Window {
   wpCurateQueryBlock: {
     allowedPostTypes: Array<string>;
     allowedTaxonomies: Array<string>;
-    useParsely: string,
+    parselyAvailable: string,
   };
 }
 
@@ -78,7 +78,7 @@ export default function Edit({
     wpCurateQueryBlock: {
       allowedPostTypes = [],
       allowedTaxonomies = [],
-      useParsely = 'false',
+      parselyAvailable = 'false',
     } = {},
   } = (window as any as Window);
 
@@ -386,7 +386,7 @@ export default function Edit({
             onChange={(next) => setAttributes({ searchTerm: next })}
             value={searchTerm}
           />
-          { useParsely === 'true' ? (
+          { parselyAvailable === 'true' ? (
             <ToggleControl
               label={__('Show Trending Content from Parsely', 'wp-curate')}
               help={__('If enabled, the block will show trending content from Parsely.', 'wp-curate')}

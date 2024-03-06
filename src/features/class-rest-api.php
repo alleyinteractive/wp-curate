@@ -38,9 +38,7 @@ final class Rest_Api implements Feature {
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'get_posts' ],
-				'permission_callback' => function () {
-					return current_user_can( 'edit_posts' );
-				},
+				'permission_callback' => 'is_user_logged_in',
 			]
 		);
 	}
