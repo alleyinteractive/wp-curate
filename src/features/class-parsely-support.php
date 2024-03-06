@@ -59,7 +59,6 @@ final class Parsely_Support implements Feature {
 	 * @return array<int> An array of post IDs.
 	 */
 	public function get_trending_posts( array $args ): array {
-		// TODO: Add failover if we're not on production.
 		$parsely_options = $GLOBALS['parsely']->get_options();
 		/**
 		 * Filter the period start for the Parsely API.
@@ -116,6 +115,15 @@ final class Parsely_Support implements Feature {
 			);
 			wp_cache_set( $cache_key, $ids, '', 10 * MINUTE_IN_SECONDS );
 		}
+
+		/**
+		 * Filters the trending posts from Parsely.
+		 *
+		 * @param array<int> $ids The list of post IDs.
+		 * @param array<string, mixed> $parsely_args The Parsely API args.
+		 * @param array<string, mixed> $args The WP_Query args.
+		 */
+		$ids = apply_filters( 'wp_curate_parsely_trending_posts', $ids, $parsely_args, $args );
 		$ids = array_map( 'intval', $ids ); // @phpstan-ignore-line - yes phpstan, 'invtal' is a function.
 
 		return $ids;
