@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.7.0 - 2024-03-06
+
+- Enhancement: Integration with [Parse.ly plugin](https://wordpress.org/plugins/wp-parsely/) to support querying trending posts.
+
 ## 1.6.3 - 2024-02-14
 
 - Bug Fix: Selecting a post more than once in a Query block causes empty slots at the end.
