@@ -19,6 +19,7 @@ interface EditProps {
       [key: string]: string;
     };
     taxRelation?: string;
+    orderby?: string;
   };
   setAttributes: (attributes: any) => void;
 }

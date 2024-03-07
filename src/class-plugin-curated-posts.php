@@ -43,7 +43,7 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 			'no_found_rows'  => true,
 			'offset'         => $attributes['offset'] ?? $block_type->attributes['offset']['default'],
 			'order'          => 'DESC',
-			'orderby'        => 'date',
+			'orderby'        => $attributes['orderby'] ?? 'date',
 			'posts_per_page' => $attributes['numberOfPosts'] ?? $block_type->attributes['numberOfPosts']['default'],
 			'post_status'    => 'publish',
 			'post_type'      => $attributes['postTypes'] ?? $block_type->attributes['postTypes']['default'],

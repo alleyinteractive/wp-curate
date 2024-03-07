@@ -38,6 +38,7 @@ function main(): void {
 		stop_queries_var: $stop_queries_var,
 		block_type_registry: WP_Block_Type_Registry::get_instance(),
 	);
+	$features[] = new Features\Parsely_Support();
 
 	$features[] = new Features\Rest_Api();
 

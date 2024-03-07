@@ -94,6 +94,14 @@
         "OR"
       ],
       "type": "string"
+    },
+    "orderby": {
+      "default": "date",
+      "enum": [
+        "date",
+        "trending"
+      ],
+      "type": "string"
     }
   }
 }

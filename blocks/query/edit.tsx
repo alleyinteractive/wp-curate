@@ -11,6 +11,7 @@ import {
   RangeControl,
   SelectControl,
   TextControl,
+  ToggleControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import {
@@ -22,7 +23,6 @@ import {
 import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
-import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
 import { Template } from '@wordpress/blocks';
 import type {
   EditProps,
@@ -44,6 +44,7 @@ interface Window {
   wpCurateQueryBlock: {
     allowedPostTypes: Array<string>;
     allowedTaxonomies: Array<string>;
+    parselyAvailable: string,
   };
 }
 
@@ -69,6 +70,7 @@ export default function Edit({
     terms = {},
     termRelations = {},
     taxRelation = 'AND',
+    orderby = 'date',
   },
   setAttributes,
 }: EditProps) {
@@ -76,6 +78,7 @@ export default function Edit({
     wpCurateQueryBlock: {
       allowedPostTypes = [],
       allowedTaxonomies = [],
+      parselyAvailable = 'false',
     } = {},
   } = (window as any as Window);
 
@@ -154,13 +157,14 @@ export default function Edit({
     }
     const fetchPosts = async () => {
       let path = addQueryArgs(
-        '/wp/v2/posts',
+        '/wp-curate/v1/posts',
         {
           search: debouncedSearchTerm,
           offset,
           type: postTypeString,
           status: 'publish',
           per_page: 20,
+          orderby,
         },
       );
       path += `&${termQueryArgs}`;
@@ -168,10 +172,7 @@ export default function Edit({
       apiFetch({
         path,
       }).then((response) => {
-        const postIds: number[] = (response as WP_REST_API_Posts).map(
-          (post: WP_REST_API_Post) => post.id,
-        );
-        setAttributes({ backfillPosts: postIds });
+        setAttributes({ backfillPosts: response as Array<number> });
       });
     };
     fetchPosts();
@@ -181,6 +182,7 @@ export default function Edit({
     offset,
     postTypeString,
     availableTaxonomies,
+    orderby,
     setAttributes,
   ]);
 
@@ -384,6 +386,14 @@ export default function Edit({
             onChange={(next) => setAttributes({ searchTerm: next })}
             value={searchTerm}
           />
+          { parselyAvailable === 'true' ? (
+            <ToggleControl
+              label={__('Show Trending Content from Parsely', 'wp-curate')}
+              help={__('If enabled, the block will show trending content from Parsely.', 'wp-curate')}
+              checked={orderby === 'trending'}
+              onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date' })}
+            />
+          ) : null }
         </PanelBody>
       </InspectorControls>
 
