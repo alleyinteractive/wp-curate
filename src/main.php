@@ -41,6 +41,7 @@ function main(): void {
 	$features[] = new Features\Parsely_Support();
 
 	$features[] = new Features\Rest_Api();
+	$features[] = new Features\GraphQL();
 
 	foreach ( $features as $feature ) {
 		$feature->boot();
