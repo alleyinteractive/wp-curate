@@ -126,7 +126,8 @@ final class GraphQL implements Feature {
 						'description' => __( 'Array of IDs for the objects to retrieve', 'wp-curate' ),
 					],
 				],
-				'resolve'        => function ( $source, $args, AppContext $context, ResolveInfo $info ) { // @phpstan-ignore-line
+				// @phpstan-ignore-next-line
+				'resolve'        => function ( $source, $args, AppContext $context, ResolveInfo $info ) {
 					$resolver = new PostObjectConnectionResolver( $source, $args, $context, $info ); // @phpstan-ignore-line
 
 					$resolver->set_query_arg( 'post__in', $args['where']['in'] ); // @phpstan-ignore-line
