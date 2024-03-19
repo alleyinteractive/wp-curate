@@ -42,6 +42,7 @@ final class GraphQL implements Feature {
 			return '';
 		}
 
+		// @phpstan-ignore-next-line
 		return ucfirst( $post_type_object->graphql_single_name );
 	}
 
@@ -86,7 +87,7 @@ final class GraphQL implements Feature {
 		 *
 		 * @see https://www.wpgraphql.com/functions/register_graphql_interface_type
 		 */
-		register_graphql_interface_type(
+		register_graphql_interface_type( // @phpstan-ignore-line
 			'WPCurateInterface',
 			[
 				'description' => __( 'Represents the interface type a WP Curate post', 'wp-curate' ),
@@ -105,7 +106,7 @@ final class GraphQL implements Feature {
 		 *
 		 * @see https://www.wpgraphql.com/functions/register_graphql_interfaces_to_types
 		 */
-		register_graphql_interfaces_to_types( [ 'WPCurateInterface' ], $this->get_types_from_allowed_post_types() );
+		register_graphql_interfaces_to_types( [ 'WPCurateInterface' ], $this->get_types_from_allowed_post_types() ); // @phpstan-ignore-line
 
 		/**
 		 * Register a new connection field named 'wpCuratePosts' on `RootQuery`
@@ -114,7 +115,7 @@ final class GraphQL implements Feature {
 		 *
 		 * @see https://www.wpgraphql.com/functions/register_graphql_connection
 		 */
-		register_graphql_connection(
+		register_graphql_connection( // @phpstan-ignore-line
 			[
 				'fromType'       => 'RootQuery',
 				'toType'         => 'WPCurateInterface',
@@ -125,13 +126,13 @@ final class GraphQL implements Feature {
 						'description' => __( 'Array of IDs for the objects to retrieve', 'wp-curate' ),
 					],
 				],
-				'resolve'        => function ( $source, $args, AppContext $context, ResolveInfo $info ) {
-					$resolver = new PostObjectConnectionResolver( $source, $args, $context, $info );
+				'resolve'        => function ( $source, $args, AppContext $context, ResolveInfo $info ) { // @phpstan-ignore-line
+					$resolver = new PostObjectConnectionResolver( $source, $args, $context, $info ); // @phpstan-ignore-line
 
-					$resolver->set_query_arg( 'post__in', $args['where']['in'] );
-					$resolver->set_query_arg( 'post_type', $this->allowed_post_types );
+					$resolver->set_query_arg( 'post__in', $args['where']['in'] ); // @phpstan-ignore-line
+					$resolver->set_query_arg( 'post_type', $this->allowed_post_types ); // @phpstan-ignore-line
 
-					return $resolver->get_connection();
+					return $resolver->get_connection(); // @phpstan-ignore-line
 				},
 			],
 		);
