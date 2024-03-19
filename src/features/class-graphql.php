@@ -70,10 +70,7 @@ final class GraphQL implements Feature {
 	 * Boot the feature.
 	 */
 	public function boot(): void {
-		// Assumes that WPGraphQL has been installed as a composer dependency of a parent project.
-		if ( class_exists( 'WPGraphQL' ) ) {
-			add_action( 'graphql_register_types', [ $this, 'graphql_register_types' ] );
-		}
+		add_action( 'graphql_register_types', [ $this, 'graphql_register_types' ] );
 	}
 
 	/**
