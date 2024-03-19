@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.8.0 - 2024-03-19
+
+- Enhancement: Integration with [WPGraphQL plugin](https://wordpress.org/plugins/wp-graphql/) to support custom GraphQL interface type and connection.
+
 ## 1.7.0 - 2024-03-06
 
 - Enhancement: Integration with [Parse.ly plugin](https://wordpress.org/plugins/wp-parsely/) to support querying trending posts.
