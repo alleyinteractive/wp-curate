@@ -18,6 +18,8 @@ use WPGraphQL\Data\Connection\PostObjectConnectionResolver;
 final class GraphQL implements Feature {
 	/**
 	 * Post types allowed in GraphQL.
+	 *
+	 * @var array
 	 */
 	private $allowed_post_types;
 
