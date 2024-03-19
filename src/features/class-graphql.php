@@ -63,7 +63,7 @@ final class GraphQL implements Feature {
 	 * Set up.
 	 */
 	public function __construct() {
-		$this->allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post', 'opinion' ] );
+		$this->allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
 	}
 
 	/**
