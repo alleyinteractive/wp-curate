@@ -31,15 +31,14 @@ final class GraphQL implements Feature {
 	private function get_graphql_type_by_post_type( string $post_type_string ): string {
 		$post_type_object = get_post_type_object( $post_type_string );
 
-		if ( empty( $post_type_object ) ) {
-			return '';
-		}
-
 		// Only return a GraphQL type for allowed post types in WP Curate.
 		if ( ! in_array( $post_type_string, $this->allowed_post_types, true ) ) {
 			return '';
 		}
 
+		if ( empty( $post_type_object ) ) {
+			return '';
+		}
 
 		return ucfirst( $post_type_object->graphql_single_name );
 	}
