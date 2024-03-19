@@ -28,7 +28,7 @@ final class GraphQL implements Feature {
 	 *
 	 * @return string GraphQL Type name. Ex: 'Post'.
 	 */
-	private function get_graphql_type_by_post_type( $post_type_string ): string {
+	private function get_graphql_type_by_post_type( string $post_type_string ): string {
 		$post_type_object = get_post_type_object( $post_type_string );
 
 		if ( empty( $post_type_object ) ) {
