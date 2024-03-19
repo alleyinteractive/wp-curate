@@ -19,7 +19,7 @@ final class GraphQL implements Feature {
 	/**
 	 * Post types allowed in GraphQL.
 	 *
-	 * @var array
+	 * @var string[]
 	 */
 	private $allowed_post_types;
 
