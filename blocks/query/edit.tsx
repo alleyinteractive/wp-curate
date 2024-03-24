@@ -161,7 +161,7 @@ export default function Edit({
         {
           search: debouncedSearchTerm,
           offset,
-          type: postTypeString,
+          post_type: postTypeString,
           status: 'publish',
           per_page: 20,
           orderby,

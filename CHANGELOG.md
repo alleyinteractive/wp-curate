@@ -6,6 +6,10 @@ All notable changes to `WP Curate` will be documented in this file.
 
 - Enhancement: Integration with [WPGraphQL plugin](https://wordpress.org/plugins/wp-graphql/) to support custom GraphQL interface type and connection.
 
+## 1.7.1 - 2024-03-13
+
+- Bug Fix: Query block does not update with posts from custom post types when selected in Query Paramaters block settings.
+
 ## 1.7.0 - 2024-03-06
 
 - Enhancement: Integration with [Parse.ly plugin](https://wordpress.org/plugins/wp-parsely/) to support querying trending posts.

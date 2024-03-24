@@ -24,6 +24,7 @@ final class Rest_Api implements Feature {
 	 */
 	public function boot(): void {
 		add_action( 'rest_api_init', [ $this, 'register_endpoints' ] );
+		add_filter( 'rest_post_query', [ $this, 'add_type_param' ], 10, 2 );
 	}
 
 	/**
@@ -141,5 +142,36 @@ final class Rest_Api implements Feature {
 			$posts = $query->posts;
 		}
 		return array_map( 'intval', $posts ); // @phpstan-ignore-line
+	}
+
+	/**
+	 * Add post_type to rest post query if the type param is set.
+	 *
+	 * NOTE: This is a temporary solution that will be replaced by a more robust solution in the future.
+	 *
+	 * @param array<array<int, string>|string> $query_args The existing query args.
+	 * @param WP_REST_Request                  $request The REST request.
+	 * @return array<array<int, string>|string>
+	 */
+	// @phpstan-ignore-next-line
+	public function add_type_param( $query_args, $request ): array { // phpcs:ignore Squiz.Commenting.FunctionComment.WrongStyle
+		// Check if the user is logged in.
+		if ( ! \is_user_logged_in() ) {
+			return $query_args;
+		}
+		// Check the context.
+		if ( 'edit' !== $request['context'] ) {
+			return $query_args;
+		}
+
+		$type = $request->get_param( 'type' );
+
+		if ( ! empty( $type ) && is_string( $type ) ) {
+			$types                   = explode( ',', $type );
+			$types                   = array_filter( $types, 'post_type_exists' );
+			$query_args['post_type'] = $types;
+		}
+
+		return $query_args;
 	}
 }
