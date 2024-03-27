@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.8.2 - 2024-03-27
+
+- Bug Fix: Error in 1.8.1 when Parse.ly is not instantiated.
+
 ## 1.8.1 - 2024-03-27
 
 - Bug Fix: Query blocks set to ordery trending fatal when Parse.ly is not set up.

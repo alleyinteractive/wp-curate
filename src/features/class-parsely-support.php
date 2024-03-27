@@ -61,6 +61,9 @@ final class Parsely_Support implements Feature {
 	 */
 	public function get_trending_posts( array $args ): array {
 		$parsely = $GLOBALS['parsely'];
+		if ( ! $parsely ) {
+			return [];
+		}
 		if ( ! $parsely->api_secret_is_set() ) {
 			return [];
 		}
@@ -112,7 +115,10 @@ final class Parsely_Support implements Feature {
 		if ( false === $ids || ! is_array( $ids ) ) {
 			$api   = new Analytics_Posts_API( $GLOBALS['parsely'] );
 			$posts = $api->get_posts_analytics( $parsely_args );
-			$ids   = array_map(
+			if ( \is_wp_error( $posts ) || ! \is_array( $posts ) ) {
+				return [];
+			}
+			$ids = array_map(
 				function ( $post ) {
 					// Check if the metadata contains post_id, if not, use the URL to get the post ID.
 					$metadata = json_decode( $post['metadata'] ?? '', true );
