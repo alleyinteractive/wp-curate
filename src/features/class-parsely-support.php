@@ -60,6 +60,10 @@ final class Parsely_Support implements Feature {
 	 * @return array<int> An array of post IDs.
 	 */
 	public function get_trending_posts( array $args ): array {
+		$parsely = $GLOBALS['parsely'];
+		if ( ! $parsely->api_secret_is_set() ) {
+			return [];
+		}
 		if ( ! class_exists( '\Parsely\Parsely' ) || ! isset( $GLOBALS['parsely'] ) || ! $GLOBALS['parsely'] instanceof Parsely ) {
 			return [];
 		}

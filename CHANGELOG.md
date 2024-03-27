@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.8.1 - 2024-03-27
+
+- Bug Fix: Query blocks set to ordery trending fatal when Parse.ly is not set up.
+
 ## 1.8.0 - 2024-03-19
 
 - Enhancement: Integration with [WPGraphQL plugin](https://wordpress.org/plugins/wp-graphql/) to support custom GraphQL interface type and connection.
