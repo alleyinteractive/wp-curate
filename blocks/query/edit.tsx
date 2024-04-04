@@ -128,6 +128,7 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
+  const currentPostId = useSelect((select: any) => select('core/editor').getCurrentPostId(), []);
   const postTypeString = postTypes.join(',');
 
   // Fetch available taxonomies.
@@ -169,21 +170,31 @@ export default function Edit({
       );
       path += `&${termQueryArgs}`;
 
-      apiFetch({
-        path,
-      }).then((response) => {
-        setAttributes({ backfillPosts: response as Array<number> });
+      apiFetch({ path }).then((response:any) => {
+        let revisedResponse;
+        if (Array.isArray(response)) {
+          revisedResponse = response.filter((item) => item !== currentPostId);
+        } else if (response.id === currentPostId) {
+          // If the current post is in the response, remove it.
+          revisedResponse = null;
+        } else {
+          revisedResponse = response;
+        }
+        if (revisedResponse !== null) {
+          setAttributes({ backfillPosts: revisedResponse as Array<number> });
+        }
       });
     };
     fetchPosts();
   }, [
-    debouncedSearchTerm,
-    termQueryArgs,
-    offset,
-    postTypeString,
     availableTaxonomies,
+    currentPostId,
+    debouncedSearchTerm,
+    offset,
     orderby,
+    postTypeString,
     setAttributes,
+    termQueryArgs,
   ]);
 
   // Update the query when the backfillPosts change.
