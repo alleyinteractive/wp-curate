@@ -9,12 +9,14 @@ namespace Alley\WP\WP_Curate\Features;
 
 use Alley\Validator\Comparison;
 use Alley\WP\Blocks\Parsed_Block;
+use Alley\WP\Post_IDs\Post_IDs_Envelope;
 use Alley\WP\Post_IDs\Used_Post_IDs;
 use Alley\WP\Post_Queries\Exclude_Queries;
 use Alley\WP\Post_Queries\Variable_Post_Queries;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
+use Alley\WP\WP_Curate\Features\Parsely_Support;
 use Alley\WP\WP_Curate\Must_Include_Curated_Posts;
 use Alley\WP\WP_Curate\Plugin_Curated_Posts;
 use Alley\WP\WP_Curate\Recorded_Curated_Posts;
@@ -26,7 +28,7 @@ use WP_Block_Type_Registry;
 /**
  * Provides context to query blocks
  */
-final class Query_Block_Context implements Feature {
+final readonly class Query_Block_Context implements Feature {
 	/**
 	 * Set up.
 	 *
@@ -38,12 +40,12 @@ final class Query_Block_Context implements Feature {
 	 * @param WP_Block_Type_Registry $block_type_registry Core block type registry.
 	 */
 	public function __construct(
-		private readonly Post_Queries $post_queries,
-		private readonly Used_Post_IDs $history,
-		private readonly Post_Query $main_query,
-		private readonly int $default_per_page,
-		private readonly string $stop_queries_var,
-		private readonly WP_Block_Type_Registry $block_type_registry,
+		private Post_Queries $post_queries,
+		private Used_Post_IDs $history,
+		private Post_Query $main_query,
+		private int $default_per_page,
+		private string $stop_queries_var,
+		private WP_Block_Type_Registry $block_type_registry,
 	) {
 	}
 
@@ -56,7 +58,8 @@ final class Query_Block_Context implements Feature {
 	}
 
 	/**
-	 * Filters the context provided to a query block.
+	 * Filters the context provided to a query block
+	 * to determine the definitive list of backfilled posts.
 	 *
 	 * @param array<string, mixed>                 $context Default context.
 	 * @param array{"attrs": array<string, mixed>} $parsed_block Block being rendered.
@@ -71,10 +74,6 @@ final class Query_Block_Context implements Feature {
 
 		// If the block type is a custom 'query' block from our plugin, provide 'query' context.
 		if ( $plugin_block_type instanceof WP_Block_Type && $current_block->block_name() === $plugin_block_type->name ) {
-
-			/**
-			 * Filter and determine the definitive list of backfilled posts.
-			 */
 
 			// Handles the decision to exclude (deduplicate) posts or not, based on a given input.
 			$variable_post_queries = new Variable_Post_Queries(
@@ -105,11 +104,25 @@ final class Query_Block_Context implements Feature {
 				is_false: $this->post_queries,
 			);
 
+			// Exclude the current post from the list of posts to backfill.
+			$exclude_current_post_queries = new Variable_Post_Queries(
+				input: function () {
+					return $this->main_query->query_object()->is_singular();
+				},
+				test: new Comparison( [ 'compared' => true ] ),
+				is_true: new Exclude_Queries(
+					new Used_Post_IDs( new Post_IDs_Envelope( [ $this->main_query->query_object()->get_queried_object_id() ] ) ),
+					$this->default_per_page,
+					$variable_post_queries,
+				),
+				is_false: $variable_post_queries,
+			);
+
 			// Pull trending posts from Parsely and merge with existing queries.
 			$plugin_curated_posts = new Plugin_Curated_Posts(
 				queries: new Trending_Post_Queries(
 					parsely: new Parsely_Support(),
-					origin: $variable_post_queries,
+					origin: $exclude_current_post_queries,
 				),
 			);
 
