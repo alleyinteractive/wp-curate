@@ -113,7 +113,7 @@ final class Query_Block_Context implements Feature {
 				),
 			);
 
-			// Deduplication is achieved by both recording to and excluding from the same place.
+			// Handle deduplication and backfilling of curated posts.
 			$curated_posts = new Recorded_Curated_Posts(
 				history: $this->history,
 				origin: new Must_Include_Curated_Posts(
