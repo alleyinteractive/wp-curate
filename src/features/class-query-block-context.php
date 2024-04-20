@@ -28,7 +28,7 @@ use WP_Block_Type_Registry;
 /**
  * Provides context to query blocks
  */
-final readonly class Query_Block_Context implements Feature {
+final class Query_Block_Context implements Feature {
 	/**
 	 * Set up.
 	 *
@@ -40,12 +40,12 @@ final readonly class Query_Block_Context implements Feature {
 	 * @param WP_Block_Type_Registry $block_type_registry Core block type registry.
 	 */
 	public function __construct(
-		private Post_Queries $post_queries,
-		private Used_Post_IDs $history,
-		private Post_Query $main_query,
-		private int $default_per_page,
-		private string $stop_queries_var,
-		private WP_Block_Type_Registry $block_type_registry,
+		private readonly Post_Queries $post_queries,
+		private readonly Used_Post_IDs $history,
+		private readonly Post_Query $main_query,
+		private readonly int $default_per_page,
+		private readonly string $stop_queries_var,
+		private readonly WP_Block_Type_Registry $block_type_registry,
 	) {
 	}
 
@@ -150,7 +150,7 @@ final readonly class Query_Block_Context implements Feature {
 			&& $current_block_type instanceof WP_Block_Type
 			&& $plugin_block_type instanceof WP_Block_Type
 			&& $parent_block->name === $plugin_block_type->name
-			&& in_array( 'query', $current_block_type->uses_context, true )
+			&& in_array( 'query', $current_block_type->uses_context, true ) // @phpstan-ignore-line - uses_context is private in WP_Block_Type but can be accessed via a magic method.
 			&& isset( $parent_block->context['query'] )
 			&& ! isset( $context['query'] )
 		) {
