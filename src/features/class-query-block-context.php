@@ -46,8 +46,7 @@ final class Query_Block_Context implements Feature {
 		private readonly int $default_per_page,
 		private readonly string $stop_queries_var,
 		private readonly WP_Block_Type_Registry $block_type_registry,
-	) {
-	}
+	) {}
 
 	/**
 	 * Boot the feature.
