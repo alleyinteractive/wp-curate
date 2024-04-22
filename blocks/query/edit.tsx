@@ -80,7 +80,7 @@ export default function Edit({
       allowedTaxonomies = [],
       parselyAvailable = 'false',
     } = {},
-  } = (window as any as Window) || {};
+  } = (window as any as Window);
 
   const andOrOptions = [
     {
@@ -95,7 +95,7 @@ export default function Edit({
 
   // @ts-ignore
   const [isPostDeduplicating, postTypeObject] = useSelect(
-    (select: any) => {
+    (select) => {
       // @ts-ignore
       const editor = select('core/editor');
 
