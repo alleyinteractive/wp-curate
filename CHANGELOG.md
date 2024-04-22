@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 1.9.0 - 2024-04-19
+
+- Enhancement: Exclude current post in backfilled posts query.
+
 ## 1.8.2 - 2024-03-27
 
 - Bug Fix: Error in 1.8.1 when Parse.ly is not instantiated.
