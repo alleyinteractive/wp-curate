@@ -65,7 +65,7 @@ export default function Edit({
     numberOfPosts = 5,
     offset = 0,
     posts: manualPosts = [],
-    postTypes = ['post'],
+    postTypes = [],
     searchTerm = '',
     terms = {},
     termRelations = {},
@@ -81,6 +81,10 @@ export default function Edit({
       parselyAvailable = 'false',
     } = {},
   } = (window as any as Window);
+
+  if (!postTypes.length) {
+    setAttributes({ postTypes: allowedPostTypes });
+  }
 
   const andOrOptions = [
     {

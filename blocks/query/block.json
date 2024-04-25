@@ -45,9 +45,7 @@
       "type": "number"
     },
     "postTypes": {
-      "default": [
-        "post"
-      ],
+      "default": [],
       "items": {
         "type": "string"
       },
