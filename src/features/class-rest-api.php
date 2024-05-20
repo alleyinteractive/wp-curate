@@ -128,6 +128,14 @@ final class Rest_Api implements Feature {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 		}
 
+		/**
+		 * Filters the REST post query arguments.
+		 *
+		 * @param array<string, mixed> $args    The WP_Query arguments.
+		 * @param WP_REST_Request      $request The REST request.
+		 */
+		$args = apply_filters( 'wp_curate_rest_posts_query', $args, $request );
+
 		if ( $trending ) {
 			/**
 			 * Filters the trending posts query.

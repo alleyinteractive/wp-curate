@@ -81,6 +81,13 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 			origin: $this->queries,
 		);
 
+		/**
+		 * Filters the arguments used when querying for posts that match the block attributes.
+		 *
+		 * @param array<string, mixed> $args Query arguments.
+		 */
+		$args = apply_filters( 'wp_curate_plugin_curated_post_query', $args );
+
 		$context['query'] = [
 			'perPage'  => $args['posts_per_page'],
 			'include'  => $queries->query( $args )->post_ids(),
