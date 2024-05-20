@@ -170,6 +170,7 @@ export default function Edit({
           status: 'publish',
           per_page: 20,
           orderby,
+          current_post_id: Number.isInteger(currentPostId) ? currentPostId : 0,
         },
       );
       path += `&${termQueryArgs}`;
