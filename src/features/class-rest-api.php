@@ -40,6 +40,13 @@ final class Rest_Api implements Feature {
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'get_posts' ],
 				'permission_callback' => 'is_user_logged_in',
+				'args'                => [
+					'current_post_id' => [
+						'type'        => 'integer',
+						'description' => __( 'The ID of the post being edited, if any.', 'wp-curate' ),
+						'default'     => 0,
+					],
+				],
 			]
 		);
 	}
