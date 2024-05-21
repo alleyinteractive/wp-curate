@@ -2,7 +2,7 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
-## Unreleased
+## 1.10.0 - 2024-05-21
 
 - Enhancement: Add `wp_curate_plugin_curated_post_query` filter for the arguments used for querying posts that match query block attributes.
 - Enhancement: Add `wp_curate_rest_posts_query` filter for the arguments used for querying posts over the REST API for the query block editor preview.
