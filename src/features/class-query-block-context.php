@@ -16,7 +16,6 @@ use Alley\WP\Post_Queries\Variable_Post_Queries;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
-use Alley\WP\WP_Curate\Features\Parsely_Support;
 use Alley\WP\WP_Curate\Must_Include_Curated_Posts;
 use Alley\WP\WP_Curate\Plugin_Curated_Posts;
 use Alley\WP\WP_Curate\Recorded_Curated_Posts;
