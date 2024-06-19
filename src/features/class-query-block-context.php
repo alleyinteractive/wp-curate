@@ -110,7 +110,7 @@ final class Query_Block_Context implements Feature {
 				},
 				test: new Comparison( [ 'compared' => true ] ),
 				is_true: new Exclude_Queries(
-					new Used_Post_IDs( new Post_IDs_Envelope( [ $this->main_query->query_object()->get_queried_object_id() ] ) ),
+					new Post_IDs_Envelope( [ $this->main_query->query_object()->get_queried_object_id() ] ),
 					$this->default_per_page,
 					$variable_post_queries,
 				),
