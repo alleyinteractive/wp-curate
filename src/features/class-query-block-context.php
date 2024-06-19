@@ -56,13 +56,11 @@ final class Query_Block_Context implements Feature {
 	}
 
 	/**
-	 * Filters the context provided to a query block
-	 * to determine the definitive list of backfilled posts.
+	 * Filters the context provided to a query block to determine the definitive list of backfilled posts.
 	 *
 	 * @param array<string, mixed>                 $context Default context.
 	 * @param array{"attrs": array<string, mixed>} $parsed_block Block being rendered.
 	 * @param WP_Block|null                        $parent_block Parent block, if any.
-	 *
 	 * @return array<string, mixed> Updated context.
 	 */
 	public function filter_query_context( $context, $parsed_block, $parent_block ): array {
