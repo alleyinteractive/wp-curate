@@ -120,8 +120,8 @@ final class Query_Block_Context implements Feature {
 			// Pull trending posts from Parsely and merge with existing queries.
 			$plugin_curated_posts = new Plugin_Curated_Posts(
 				queries: new Trending_Post_Queries(
-					parsely: new Parsely_Support(),
 					origin: $exclude_current_post_queries,
+					parsely: new Parsely_Support(),
 				),
 			);
 
