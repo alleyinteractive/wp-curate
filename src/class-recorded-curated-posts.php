@@ -7,7 +7,7 @@
 
 namespace Alley\WP\WP_Curate;
 
-use Alley\WP\Post_IDs\Used_Post_IDs;
+use Alley\WP\WP_Curate\Post_IDs\History;
 use WP_Block_Type;
 
 /**
@@ -17,11 +17,11 @@ final class Recorded_Curated_Posts implements Curated_Posts {
 	/**
 	 * Set up.
 	 *
-	 * @param Used_Post_IDs $history Post IDs to record history to.
+	 * @param History       $history Post IDs to record history to.
 	 * @param Curated_Posts $origin  The curated posts.
 	 */
 	public function __construct(
-		private readonly Used_Post_IDs $history,
+		private readonly History $history,
 		private readonly Curated_Posts $origin,
 	) {}
 

@@ -10,7 +10,6 @@ namespace Alley\WP\WP_Curate\Features;
 use Alley\Validator\Comparison;
 use Alley\WP\Blocks\Parsed_Block;
 use Alley\WP\Post_IDs\Post_IDs_Envelope;
-use Alley\WP\Post_IDs\Used_Post_IDs;
 use Alley\WP\Post_Queries\Exclude_Queries;
 use Alley\WP\Post_Queries\Variable_Post_Queries;
 use Alley\WP\Types\Feature;
@@ -18,6 +17,7 @@ use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
 use Alley\WP\WP_Curate\Must_Include_Curated_Posts;
 use Alley\WP\WP_Curate\Plugin_Curated_Posts;
+use Alley\WP\WP_Curate\Post_IDs\History;
 use Alley\WP\WP_Curate\Recorded_Curated_Posts;
 use Alley\WP\WP_Curate\Trending_Post_Queries;
 use WP_Block;
@@ -31,16 +31,16 @@ final class Query_Block_Context implements Feature {
 	/**
 	 * Set up.
 	 *
-	 * @param Post_Queries           $post_queries The post queries available to all query blocks by default.
-	 * @param Used_Post_IDs          $history The post IDs that have already been used in this request.
-	 * @param Post_Query             $main_query The main query.
-	 * @param int                    $default_per_page Default posts per page.
-	 * @param string                 $stop_queries_var The query var to stop queries.
+	 * @param Post_Queries           $post_queries        The post queries available to all query blocks by default.
+	 * @param History                $history             The post IDs that have already been used in this request.
+	 * @param Post_Query             $main_query          The main query.
+	 * @param int                    $default_per_page    Default posts per page.
+	 * @param string                 $stop_queries_var    The query var to stop queries.
 	 * @param WP_Block_Type_Registry $block_type_registry Core block type registry.
 	 */
 	public function __construct(
 		private readonly Post_Queries $post_queries,
-		private readonly Used_Post_IDs $history,
+		private readonly History $history,
 		private readonly Post_Query $main_query,
 		private readonly int $default_per_page,
 		private readonly string $stop_queries_var,
