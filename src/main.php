@@ -20,8 +20,8 @@ use WP_Block_Type_Registry;
 function main(): void {
 	$stop_queries_var = 'wp_curate_stop_queries';
 
+	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore
 	$plugin = new Group(
-
 		/*
 		 * This feature checks query objects for our custom query var before they execute and stops
 		 * them before they execute if the query var is true. It's responsible only for stopping
@@ -45,6 +45,7 @@ function main(): void {
 		new Features\Rest_Api(),
 		new Features\GraphQL(),
 	);
+	// phpcs:enable
 
 	$plugin->boot();
 }
