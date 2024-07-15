@@ -67,13 +67,12 @@ const getQueryBlocks = (blocks: Block[], out: Block[]) => {
   blocks.forEach((block: Block) => {
     if (block.name === 'wp-curate/query') {
       out.push(block);
-    } else {
-      const { innerBlocks } = block;
-      if (!innerBlocks) {
-        return;
-      }
-      getQueryBlocks(innerBlocks, out);
     }
+    const { innerBlocks } = block;
+    if (!innerBlocks) {
+      return;
+    }
+    getQueryBlocks(innerBlocks, out);
   });
 };
 

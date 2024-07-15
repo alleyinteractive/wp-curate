@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wp-curate/subquery",
+	"version": "0.1.0",
+	"title": "Subquery",
+	"category": "theme",
+	"icon": "screenoptions",
+	"description": "A limited version of the query block for displaying independent post lists inside a Query block",
+	"textdomain": "wp-curate",
+	"editorScript": "file:index.ts",
+	"editorStyle": "file:index.css",
+	"style": [
+		"file:style-index.css"
+	],
+	"render": "file:render.php"
+}
