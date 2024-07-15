@@ -107,15 +107,15 @@ export function mainDedupe() {
   // earlier on the page. The front end does not currently do this, so it will be commented out
   // here to match. We should probably add a setting to allow this in both places.
 
-  // queryBlocks.forEach((queryBlock) => {
-  //   const { attributes } = queryBlock;
-  //   const { posts } = attributes;
-  //   posts?.forEach((post) => {
-  //     if (post) {
-  //       deduplicate(post);
-  //     }
-  //   });
-  // });
+  queryBlocks.forEach((queryBlock) => {
+    const { attributes } = queryBlock;
+    const { posts } = attributes;
+    posts?.forEach((post) => {
+      if (post) {
+        deduplicate(post);
+      }
+    });
+  });
 
   // Loop through all query blocks and set backfilled posts in the open slots.
   queryBlocks.forEach((queryBlock) => {
