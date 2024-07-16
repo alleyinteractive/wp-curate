@@ -24,7 +24,6 @@ import type {
 type QueryControlsProps = {
   allowedPostTypes: string[];
   allowedTaxonomies: string[];
-  andOrOptions: Option[];
   availableTaxonomies: Record<string, { name: string }>;
   deduplication: string;
   displayTypes: Option[];
@@ -44,10 +43,6 @@ type QueryControlsProps = {
   postTypes: string[];
   searchTerm: string;
   setAttributes: (value: any) => void;
-  setManualPost: (id: number, index: number) => void;
-  setNumberOfPosts: (value?: number) => void;
-  setTermRelation: (taxonomy: string, relation: string) => void;
-  setTerms: (taxonomy: string, terms: Term[]) => void;
   taxCount: number;
   taxRelation: string;
   termRelations: Record<string, string>;
@@ -57,7 +52,6 @@ type QueryControlsProps = {
 export default function QueryControls({
   allowedPostTypes,
   allowedTaxonomies = [],
-  andOrOptions,
   availableTaxonomies,
   deduplication,
   displayTypes,
@@ -73,15 +67,63 @@ export default function QueryControls({
   postTypes,
   searchTerm,
   setAttributes,
-  setManualPost,
-  setNumberOfPosts,
-  setTermRelation,
-  setTerms,
   taxCount,
   taxRelation,
   termRelations,
   terms,
 }: QueryControlsProps) {
+  const andOrOptions = [
+    {
+      label: __('AND', 'wp-curate'),
+      value: 'AND',
+    },
+    {
+      label: __('OR', 'wp-curate'),
+      value: 'OR',
+    },
+  ];
+
+  const setTerms = ((type: string, newTerms: Term[]) => {
+    const cleanedTerms = newTerms.map((term) => (
+      {
+        id: term.id,
+        title: term.title,
+        url: term.url,
+        type: term.type,
+      }
+    ));
+    const newTermAttrs = {
+      ...terms,
+      [type]: cleanedTerms,
+    };
+    setAttributes({ terms: newTermAttrs });
+  });
+
+  const setTermRelation = ((type: string, relation: string) => {
+    const newTermRelationAttrs = {
+      ...termRelations,
+      [type]: relation,
+    };
+    setAttributes({ termRelations: newTermRelationAttrs });
+  });
+
+  const setNumberOfPosts = (newValue?: number) => {
+    setAttributes({
+      numberOfPosts: newValue,
+      posts: manualPosts.slice(0, newValue),
+    });
+  };
+
+  const setManualPost = (id: number, index: number) => {
+    const newManualPosts = [...manualPosts];
+    // If the post is already in the list, remove it.
+    if (id !== null && newManualPosts.includes(id)) {
+      newManualPosts.splice(newManualPosts.indexOf(id), 1, null);
+    }
+    newManualPosts.splice(index, 1, id);
+    setAttributes({ posts: newManualPosts });
+  };
+
   return (
     <>
       <InspectorControls>

@@ -74,17 +74,6 @@ export default function Edit({
     setAttributes({ postTypes: allowedPostTypes });
   }
 
-  const andOrOptions = [
-    {
-      label: __('AND', 'wp-curate'),
-      value: 'AND',
-    },
-    {
-      label: __('OR', 'wp-curate'),
-      value: 'OR',
-    },
-  ];
-
   // @ts-ignore
   const [isPostDeduplicating, postTypeObject] = useSelect(
     (select) => {
@@ -205,46 +194,6 @@ export default function Edit({
     deduplication,
   ]);
 
-  const setManualPost = (id: number, index: number) => {
-    const newManualPosts = [...manualPosts];
-    // If the post is already in the list, remove it.
-    if (id !== null && newManualPosts.includes(id)) {
-      newManualPosts.splice(newManualPosts.indexOf(id), 1, null);
-    }
-    newManualPosts.splice(index, 1, id);
-    setAttributes({ posts: newManualPosts });
-  };
-
-  const setTerms = ((type: string, newTerms: Term[]) => {
-    const cleanedTerms = newTerms.map((term) => (
-      {
-        id: term.id,
-        title: term.title,
-        url: term.url,
-        type: term.type,
-      }
-    ));
-    const newTermAttrs = {
-      ...terms,
-      [type]: cleanedTerms,
-    };
-    setAttributes({ terms: newTermAttrs });
-  });
-
-  const setTermRelation = ((type: string, relation: string) => {
-    const newTermRelationAttrs = {
-      ...termRelations,
-      [type]: relation,
-    };
-    setAttributes({ termRelations: newTermRelationAttrs });
-  });
-
-  const setNumberOfPosts = (newValue?: number) => {
-    setAttributes({
-      numberOfPosts: newValue,
-      posts: manualPosts.slice(0, newValue),
-    });
-  };
 
   for (let i = 0; i < numberOfPosts; i += 1) {
     if (!manualPosts[i]) {
@@ -264,7 +213,6 @@ export default function Edit({
           {},
           [
             ['core/post-title', { isLink: true }],
-            ['core/post-excerpt', {}],
           ],
         ],
       ],
@@ -291,7 +239,6 @@ export default function Edit({
       <QueryControls
         allowedPostTypes={allowedPostTypes}
         allowedTaxonomies={allowedTaxonomies}
-        andOrOptions={andOrOptions}
         availableTaxonomies={availableTaxonomies}
         deduplication={deduplication}
         displayTypes={displayTypes}
@@ -307,10 +254,6 @@ export default function Edit({
         postTypes={postTypes}
         searchTerm={searchTerm}
         setAttributes={setAttributes}
-        setManualPost={setManualPost}
-        setNumberOfPosts={setNumberOfPosts}
-        setTermRelation={setTermRelation}
-        setTerms={setTerms}
         taxCount={taxCount}
         taxRelation={taxRelation}
         termRelations={termRelations}
