@@ -22,65 +22,65 @@ import type {
 } from '../../blocks/query/types';
 
 type QueryControlsProps = {
-  minNumberOfPosts: number;
-  maxNumberOfPosts: number;
-  numberOfPosts: number;
-  setNumberOfPosts: (value?: number) => void;
-  offset: number;
-  setAttributes: (value: any) => void;
-  manualPosts: number[];
   allowedPostTypes: string[];
-  setManualPost: (id: number, index: number) => void;
-  postTypes: string[];
-  displayTypes: Option[];
   allowedTaxonomies: string[];
-  availableTaxonomies: Record<string, { name: string }>;
-  terms: Record<string, Term[]>;
-  termRelations: Record<string, string>;
-  setTerms: (taxonomy: string, terms: Term[]) => void;
-  setTermRelation: (taxonomy: string, relation: string) => void;
   andOrOptions: Option[];
-  taxRelation: string;
-  searchTerm: string;
+  availableTaxonomies: Record<string, { name: string }>;
+  deduplication: string;
+  displayTypes: Option[];
+  isPostDeduplicating: boolean;
+  manualPosts: number[];
+  maxNumberOfPosts: number;
+  minNumberOfPosts: number;
+  numberOfPosts: number;
+  offset: number;
   orderby: string;
   parselyAvailable: string;
-  isPostDeduplicating: boolean;
   postTypeObject: {
     labels: {
       singular_name: string;
     };
   };
-  deduplication: string;
+  postTypes: string[];
+  searchTerm: string;
+  setAttributes: (value: any) => void;
+  setManualPost: (id: number, index: number) => void;
+  setNumberOfPosts: (value?: number) => void;
+  setTermRelation: (taxonomy: string, relation: string) => void;
+  setTerms: (taxonomy: string, terms: Term[]) => void;
   taxCount: number;
+  taxRelation: string;
+  termRelations: Record<string, string>;
+  terms: Record<string, Term[]>;
 };
 
 export default function QueryControls({
-  minNumberOfPosts,
-  maxNumberOfPosts,
-  numberOfPosts,
-  setNumberOfPosts,
-  offset,
-  setAttributes,
-  manualPosts,
   allowedPostTypes,
-  setManualPost,
-  postTypes,
-  displayTypes,
   allowedTaxonomies = [],
-  availableTaxonomies,
-  terms,
-  termRelations,
-  setTerms,
-  setTermRelation,
   andOrOptions,
-  taxRelation,
-  searchTerm,
+  availableTaxonomies,
+  deduplication,
+  displayTypes,
+  isPostDeduplicating,
+  manualPosts,
+  maxNumberOfPosts,
+  minNumberOfPosts,
+  numberOfPosts,
+  offset,
   orderby,
   parselyAvailable,
-  isPostDeduplicating,
   postTypeObject,
-  deduplication,
+  postTypes,
+  searchTerm,
+  setAttributes,
+  setManualPost,
+  setNumberOfPosts,
+  setTermRelation,
+  setTerms,
   taxCount,
+  taxRelation,
+  termRelations,
+  terms,
 }: QueryControlsProps) {
   return (
     <>

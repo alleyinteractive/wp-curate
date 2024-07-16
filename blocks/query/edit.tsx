@@ -289,30 +289,32 @@ export default function Edit({
         <InnerBlocks template={TEMPLATE} />
       </div>
       <QueryControls
-        minNumberOfPosts={minNumberOfPosts}
-        maxNumberOfPosts={maxNumberOfPosts}
-        numberOfPosts={numberOfPosts}
-        setNumberOfPosts={setNumberOfPosts}
-        offset={offset}
-        setAttributes={setAttributes}
-        manualPosts={manualPosts}
-        setManualPost={setManualPost}
-        postTypes={postTypes}
-        allowedPostTypes={displayTypes}
-        availableTaxonomies={availableTaxonomies}
-        terms={terms}
-        setTerms={setTerms}
-        termRelations={termRelations}
-        setTermRelation={setTermRelation}
+        allowedPostTypes={allowedPostTypes}
+        allowedTaxonomies={allowedTaxonomies}
         andOrOptions={andOrOptions}
-        taxRelation={taxRelation}
-        searchTerm={searchTerm}
+        availableTaxonomies={availableTaxonomies}
+        deduplication={deduplication}
+        displayTypes={displayTypes}
+        isPostDeduplicating={isPostDeduplicating}
+        manualPosts={manualPosts}
+        maxNumberOfPosts={maxNumberOfPosts}
+        minNumberOfPosts={minNumberOfPosts}
+        numberOfPosts={numberOfPosts}
+        offset={offset}
         orderby={orderby}
         parselyAvailable={parselyAvailable}
-        isPostDeduplicating={isPostDeduplicating}
         postTypeObject={postTypeObject}
-        deduplication={deduplication}
+        postTypes={postTypes}
+        searchTerm={searchTerm}
+        setAttributes={setAttributes}
+        setManualPost={setManualPost}
+        setNumberOfPosts={setNumberOfPosts}
+        setTermRelation={setTermRelation}
+        setTerms={setTerms}
         taxCount={taxCount}
+        taxRelation={taxRelation}
+        termRelations={termRelations}
+        terms={terms}
       />
     </>
   );
