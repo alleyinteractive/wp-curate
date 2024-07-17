@@ -48,7 +48,7 @@ function wp_curate_query_block_init(): void {
 	 *
 	 * @param integer $max_posts The maximum number of posts to display.
 	 */
-	$max_posts = apply_filters('wp_curate_max_posts', 5);
+	$max_posts = apply_filters( 'wp_curate_max_posts', 5 );
 
 	/**
 	 * Filter whether to use Parsely.
@@ -63,7 +63,7 @@ function wp_curate_query_block_init(): void {
 			'allowedPostTypes'  => $allowed_post_types,
 			'allowedTaxonomies' => $allowed_taxonomies,
 			'parselyAvailable'  => $parsely_available ? 'true' : 'false',
-			'maxPosts'      => $max_posts,
+			'maxPosts'          => $max_posts,
 		]
 	);
 }
