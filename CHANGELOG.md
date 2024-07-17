@@ -2,6 +2,17 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.0.0 - 2024-06-24
+
+- Enhancement: Fire the `wp_curate_clear_history_post_ids` action to clear the history of post IDs that have used on the page and would be deduplicated from subsequent queries.
+- Changed: Signatures for `Query_Block_Context` and `Recorded_Curated_Posts`.
+
+## 1.10.0 - 2024-05-21
+
+- Enhancement: Add `wp_curate_plugin_curated_post_query` filter for the arguments used for querying posts that match query block attributes.
+- Enhancement: Add `wp_curate_rest_posts_query` filter for the arguments used for querying posts over the REST API for the query block editor preview.
+- Enhancement: Make the ID of the post being edited available to `wp_curate_rest_posts_query` filter.
+
 ## 1.9.1 - 2024-04-25
 
 - Bug Fix: Improve handling of default post types on the Query block.
