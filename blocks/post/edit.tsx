@@ -85,9 +85,11 @@ export default function Edit({
   ), [clientId]);
 
   const toggleMove = () => {
+    const newData = moveData.postId ? {} : { postId, clientId };
+
     // @ts-ignore
     dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
-      moveData: { postId, clientId },
+      moveData: newData,
     });
   };
 
@@ -106,6 +108,9 @@ export default function Edit({
         <div
           style={{
             border: '4px solid red',
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
           }}
         />
       ) : null}
