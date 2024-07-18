@@ -119,6 +119,7 @@ class Unique_Pinned_Post_Test extends Test_Case {
 			);
 
 		$page = $this->get( $post )->assertOk();
+		dump( $page->get_content() );
 
 		$occurrences = substr_count( $page->get_content(), 'PinnedPost 1' );
 		$this->assertEquals( 2, $occurrences );
