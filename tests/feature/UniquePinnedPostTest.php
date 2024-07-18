@@ -14,7 +14,7 @@ use Alley\WP\WP_Curate\Tests\Test_Case;
  *
  * @link https://mantle.alley.com/testing/test-framework.html
  */
-class Unique_Pinned_Post_Test extends Test_Case {
+class UniquePinnedPostTest extends Test_Case {
 	/**
 	 * Run before each test.
 	 */
