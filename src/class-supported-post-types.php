@@ -92,6 +92,14 @@ final class Supported_Post_Types {
 				'type' => 'boolean',
 			]
 		);
+		register_meta_helper(
+			'post',
+			$this->get_supported_post_types(),
+			'wp_curate_unique_pinned_posts',
+			[
+				'type' => 'boolean',
+			]
+		);
 	}
 
 	/**
