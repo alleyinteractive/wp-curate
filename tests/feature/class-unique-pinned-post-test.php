@@ -131,7 +131,7 @@ class Unique_Pinned_Post_Test extends Test_Case {
 	public function test_pinned_post_only_displays_once() {
 		$pinned_post    = static::factory()->post->as_models()->create_and_get(
 			[
-				'post_title' => 'PinnedPost 1',
+				'post_title' => 'PinnedPost 2',
 			]
 		);
 		$pinned_post_id = $pinned_post->id();
@@ -156,7 +156,7 @@ class Unique_Pinned_Post_Test extends Test_Case {
 
 		$page = $this->get( $post )->assertOk();
 
-		$occurrences = substr_count( $page->get_content(), 'PinnedPost 1' );
+		$occurrences = substr_count( $page->get_content(), 'PinnedPost 2' );
 		$this->assertEquals( 1, $occurrences );
 	}
 }
