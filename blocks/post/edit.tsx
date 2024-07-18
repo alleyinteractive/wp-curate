@@ -100,79 +100,51 @@ export default function Edit({
     }
   }, [isParentOfSelectedBlock, isSelected, moveData.postId, postId, queryParentId, updatePost]);
 
-  if (!isSelected) {
-    return (
-      moveData.postId && moveData.postId !== postId ? (
+  return (
+    <>
+      {moveData.postId && moveData.postId !== postId ? (
         <div
-          {...useBlockProps(
-            {
-              className: classnames(
-                'wp-curate-post-block',
-                { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
-                { 'wp-curate-post-block--backfill': !selected },
-              ),
-            },
-          )}
           style={{
             border: '4px solid red',
           }}
-        >
-          <InnerBlocks />
-        </div>
-      ) : (
-        <div
-          {...useBlockProps(
-            {
-              className: classnames(
-                'wp-curate-post-block',
-                { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
-                { 'wp-curate-post-block--backfill': !selected },
-              ),
-            },
-          )}
-        >
-          <InnerBlocks />
-        </div>
-      )
-    );
-  }
-
-  return (
-    <div
-      {...useBlockProps(
-        {
-          className: classnames(
-            'wp-curate-post-block',
-            { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
-            { 'wp-curate-post-block--backfill': !selected },
-          ),
-        },
-      )}
-    >
-      <InnerBlocks />
-      {isParentOfSelectedBlock || isSelected ? (
-        <>
-          {selected ? (
-            <Button
-              variant="secondary"
-              onClick={toggleMove}
-            >
-              {moveData.postId ? __('Cancel', 'wp-curate') : __('Move Post', 'wp-curate')}
-            </Button>
-          ) : null}
-          <PostPicker
-            allowedTypes={postTypes}
-            onUpdate={updatePost}
-            onReset={resetPost}
-            value={selected ?? 0}
-            previewRender={(NoRender)}
-            className="wp-curate-post-block__post-picker"
-            selectText={__('Pin a post', 'wp-curate')}
-            resetText={__('Backfill post', 'wp-curate')}
-            replaceText={__('Pin a different post', 'wp-curate')}
-          />
-        </>
+        />
       ) : null}
-    </div>
+      <div
+        {...useBlockProps(
+          {
+            className: classnames(
+              'wp-curate-post-block',
+              { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
+              { 'wp-curate-post-block--backfill': !selected },
+            ),
+          },
+        )}
+      >
+        <InnerBlocks />
+        {isParentOfSelectedBlock || isSelected ? (
+          <>
+            {selected ? (
+              <Button
+                variant="secondary"
+                onClick={toggleMove}
+              >
+                {moveData.postId ? __('Cancel', 'wp-curate') : __('Move Post', 'wp-curate')}
+              </Button>
+            ) : null}
+            <PostPicker
+              allowedTypes={postTypes}
+              onUpdate={updatePost}
+              onReset={resetPost}
+              value={selected ?? 0}
+              previewRender={(NoRender)}
+              className="wp-curate-post-block__post-picker"
+              selectText={__('Pin a post', 'wp-curate')}
+              resetText={__('Backfill post', 'wp-curate')}
+              replaceText={__('Pin a different post', 'wp-curate')}
+            />
+          </>
+        ) : null}
+      </div>
+    </>
   );
 }
