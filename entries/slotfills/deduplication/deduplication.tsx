@@ -14,6 +14,7 @@ import countBlocksByName from '../../../services/countBlocksByName';
 
 function Deduplication() {
   const [deduplication, setDeduplication] = usePostMetaValue('wp_curate_deduplication');
+  const [uniquePinnedPosts, setUniquePinnedPosts] = usePostMetaValue('wp_curate_unique_pinned_posts');
   // @ts-ignore - useSelect doesn't export proper types
   const blocks = useSelect((select) => select('core/block-editor').getBlocks(), []);
   const queryBlocksFound = countBlocksByName(blocks, 'wp-curate/query');
@@ -34,6 +35,11 @@ function Deduplication() {
         label={__('Enable deduplication', 'wp-curate')}
         checked={deduplication}
         onChange={(value) => setDeduplication(value)}
+      />
+      <ToggleControl
+        label={__('Enable unique pinned posts', 'wp-curate')}
+        checked={uniquePinnedPosts}
+        onChange={setUniquePinnedPosts}
       />
     </PluginDocumentSettingPanel>
   );
