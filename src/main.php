@@ -22,7 +22,7 @@ function main(): void {
 	$main_query       = new Global_Post_Query( 'wp_query' );
 
 	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore
-	$plugin     = new Group(
+	$plugin = new Group(
 		/*
 		 * This feature checks query objects for our custom query var before they execute and stops
 		 * them before they execute if the query var is true. It's responsible only for stopping

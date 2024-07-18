@@ -1,4 +1,9 @@
 <?php
+/**
+ * Pinned_In_Post_Content class file
+ *
+ * @package wp-curate
+ */
 
 namespace Alley\WP\WP_Curate\Post_IDs;
 
@@ -9,7 +14,15 @@ use Alley\WP\Types\Post_Query;
 
 use function Alley\WP\match_blocks;
 
+/**
+ * Post IDs from pinned posts in post content.
+ */
 final class Pinned_In_Post_Content implements Post_IDs {
+	/**
+	 * Set up.
+	 *
+	 * @param Post_Query $main_query The main query.
+	 */
 	public function __construct(
 		private readonly Post_Query $main_query,
 	) {}
