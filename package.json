@@ -45,6 +45,7 @@
     "@wordpress/block-editor": "^12.10.13",
     "@wordpress/blocks": "^12.19.13",
     "@wordpress/components": "^25.8.13",
+    "@wordpress/core-data": "^7.3.0",
     "@wordpress/data": "^9.12.13",
     "@wordpress/edit-post": "^7.19.15",
     "@wordpress/element": "^5.19.13",
