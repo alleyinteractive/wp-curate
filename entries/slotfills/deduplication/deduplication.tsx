@@ -2,14 +2,9 @@ import { ToggleControl } from '@wordpress/components';
 import { PluginDocumentSettingPanel } from '@wordpress/edit-post';
 import { __ } from '@wordpress/i18n';
 import { usePostMetaValue } from '@alleyinteractive/block-editor-tools';
-
-/**
- * The following code is a temporary fix.
- *
- * Once the issue linked below is resolved, this code can be removed.
- * @link https://github.com/alleyinteractive/alley-scripts/issues/473
- */
 import { useSelect } from '@wordpress/data';
+import { useEffect } from '@wordpress/element';
+
 import countBlocksByName from '../../../services/countBlocksByName';
 
 function Deduplication() {
@@ -18,8 +13,22 @@ function Deduplication() {
   // @ts-ignore - useSelect doesn't export proper types
   const blocks = useSelect((select) => select('core/block-editor').getBlocks(), []);
   const queryBlocksFound = countBlocksByName(blocks, 'wp-curate/query');
+  const twoOrMoreQueryBlocks = queryBlocksFound >= 2;
 
-  if (queryBlocksFound < 2) {
+  /**
+   * If deduplication is disabled, we should also disable unique pinned posts.
+   */
+  useEffect(() => {
+    if (!twoOrMoreQueryBlocks) {
+      return;
+    }
+
+    if (!deduplication && uniquePinnedPosts) {
+      setUniquePinnedPosts(false);
+    }
+  }, [deduplication, setUniquePinnedPosts, twoOrMoreQueryBlocks, uniquePinnedPosts]);
+
+  if (!twoOrMoreQueryBlocks) {
     return null;
   }
 
@@ -37,6 +46,7 @@ function Deduplication() {
         onChange={(value) => setDeduplication(value)}
       />
       <ToggleControl
+        disabled={!deduplication}
         label={__('Enable unique pinned posts', 'wp-curate')}
         checked={uniquePinnedPosts}
         onChange={setUniquePinnedPosts}
