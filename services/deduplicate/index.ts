@@ -104,6 +104,9 @@ export function mainDedupe() {
   // Loop through all blocks and find all query blocks.
   getQueryBlocks(blocks, queryBlocks);
 
+  /**
+   * This block of code is responsible for enforcing the unique pinned posts setting in the editor.
+   */
   if (wpCurateUniquePinnedPosts) {
     queryBlocks.forEach((queryBlock) => {
       const { attributes } = queryBlock;
