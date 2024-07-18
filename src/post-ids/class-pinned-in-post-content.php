@@ -27,12 +27,12 @@ final class Pinned_In_Post_Content implements Post_IDs {
 			$post = $main_query->get_queried_object();
 
 			if ( $post instanceof \WP_Post ) {
-				// Imaginary meta key. Variable is made always true for demo purposes.
-				$post_level_unique        = get_post_meta( $post->ID, 'wp_curate_unique_pinned_posts', true );
-				$post_level_deduplication = get_post_meta( $post->ID, 'wp_curate_deduplication', true );
-				$post_level_unique        = $post_level_unique && $post_level_deduplication;
+				// Unique pinned posts relies on deduplication being enabled.
+				$post_level_unique         = get_post_meta( $post->ID, 'wp_curate_unique_pinned_posts', true );
+				$post_level_deduplication  = get_post_meta( $post->ID, 'wp_curate_deduplication', true );
+				$post_level_unique_enabled = $post_level_unique && $post_level_deduplication;
 
-				if ( true === (bool) $post_level_unique ) {
+				if ( true === (bool) $post_level_unique_enabled ) {
 					$query_blocks = match_blocks(
 						$post->post_content,
 						[

@@ -43,7 +43,13 @@ class Unique_Pinned_Post_Test extends Test_Case {
 		]);
 	}
 
-	private function create_html_content( $pinned_post_id ) {
+	/**
+	 * Create the HTML content for the test.
+	 *
+	 * @param $pinned_post_id
+	 * @return string
+	 */
+	private function create_html_content( $pinned_post_id ): string {
 		return <<<HTML
 				<!-- wp:wp-curate/query {"numberOfPosts":2,"postTypes":["post"],"posts":[null,null]} -->
 				<div class="wp-block-wp-curate-query"><!-- wp:post-template -->
