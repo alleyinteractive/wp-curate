@@ -36,3 +36,4 @@ jobs:
         uses: alleyinteractive/action-test-php@develop
         with:
           skip-services: 'true'
+          wordpress-version: 'false'
