@@ -110,19 +110,11 @@ class Unique_Pinned_Post_Test extends Test_Case {
 					'wp_curate_unique_pinned_posts' => '0',
 				]
 			)
-			->as_models()
-			->create_and_get(
-				[
-					// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
-					'post_content' => print_r( $content, true ),
-				]
-			);
+			->create_and_get( [ 'post_content' => $content ] );
 
-		$page = $this->get( $test_post)->assertOk();
-		dump( $page->get_content() );
+		$page = $this->get( $test_post )->assertOk();
 
-		$occurrences = substr_count( $page->get_content(), 'PinnedPost 1' );
-		$this->assertEquals( 2, $occurrences );
+		$this->assertEquals( 2, substr_count( $page->get_content(), 'PinnedPost 1' ) );
 	}
 
 	/**
@@ -147,17 +139,10 @@ class Unique_Pinned_Post_Test extends Test_Case {
 					'wp_curate_unique_pinned_posts' => '1',
 				]
 			)
-			->as_models()
-			->create_and_get(
-				[
-					// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
-					'post_content' => print_r( $content, true ),
-				]
-			);
+			->create_and_get( [ 'post_content' => $content ] );
 
 		$page = $this->get( $test_post )->assertOk();
 
-		$occurrences = substr_count( $page->get_content(), 'PinnedPost 2' );
-		$this->assertEquals( 1, $occurrences );
+		$this->assertEquals( 1, substr_count( $page->get_content(), 'PinnedPost 2' ) );
 	}
 }
