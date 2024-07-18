@@ -102,7 +102,7 @@ class Unique_Pinned_Post_Test extends Test_Case {
 
 		$content = $this->create_html_content( $pinned_post_id );
 
-		$post = static::factory()
+		$test_post = static::factory()
 			->post
 			->with_meta(
 				[
@@ -118,7 +118,7 @@ class Unique_Pinned_Post_Test extends Test_Case {
 				]
 			);
 
-		$page = $this->get( $post )->assertOk();
+		$page = $this->get( $test_post)->assertOk();
 		dump( $page->get_content() );
 
 		$occurrences = substr_count( $page->get_content(), 'PinnedPost 1' );
@@ -139,7 +139,7 @@ class Unique_Pinned_Post_Test extends Test_Case {
 
 		$content = $this->create_html_content( $pinned_post_id );
 
-		$post = static::factory()
+		$test_post = static::factory()
 			->post
 			->with_meta(
 				[
@@ -155,7 +155,7 @@ class Unique_Pinned_Post_Test extends Test_Case {
 				]
 			);
 
-		$page = $this->get( $post )->assertOk();
+		$page = $this->get( $test_post )->assertOk();
 
 		$occurrences = substr_count( $page->get_content(), 'PinnedPost 2' );
 		$this->assertEquals( 1, $occurrences );
