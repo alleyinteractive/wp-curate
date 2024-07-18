@@ -3,6 +3,8 @@ import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { PostPicker } from '@alleyinteractive/block-editor-tools';
 import { dispatch, select, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
+import { Button } from '@wordpress/components';
+import { useEffect } from '@wordpress/element';
 
 import NoRender from './norender';
 
@@ -14,6 +16,10 @@ interface PostEditProps {
     postId: number;
     query: {
       include?: string;
+    };
+    moveData: {
+      postId: number;
+      clientId: string;
     };
   };
   isSelected: boolean;
@@ -31,6 +37,7 @@ export default function Edit({
     query: {
       include = '',
     } = {},
+    moveData = {},
   },
   isSelected,
 }: PostEditProps) {
@@ -49,6 +56,7 @@ export default function Edit({
       postTypes = [],
     } = {},
   } = queryParent;
+
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
   const selected = posts[index];
@@ -76,30 +84,94 @@ export default function Edit({
     innerSelect('core/block-editor').hasSelectedInnerBlock(clientId, true)
   ), [clientId]);
 
+  const toggleMove = () => {
+    // @ts-ignore
+    dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+      moveData: { postId, clientId },
+    });
+  };
+
+  useEffect(() => {
+    if ((isParentOfSelectedBlock || isSelected) && moveData.postId && moveData.postId !== postId) {
+      updatePost(moveData.postId);
+      dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+        moveData: {},
+      });
+    }
+  }, [isParentOfSelectedBlock, isSelected, moveData.postId, postId, queryParentId, updatePost]);
+
+  if (!isSelected) {
+    return (
+      moveData.postId && moveData.postId !== postId ? (
+        <div
+          {...useBlockProps(
+            {
+              className: classnames(
+                'wp-curate-post-block',
+                { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
+                { 'wp-curate-post-block--backfill': !selected },
+              ),
+            },
+          )}
+          style={{
+            border: '4px solid red',
+          }}
+        >
+          <InnerBlocks />
+        </div>
+      ) : (
+        <div
+          {...useBlockProps(
+            {
+              className: classnames(
+                'wp-curate-post-block',
+                { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
+                { 'wp-curate-post-block--backfill': !selected },
+              ),
+            },
+          )}
+        >
+          <InnerBlocks />
+        </div>
+      )
+    );
+  }
+
   return (
-    <div {...useBlockProps(
-      {
-        className: classnames(
-          'wp-curate-post-block',
-          { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
-          { 'wp-curate-post-block--backfill': !selected },
-        ),
-      },
-    )}
+    <div
+      {...useBlockProps(
+        {
+          className: classnames(
+            'wp-curate-post-block',
+            { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
+            { 'wp-curate-post-block--backfill': !selected },
+          ),
+        },
+      )}
     >
       <InnerBlocks />
       {isParentOfSelectedBlock || isSelected ? (
-        <PostPicker
-          allowedTypes={postTypes}
-          onUpdate={updatePost}
-          onReset={resetPost}
-          value={selected ?? 0}
-          previewRender={(NoRender)}
-          className="wp-curate-post-block__post-picker"
-          selectText={__('Pin a post', 'wp-curate')}
-          resetText={__('Backfill post', 'wp-curate')}
-          replaceText={__('Pin a different post', 'wp-curate')}
-        />
+        <>
+          {selected ? (
+            <Button
+              variant="secondary"
+              onClick={toggleMove}
+            >
+              {moveData.postId ? __('Cancel', 'wp-curate') : __('Move Post', 'wp-curate')}
+            </Button>
+          ) : null}
+          <PostPicker
+            allowedTypes={postTypes}
+            onUpdate={updatePost}
+            onReset={resetPost}
+            value={selected ?? 0}
+            previewRender={(NoRender)}
+            className="wp-curate-post-block__post-picker"
+            selectText={__('Pin a post', 'wp-curate')}
+            resetText={__('Backfill post', 'wp-curate')}
+            replaceText={__('Pin a different post', 'wp-curate')}
+          />
+        </>
       ) : null}
     </div>
   );

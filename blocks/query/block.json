@@ -17,7 +17,8 @@
     "query": "query",
     "displayLayout": "displayLayout",
     "heading": "heading",
-    "curation": "curation"
+    "curation": "curation",
+    "moveData": "moveData"
   },
   "attributes": {
     "deduplication": {
