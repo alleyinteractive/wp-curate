@@ -42,21 +42,13 @@ export default function Edit({
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
 
-  // console.log('mre', postId, fullTitle, context);
-
-  // @todo: handle removing custom title when "unpinned"
-
+  // @todo: handle removing custom title when post is "unpinned".
   // useEffect(() => {
-  //   if (
-  //     customPostTitles.length === 0
-  //     || (customPostTitles.length && isPinned)
-  //   ) {
-  //     return;
+  //   if (?) {
+  //     dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+  //       customPostTitles: customPostTitles.filter((item) => item?.postId !== postId),
+  //     });
   //   }
-
-  //   dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
-  //     customPostTitles: customPostTitles.filter((item) => item?.postId !== postId),
-  //   });
   // }, [isPinned, postId, customPostTitles, queryParentId]);
 
   let titleElement = (
