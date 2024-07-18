@@ -83,7 +83,8 @@ class Unique_Pinned_Post_Test extends Test_Case {
 			->post
 			->with_meta(
 				[
-					'wp_curate_deduplication' => '1'
+					'wp_curate_deduplication'       => '1',
+					'wp_curate_unique_pinned_posts' => '1'
 				]
 			)
 			->as_models()
