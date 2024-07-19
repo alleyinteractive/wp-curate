@@ -13,7 +13,19 @@
  * @package wp-curate
  */
 
+$post_id            = $block->context['postId'] ?? 0;
+$post_type          = $block->context['postType'] ?? '';
+$custom_post_titles = $attributes['customPostTitles'] ?? [];
+$post_title         = get_the_title( $post_id );
+$post_link          = get_the_permalink( $post_id );
+
+// Use custom post title, if available.
+foreach ($custom_post_titles as $value) {
+	if ($value['postId'] === $post_id) {
+		$post_title = $value['title'];
+	}
+}
 ?>
-<p <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
-	<?php esc_html_e( 'Post Title - hello from a dynamic block!' ); ?>
-</p>
+<a <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?> href="<?php echo esc_url( $post_link ) ?>">
+	<?php echo esc_html( $post_title ); ?>
+</a>

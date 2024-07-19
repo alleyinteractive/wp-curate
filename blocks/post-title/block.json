@@ -11,6 +11,16 @@
 	"editorScript": "file:index.ts",
 	"editorStyle": "file:index.css",
   "style": "wp-block-post-title",
-  "usesContext": ["postId", "query", "pinnedPosts", "customPostTitles"],
+  "usesContext": ["postId", "query", "pinnedPosts"],
+  "attributes": {
+    "customPostTitles": {
+      "default": [],
+      "items": {
+        "default": {},
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
 	"render": "file:render.php"
 }

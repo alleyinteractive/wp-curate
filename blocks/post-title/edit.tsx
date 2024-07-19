@@ -7,6 +7,12 @@ import './index.scss';
 
 interface PostTitleEditProps {
   clientId?: string;
+  attributes: {
+    customPostTitles?: {
+      postId: number;
+      title: string;
+    }[];
+  };
   context: {
     postId: number;
     query: {
@@ -17,12 +23,9 @@ interface PostTitleEditProps {
       orderby?: string;
     };
     pinnedPosts?: Array<number>;
-    customPostTitles?: {
-      postId: number;
-      title: string;
-    }[];
   };
   isSelected?: boolean;
+  setAttributes: (attributes: any) => void;
 }
 
 /**
@@ -31,12 +34,13 @@ interface PostTitleEditProps {
  * @return {WPElement} Element to render.
  */
 export default function Edit({
-  clientId,
+  attributes,
   context,
+  setAttributes,
 }: PostTitleEditProps) {
   // @ts-ignore
-  const queryParentId = select('core/block-editor').getBlockParentsByBlockName(clientId, 'wp-curate/query')[0];
-  const { customPostTitles = [], postId, pinnedPosts = [] } = context;
+  const { postId, pinnedPosts = [] } = context;
+  const { customPostTitles = [] } = attributes;
   const [rawTitle = '', setTitle, fullTitle] = useEntityProp('postType', context?.query?.postType, 'title', postId);
   const [link] = useEntityProp('postType', context?.query?.postType, 'link', postId);
   const isPinned = pinnedPosts.includes(postId);
@@ -81,9 +85,7 @@ export default function Edit({
         ];
       }
 
-      dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
-        customPostTitles: newCustomPostTitles,
-      });
+      setAttributes({ customPostTitles: newCustomPostTitles });
     };
 
     titleElement = (
