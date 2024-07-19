@@ -2,6 +2,12 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.0.2 - 2024-07-19
+
+- Enhancement: Update Mantle Testkit to `v1.0.0`.
+- Enhancement: Allow for unique pinned posts on pages with deduplication enabled.
+- Bug Fix: Unit testing in Github Actions.
+
 ## 2.0.1 - 2024-07-18
 
 - Bug Fix: Update block-editor-tools to prevent errors/block crashes related to the PostPicker.
