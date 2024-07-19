@@ -15,5 +15,29 @@
     display: flex;
     justify-content: space-between;
     margin-top: 0.5rem;
+
+    &__post-picker {
+      align-self: flex-end;
+    }
   }
+}
+
+.curate-droppable::after {
+  align-items: center;
+  background: rgba(255,255,255,0.8);
+  border: 4px dashed var(--wp-components-color-accent, var(--wp-admin-theme-color, #3858e9));
+  color: #333;
+  content: "Move post here";
+  cursor: pointer;
+  display: flex;
+  font-size: 40px;
+  font-weight: bold;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  position: absolute;
+  text-align: center;
+  top: 0;
+  width: 100%;
+  z-index: 9999;
 }

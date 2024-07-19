@@ -103,11 +103,6 @@ export default function Edit({
     }
   }, [isParentOfSelectedBlock, isSelected, moveData.postId, postId, queryParentId, updatePost]);
 
-  const style = moveData.postId && moveData.postId !== postId ? {
-    border: '4px solid var(--wp-components-color-accent,var(--wp-admin-theme-color,#3858e9))',
-    width: '100%',
-    height: '100%',
-  } : {};
   return (
     <div
       {...useBlockProps(
@@ -116,14 +111,14 @@ export default function Edit({
             'wp-curate-post-block',
             { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
             { 'wp-curate-post-block--backfill': !selected },
+            { 'curate-droppable': moveData.postId && moveData.postId !== postId },
           ),
-          style,
         },
       )}
     >
       <InnerBlocks />
       {isParentOfSelectedBlock || isSelected ? (
-        <div class="wp-curate-post-block__actions">
+        <div className="wp-curate-post-block__actions">
           {selected ? (
             <Button
               variant="secondary"
@@ -131,7 +126,7 @@ export default function Edit({
             >
               {moveData.postId ? __('Cancel', 'wp-curate') : __('Move Post', 'wp-curate')}
             </Button>
-          ) : null}
+          ) : <span />}
           <PostPicker
             allowedTypes={postTypes}
             onUpdate={updatePost}
