@@ -123,7 +123,7 @@ export default function Edit({
     >
       <InnerBlocks />
       {isParentOfSelectedBlock || isSelected ? (
-        <>
+        <div class="wp-curate-post-block__actions">
           {selected ? (
             <Button
               variant="secondary"
@@ -143,7 +143,7 @@ export default function Edit({
             resetText={__('Backfill post', 'wp-curate')}
             replaceText={__('Pin a different post', 'wp-curate')}
           />
-        </>
+        </div>
       ) : null}
     </div>
   );

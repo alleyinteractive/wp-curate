@@ -10,8 +10,10 @@
     opacity: 0.5;
   }
 
-  &__post-picker {
+  &__actions {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
     margin-top: 0.5rem;
-    text-align: right;
   }
 }
