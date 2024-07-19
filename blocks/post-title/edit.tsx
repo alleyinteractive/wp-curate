@@ -1,6 +1,5 @@
 import { __ } from '@wordpress/i18n';
 import { PlainText, useBlockProps } from '@wordpress/block-editor';
-import { dispatch, select } from '@wordpress/data';
 import { useEntityProp } from '@wordpress/core-data';
 
 import './index.scss';
@@ -39,10 +38,10 @@ export default function Edit({
   setAttributes,
 }: PostTitleEditProps) {
   // @ts-ignore
-  const { postId, pinnedPosts = [] } = context;
+  const { postId, pinnedPosts = [], query: { postType = 'post' } } = context;
   const { customPostTitles = [] } = attributes;
-  const [rawTitle = '', setTitle, fullTitle] = useEntityProp('postType', context?.query?.postType, 'title', postId);
-  const [link] = useEntityProp('postType', context?.query?.postType, 'link', postId);
+  const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId.toString());
+  const [link] = useEntityProp('postType', postType, 'link', postId.toString());
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
 
@@ -61,6 +60,7 @@ export default function Edit({
       <a
         href={link}
         onClick={(event) => event.preventDefault()}
+        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{
           __html: fullTitle?.rendered,
         }}
@@ -91,9 +91,6 @@ export default function Edit({
     titleElement = (
       <h1 {...useBlockProps}>
         <PlainText
-          tagName="a"
-          href={link}
-          placeholder={!rawTitle.length ? __('No Title') : null}
           value={currentCustomPostTitle?.title ? currentCustomPostTitle?.title : rawTitle}
           onChange={handleOnChange}
         />
