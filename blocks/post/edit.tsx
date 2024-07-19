@@ -4,7 +4,7 @@ import { PostPicker } from '@alleyinteractive/block-editor-tools';
 import { dispatch, select, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
-import { useEffect } from '@wordpress/element';
+import { useEffect, useCallback } from '@wordpress/element';
 
 import NoRender from './norender';
 
@@ -17,9 +17,9 @@ interface PostEditProps {
     query: {
       include?: string;
     };
-    moveData: {
-      postId: number;
-      clientId: string;
+    moveData?: {
+      postId?: number;
+      clientId?: string;
     };
   };
   isSelected: boolean;
@@ -61,7 +61,7 @@ export default function Edit({
   const index = queryInclude.findIndex((id: number) => id === postId);
   const selected = posts[index];
 
-  const updatePost = (post: number | null) => {
+  const updatePost = useCallback((post: number | null) => {
     const newPosts = [...posts];
     // If the post is already in the list, remove it.
     if (post !== null && newPosts.includes(post)) {
@@ -72,7 +72,7 @@ export default function Edit({
     dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
       posts: newPosts,
     });
-  };
+  }, [index, posts, queryParentId]);
 
   const resetPost = () => {
     updatePost(null);
@@ -96,6 +96,7 @@ export default function Edit({
   useEffect(() => {
     if ((isParentOfSelectedBlock || isSelected) && moveData.postId && moveData.postId !== postId) {
       updatePost(moveData.postId);
+      // @ts-ignore
       dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
         moveData: {},
       });
@@ -104,7 +105,6 @@ export default function Edit({
 
   const style = moveData.postId && moveData.postId !== postId ? {
     border: '4px solid var(--wp-components-color-accent,var(--wp-admin-theme-color,#3858e9))',
-    position: 'relative',
     width: '100%',
     height: '100%',
   } : {};
