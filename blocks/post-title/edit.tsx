@@ -41,7 +41,6 @@ export default function Edit({
   const { postId, pinnedPosts = [], query: { postType = 'post' } } = context;
   const { customPostTitles = [] } = attributes;
   const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId.toString());
-  const [link] = useEntityProp('postType', postType, 'link', postId.toString());
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
 
@@ -55,17 +54,13 @@ export default function Edit({
   // }, [isPinned, postId, customPostTitles, queryParentId]);
 
   let titleElement = (
-    <h1 {...useBlockProps}>
-      {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-      <a
-        href={link}
-        onClick={(event) => event.preventDefault()}
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{
-          __html: fullTitle?.rendered,
-        }}
-      />
-    </h1>
+    <h3
+      {...useBlockProps}
+      // eslint-disable-next-line react/no-danger
+      dangerouslySetInnerHTML={{
+        __html: fullTitle?.rendered,
+      }}
+    />
   );
 
   if (isPinned) {
@@ -89,12 +84,12 @@ export default function Edit({
     };
 
     titleElement = (
-      <h1 {...useBlockProps}>
+      <h3 {...useBlockProps}>
         <PlainText
           value={currentCustomPostTitle?.title ? currentCustomPostTitle?.title : rawTitle}
           onChange={handleOnChange}
         />
-      </h1>
+      </h3>
     );
   }
 
