@@ -3,6 +3,7 @@ import { PlainText, useBlockProps } from '@wordpress/block-editor';
 import { useEntityProp } from '@wordpress/core-data';
 
 import './index.scss';
+import { useEffect } from 'react';
 
 interface PostTitleEditProps {
   clientId?: string;
@@ -44,14 +45,17 @@ export default function Edit({
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
 
-  // @todo: handle removing custom title when post is "unpinned".
-  // useEffect(() => {
-  //   if (?) {
-  //     dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
-  //       customPostTitles: customPostTitles.filter((item) => item?.postId !== postId),
-  //     });
-  //   }
-  // }, [isPinned, postId, customPostTitles, queryParentId]);
+  useEffect(() => {
+    if (
+      customPostTitles.length
+      && (currentCustomPostTitle && !isPinned)
+    ) {
+      // Remove custom title if post is unpinned.
+      setAttributes(
+        { customPostTitles: customPostTitles.filter((item) => item?.postId !== postId) },
+      );
+    }
+  }, [isPinned, postId, customPostTitles, currentCustomPostTitle, setAttributes]);
 
   let titleElement = (
     <h3
