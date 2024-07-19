@@ -86,6 +86,8 @@ export default function Edit({
     titleElement = (
       <h3 {...useBlockProps}>
         <PlainText
+          // @fixme: If editing and all text is cleared, we don't want the raw
+          // title to auto-populate.
           value={currentCustomPostTitle?.title ? currentCustomPostTitle?.title : rawTitle}
           onChange={handleOnChange}
         />
