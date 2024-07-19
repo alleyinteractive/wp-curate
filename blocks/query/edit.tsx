@@ -1,5 +1,11 @@
 /* eslint-disable camelcase */
-import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
+import {
+  PostPicker,
+  TermSelector,
+  Checkboxes,
+  Sortable,
+  SortableItem,
+} from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import apiFetch from '@wordpress/api-fetch';
@@ -227,6 +233,10 @@ export default function Edit({
     setAttributes({ posts: newManualPosts });
   };
 
+  const setManualPosts = (newPosts: number[]) => {
+    setAttributes({ posts: newPosts });
+  };
+
   const setTerms = ((type: string, newTerms: Term[]) => {
     const cleanedTerms = newTerms.map((term) => (
       {
@@ -331,25 +341,38 @@ export default function Edit({
           initialOpen={false}
           className="manual-posts"
         >
-          {manualPosts.map((_post, index) => (
-            <PanelRow
-              // eslint-disable-next-line react/no-array-index-key
-              key={index}
-              className={classnames(
-                'manual-posts__container',
-                { 'manual-posts__container--selected': manualPosts[index] },
-              )}
-            >
-              <span className="manual-posts__counter">{index + 1}</span>
-              <PostPicker
-                allowedTypes={allowedPostTypes}
-                onReset={() => setManualPost(0, index)}
-                onUpdate={(id: number) => { setManualPost(id, index); }}
-                value={manualPosts[index] || 0}
-                className="manual-posts__picker"
-              />
-            </PanelRow>
-          ))}
+          <Sortable
+            emptyItem=""
+            list={manualPosts}
+            setList={setManualPosts}
+          >
+            {manualPosts.map((_post, index) => (
+              <SortableItem
+                index={index}
+                key={index} // eslint-disable-line react/no-array-index-key
+                list={manualPosts}
+                setList={setManualPosts}
+              >
+                <PanelRow
+                  // eslint-disable-next-line react/no-array-index-key
+                  key={index}
+                  className={classnames(
+                    'manual-posts__container',
+                    { 'manual-posts__container--selected': manualPosts[index] },
+                  )}
+                >
+                  <span className="manual-posts__counter">{index + 1}</span>
+                  <PostPicker
+                    allowedTypes={allowedPostTypes}
+                    onReset={() => setManualPost(0, index)}
+                    onUpdate={(id: number) => { setManualPost(id, index); }}
+                    value={manualPosts[index] || 0}
+                    className="manual-posts__picker"
+                  />
+                </PanelRow>
+              </SortableItem>
+            ))}
+          </Sortable>
         </PanelBody>
 
         <PanelBody
