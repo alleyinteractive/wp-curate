@@ -3,7 +3,7 @@ import { PlainText, useBlockProps } from '@wordpress/block-editor';
 import { useEntityProp } from '@wordpress/core-data';
 
 import './index.scss';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface PostTitleEditProps {
   clientId?: string;
@@ -44,18 +44,64 @@ export default function Edit({
   const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId.toString());
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
+  const [title, setTitle] = useState(rawTitle);
 
   useEffect(() => {
+    /**
+     * Handle case for removing custom title from collection if post is unpinned.
+     */
     if (
       customPostTitles.length
       && (currentCustomPostTitle && !isPinned)
     ) {
-      // Remove custom title if post is unpinned.
       setAttributes(
         { customPostTitles: customPostTitles.filter((item) => item?.postId !== postId) },
       );
     }
   }, [isPinned, postId, customPostTitles, currentCustomPostTitle, setAttributes]);
+
+  useEffect(() => {
+    /**
+     * Handle case for removing custom title from the collection if a
+     * custom title no longer exists.
+     */
+    if (
+      (currentCustomPostTitle?.postId && currentCustomPostTitle?.title.length === 0)
+      && title === rawTitle) {
+      setAttributes(
+        { customPostTitles: customPostTitles.filter((item) => item?.postId !== postId) },
+      );
+      return;
+    }
+
+    /**
+     * Handle cases for when it's not necessary to update the collection of
+     * custom titles
+     */
+    if (
+      title === rawTitle
+      || title === currentCustomPostTitle?.title
+    ) {
+      return;
+    }
+
+    let newCustomPostTitles = [...customPostTitles];
+    if (currentCustomPostTitle?.postId) {
+      // Handle updating existing custom title in collection.
+      currentCustomPostTitle.title = title;
+    } else if (!currentCustomPostTitle?.postId) {
+      // Handle adding new custom title in collection
+      newCustomPostTitles = [
+        ...customPostTitles,
+        {
+          postId,
+          title,
+        },
+      ];
+    }
+
+    setAttributes({ customPostTitles: newCustomPostTitles });
+  }, [title, customPostTitles, currentCustomPostTitle, postId, setAttributes, rawTitle]);
 
   let titleElement = (
     <h3
@@ -68,32 +114,13 @@ export default function Edit({
   );
 
   if (isPinned) {
-    const handleOnChange = (newTitle: string) => {
-      let newCustomPostTitles = [...customPostTitles];
-
-      // Handle updating existing and new custom post titles.
-      if (currentCustomPostTitle) {
-        currentCustomPostTitle.title = newTitle;
-      } else {
-        newCustomPostTitles = [
-          ...customPostTitles,
-          {
-            postId,
-            title: newTitle,
-          },
-        ];
-      }
-
-      setAttributes({ customPostTitles: newCustomPostTitles });
-    };
-
     titleElement = (
       <h3 {...useBlockProps}>
         <PlainText
-          // @fixme: If editing and all text is cleared, we don't want the raw
-          // title to auto-populate.
-          value={currentCustomPostTitle?.title ? currentCustomPostTitle?.title : rawTitle}
-          onChange={handleOnChange}
+          placeholder={__('Enter a custom title')}
+          value={title ?? rawTitle}
+          onChange={(newTitle: string) => setTitle(newTitle)}
+          onBlur={() => (title === '') && setTitle(rawTitle)}
         />
       </h3>
     );
