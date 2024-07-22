@@ -1,13 +1,15 @@
 import { __ } from '@wordpress/i18n';
-import { PlainText, useBlockProps } from '@wordpress/block-editor';
+import { InspectorControls, PlainText, useBlockProps } from '@wordpress/block-editor';
 import { useEntityProp } from '@wordpress/core-data';
 
 import './index.scss';
 import { useEffect, useState } from 'react';
+import { PanelBody, SelectControl } from '@wordpress/components';
 
 interface PostTitleEditProps {
   clientId?: string;
   attributes: {
+    level?: number;
     customPostTitles?: {
       postId: number;
       title: string;
@@ -40,11 +42,12 @@ export default function Edit({
 }: PostTitleEditProps) {
   // @ts-ignore
   const { postId, pinnedPosts = [], query: { postType = 'post' } } = context;
-  const { customPostTitles = [] } = attributes;
+  const { customPostTitles = [], level = 3 } = attributes;
   const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId.toString());
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
   const [title, setTitle] = useState(rawTitle);
+  const TagName = level === 0 ? 'p' : `h${level}`;
 
   useEffect(() => {
     /**
@@ -104,7 +107,7 @@ export default function Edit({
   }, [title, customPostTitles, currentCustomPostTitle, postId, setAttributes, rawTitle]);
 
   let titleElement = (
-    <h3
+    <TagName
       {...useBlockProps}
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{
@@ -115,20 +118,44 @@ export default function Edit({
 
   if (isPinned) {
     titleElement = (
-      <h3 {...useBlockProps}>
-        <PlainText
-          placeholder={__('Enter a custom title')}
-          value={title ?? rawTitle}
-          onChange={(newTitle: string) => setTitle(newTitle)}
-          onBlur={() => (title === '') && setTitle(rawTitle)}
-        />
-      </h3>
+      <PlainText
+        tagName={TagName}
+        placeholder={__('Enter a custom title')}
+        value={title ?? rawTitle}
+        onChange={(newTitle: string) => setTitle(newTitle)}
+        onBlur={() => (title === '') && setTitle(rawTitle)}
+        __experimentalVersion={2}
+        {...useBlockProps}
+      />
     );
   }
 
   return (
     <>
       { titleElement }
+      <InspectorControls>
+        <PanelBody
+          title={__('Setup', 'wp-curate')}
+          initialOpen
+        >
+          <SelectControl
+            label={__('Heading Level')}
+            value={level.toString()}
+            options={[
+              { label: 'p', value: '0' },
+              { label: 'h1', value: '1' },
+              { label: 'h2', value: '2' },
+              { label: 'h3', value: '3' },
+              { label: 'h4', value: '4' },
+              { label: 'h5', value: '5' },
+              { label: 'h6', value: '6' },
+            ]}
+            onChange={(newLevel) => {
+              setAttributes({ level: parseInt(newLevel, 10) });
+            }}
+          />
+        </PanelBody>
+      </InspectorControls>
     </>
   );
 }

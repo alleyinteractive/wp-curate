@@ -13,6 +13,10 @@
   "style": "wp-block-post-title",
   "usesContext": ["postId", "query", "pinnedPosts"],
   "attributes": {
+    "level": {
+      "type": "number",
+      "default": 3
+    },
     "customPostTitles": {
       "default": [],
       "items": {

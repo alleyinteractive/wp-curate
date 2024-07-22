@@ -18,6 +18,8 @@ $post_type          = $block->context['postType'] ?? '';
 $custom_post_titles = $attributes['customPostTitles'] ?? [];
 $post_title         = get_the_title( $post_id );
 $post_link          = get_the_permalink( $post_id );
+$level              = $attributes['level'] ?? 3;
+$tag_name           = $level === 0 ? 'p' : "h{$level}";
 
 // Use custom post title, if available.
 foreach ($custom_post_titles as $value) {
@@ -26,6 +28,8 @@ foreach ($custom_post_titles as $value) {
 	}
 }
 ?>
-<a <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?> href="<?php echo esc_url( $post_link ) ?>">
-	<?php echo esc_html( $post_title ); ?>
-</a>
+<<?php echo esc_attr( $tag_name) . ' ' . wp_kses_data( get_block_wrapper_attributes() ); ?>>
+	<a href="<?php echo esc_url( $post_link ) ?>">
+		<?php echo esc_html( $post_title ); ?>
+	</a>
+</<?php echo esc_attr( $tag_name ); ?>>
