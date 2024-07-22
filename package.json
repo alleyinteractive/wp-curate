@@ -50,6 +50,7 @@
     "@wordpress/edit-post": "^7.19.15",
     "@wordpress/element": "^5.19.13",
     "@wordpress/i18n": "^4.42.13",
+    "@wordpress/icons": "^10.3.0",
     "@wordpress/plugins": "^6.10.13",
     "@wordpress/url": "^3.43.13",
     "classnames": "^2.5.1",
