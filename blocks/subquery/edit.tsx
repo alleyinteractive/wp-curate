@@ -61,6 +61,12 @@ export default function Edit({
     orderby = 'date',
   },
   setAttributes,
+  context: {
+    postId,
+    query: {
+      include = '',
+    } = {},
+  },
 }: EditProps) {
   const {
     wpCurateQueryBlock: {
@@ -183,7 +189,7 @@ export default function Edit({
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    mainDedupe();
+    // mainDedupe();
   }, [
     manualPostIds,
     backfillPosts,
@@ -193,7 +199,6 @@ export default function Edit({
     isPostDeduplicating,
     deduplication,
   ]);
-
 
   for (let i = 0; i < numberOfPosts; i += 1) {
     if (!manualPosts[i]) {
@@ -212,8 +217,7 @@ export default function Edit({
           'wp-curate/post',
           {},
           [
-            ['core/post-title', { isLink: true }],
-            ['core/post-excerpt', {}],
+            ['core/post-title', { isLink: true, level: 3 }],
           ],
         ],
       ],
@@ -232,34 +236,39 @@ export default function Edit({
     }
   });
 
+  const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
+  const index = queryInclude.findIndex((id: number) => id === postId);
+
   return (
-    <>
-      <div {...useBlockProps()}>
-        <InnerBlocks template={TEMPLATE} />
-      </div>
-      <QueryControls
-        allowedPostTypes={allowedPostTypes}
-        allowedTaxonomies={allowedTaxonomies}
-        availableTaxonomies={availableTaxonomies}
-        deduplication={deduplication}
-        displayTypes={displayTypes}
-        isPostDeduplicating={isPostDeduplicating}
-        manualPosts={manualPosts}
-        maxNumberOfPosts={maxNumberOfPosts}
-        minNumberOfPosts={minNumberOfPosts}
-        numberOfPosts={numberOfPosts}
-        offset={offset}
-        orderby={orderby}
-        parselyAvailable={parselyAvailable}
-        postTypeObject={postTypeObject}
-        postTypes={postTypes}
-        searchTerm={searchTerm}
-        setAttributes={setAttributes}
-        taxCount={taxCount}
-        taxRelation={taxRelation}
-        termRelations={termRelations}
-        terms={terms}
-      />
-    </>
+    index === 0 ? (
+      <>
+        <div {...useBlockProps()}>
+          <InnerBlocks template={TEMPLATE} />
+        </div>
+        <QueryControls
+          allowedPostTypes={allowedPostTypes}
+          allowedTaxonomies={allowedTaxonomies}
+          availableTaxonomies={availableTaxonomies}
+          deduplication={deduplication}
+          displayTypes={displayTypes}
+          isPostDeduplicating={isPostDeduplicating}
+          manualPosts={manualPosts}
+          maxNumberOfPosts={maxNumberOfPosts}
+          minNumberOfPosts={minNumberOfPosts}
+          numberOfPosts={numberOfPosts}
+          offset={offset}
+          orderby={orderby}
+          parselyAvailable={parselyAvailable}
+          postTypeObject={postTypeObject}
+          postTypes={postTypes}
+          searchTerm={searchTerm}
+          setAttributes={setAttributes}
+          taxCount={taxCount}
+          taxRelation={taxRelation}
+          termRelations={termRelations}
+          terms={terms}
+        />
+      </>
+    ) : null
   );
 }
