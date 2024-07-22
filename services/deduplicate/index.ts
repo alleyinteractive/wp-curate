@@ -65,7 +65,7 @@ export default {
 // Recursively find all query blocks.
 const getQueryBlocks = (blocks: Block[], out: Block[]) => {
   blocks.forEach((block: Block) => {
-    if (block.name === 'wp-curate/query') {
+    if (block.name === 'wp-curate/query' || block.name === 'wp-curate/subquery') {
       out.push(block);
     }
     const { innerBlocks } = block;
@@ -115,7 +115,7 @@ export function mainDedupe() {
   //     }
   //   });
   // });
-
+  console.log(queryBlocks);
   // Loop through all query blocks and set backfilled posts in the open slots.
   queryBlocks.forEach((queryBlock) => {
     const { attributes } = queryBlock;
@@ -127,6 +127,7 @@ export function mainDedupe() {
       postTypes = ['post'],
     } = attributes;
     if (!backfillPosts) {
+      console.log (queryBlock.clientId, 'no backfill posts');
       return;
     }
     const postTypeString = postTypes.join(',');
@@ -176,6 +177,18 @@ export function mainDedupe() {
       allPostIds.push(manualPost || backfillPost);
     });
 
+    console.log(queryBlock);
+    console.log({
+      // Set the query attribute to pass to the child blocks.
+      query: {
+        perPage: numberOfPosts,
+        postType: 'post',
+        type: postTypeString,
+        include: allPostIds.join(','),
+        orderby: 'include',
+      },
+      queryId: 0,
+    });
     // Update the query block with the new query.
     // @ts-ignore
     dispatch('core/block-editor')

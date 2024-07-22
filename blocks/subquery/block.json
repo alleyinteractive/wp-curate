@@ -18,6 +18,9 @@
         "query",
         "postId"
     ],
+    "providesContext": {
+        "query": "query"
+    },
     "attributes": {
         "deduplication": {
             "default": "inherit",
