@@ -58,7 +58,7 @@
   "prefer-stable": true,
   "scripts": {
     "phpcbf": "phpcbf .",
-    "phpcs": "phpcs . -sn",
+    "phpcs": "phpcs .",
     "phpunit": "phpunit",
     "phpstan": "phpstan --memory-limit=512M",
     "test": [
