@@ -1,9 +1,9 @@
+import { useEffect } from 'react';
 import { ToggleControl } from '@wordpress/components';
 import { PluginDocumentSettingPanel } from '@wordpress/edit-post';
 import { __ } from '@wordpress/i18n';
 import { usePostMetaValue } from '@alleyinteractive/block-editor-tools';
 import { useSelect } from '@wordpress/data';
-import { useEffect } from '@wordpress/element';
 
 import countBlocksByName from '../../../services/countBlocksByName';
 
