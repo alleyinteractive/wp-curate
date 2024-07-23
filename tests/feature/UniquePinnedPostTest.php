@@ -25,32 +25,32 @@ class UniquePinnedPostTest extends Test_Case {
 
 		static::factory()->post->create(
 			[
-				'post_title' => 'TheWrapTestPost 1',
+				'post_title' => 'Test Post 1',
 			]
 		);
 		static::factory()->post->create(
 			[
-				'post_title' => 'TheWrapTestPost 2',
+				'post_title' => 'Test Post 2',
 			]
 		);
 		static::factory()->post->create(
 			[
-				'post_title' => 'TheWrapTestPost 3',
+				'post_title' => 'Test Post 3',
 			]
 		);
 		static::factory()->post->create(
 			[
-				'post_title' => 'TheWrapTestPost 4',
+				'post_title' => 'Test Post 4',
 			]
 		);
 		static::factory()->post->create(
 			[
-				'post_title' => 'TheWrapTestPost 5',
+				'post_title' => 'Test Post 5',
 			]
 		);
 		static::factory()->post->create(
 			[
-				'post_title' => 'TheWrapTestPost 6',
+				'post_title' => 'Test Post 6',
 			]
 		);
 	}
@@ -95,7 +95,7 @@ class UniquePinnedPostTest extends Test_Case {
 	public function test_do_not_enforce_unique_pinned_posts_if_not_enabled() {
 		$pinned_post    = static::factory()->post->as_models()->create_and_get(
 			[
-				'post_title' => 'PinnedPost 1',
+				'post_title' => 'Pinned Post 1',
 			]
 		);
 		$pinned_post_id = $pinned_post->id();
@@ -114,7 +114,7 @@ class UniquePinnedPostTest extends Test_Case {
 
 		$page = $this->get( $test_post )->assertOk();
 
-		$this->assertEquals( 2, substr_count( $page->get_content(), 'PinnedPost 1' ) );
+		$this->assertEquals( 2, substr_count( $page->get_content(), 'Pinned Post 1' ) );
 	}
 
 	/**
@@ -124,7 +124,7 @@ class UniquePinnedPostTest extends Test_Case {
 	public function test_pinned_post_only_displays_once() {
 		$pinned_post    = static::factory()->post->as_models()->create_and_get(
 			[
-				'post_title' => 'PinnedPost 2',
+				'post_title' => 'Pinned Post 2',
 			]
 		);
 		$pinned_post_id = $pinned_post->id();
@@ -143,6 +143,6 @@ class UniquePinnedPostTest extends Test_Case {
 
 		$page = $this->get( $test_post )->assertOk();
 
-		$this->assertEquals( 1, substr_count( $page->get_content(), 'PinnedPost 2' ) );
+		$this->assertEquals( 1, substr_count( $page->get_content(), 'Pinned Post 2' ) );
 	}
 }
