@@ -109,9 +109,7 @@ export function mainDedupe() {
    */
   if (wpCurateUniquePinnedPosts) {
     queryBlocks.forEach((queryBlock) => {
-      const { attributes } = queryBlock;
-      const { posts } = attributes;
-      posts?.forEach((post) => {
+      queryBlock?.attributes?.posts?.forEach((post) => {
         if (post) {
           deduplicate(post);
         }
