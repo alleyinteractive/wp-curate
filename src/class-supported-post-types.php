@@ -97,7 +97,8 @@ final class Supported_Post_Types {
 			$this->get_supported_post_types(),
 			'wp_curate_unique_pinned_posts',
 			[
-				'type' => 'boolean',
+				'type'    => 'boolean',
+				'default' => false,
 			]
 		);
 	}
