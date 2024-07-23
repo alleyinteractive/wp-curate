@@ -28,8 +28,7 @@
   },
   "require-dev": {
     "alleyinteractive/alley-coding-standards": "^2.0",
-    "mantle-framework/testkit": "^0.12",
-    "nunomaduro/collision": "^6.0",
+    "mantle-framework/testkit": "^1.0",
     "szepeviktor/phpstan-wordpress": "^1.1"
   },
   "config": {
@@ -39,6 +38,11 @@
       "pestphp/pest-plugin": true
     },
     "sort-packages": true
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Alley\\WP\\WP_Curate\\Tests\\": "tests"
+    }
   },
   "extra": {
     "wordpress-autoloader": {
