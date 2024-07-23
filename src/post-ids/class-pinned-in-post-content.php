@@ -43,9 +43,8 @@ final class Pinned_In_Post_Content implements Post_IDs {
 				// Unique pinned posts relies on deduplication being enabled.
 				$post_level_unique         = get_post_meta( $post->ID, 'wp_curate_unique_pinned_posts', true );
 				$post_level_deduplication  = get_post_meta( $post->ID, 'wp_curate_deduplication', true );
-				$post_level_unique_enabled = $post_level_unique && $post_level_deduplication;
 
-				if ( true === (bool) $post_level_unique_enabled ) {
+				if ( $post_level_unique && $post_level_deduplication ) {
 					$query_blocks = match_blocks(
 						$post->post_content,
 						[
