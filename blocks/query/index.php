@@ -53,8 +53,41 @@ function wp_curate_query_block_init(): void {
 		'wp-curate-query-editor-script',
 		'wpCurateQueryBlock',
 		[
-			'allowedPostTypes'  => $allowed_post_types,
-			'allowedTaxonomies' => $allowed_taxonomies,
+			'allowedPostTypes'  => array_filter(
+				array_map(
+					function( $slug ) {
+						$post_type_object = get_post_type_object( $slug );
+						if ( ! $post_type_object ) {
+							return null;
+						}
+						return (
+							[
+								'name' => $post_type_object->labels->singular_name,
+								'slug' => $slug,
+							]
+						);
+					},
+					$allowed_post_types
+				)
+			),
+			'allowedTaxonomies' => array_filter(
+				array_map(
+					function( $slug ) {
+						$taxonomy = get_taxonomy( $slug );
+						if ( ! $taxonomy ) {
+							return null;
+						}
+						return (
+							[
+								'name'      => $taxonomy->labels->singular_name,
+								'slug'      => $slug,
+								'rest_base' => $taxonomy->rest_base,
+							]
+						);
+					},
+					$allowed_taxonomies,
+				),
+			),
 			'parselyAvailable'  => $parsely_available ? 'true' : 'false',
 		]
 	);

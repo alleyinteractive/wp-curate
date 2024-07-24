@@ -177,20 +177,18 @@ export function mainDedupe() {
       allPostIds.push(manualPost || backfillPost);
     });
 
-    if (queryBlock.name === 'wp-curate/subquery') {
-      console.log(queryBlock);
-      console.log({
-        // Set the query attribute to pass to the child blocks.
-        query: {
-          perPage: numberOfPosts,
-          postType: 'post',
-          type: postTypeString,
-          include: allPostIds.join(','),
-          orderby: 'include',
-        },
-        queryId: 0,
-      });
-    }
+    console.log(queryBlock);
+    console.log({
+      // Set the query attribute to pass to the child blocks.
+      query: {
+        perPage: numberOfPosts,
+        postType: 'post',
+        type: postTypeString,
+        include: allPostIds.join(','),
+        orderby: 'include',
+      },
+      queryId: 0,
+    });
     // Update the query block with the new query.
     // @ts-ignore
     dispatch('core/block-editor')

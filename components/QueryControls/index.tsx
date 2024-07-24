@@ -21,10 +21,14 @@ import type {
   Term,
 } from '../../blocks/query/types';
 
+type PostTypeOrTerm = {
+  name: string;
+  slug: string;
+};
+
 type QueryControlsProps = {
-  allowedPostTypes: string[];
-  allowedTaxonomies: string[];
-  availableTaxonomies: Record<string, { name: string }>;
+  allowedPostTypes: PostTypeOrTerm[];
+  allowedTaxonomies: PostTypeOrTerm[];
   deduplication: string;
   displayTypes: Option[];
   isPostDeduplicating: boolean;
@@ -52,7 +56,6 @@ type QueryControlsProps = {
 export default function QueryControls({
   allowedPostTypes,
   allowedTaxonomies = [],
-  availableTaxonomies,
   deduplication,
   displayTypes,
   isPostDeduplicating,
@@ -167,7 +170,7 @@ export default function QueryControls({
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
-                allowedTypes={allowedPostTypes}
+                allowedTypes={allowedPostTypes.map((type) => type.slug)}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] || 0}
@@ -187,33 +190,31 @@ export default function QueryControls({
             onChange={(newValue) => setAttributes({ postTypes: newValue })}
             options={displayTypes}
           />
-          {Object.keys(availableTaxonomies).length > 0 ? (
-            allowedTaxonomies.map((taxonomy) => (
-              <Fragment key={taxonomy}>
-                { /* @ts-ignore */ }
-                <TermSelector
-                  label={availableTaxonomies[taxonomy].name || taxonomy}
-                  subTypes={[taxonomy]}
-                  selected={terms[taxonomy] ?? []}
-                  onSelect={(newCategories: Term[]) => setTerms(taxonomy, newCategories)}
-                  multiple
+          {allowedTaxonomies.map((taxonomy) => (
+            <Fragment key={taxonomy.slug}>
+              { /* @ts-ignore */ }
+              <TermSelector
+                label={taxonomy.name}
+                subTypes={[taxonomy]}
+                selected={terms[taxonomy.slug] ?? []}
+                onSelect={(newCategories: Term[]) => setTerms(taxonomy.slug, newCategories)}
+                multiple
+              />
+              {terms[taxonomy.slug]?.length > 1 ? (
+                <SelectControl
+                  label={sprintf(
+                    __('%s Relation', 'wp-curate'),
+                    taxonomy.name,
+                  )}
+                  help={__('AND: Posts must have all selected terms. OR: Posts may have one or more selected terms.', 'wp-curate')}
+                  options={andOrOptions}
+                  onChange={(newValue) => setTermRelation(taxonomy.slug, newValue)}
+                  value={termRelations[taxonomy.slug] ?? 'OR'}
                 />
-                {terms[taxonomy]?.length > 1 ? (
-                  <SelectControl
-                    label={sprintf(
-                      __('%s Relation', 'wp-curate'),
-                      availableTaxonomies[taxonomy].name || taxonomy,
-                    )}
-                    help={__('AND: Posts must have all selected terms. OR: Posts may have one or more selected terms.', 'wp-curate')}
-                    options={andOrOptions}
-                    onChange={(newValue) => setTermRelation(taxonomy, newValue)}
-                    value={termRelations[taxonomy] ?? 'OR'}
-                  />
-                ) : null}
-                <hr />
-              </Fragment>
-            ))
-          ) : null}
+              ) : null}
+              <hr />
+            </Fragment>
+          ))}
           {taxCount > 1 ? (
             <SelectControl
               label={__('Taxonomy Relation', 'wp-curate')}

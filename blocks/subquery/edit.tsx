@@ -5,7 +5,6 @@ import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import {
   useEffect,
-  useState,
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
@@ -28,10 +27,15 @@ import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import QueryControls from '../../components/QueryControls';
 import './index.scss';
 
+interface PostTypeOrTerm {
+  name: string;
+  slug: string;
+}
+
 interface Window {
   wpCurateQueryBlock: {
-    allowedPostTypes: Array<string>;
-    allowedTaxonomies: Array<string>;
+    allowedPostTypes: PostTypeOrTerm[];
+    allowedTaxonomies: PostTypeOrTerm[];
     parselyAvailable: string,
   };
 }
@@ -101,15 +105,12 @@ export default function Edit({
   );
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
-  const [availableTaxonomies, setAvailableTaxonomies] = useState<Taxonomies>({});
-  const [availableTypes, setAvailableTypes] = useState<Types>({});
 
   const taxCount = allowedTaxonomies.filter((taxonomy: string) => terms[taxonomy]?.length > 0).length; // eslint-disable-line max-len
 
   const termQueryArgs = buildTermQueryArgs(
     allowedTaxonomies,
     terms,
-    availableTaxonomies,
     termRelations,
     taxRelation,
   );
@@ -130,6 +131,7 @@ export default function Edit({
 
   // Fetch available post types.
   useEffect(() => {
+    console.log('fetching types');
     const fetchTypes = async () => {
       apiFetch({ path: '/wp/v2/types' }).then((response) => {
         setAvailableTypes(response as Types);
@@ -140,6 +142,7 @@ export default function Edit({
 
   // Fetch "backfill" posts when categories, tags, or search term change.
   useEffect(() => {
+    console.log('fetching backfill');
     if (Object.keys(availableTaxonomies).length <= 0) {
       return;
     }
