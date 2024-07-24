@@ -108,6 +108,7 @@ export default function Edit({
     <TagName
       {...useBlockProps}
       // eslint-disable-next-line react/no-danger
+      // @ts-ignore
       dangerouslySetInnerHTML={{
         __html: fullTitle?.rendered,
       }}
@@ -117,6 +118,7 @@ export default function Edit({
   if (isPinned) {
     titleElement = (
       <PlainText
+        // @ts-ignore
         tagName={TagName}
         placeholder={__('Enter a custom title')}
         value={title ?? rawTitle}
