@@ -25,5 +25,8 @@
       "type": "array"
     }
   },
-  "render": "file:render.php"
+  "render": "file:render.php",
+  "supports": {
+    "inserter": false
+  }
 }
