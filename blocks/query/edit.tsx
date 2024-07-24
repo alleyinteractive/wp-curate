@@ -75,7 +75,7 @@ export default function Edit({
   }
 
   // @ts-ignore
-  const [isPostDeduplicating, postTypeObject] = useSelect(
+  const [isPostDeduplicating, postTypeObject, uniquePinnedPosts] = useSelect(
     (select) => {
       // @ts-ignore
       const editor = select('core/editor');
@@ -90,6 +90,7 @@ export default function Edit({
         Boolean(meta?.wp_curate_deduplication),
         // @ts-ignore
         type ? select('core').getPostType(type) : null,
+        Boolean(meta?.wp_curate_unique_pinned_posts),
       ];
     },
   );
@@ -192,6 +193,7 @@ export default function Edit({
     postTypeString,
     isPostDeduplicating,
     deduplication,
+    uniquePinnedPosts,
   ]);
 
 
