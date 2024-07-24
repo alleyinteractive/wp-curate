@@ -9,7 +9,6 @@
 	"description": "Custom post title for WP Curate",
 	"textdomain": "post-title",
 	"editorScript": "file:index.ts",
-	"editorStyle": "file:index.css",
   "style": "wp-block-post-title",
   "usesContext": ["postId", "query", "pinnedPosts"],
   "attributes": {

@@ -1,8 +1,6 @@
 import { __ } from '@wordpress/i18n';
 import { InspectorControls, PlainText, useBlockProps } from '@wordpress/block-editor';
 import { useEntityProp } from '@wordpress/core-data';
-
-import './index.scss';
 import { useEffect, useState } from 'react';
 import { PanelBody, SelectControl } from '@wordpress/components';
 
