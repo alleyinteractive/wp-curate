@@ -57,4 +57,15 @@
   <rule ref="Squiz.Commenting.InlineComment">
     <exclude-pattern>src/assets.php</exclude-pattern>
   </rule>
+
+  <!-- Fixes from alley-coding-standards that will be included in the 2.1 release. -->
+  <!-- Allow PSR-4 file format for test files -->
+  <rule ref="WordPress.Files.FileName.NotHyphenatedLowercase">
+    <exclude-pattern>tests/*Test.php</exclude-pattern>
+  </rule>
+
+  <!-- Allow PSR-4 file format for test files -->
+  <rule ref="WordPress.Files.FileName.InvalidClassFileName">
+    <exclude-pattern>tests/*Test.php</exclude-pattern>
+  </rule>
 </ruleset>
