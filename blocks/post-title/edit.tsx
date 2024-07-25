@@ -46,6 +46,7 @@ export default function Edit({
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
   const [title, setTitle] = useState(rawTitle);
   const TagName = level === 0 ? 'p' : `h${level}`;
+  const blockProps = useBlockProps();
 
   useEffect(() => {
     /**
@@ -106,7 +107,7 @@ export default function Edit({
 
   let titleElement = (
     <TagName
-      {...useBlockProps}
+      {...blockProps}
       // eslint-disable-next-line react/no-danger
       // @ts-ignore
       dangerouslySetInnerHTML={{
@@ -125,7 +126,7 @@ export default function Edit({
         onChange={(newTitle: string) => setTitle(newTitle)}
         onBlur={() => (title === '') && setTitle(rawTitle)}
         __experimentalVersion={2}
-        {...useBlockProps}
+        {...blockProps}
       />
     );
   }
