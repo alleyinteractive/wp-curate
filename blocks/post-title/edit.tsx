@@ -1,7 +1,7 @@
 import { __ } from '@wordpress/i18n';
 import { InspectorControls, PlainText, useBlockProps } from '@wordpress/block-editor';
 import { useEntityProp } from '@wordpress/core-data';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { PanelBody, SelectControl } from '@wordpress/components';
 
 interface PostTitleEditProps {
@@ -44,7 +44,6 @@ export default function Edit({
   const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId.toString());
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
-  const [title, setTitle] = useState(rawTitle);
   const TagName = level === 0 ? 'p' : `h${level}`;
   const blockProps = useBlockProps();
 
@@ -62,11 +61,11 @@ export default function Edit({
     }
   }, [isPinned, postId, customPostTitles, currentCustomPostTitle, setAttributes]);
 
-  useEffect(() => {
+  const handleOnChange = (title: string) => {
     /**
-     * Handle case for removing custom title from the collection if a
-     * custom title no longer exists.
-     */
+    * Handle case for removing custom title from the collection if a
+    * custom title no longer exists.
+    */
     if (
       (currentCustomPostTitle?.postId && currentCustomPostTitle?.title.length === 0)
       && title === rawTitle) {
@@ -103,7 +102,7 @@ export default function Edit({
     }
 
     setAttributes({ customPostTitles: newCustomPostTitles });
-  }, [title, customPostTitles, currentCustomPostTitle, postId, setAttributes, rawTitle]);
+  };
 
   let titleElement = (
     <TagName
@@ -122,9 +121,9 @@ export default function Edit({
         // @ts-ignore
         tagName={TagName}
         placeholder={__('Enter a custom title')}
-        value={title ?? rawTitle}
-        onChange={(newTitle: string) => setTitle(newTitle)}
-        onBlur={() => (title === '') && setTitle(rawTitle)}
+        value={currentCustomPostTitle?.title ?? rawTitle}
+        onChange={(newTitle: string) => handleOnChange(newTitle.trim())}
+        onBlur={() => (currentCustomPostTitle?.title === '') && handleOnChange(rawTitle)}
         __experimentalVersion={2}
         {...blockProps}
       />
