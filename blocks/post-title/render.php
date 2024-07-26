@@ -13,23 +13,22 @@
  * @package wp-curate
  */
 
-$post_id            = $block->context['postId'] ?? 0;
-$post_type          = $block->context['postType'] ?? '';
+$current_post_id    = $block->context['postId'] ?? 0;
 $custom_post_titles = $attributes['customPostTitles'] ?? [];
-$post_title         = get_the_title( $post_id );
-$post_link          = get_the_permalink( $post_id );
+$post_title         = get_the_title( $current_post_id );
+$post_link          = get_the_permalink( $current_post_id );
 $level              = $attributes['level'] ?? 3;
-$tag_name           = $level === 0 ? 'p' : "h{$level}";
+$tag_name           = 0 === $level ? 'p' : "h{$level}";
 
 // Use custom post title, if available.
-foreach ($custom_post_titles as $value) {
-	if ($value['postId'] === $post_id) {
+foreach ( $custom_post_titles as $value ) {
+	if ( $value['postId'] === $current_post_id ) {
 		$post_title = $value['title'];
 	}
 }
 ?>
-<<?php echo esc_attr( $tag_name) . ' ' . wp_kses_data( get_block_wrapper_attributes() ); ?>>
-	<a href="<?php echo esc_url( $post_link ) ?>">
+<<?php echo esc_attr( $tag_name ) . ' ' . wp_kses_data( get_block_wrapper_attributes() ); ?>>
+	<a href="<?php echo esc_url( $post_link ); ?>">
 		<?php echo esc_html( $post_title ); ?>
 	</a>
 </<?php echo esc_attr( $tag_name ); ?>>
