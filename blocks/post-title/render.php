@@ -6,26 +6,38 @@
  *
  * @phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- File doesn't load in global scope, just appears to to PHPCS.
  *
- * @var array    $attributes The array of attributes for this block.
- * @var string   $content    Rendered block output. ie. <InnerBlocks.Content />.
- * @var WP_Block $block      The instance of the WP_Block class that represents the block being rendered.
+ * @var array<mixed> $attributes The array of attributes for this block.
+ * @var string       $content    Rendered block output. ie. <InnerBlocks.Content />.
+ * @var WP_Block     $block      The instance of the WP_Block class that represents the block being rendered.
  *
  * @package wp-curate
  */
 
-$current_post_id    = $block->context['postId'] ?? 0;
-$custom_post_titles = $attributes['customPostTitles'] ?? [];
+$current_post_id = intval( $block->context['postId'] );
+
+if ( empty( $current_post_id ) ) {
+	return;
+}
+
+$custom_post_titles = is_array( $attributes['customPostTitles'] ) ? $attributes['customPostTitles'] : [];
 $post_title         = get_the_title( $current_post_id );
 $post_link          = get_the_permalink( $current_post_id );
-$level              = $attributes['level'] ?? 3;
+$level              = intval( $attributes['level'] );
 $tag_name           = 0 === $level ? 'p' : "h{$level}";
 
+if ( empty( $post_title ) || empty( $post_link ) ) {
+	return;
+}
+
 // Use custom post title, if available.
-foreach ( $custom_post_titles as $value ) {
-	if ( $value['postId'] === $current_post_id ) {
-		$post_title = $value['title'];
+if ( 0 < count( $custom_post_titles ) ) {
+	foreach ( $custom_post_titles as $value ) {
+		if ( $value['postId'] === $current_post_id ) {
+			$post_title = $value['title'];
+		}
 	}
 }
+
 ?>
 <<?php echo esc_attr( $tag_name ) . ' ' . wp_kses_data( get_block_wrapper_attributes() ); ?>>
 	<a href="<?php echo esc_url( $post_link ); ?>">
