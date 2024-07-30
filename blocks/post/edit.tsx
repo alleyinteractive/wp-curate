@@ -104,50 +104,62 @@ export default function Edit({
       });
     };
 
-    if (newData.postId) {
-      // @ts-ignore
-      window.addEventListener('click', (e: MouseEvent) => {
-        if (!e.target) {
+    const clickHandler = (e: MouseEvent) => {
+      let targetElement = e.target as HTMLElement;
+      // We want the wp-block-post element, not the wp-curate-post-block element.
+      if (targetElement.classList.contains('wp-curate-post-block')) {
+        targetElement = targetElement.parentElement as HTMLElement;
+      }
+      if (!targetElement.classList.contains('wp-block-post')
+        && !targetElement.classList.contains('components-button')
+      ) {
+        window.removeEventListener('click', clickHandler);
+        cancelMove();
+      } else if (targetElement.classList.contains('wp-block-post')) {
+        e.preventDefault();
+        const parent = targetElement.parentNode as HTMLElement;
+        if (!parent) {
           return;
         }
-        const targetElement = e.target as HTMLElement;
-        if (!targetElement.classList.contains('wp-block-post') && !targetElement.classList.contains('components-button')) {
-          cancelMove();
-        } else if (targetElement.classList.contains('wp-block-post')) {
-          const parent = targetElement.parentNode as HTMLElement;
-          if (!parent) {
-            return;
-          }
-          const targetIndex = Array.prototype.indexOf.call(parent.children, targetElement);
-          const blockId = parent.dataset.block;
-          const parentId = select('core/block-editor').getBlockParentsByBlockName(blockId, 'wp-curate/query')[0];
-
-          const oldPosts = select('core/block-editor').getBlockAttributes(parentId).posts;
-          const newPosts = oldPosts.map((post: number) => (post === newData.postId ? null : post));
-          newPosts[targetIndex - 1] = newData.postId;
-          // @ts-ignore
-          dispatch('core/block-editor').updateBlockAttributes(parentId, {
-            posts: newPosts,
-          });
-          // Remove the post from the source query block if it's not the same as the target block.
-          const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId, 'wp-curate/query')[0];
-          if (parentId !== sourceParent) {
-            const sourceOldPosts = select('core/block-editor').getBlockAttributes(sourceParent).posts;
-            const sourceNewPosts = sourceOldPosts.map(
-              (post: number) => (post === newData.postId ? null : post),
-            );
-            // @ts-ignore
-            dispatch('core/block-editor').updateBlockAttributes(sourceParent, {
-              posts: sourceNewPosts,
-            });
-          }
-          cancelMove();
-          // TODO: fix this scrollIntoView
-          setTimeout(() => {
-            document.querySelectorAll(`.post-${newData.postId}`)[0]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, 500);
+        let targetIndex = Array.prototype.indexOf.call(parent.children, targetElement);
+        if (parent.classList.contains('is-selected')) {
+          targetIndex -= 1;
         }
-      });
+        const blockId = parent.dataset.block;
+        const parentId = select('core/block-editor').getBlockParentsByBlockName(blockId, 'wp-curate/query')[0];
+
+        const oldPosts = select('core/block-editor').getBlockAttributes(parentId).posts;
+        const newPosts = oldPosts.map((post: number) => (post === newData.postId ? null : post));
+        newPosts[targetIndex] = newData.postId;
+        // @ts-ignore
+        dispatch('core/block-editor').updateBlockAttributes(parentId, {
+          posts: newPosts,
+        });
+        // Remove the post from the source query block if it's not the same as the target block.
+        const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId, 'wp-curate/query')[0];
+        if (parentId !== sourceParent) {
+          const sourceOldPosts = select('core/block-editor').getBlockAttributes(sourceParent).posts;
+          const sourceNewPosts = sourceOldPosts.map(
+            (post: number) => (post === newData.postId ? null : post),
+          );
+          // @ts-ignore
+          dispatch('core/block-editor').updateBlockAttributes(sourceParent, {
+            posts: sourceNewPosts,
+          });
+        }
+        cancelMove();
+        window.removeEventListener('click', clickHandler);
+        setTimeout(() => {
+          // @ts-ignore - scrollIntoViewIfNeeded has ok browser support
+          // and works better than scrollIntoView.
+          document.querySelectorAll(`.post-${newData.postId}`)[0]?.scrollIntoViewIfNeeded({ behavior: 'smooth', block: 'start' });
+        }, 500);
+      }
+    };
+
+    if (newData.postId) {
+      // @ts-ignore
+      window.addEventListener('click', clickHandler);
     }
   };
 
