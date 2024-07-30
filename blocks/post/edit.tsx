@@ -4,7 +4,7 @@ import { PostPicker } from '@alleyinteractive/block-editor-tools';
 import { dispatch, select, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
-import { useEffect, useCallback } from '@wordpress/element';
+import { useCallback } from '@wordpress/element';
 
 import NoRender from './norender';
 
@@ -50,6 +50,7 @@ export default function Edit({
       postTypes: [],
     },
   };
+  const queryBlocks = select('core/block-editor').getBlocksByName('wp-curate/query');
   const {
     attributes: {
       posts = [],
@@ -87,21 +88,52 @@ export default function Edit({
   const toggleMove = () => {
     const newData = moveData.postId ? {} : { postId, clientId };
 
-    // @ts-ignore
-    dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
-      moveData: newData,
-    });
-  };
-
-  useEffect(() => {
-    if ((isParentOfSelectedBlock || isSelected) && moveData.postId && moveData.postId !== postId) {
-      updatePost(moveData.postId);
+    queryBlocks.forEach((blockId: string) => {
       // @ts-ignore
-      dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
-        moveData: {},
+      dispatch('core/block-editor').updateBlockAttributes(blockId, {
+        moveData: newData,
+      });
+    });
+
+    const cancelMove = () => {
+      queryBlocks.forEach((blockId: string) => {
+        // @ts-ignore
+        dispatch('core/block-editor').updateBlockAttributes(blockId, {
+          moveData: {},
+        });
+      });
+    };
+
+    if (newData.postId) {
+      // @ts-ignore
+      window.addEventListener('click', (e: MouseEvent) => {
+        if (!e.target) {
+          return;
+        }
+        if (!e.target.classList.contains('wp-block-post') && !e.target.classList.contains('components-button')) {
+          cancelMove();
+        } else if (e.target.classList.contains('wp-block-post')) {
+          const parent = e.target.parentNode;
+          const targetIndex = Array.prototype.indexOf.call(parent.children, e.target);
+          const blockId = parent.dataset.block;
+          const parentId = select('core/block-editor').getBlockParentsByBlockName(blockId, 'wp-curate/query')[0];
+
+          const oldPosts = select('core/block-editor').getBlockAttributes(parentId).posts;
+          const newPosts = oldPosts.map((post: number) => (post === newData.postId ? null : post));
+          newPosts[targetIndex - 1] = newData.postId;
+          // @ts-ignore
+          dispatch('core/block-editor').updateBlockAttributes(parentId, {
+            posts: newPosts,
+          });
+          cancelMove();
+          // TODO: fix this scrollIntoView
+          setTimeout(() => {
+            document.getElementById(`#block-${blockId}`)?.scrollIntoView({ block: 'start' });
+          }, 100);
+        }
       });
     }
-  }, [isParentOfSelectedBlock, isSelected, moveData.postId, postId, queryParentId, updatePost]);
+  };
 
   return (
     <div
