@@ -110,11 +110,15 @@ export default function Edit({
         if (!e.target) {
           return;
         }
-        if (!e.target.classList.contains('wp-block-post') && !e.target.classList.contains('components-button')) {
+        const targetElement = e.target as HTMLElement;
+        if (!targetElement.classList.contains('wp-block-post') && !targetElement.classList.contains('components-button')) {
           cancelMove();
-        } else if (e.target.classList.contains('wp-block-post')) {
-          const parent = e.target.parentNode;
-          const targetIndex = Array.prototype.indexOf.call(parent.children, e.target);
+        } else if (targetElement.classList.contains('wp-block-post')) {
+          const parent = targetElement.parentNode as HTMLElement;
+          if (!parent) {
+            return;
+          }
+          const targetIndex = Array.prototype.indexOf.call(parent.children, targetElement);
           const blockId = parent.dataset.block;
           const parentId = select('core/block-editor').getBlockParentsByBlockName(blockId, 'wp-curate/query')[0];
 
@@ -125,11 +129,23 @@ export default function Edit({
           dispatch('core/block-editor').updateBlockAttributes(parentId, {
             posts: newPosts,
           });
+          // Remove the post from the source query block if it's not the same as the target block.
+          const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId, 'wp-curate/query')[0];
+          if (parentId !== sourceParent) {
+            const sourceOldPosts = select('core/block-editor').getBlockAttributes(sourceParent).posts;
+            const sourceNewPosts = sourceOldPosts.map(
+              (post: number) => (post === newData.postId ? null : post),
+            );
+            // @ts-ignore
+            dispatch('core/block-editor').updateBlockAttributes(sourceParent, {
+              posts: sourceNewPosts,
+            });
+          }
           cancelMove();
           // TODO: fix this scrollIntoView
           setTimeout(() => {
-            document.getElementById(`#block-${blockId}`)?.scrollIntoView({ block: 'start' });
-          }, 100);
+            document.querySelectorAll(`.post-${newData.postId}`)[0]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 500);
         }
       });
     }
