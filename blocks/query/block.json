@@ -18,7 +18,8 @@
     "displayLayout": "displayLayout",
     "heading": "heading",
     "curation": "curation",
-    "pinnedPosts": "posts"
+    "pinnedPosts": "posts",
+    "customPostTitles": "customPostTitles"
   },
   "attributes": {
     "deduplication": {
@@ -101,6 +102,14 @@
         "trending"
       ],
       "type": "string"
+    },
+    "customPostTitles": {
+      "default": [],
+      "items": {
+        "default": {},
+        "type": "object"
+      },
+      "type": "array"
     }
   }
 }

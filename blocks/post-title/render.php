@@ -15,11 +15,16 @@
 
 $current_post_id = intval( $block->context['postId'] );
 
+echo '<pre>';
+var_dump( $block->context );
+echo '</pre>';
+
+
 if ( empty( $current_post_id ) ) {
 	return;
 }
 
-$custom_post_titles = is_array( $attributes['customPostTitles'] ) ? $attributes['customPostTitles'] : [];
+$custom_post_titles = ! empty( $attributes['customPostTitles'] ) ? $attributes['customPostTitles'] : [];
 $post_title         = get_the_title( $current_post_id );
 $post_link          = get_the_permalink( $current_post_id );
 $level              = intval( $attributes['level'] );
