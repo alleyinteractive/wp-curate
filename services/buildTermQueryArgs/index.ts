@@ -1,11 +1,3 @@
-interface Types {
-  [key: string]: {
-    name: string;
-    slug: string;
-    rest_base: string;
-  };
-}
-
 /**
  * Builds the term query args for the WP REST API.
  *
@@ -20,13 +12,13 @@ export default function buildTermQueryArgs(
   allowedTaxonomies: {
     name: string;
     slug: string;
-    rest_base: string;
+    rest_base?: string;
   }[],
   terms: { [key: string]: any[] },
   termRelations: { [key: string]: string },
   taxRelation: string,
 ): string {
-  const taxCount = allowedTaxonomies.filter((taxonomy: string) => terms[taxonomy]?.length > 0).length; // eslint-disable-line max-len
+  const taxCount = allowedTaxonomies.length;
 
   const termQueryArgs: string[] = [];
   allowedTaxonomies.forEach((taxonomy) => {

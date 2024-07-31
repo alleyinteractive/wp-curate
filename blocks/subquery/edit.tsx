@@ -6,17 +6,13 @@ import { useSelect } from '@wordpress/data';
 import {
   useEffect,
 } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
 import type {
   EditProps,
   Option,
-  Taxonomies,
-  Term,
-  Types,
-} from './types';
+} from '../query/types';
 
 import {
   mainDedupe,
@@ -106,7 +102,7 @@ export default function Edit({
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
 
-  const taxCount = allowedTaxonomies.filter((taxonomy: string) => terms[taxonomy]?.length > 0).length; // eslint-disable-line max-len
+  const taxCount = allowedTaxonomies.length;
 
   const termQueryArgs = buildTermQueryArgs(
     allowedTaxonomies,
@@ -119,33 +115,9 @@ export default function Edit({
   const currentPostId = useSelect((select: any) => select('core/editor').getCurrentPostId(), []);
   const postTypeString = postTypes.join(',');
 
-  // Fetch available taxonomies.
-  useEffect(() => {
-    const fetchTaxonomies = async () => {
-      apiFetch({ path: '/wp/v2/taxonomies' }).then((response) => {
-        setAvailableTaxonomies(response as Taxonomies);
-      });
-    };
-    fetchTaxonomies();
-  }, []);
-
-  // Fetch available post types.
-  useEffect(() => {
-    console.log('fetching types');
-    const fetchTypes = async () => {
-      apiFetch({ path: '/wp/v2/types' }).then((response) => {
-        setAvailableTypes(response as Types);
-      });
-    };
-    fetchTypes();
-  }, []);
-
   // Fetch "backfill" posts when categories, tags, or search term change.
   useEffect(() => {
     console.log('fetching backfill');
-    if (Object.keys(availableTaxonomies).length <= 0) {
-      return;
-    }
     const fetchPosts = async () => {
       let path = addQueryArgs(
         '/wp-curate/v1/posts',
@@ -179,7 +151,6 @@ export default function Edit({
     };
     fetchPosts();
   }, [
-    availableTaxonomies,
     currentPostId,
     debouncedSearchTerm,
     offset,
@@ -227,17 +198,10 @@ export default function Edit({
     ],
   ];
 
-  const displayTypes: Option[] = [];
-  Object.keys(availableTypes).forEach((type) => {
-    if (allowedPostTypes.includes(type)) {
-      displayTypes.push(
-        {
-          label: availableTypes[type].name,
-          value: type,
-        },
-      );
-    }
-  });
+  const displayTypes: Option[] = allowedPostTypes.map((type) => ({
+    label: type.name,
+    value: type.slug,
+  }));
 
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
@@ -251,7 +215,6 @@ export default function Edit({
         <QueryControls
           allowedPostTypes={allowedPostTypes}
           allowedTaxonomies={allowedTaxonomies}
-          availableTaxonomies={availableTaxonomies}
           deduplication={deduplication}
           displayTypes={displayTypes}
           isPostDeduplicating={isPostDeduplicating}

@@ -6,16 +6,12 @@ import { useSelect } from '@wordpress/data';
 import {
   useEffect,
 } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
 import type {
   EditProps,
   Option,
-  Taxonomies,
-  Term,
-  Types,
 } from './types';
 
 import {
@@ -102,7 +98,7 @@ export default function Edit({
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
 
-  const taxCount = allowedTaxonomies.filter((taxonomy: string) => terms[taxonomy]?.length > 0).length; // eslint-disable-line max-len
+  const taxCount = allowedTaxonomies.length;
 
   const termQueryArgs = buildTermQueryArgs(
     allowedTaxonomies,

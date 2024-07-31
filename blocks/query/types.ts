@@ -22,6 +22,12 @@ interface EditProps {
     orderby?: string;
   };
   setAttributes: (attributes: any) => void;
+  context: {
+    postId: number;
+    query: {
+      include?: string;
+    };
+  };
 }
 
 interface Taxonomies {

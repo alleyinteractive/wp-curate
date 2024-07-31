@@ -32,7 +32,7 @@ type QueryControlsProps = {
   deduplication: string;
   displayTypes: Option[];
   isPostDeduplicating: boolean;
-  manualPosts: number[];
+  manualPosts: Array<number | null>;
   maxNumberOfPosts: number;
   minNumberOfPosts: number;
   numberOfPosts: number;
@@ -271,4 +271,4 @@ export default function QueryControls({
       </InspectorControls>
     </>
   );
-};
+}
