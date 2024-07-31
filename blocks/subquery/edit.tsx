@@ -117,7 +117,6 @@ export default function Edit({
 
   // Fetch "backfill" posts when categories, tags, or search term change.
   useEffect(() => {
-    console.log('fetching backfill');
     const fetchPosts = async () => {
       let path = addQueryArgs(
         '/wp-curate/v1/posts',
@@ -163,7 +162,7 @@ export default function Edit({
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    mainDedupe();
+    mainDedupe(['wp-curate/subquery']);
   }, [
     manualPostIds,
     backfillPosts,

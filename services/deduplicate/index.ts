@@ -63,16 +63,16 @@ export default {
 };
 
 // Recursively find all query blocks.
-const getQueryBlocks = (blocks: Block[], out: Block[]) => {
+const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => {
   blocks.forEach((block: Block) => {
-    if (block.name === 'wp-curate/query' || block.name === 'wp-curate/subquery') {
+    if (blockNames.includes(block.name)) {
       out.push(block);
     }
     const { innerBlocks } = block;
     if (!innerBlocks) {
       return;
     }
-    getQueryBlocks(innerBlocks, out);
+    getQueryBlocks(innerBlocks, blockNames, out);
   });
 };
 
@@ -80,7 +80,7 @@ const getQueryBlocks = (blocks: Block[], out: Block[]) => {
  * This is the main function to update all pinned posts. Call it whenever a pinned post
  * changes or the query settings change.
  */
-export function mainDedupe() {
+export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
@@ -101,7 +101,7 @@ export function mainDedupe() {
 
   const queryBlocks: Block[] = [];
   // Loop through all blocks and find all query blocks.
-  getQueryBlocks(blocks, queryBlocks);
+  getQueryBlocks(blocks, blockNames, queryBlocks);
 
   /**
    * This block of code is responsible for enforcing the unique pinned posts setting in the editor.
@@ -177,18 +177,6 @@ export function mainDedupe() {
       allPostIds.push(manualPost || backfillPost);
     });
 
-    console.log(queryBlock);
-    console.log({
-      // Set the query attribute to pass to the child blocks.
-      query: {
-        perPage: numberOfPosts,
-        postType: 'post',
-        type: postTypeString,
-        include: allPostIds.join(','),
-        orderby: 'include',
-      },
-      queryId: 0,
-    });
     // Update the query block with the new query.
     // @ts-ignore
     dispatch('core/block-editor')

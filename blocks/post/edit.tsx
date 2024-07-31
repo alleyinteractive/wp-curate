@@ -42,7 +42,9 @@ export default function Edit({
   isSelected,
 }: PostEditProps) {
   // @ts-ignore
-  const queryParentId = select('core/block-editor').getBlockParentsByBlockName(clientId, 'wp-curate/query')[0];
+  const queryParents = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
+  const queryParentId = queryParents.pop();
+
   // @ts-ignore
   const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {
     attributes: {
@@ -50,6 +52,7 @@ export default function Edit({
       postTypes: [],
     },
   };
+
   const queryBlocks = select('core/block-editor').getBlocksByName('wp-curate/query');
   const {
     attributes: {

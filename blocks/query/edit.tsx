@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import apiFetch from '@wordpress/api-fetch';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
