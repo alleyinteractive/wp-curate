@@ -55,8 +55,6 @@ export default function Edit({
   const TagName = level === 0 ? 'p' : `h${level}`;
   const blockProps = useBlockProps();
 
-  console.log('mre', context);
-
   useEffect(() => {
     /**
      * Handle case for removing custom title from collection if post is unpinned.
