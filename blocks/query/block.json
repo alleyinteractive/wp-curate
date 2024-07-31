@@ -18,7 +18,8 @@
     "displayLayout": "displayLayout",
     "heading": "heading",
     "curation": "curation",
-    "pinnedPosts": "posts"
+    "pinnedPosts": "posts",
+    "moveData": "moveData"
   },
   "attributes": {
     "deduplication": {

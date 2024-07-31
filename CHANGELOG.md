@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.1.0 - 2024-07-31
+
+- Enhancement: Ability to move pinned posts by clicking the Move Post button, then clicking the destination block.
+
 ## 2.0.2 - 2024-07-19
 
 - Enhancement: Update Mantle Testkit to `v1.0.0`.
