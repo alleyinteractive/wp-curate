@@ -60,6 +60,7 @@ export default function Edit({
     termRelations = {},
     taxRelation = 'AND',
     orderby = 'date',
+    moveData = {},
   },
   setAttributes,
 }: EditProps) {
@@ -201,7 +202,12 @@ export default function Edit({
 
   return (
     <>
-      <div {...useBlockProps()}>
+      <div {...useBlockProps({
+        className: classnames(
+          { 'wp-curate-query-block--move': moveData.postId },
+        ),
+      })}
+      >
         <InnerBlocks template={TEMPLATE} />
       </div>
       <QueryControls
