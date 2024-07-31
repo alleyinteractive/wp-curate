@@ -39,6 +39,7 @@ if ( 0 < count( $custom_post_titles ) ) {
 	foreach ( $custom_post_titles as $value ) {
 		if ( $value['postId'] === $current_post_id ) {
 			$post_title = $value['title'];
+			break;
 		}
 	}
 }

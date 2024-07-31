@@ -19,6 +19,7 @@
     "heading": "heading",
     "curation": "curation",
     "pinnedPosts": "posts",
+    "moveData": "moveData",
     "customPostTitles": "customPostTitles"
   },
   "attributes": {
