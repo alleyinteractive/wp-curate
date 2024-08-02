@@ -10,19 +10,11 @@
   "textdomain": "wp-curate",
   "editorScript": "file:index.ts",
   "style": "wp-block-post-title",
-  "usesContext": ["postId", "query", "pinnedPosts"],
+  "usesContext": ["postId", "query", "pinnedPosts", "customPostTitles"],
   "attributes": {
     "level": {
       "type": "number",
       "default": 3
-    },
-    "customPostTitles": {
-      "default": [],
-      "items": {
-        "default": {},
-        "type": "object"
-      },
-      "type": "array"
     }
   },
   "render": "file:render.php",

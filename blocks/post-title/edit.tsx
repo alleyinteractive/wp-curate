@@ -3,15 +3,12 @@ import { InspectorControls, PlainText, useBlockProps } from '@wordpress/block-ed
 import { useEntityProp } from '@wordpress/core-data';
 import { useEffect } from 'react';
 import { PanelBody, SelectControl } from '@wordpress/components';
+import { dispatch, select } from '@wordpress/data';
 
 interface PostTitleEditProps {
   clientId?: string;
   attributes: {
     level?: number;
-    customPostTitles?: {
-      postId: number;
-      title: string;
-    }[];
   };
   context: {
     postId: number;
@@ -23,6 +20,10 @@ interface PostTitleEditProps {
       orderby?: string;
     };
     pinnedPosts?: Array<number>;
+    customPostTitles?: {
+      postId: number;
+      title: string;
+    }[];
   };
   isSelected?: boolean;
   setAttributes: (attributes: any) => void;
@@ -34,13 +35,20 @@ interface PostTitleEditProps {
  * @return {WPElement} Element to render.
  */
 export default function Edit({
+  clientId,
   attributes,
   context,
   setAttributes,
 }: PostTitleEditProps) {
   // @ts-ignore
-  const { postId, pinnedPosts = [], query: { postType = 'post' } } = context;
-  const { customPostTitles = [], level = 3 } = attributes;
+  const queryParentId = select('core/block-editor').getBlockParentsByBlockName(clientId, 'wp-curate/query')[0];
+  const {
+    postId,
+    pinnedPosts = [],
+    query: { postType = 'post' },
+    customPostTitles = [],
+  } = context;
+  const { level = 3 } = attributes;
   const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId.toString());
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
@@ -55,11 +63,11 @@ export default function Edit({
       customPostTitles.length
       && (currentCustomPostTitle && !isPinned)
     ) {
-      setAttributes(
-        { customPostTitles: customPostTitles.filter((item) => item?.postId !== postId) },
-      );
+      dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+        customPostTitles: customPostTitles.filter((item) => item?.postId !== postId),
+      });
     }
-  }, [isPinned, postId, customPostTitles, currentCustomPostTitle, setAttributes]);
+  }, [isPinned, postId, customPostTitles, currentCustomPostTitle, setAttributes, queryParentId]);
 
   const handleOnChange = (title: string) => {
     /**
@@ -69,9 +77,9 @@ export default function Edit({
     if (
       (currentCustomPostTitle?.postId && currentCustomPostTitle?.title.length === 0)
       && title === rawTitle) {
-      setAttributes(
-        { customPostTitles: customPostTitles.filter((item) => item?.postId !== postId) },
-      );
+      dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+        customPostTitles: customPostTitles.filter((item) => item?.postId !== postId),
+      });
       return;
     }
 
@@ -101,7 +109,9 @@ export default function Edit({
       ];
     }
 
-    setAttributes({ customPostTitles: newCustomPostTitles });
+    dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+      customPostTitles: newCustomPostTitles,
+    });
   };
 
   let titleElement = (
