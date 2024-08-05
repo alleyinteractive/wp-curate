@@ -2,9 +2,9 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
-## 2.2.0 - [tbd]
+## 2.2.0 - 2024-08-05
 
-- Enhancement: Ability to add a custom post title for a post that appears in a Query block.
+- Enhancement: Ability to customize the post title for a post that appears in a Query block.
 
 ## 2.1.0 - 2024-07-31
 
