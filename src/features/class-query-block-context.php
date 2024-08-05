@@ -32,7 +32,7 @@ final class Query_Block_Context implements Feature {
 	/**
 	 * Custom post titles associated with Query.
 	 *
-	 * @var array
+	 * @var array<array{'postId': int, 'title': string}>
 	 */
 	private array $custom_post_titles = [];
 

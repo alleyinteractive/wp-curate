@@ -22,7 +22,7 @@ if ( empty( $current_post_id ) ) {
 $custom_post_titles = ! empty( $block->context['customPostTitles'] ) ? $block->context['customPostTitles'] : [];
 $post_title         = get_the_title( $current_post_id );
 $post_link          = get_the_permalink( $current_post_id );
-$level              = intval( $attributes['level'] );
+$level              = is_int( $attributes['level'] ) ? intval( $attributes['level'] ) : 0;
 $tag_name           = 0 === $level ? 'p' : "h{$level}";
 
 if ( empty( $post_title ) || empty( $post_link ) ) {
