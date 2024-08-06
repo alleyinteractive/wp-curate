@@ -28,6 +28,14 @@ use WP_Block_Type_Registry;
  * Provides context to query blocks
  */
 final class Query_Block_Context implements Feature {
+
+	/**
+	 * Custom post titles associated with Query.
+	 *
+	 * @var array<array{'postId': int, 'title': string}>
+	 */
+	private array $custom_post_titles = [];
+
 	/**
 	 * Set up.
 	 *
@@ -151,6 +159,34 @@ final class Query_Block_Context implements Feature {
 			&& ! isset( $context['query'] )
 		) {
 			$context['query'] = $parent_block->context['query'];
+		}
+
+		/**
+		 * In addition to having access to the query context for the said reason above, also
+		 * ensure that the `wp-curate/post-title` block has access to custom post titles
+		 * in it's context.
+		 *
+		 * This is necessary due to filtering that happens in core which forces only post ID and
+		 * post type to be available.
+		 *
+		 * See: https://github.com/WordPress/gutenberg/blob/trunk/packages/block-library/src/post-template/index.php#L113
+		 */
+		if (
+			$parent_block instanceof WP_Block
+			&& $current_block_type instanceof WP_Block_Type
+			&& $plugin_block_type instanceof WP_Block_Type
+			&& $parent_block->name === $plugin_block_type->name
+			&& in_array( 'query', $current_block_type->uses_context, true ) // @phpstan-ignore-line - uses_context is private in WP_Block_Type but can be accessed via a magic method.
+			&& $current_block->block_name() === 'core/post-template'
+			&& 'wp-curate/query' === $parent_block->name
+			&& isset( $parent_block->attributes['customPostTitles'] )
+		) {
+			$this->custom_post_titles = $parent_block->attributes['customPostTitles'];
+		}
+
+		// Manually assign custom post titles to 'wp-curate/post-title' context.
+		if ( $current_block->block_name() === 'wp-curate/post-title' && ! empty( $this->custom_post_titles ) ) {
+			$context['customPostTitles'] = $this->custom_post_titles;
 		}
 
 		return $context;
