@@ -160,7 +160,7 @@ export default function Edit({
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    mainDedupe();
+    mainDedupe(['wp-curate/query', 'wp-curate/subquery']);
   }, [
     manualPostIds,
     backfillPosts,

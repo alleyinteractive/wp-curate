@@ -86,7 +86,6 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
     redo = true;
     return;
   }
-
   running = true;
   // Clear the flag for another run.
   redo = false;
@@ -101,18 +100,40 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
 
   const queryBlocks: Block[] = [];
   // Loop through all blocks and find all query blocks.
-  getQueryBlocks(blocks, blockNames, queryBlocks);
+  blockNames.forEach((blockName) => {
+    getQueryBlocks(blocks, [blockName], queryBlocks);
+  });
+
+  const allQueryBlocks: Block[] = [];
+  ['wp-curate/query', 'wp-curate/subquery'].forEach((blockName) => {
+    getQueryBlocks(blocks, [blockName], allQueryBlocks);
+  });
 
   /**
    * This block of code is responsible for enforcing the unique pinned posts setting in the editor.
    */
   if (wpCurateUniquePinnedPosts) {
-    queryBlocks.forEach((queryBlock) => {
+    allQueryBlocks.forEach((queryBlock) => {
       queryBlock?.attributes?.posts?.forEach((post) => {
         if (post) {
           deduplicate(post);
         }
       });
+    });
+  }
+
+  if (queryBlocks.length !== allQueryBlocks.length) {
+    allQueryBlocks.forEach((queryBlock) => {
+      if (queryBlock.name === 'wp-curate/query' && queryBlock.attributes.query) {
+        const posts: number[] = queryBlock.attributes.query?.include.split(',');
+        if (posts) {
+          posts.forEach((post) => {
+            if (post) {
+              deduplicate(post);
+            }
+          });
+        }
+      }
     });
   }
 

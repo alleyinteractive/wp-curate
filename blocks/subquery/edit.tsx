@@ -68,6 +68,9 @@ export default function Edit({
     } = {},
   },
 }: EditProps) {
+  const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
+  const index = queryInclude.findIndex((id: number) => id === postId);
+
   const {
     wpCurateQueryBlock: {
       allowedPostTypes = [],
@@ -117,6 +120,12 @@ export default function Edit({
 
   // Fetch "backfill" posts when categories, tags, or search term change.
   useEffect(() => {
+    if (index !== 0) {
+      return;
+    }
+    if (backfillPosts.length) {
+      return;
+    }
     const fetchPosts = async () => {
       let path = addQueryArgs(
         '/wp-curate/v1/posts',
@@ -150,8 +159,10 @@ export default function Edit({
     };
     fetchPosts();
   }, [
+    backfillPosts,
     currentPostId,
     debouncedSearchTerm,
+    index,
     offset,
     orderby,
     postTypeString,
@@ -162,15 +173,31 @@ export default function Edit({
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
+    if (index !== 0) {
+      return;
+    }
     mainDedupe(['wp-curate/subquery']);
   }, [
-    manualPostIds,
     backfillPosts,
-    numberOfPosts,
-    setAttributes,
-    postTypeString,
-    isPostDeduplicating,
     deduplication,
+    index,
+    isPostDeduplicating,
+    manualPostIds,
+    numberOfPosts,
+    postTypeString,
+    setAttributes,
+  ]);
+
+  // Update the query when the backfillPosts change.
+  // The query is passed via context to the core/post-template block.
+  useEffect(() => {
+    if (index !== 0) {
+      return;
+    }
+    mainDedupe(['wp-curate/query', 'wp-curate/subquery']);
+  }, [
+    index,
+    manualPostIds,
   ]);
 
   for (let i = 0; i < numberOfPosts; i += 1) {
@@ -201,9 +228,6 @@ export default function Edit({
     label: type.name,
     value: type.slug,
   }));
-
-  const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
-  const index = queryInclude.findIndex((id: number) => id === postId);
 
   return (
     index === 0 ? (

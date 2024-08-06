@@ -99,7 +99,7 @@ export default function QueryControls({
       ...terms,
       [type]: cleanedTerms,
     };
-    setAttributes({ terms: newTermAttrs });
+    setAttributes({ terms: newTermAttrs, backfillPosts: [] });
   });
 
   const setTermRelation = ((type: string, relation: string) => {
@@ -107,7 +107,7 @@ export default function QueryControls({
       ...termRelations,
       [type]: relation,
     };
-    setAttributes({ termRelations: newTermRelationAttrs });
+    setAttributes({ termRelations: newTermRelationAttrs, backfillPosts: []});
   });
 
   const setNumberOfPosts = (newValue?: number) => {
@@ -187,7 +187,7 @@ export default function QueryControls({
           <Checkboxes
             label={__('Post Types', 'wp-curate')}
             value={postTypes}
-            onChange={(newValue) => setAttributes({ postTypes: newValue })}
+            onChange={(newValue) => setAttributes({ postTypes: newValue, backfillPosts: [] })}
             options={displayTypes}
           />
           {allowedTaxonomies.map((taxonomy) => (
@@ -220,13 +220,13 @@ export default function QueryControls({
               label={__('Taxonomy Relation', 'wp-curate')}
               help={__('AND: Posts must meet all selected taxonomy requirements. OR: Posts may have meet one or more selected taxonomy requirements.', 'wp-curate')}
               options={andOrOptions}
-              onChange={(newValue) => setAttributes({ taxRelation: newValue })}
+              onChange={(newValue) => setAttributes({ taxRelation: newValue, backfillPosts: [] })}
               value={taxRelation}
             />
           ) : null }
           <TextControl
             label={__('Search Term', 'wp-curate')}
-            onChange={(next) => setAttributes({ searchTerm: next })}
+            onChange={(next) => setAttributes({ searchTerm: next, backfillPosts: [] })}
             value={searchTerm}
           />
           { parselyAvailable === 'true' ? (
@@ -234,7 +234,7 @@ export default function QueryControls({
               label={__('Show Trending Content from Parsely', 'wp-curate')}
               help={__('If enabled, the block will show trending content from Parsely.', 'wp-curate')}
               checked={orderby === 'trending'}
-              onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date' })}
+              onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date', backfillPosts: [] })}
             />
           ) : null }
         </PanelBody>
