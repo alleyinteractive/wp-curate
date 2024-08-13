@@ -1,0 +1,66 @@
+<?php
+/**
+ * Subquery_Block_Display class file
+ *
+ * @package wp-curate
+ */
+
+namespace Alley\WP\WP_Curate\Features;
+
+use Alley\WP\Types\Feature;
+
+/**
+ * Handles displaying the subquery block only once.
+ */
+final class Subquery_Block_Display implements Feature {
+	/**
+	 * Set up.
+	 */
+	public function __construct() {}
+
+	/**
+	 * Boot the feature.
+	 */
+	public function boot(): void {
+		add_filter( 'pre_render_block', [ $this, 'filter_pre_render_block' ], 10, 3 );
+	}
+
+	/**
+	 * Filters the block content before it is rendered.
+	 *
+	 * @param string $block_content The block content.
+	 * @param array $parsed_block The block object.
+	 * @param WP_Block $parent_block The parent block object.
+	 * @return string The block content.
+	 */
+	public function filter_pre_render_block( string | null $block_content, array $parsed_block, \WP_Block | null $parent_block ): string | null {
+		if ( 'wp-curate/subquery' !== $parsed_block['blockName'] ) {
+			return $block_content;
+		}
+
+		// TODO: Implement the logic to display the subquery block only once.
+		// Figure out a way to determine when a subquery block is being rendered for the first time.
+		// If it is the first time, display the block content.
+		// Possible ideas: add a unique id to the block attributes,
+		// have a class array variable that keeps track of the block ids that have been rendered,
+		// Hashing the attributes isn't guaranteed to be unique.
+
+		// echo '<strong>Block content:</strong>';
+		// echo '<pre>';
+		// var_dump( $block_content );
+		// echo '</pre>';
+		echo '<strong>Parsed block:</strong>';
+		echo '<pre>';
+		var_dump( $parsed_block );
+		echo '</pre>';
+		// var_dump( md5( wp_json_encode( $parsed_block ) ) );
+		// echo '<br />';
+		// echo '<strong>Parent block:</strong>';
+		// echo '<pre>';
+		// var_dump( $parent_block );
+		// echo '</pre>';
+		return 'replace ';
+
+		return $block_content;
+	}
+}

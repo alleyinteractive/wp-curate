@@ -144,7 +144,6 @@ final class Query_Block_Context implements Feature {
 		 * applied to inner blocks: When context is added to the query block via the filter, it
 		 * isn't passed to its inner blocks, unlike context added to a top-level query block.
 		 */
-		var_dump( $current_block_type );
 		if (
 			$parent_block instanceof WP_Block
 			&& $current_block_type instanceof WP_Block_Type

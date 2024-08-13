@@ -36,7 +36,6 @@ add_action( 'init', 'subquery_subquery_block_init' );
  * @return string Block output.
  */
 function wp_curate_render_subquery_block( $attributes, $content, $block ): string {
-	var_dump( $block->context );
 	$proc = new WP_HTML_Tag_Processor( $content );
 
 	/*
