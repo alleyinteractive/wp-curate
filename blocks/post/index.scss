@@ -45,3 +45,14 @@
   width: 100%;
   z-index: 9999;
 }
+
+.wp-curate-error::after {
+  color: #cc1818;
+  content: "\f534"; // dashicons-warning
+  font-family: "dashicons";
+  font-size: 2.5rem;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 2;
+}
