@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import useSWR from 'swr';
 import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -21,7 +22,6 @@ import {
   useState,
 } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
 import type {
@@ -32,11 +32,10 @@ import type {
   Types,
 } from './types';
 
-import {
-  mainDedupe,
-} from '../../services/deduplicate';
-
+import { mainDedupe } from '../../services/deduplicate';
+import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
+import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 
 import './index.scss';
 
@@ -134,8 +133,24 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
-  const currentPostId = useSelect((select: any) => select('core/editor').getCurrentPostId(), []);
+  const currentPostId = Number(useSelect((select: any) => select('core/editor').getCurrentPostId(), []));
   const postTypeString = postTypes.join(',');
+
+  // Construct the API path using your query args
+  const path = Object.keys(availableTaxonomies).length > 0
+    ? `${buildPostsApiPath({
+      search: debouncedSearchTerm,
+      offset,
+      postType: postTypeString,
+      status: 'publish',
+      perPage: 20,
+      orderBy: orderby,
+      currentPostId,
+    })}&${termQueryArgs}`
+    : undefined;
+
+  // Use SWR to fetch data
+  const { data, error } = useSWR([path, currentPostId], queryBlockPostFetcher);
 
   // Fetch available taxonomies.
   useEffect(() => {
@@ -158,57 +173,19 @@ export default function Edit({
   }, []);
 
   // Fetch "backfill" posts when categories, tags, or search term change.
+  // Handle the fetched data
   useEffect(() => {
-    if (Object.keys(availableTaxonomies).length <= 0) {
-      return;
+    if (data && !error) {
+      setAttributes({ backfillPosts: data });
     }
-    const fetchPosts = async () => {
-      let path = addQueryArgs(
-        '/wp-curate/v1/posts',
-        {
-          search: debouncedSearchTerm,
-          offset,
-          post_type: postTypeString,
-          status: 'publish',
-          per_page: 20,
-          orderby,
-          current_post_id: Number.isInteger(currentPostId) ? currentPostId : 0,
-        },
-      );
-      path += `&${termQueryArgs}`;
-
-      apiFetch({ path }).then((response:any) => {
-        let revisedResponse;
-        // If the response is an array, filter out the current post.
-        if (Array.isArray(response)) {
-          revisedResponse = response.filter((item) => item !== currentPostId);
-        } else if (response.id === currentPostId) {
-          // Response is an object, if id is the current post, nullify it.
-          revisedResponse = null;
-        } else {
-          revisedResponse = response;
-        }
-        if (revisedResponse !== null) {
-          setAttributes({ backfillPosts: revisedResponse as Array<number> });
-        }
-      });
-    };
-    fetchPosts();
-  }, [
-    availableTaxonomies,
-    currentPostId,
-    debouncedSearchTerm,
-    offset,
-    orderby,
-    postTypeString,
-    setAttributes,
-    termQueryArgs,
-  ]);
+  }, [data, error, setAttributes]);
 
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    mainDedupe();
+    if (data && !error) {
+      mainDedupe();
+    }
   }, [
     manualPostIds,
     backfillPosts,
@@ -218,6 +195,8 @@ export default function Edit({
     isPostDeduplicating,
     deduplication,
     uniquePinnedPosts,
+    data,
+    error,
   ]);
 
   const setManualPost = (id: number, index: number) => {
