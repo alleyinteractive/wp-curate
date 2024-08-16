@@ -101,6 +101,10 @@
                 "trending"
             ],
             "type": "string"
+        },
+        "uniqueId": {
+            "default": "",
+            "type": "string"
         }
     }
 }

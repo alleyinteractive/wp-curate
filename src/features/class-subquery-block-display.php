@@ -26,6 +26,12 @@ final class Subquery_Block_Display implements Feature {
 	}
 
 	/**
+	 * Current subquery block unique id.
+	 * @var string | null
+	 */
+	private $current_unique_id = null;
+
+	/**
 	 * Filters the block content before it is rendered.
 	 *
 	 * @param string $block_content The block content.
@@ -44,22 +50,12 @@ final class Subquery_Block_Display implements Feature {
 		// Possible ideas: add a unique id to the block attributes,
 		// have a class array variable that keeps track of the block ids that have been rendered,
 		// Hashing the attributes isn't guaranteed to be unique.
+		if ( $this->current_unique_id !== $parsed_block['attrs']['uniqueId'] ) {
+			$this->current_unique_id = $parsed_block['attrs']['uniqueId'];
+			return $block_content;
+		}
 
-		// echo '<strong>Block content:</strong>';
-		// echo '<pre>';
-		// var_dump( $block_content );
-		// echo '</pre>';
-		echo '<strong>Parsed block:</strong>';
-		echo '<pre>';
-		var_dump( $parsed_block );
-		echo '</pre>';
-		// var_dump( md5( wp_json_encode( $parsed_block ) ) );
-		// echo '<br />';
-		// echo '<strong>Parent block:</strong>';
-		// echo '<pre>';
-		// var_dump( $parent_block );
-		// echo '</pre>';
-		return 'replace ';
+		return ' ';
 
 		return $block_content;
 	}

@@ -179,8 +179,6 @@ final class Query_Block_Context implements Feature {
 		if (
 			$parent_block instanceof WP_Block
 			&& $current_block_type instanceof WP_Block_Type
-			&& $plugin_block_type instanceof WP_Block_Type
-			&& $parent_block->name === $plugin_block_type->name
 			&& in_array( 'query', $current_block_type->uses_context, true ) // @phpstan-ignore-line - uses_context is private in WP_Block_Type but can be accessed via a magic method.
 			&& $current_block->block_name() === 'core/post-template'
 			&& 'wp-curate/query' === $parent_block->name

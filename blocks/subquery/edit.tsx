@@ -9,6 +9,8 @@ import {
 import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
+import { v4 as uuid } from '@lukeed/uuid';
+
 import type {
   EditProps,
   Option,
@@ -59,6 +61,7 @@ export default function Edit({
     termRelations = {},
     taxRelation = 'AND',
     orderby = 'date',
+    uniqueId = '',
   },
   setAttributes,
   context: {
@@ -117,6 +120,12 @@ export default function Edit({
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
   const currentPostId = useSelect((select: any) => select('core/editor').getCurrentPostId(), []);
   const postTypeString = postTypes.join(',');
+
+  useEffect(() => {
+    if (!uniqueId) {
+      setAttributes({ uniqueId: uuid() });
+    }
+  }, [setAttributes, uniqueId]);
 
   // Fetch "backfill" posts when categories, tags, or search term change.
   useEffect(() => {
