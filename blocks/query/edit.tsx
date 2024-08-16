@@ -189,7 +189,8 @@ export default function Edit({
           'wp-curate/post',
           {},
           [
-            ['core/post-title', { isLink: true }],
+            ['wp-curate/post-title', {}],
+            ['core/post-excerpt', {}],
           ],
         ],
       ],
