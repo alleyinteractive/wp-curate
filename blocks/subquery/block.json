@@ -8,7 +8,7 @@
     "icon": "screenoptions",
     "description": "A limited version of the query block for displaying independent post lists inside a Query block",
     "textdomain": "wp-curate",
-    "editorScript": "file:index.ts",
+    "editorScript": "file:index.tsx",
     "editorStyle": "file:index.css",
     "style": [
         "file:style-index.css"
