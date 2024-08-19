@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import useSWR from 'swr';
+import useSWRImmutable from 'swr/immutable';
 import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -150,7 +150,10 @@ export default function Edit({
     : undefined;
 
   // Use SWR to fetch data
-  const { data, error } = useSWR([path, currentPostId], queryBlockPostFetcher);
+  const { data, error } = useSWRImmutable(
+    [path, currentPostId],
+    queryBlockPostFetcher,
+  );
 
   // Fetch available taxonomies.
   useEffect(() => {
