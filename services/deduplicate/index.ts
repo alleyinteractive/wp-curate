@@ -100,14 +100,10 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
 
   const queryBlocks: Block[] = [];
   // Loop through all blocks and find all query blocks.
-  blockNames.forEach((blockName) => {
-    getQueryBlocks(blocks, [blockName], queryBlocks);
-  });
+  getQueryBlocks(blocks, blockNames, queryBlocks);
 
   const allQueryBlocks: Block[] = [];
-  ['wp-curate/query', 'wp-curate/subquery'].forEach((blockName) => {
-    getQueryBlocks(blocks, [blockName], allQueryBlocks);
-  });
+  getQueryBlocks(blocks, ['wp-curate/query', 'wp-curate/subquery'], allQueryBlocks);
 
   /**
    * This block of code is responsible for enforcing the unique pinned posts setting in the editor.
@@ -124,8 +120,9 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
 
   if (queryBlocks.length !== allQueryBlocks.length) {
     allQueryBlocks.forEach((queryBlock) => {
-      if (queryBlock.name === 'wp-curate/query' && queryBlock.attributes.query) {
-        const posts: number[] = queryBlock.attributes.query?.include.split(',');
+      // if (queryBlock.name === 'wp-curate/query' && queryBlock.attributes.query) {
+      if (queryBlock.attributes.query) {
+        const posts: number[] = queryBlock.attributes.query?.include?.split(',');
         if (posts) {
           posts.forEach((post) => {
             if (post) {
@@ -139,6 +136,7 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
 
   // Loop through all query blocks and set backfilled posts in the open slots.
   queryBlocks.forEach((queryBlock) => {
+    console.log('queryBlock', queryBlock);
     const { attributes } = queryBlock;
     const {
       backfillPosts = null,
@@ -148,6 +146,7 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
       postTypes = ['post'],
     } = attributes;
     if (!backfillPosts) {
+      console.log('no backfill posts');
       return;
     }
 
@@ -191,6 +190,8 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
               isUnique = true;
               markUsed(backfillPost);
             }
+          } else {
+            console.log('unable to get a backfill post');
           }
           postIndex += 1;
         } while (isUnique === false && postIndex <= filteredPosts.length);

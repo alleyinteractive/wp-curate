@@ -73,6 +73,7 @@ export default function Edit({
 }: EditProps) {
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
+  const backfillPostsString = backfillPosts.join(',');
 
   const {
     wpCurateQueryBlock: {
@@ -132,9 +133,6 @@ export default function Edit({
     if (index !== 0) {
       return;
     }
-    if (backfillPosts.length) {
-      return;
-    }
     const fetchPosts = async () => {
       let path = addQueryArgs(
         '/wp-curate/v1/posts',
@@ -168,7 +166,7 @@ export default function Edit({
     };
     fetchPosts();
   }, [
-    backfillPosts,
+    backfillPostsString,
     currentPostId,
     debouncedSearchTerm,
     index,
@@ -185,9 +183,13 @@ export default function Edit({
     if (index !== 0) {
       return;
     }
+    if (!backfillPostsString.length) {
+      return;
+    }
+    console.log('subquery block 1st useEffect');
     mainDedupe(['wp-curate/subquery']);
   }, [
-    backfillPosts,
+    backfillPostsString,
     deduplication,
     index,
     isPostDeduplicating,
@@ -203,6 +205,7 @@ export default function Edit({
     if (index !== 0) {
       return;
     }
+    console.log('subquery block 2nd useEffect');
     mainDedupe(['wp-curate/query', 'wp-curate/subquery']);
   }, [
     index,

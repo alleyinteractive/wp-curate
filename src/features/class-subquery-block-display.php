@@ -44,12 +44,7 @@ final class Subquery_Block_Display implements Feature {
 			return $block_content;
 		}
 
-		// TODO: Implement the logic to display the subquery block only once.
-		// Figure out a way to determine when a subquery block is being rendered for the first time.
-		// If it is the first time, display the block content.
-		// Possible ideas: add a unique id to the block attributes,
-		// have a class array variable that keeps track of the block ids that have been rendered,
-		// Hashing the attributes isn't guaranteed to be unique.
+		// Only render the subquery block once per set of posts inside a post template block.
 		if ( $this->current_unique_id !== $parsed_block['attrs']['uniqueId'] ) {
 			$this->current_unique_id = $parsed_block['attrs']['uniqueId'];
 			return $block_content;
