@@ -1,9 +1,13 @@
 import apiFetch from '@wordpress/api-fetch';
 
 type FetcherProps = [string | undefined, number];
-
 type PostResponse = number[] | { id: number };
 
+/**
+ * Fetches the post data from the API.
+ * @param url The API url.
+ * @param currentPostId The current post ID.
+ */
 const queryBlockPostFetcher = (
   [url, currentPostId]: FetcherProps,
 ) => apiFetch<PostResponse>({ path: url })

@@ -175,8 +175,7 @@ export default function Edit({
     fetchTypes();
   }, []);
 
-  // Fetch "backfill" posts when categories, tags, or search term change.
-  // Handle the fetched data
+  // Handle the fetched data.
   useEffect(() => {
     if (data && !error) {
       setAttributes({ backfillPosts: data });
