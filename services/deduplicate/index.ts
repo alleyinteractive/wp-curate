@@ -134,19 +134,24 @@ export async function mainDedupe() {
       return;
     }
 
-    const validPosts: Number[] = await apiFetch({
-      path: addQueryArgs(
-        '/wp/v2/posts',
-        {
-          offset: 0,
-          orderby: 'include',
-          per_page: posts.length,
-          type: 'post',
-          include: posts.filter((id) => id !== null).join(','),
-          _locale: 'user',
-        },
-      ),
-    }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
+    const postsToInclude = posts.filter((id) => id !== null).join(',');
+    let validPosts: Number[] = [];
+
+    if (postsToInclude.length > 0) {
+      validPosts = await apiFetch({
+        path: addQueryArgs(
+          '/wp/v2/posts',
+          {
+            offset: 0,
+            orderby: 'include',
+            per_page: posts.length,
+            type: 'post',
+            include: postsToInclude,
+            _locale: 'user',
+          },
+        ),
+      }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
+    }
 
     const postTypeString = postTypes.join(',');
     let postIndex = 0;
