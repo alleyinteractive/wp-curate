@@ -136,7 +136,7 @@ export default function Edit({
   const currentPostId = Number(useSelect((select: any) => select('core/editor').getCurrentPostId(), []));
   const postTypeString = postTypes.join(',');
 
-  // Construct the API path using your query args
+  // Construct the API path using query args.
   const path = Object.keys(availableTaxonomies).length > 0
     ? `${buildPostsApiPath({
       search: debouncedSearchTerm,
@@ -149,7 +149,7 @@ export default function Edit({
     })}&${termQueryArgs}`
     : undefined;
 
-  // Use SWR to fetch data
+  // Use SWR to fetch data.
   const { data, error } = useSWRImmutable(
     [path, currentPostId],
     queryBlockPostFetcher,

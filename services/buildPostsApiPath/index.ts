@@ -1,6 +1,6 @@
 import { addQueryArgs } from '@wordpress/url';
 
-interface PathProps {
+interface PostsApiPathProps {
   search: string,
   offset: number,
   postType: string,
@@ -10,7 +10,7 @@ interface PathProps {
   currentPostId: number
 }
 
-export default function buildPostsApiPath(pathProps: PathProps) {
+export default function buildPostsApiPath(pathProps: PostsApiPathProps) {
   return addQueryArgs('/wp-curate/v1/posts', {
     search: pathProps.search,
     offset: pathProps.offset,
