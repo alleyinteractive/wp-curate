@@ -71,6 +71,7 @@ export default function Edit({
     termRelations = {},
     taxRelation = 'AND',
     orderby = 'date',
+    moveData = {},
   },
   setAttributes,
 }: EditProps) {
@@ -98,7 +99,7 @@ export default function Edit({
   ];
 
   // @ts-ignore
-  const [isPostDeduplicating, postTypeObject] = useSelect(
+  const [isPostDeduplicating, postTypeObject, uniquePinnedPosts] = useSelect(
     (select) => {
       // @ts-ignore
       const editor = select('core/editor');
@@ -113,6 +114,7 @@ export default function Edit({
         Boolean(meta?.wp_curate_deduplication),
         // @ts-ignore
         type ? select('core').getPostType(type) : null,
+        Boolean(meta?.wp_curate_unique_pinned_posts),
       ];
     },
   );
@@ -215,6 +217,7 @@ export default function Edit({
     postTypeString,
     isPostDeduplicating,
     deduplication,
+    uniquePinnedPosts,
   ]);
 
   const setManualPost = (id: number, index: number) => {
@@ -275,7 +278,7 @@ export default function Edit({
           'wp-curate/post',
           {},
           [
-            ['core/post-title', { isLink: true }],
+            ['wp-curate/post-title', {}],
             ['core/post-excerpt', {}],
           ],
         ],
@@ -297,7 +300,12 @@ export default function Edit({
 
   return (
     <>
-      <div {...useBlockProps()}>
+      <div {...useBlockProps({
+        className: classnames(
+          { 'wp-curate-query-block--move': moveData.postId },
+        ),
+      })}
+      >
         <InnerBlocks template={TEMPLATE} />
       </div>
 
