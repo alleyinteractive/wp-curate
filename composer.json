@@ -29,7 +29,8 @@
   },
   "require-dev": {
     "alleyinteractive/alley-coding-standards": "^2.0",
-    "mantle-framework/testkit": "^1.0",
+    "mantle-framework/testkit": "^1.1",
+    "nunomaduro/collision": "^6.0",
     "szepeviktor/phpstan-wordpress": "^1.1"
   },
   "config": {
