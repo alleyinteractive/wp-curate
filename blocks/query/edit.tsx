@@ -11,6 +11,7 @@ import {
   RangeControl,
   SelectControl,
   TextControl,
+  ToggleControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import {
@@ -22,7 +23,6 @@ import {
 import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
-import type { WP_REST_API_Post, WP_REST_API_Posts } from 'wp-types';
 import { Template } from '@wordpress/blocks';
 import type {
   EditProps,
@@ -44,6 +44,7 @@ interface Window {
   wpCurateQueryBlock: {
     allowedPostTypes: Array<string>;
     allowedTaxonomies: Array<string>;
+    parselyAvailable: string,
   };
 }
 
@@ -64,11 +65,13 @@ export default function Edit({
     numberOfPosts = 5,
     offset = 0,
     posts: manualPosts = [],
-    postTypes = ['post'],
+    postTypes = [],
     searchTerm = '',
     terms = {},
     termRelations = {},
     taxRelation = 'AND',
+    orderby = 'date',
+    moveData = {},
   },
   setAttributes,
 }: EditProps) {
@@ -76,8 +79,13 @@ export default function Edit({
     wpCurateQueryBlock: {
       allowedPostTypes = [],
       allowedTaxonomies = [],
+      parselyAvailable = 'false',
     } = {},
   } = (window as any as Window);
+
+  if (!postTypes.length) {
+    setAttributes({ postTypes: allowedPostTypes });
+  }
 
   const andOrOptions = [
     {
@@ -91,7 +99,7 @@ export default function Edit({
   ];
 
   // @ts-ignore
-  const [isPostDeduplicating, postTypeObject] = useSelect(
+  const [isPostDeduplicating, postTypeObject, uniquePinnedPosts] = useSelect(
     (select) => {
       // @ts-ignore
       const editor = select('core/editor');
@@ -106,6 +114,7 @@ export default function Edit({
         Boolean(meta?.wp_curate_deduplication),
         // @ts-ignore
         type ? select('core').getPostType(type) : null,
+        Boolean(meta?.wp_curate_unique_pinned_posts),
       ];
     },
   );
@@ -125,6 +134,7 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
+  const currentPostId = useSelect((select: any) => select('core/editor').getCurrentPostId(), []);
   const postTypeString = postTypes.join(',');
 
   // Fetch available taxonomies.
@@ -154,34 +164,45 @@ export default function Edit({
     }
     const fetchPosts = async () => {
       let path = addQueryArgs(
-        '/wp/v2/posts',
+        '/wp-curate/v1/posts',
         {
           search: debouncedSearchTerm,
           offset,
-          type: postTypeString,
+          post_type: postTypeString,
           status: 'publish',
           per_page: 20,
+          orderby,
+          current_post_id: Number.isInteger(currentPostId) ? currentPostId : 0,
         },
       );
       path += `&${termQueryArgs}`;
 
-      apiFetch({
-        path,
-      }).then((response) => {
-        const postIds: number[] = (response as WP_REST_API_Posts).map(
-          (post: WP_REST_API_Post) => post.id,
-        );
-        setAttributes({ backfillPosts: postIds });
+      apiFetch({ path }).then((response:any) => {
+        let revisedResponse;
+        // If the response is an array, filter out the current post.
+        if (Array.isArray(response)) {
+          revisedResponse = response.filter((item) => item !== currentPostId);
+        } else if (response.id === currentPostId) {
+          // Response is an object, if id is the current post, nullify it.
+          revisedResponse = null;
+        } else {
+          revisedResponse = response;
+        }
+        if (revisedResponse !== null) {
+          setAttributes({ backfillPosts: revisedResponse as Array<number> });
+        }
       });
     };
     fetchPosts();
   }, [
-    debouncedSearchTerm,
-    termQueryArgs,
-    offset,
-    postTypeString,
     availableTaxonomies,
+    currentPostId,
+    debouncedSearchTerm,
+    offset,
+    orderby,
+    postTypeString,
     setAttributes,
+    termQueryArgs,
   ]);
 
   // Update the query when the backfillPosts change.
@@ -196,10 +217,15 @@ export default function Edit({
     postTypeString,
     isPostDeduplicating,
     deduplication,
+    uniquePinnedPosts,
   ]);
 
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
+    // If the post is already in the list, remove it.
+    if (id !== null && newManualPosts.includes(id)) {
+      newManualPosts.splice(newManualPosts.indexOf(id), 1, null);
+    }
     newManualPosts.splice(index, 1, id);
     setAttributes({ posts: newManualPosts });
   };
@@ -252,7 +278,7 @@ export default function Edit({
           'wp-curate/post',
           {},
           [
-            ['core/post-title', { isLink: true }],
+            ['wp-curate/post-title', {}],
             ['core/post-excerpt', {}],
           ],
         ],
@@ -274,7 +300,12 @@ export default function Edit({
 
   return (
     <>
-      <div {...useBlockProps()}>
+      <div {...useBlockProps({
+        className: classnames(
+          { 'wp-curate-query-block--move': moveData.postId },
+        ),
+      })}
+      >
         <InnerBlocks template={TEMPLATE} />
       </div>
 
@@ -380,6 +411,14 @@ export default function Edit({
             onChange={(next) => setAttributes({ searchTerm: next })}
             value={searchTerm}
           />
+          { parselyAvailable === 'true' ? (
+            <ToggleControl
+              label={__('Show Trending Content from Parsely', 'wp-curate')}
+              help={__('If enabled, the block will show trending content from Parsely.', 'wp-curate')}
+              checked={orderby === 'trending'}
+              onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date' })}
+            />
+          ) : null }
         </PanelBody>
       </InspectorControls>
 

@@ -24,12 +24,12 @@
     "php": "^8.1",
     "alleyinteractive/composer-wordpress-autoloader": "^1.0",
     "alleyinteractive/traverse-reshape": "^2.0",
-    "alleyinteractive/wp-type-extensions": "dev-main",
+    "alleyinteractive/wp-type-extensions": "^2.0",
     "nunomaduro/collision": "^7.10"
   },
   "require-dev": {
     "alleyinteractive/alley-coding-standards": "^2.0",
-    "mantle-framework/testkit": "^0.12",
+    "mantle-framework/testkit": "^1.0",
     "szepeviktor/phpstan-wordpress": "^1.1"
   },
   "config": {
@@ -39,6 +39,11 @@
       "pestphp/pest-plugin": true
     },
     "sort-packages": true
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Alley\\WP\\WP_Curate\\Tests\\": "tests"
+    }
   },
   "extra": {
     "wordpress-autoloader": {
@@ -56,7 +61,7 @@
     "phpcbf": "phpcbf .",
     "phpcs": "phpcs .",
     "phpunit": "phpunit",
-    "phpstan": "phpstan --memory-limit=512M",
+    "phpstan": "phpstan --memory-limit=1024M",
     "test": [
       "@phpcs",
       "@phpstan",

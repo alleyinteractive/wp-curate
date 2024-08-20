@@ -31,20 +31,31 @@ function wp_curate_query_block_init(): void {
 
 	/**
 	 * Filter the post types that can be used in the Query block.
+	 *
+	 * @param array<string> $allowed_post_types The allowed post types.
 	 */
 	$allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
 
 	/**
 	 * Filter the taxonomies that can be used in the Query block.
+	 *
+	 * @param array<string> $allowed_taxonomies The allowed taxonomies.
 	 */
 	$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
 
+	/**
+	 * Filter whether to use Parsely.
+	 *
+	 * @param bool $use_parsely Whether to use Parsely.
+	 */
+	$parsely_available = apply_filters( 'wp_curate_use_parsely', false );
 	wp_localize_script(
 		'wp-curate-query-editor-script',
 		'wpCurateQueryBlock',
 		[
 			'allowedPostTypes'  => $allowed_post_types,
 			'allowedTaxonomies' => $allowed_taxonomies,
+			'parselyAvailable'  => $parsely_available ? 'true' : 'false',
 		]
 	);
 }

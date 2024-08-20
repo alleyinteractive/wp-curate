@@ -43,7 +43,7 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 			'no_found_rows'  => true,
 			'offset'         => $attributes['offset'] ?? $block_type->attributes['offset']['default'],
 			'order'          => 'DESC',
-			'orderby'        => 'date',
+			'orderby'        => $attributes['orderby'] ?? 'date',
 			'posts_per_page' => $attributes['numberOfPosts'] ?? $block_type->attributes['numberOfPosts']['default'],
 			'post_status'    => 'publish',
 			'post_type'      => $attributes['postTypes'] ?? $block_type->attributes['postTypes']['default'],
@@ -74,12 +74,22 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 		}
 
 		$pinned_posts = $attributes['posts'] ?? $block_type->attributes['posts']['default'];
+		$pinned_posts = array_filter( $pinned_posts, function ( $id ) {
+			return 'publish' === get_post_status( $id );
+		} );
 
 		$queries = new Positioned_Post_Queries(
 			positioned: is_array( $pinned_posts ) ? $pinned_posts : [],
 			default_per_page: $args['posts_per_page'],
 			origin: $this->queries,
 		);
+
+		/**
+		 * Filters the arguments used when querying for posts that match the block attributes.
+		 *
+		 * @param array<string, mixed> $args Query arguments.
+		 */
+		$args = apply_filters( 'wp_curate_plugin_curated_post_query', $args );
 
 		$context['query'] = [
 			'perPage'  => $args['posts_per_page'],

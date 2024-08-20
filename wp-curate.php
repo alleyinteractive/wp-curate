@@ -3,7 +3,7 @@
  * Plugin Name: WP Curate
  * Plugin URI: https://github.com/alleyinteractive/wp-curate
  * Description: Plugin to curate homepages and other landing pages
- * Version: 1.5.1
+ * Version: 2.2.1
  * Author: Alley Interactive
  * Author URI: https://github.com/alleyinteractive/wp-curate
  * Requires at least: 6.4
@@ -15,6 +15,9 @@
  */
 
 namespace Alley\WP\WP_Curate;
+
+use Composer\InstalledVersions;
+use function add_action;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -31,8 +34,8 @@ if ( ! file_exists( __DIR__ . '/vendor/wordpress-autoload.php' ) ) {
 	// to see if the Composer dependencies have been installed in a parent
 	// folder. This is useful for when the plugin is loaded as a Composer
 	// dependency in a larger project.
-	if ( ! class_exists( \Composer\InstalledVersions::class ) ) {
-		\add_action(
+	if ( ! class_exists( InstalledVersions::class ) ) {
+		add_action(
 			'admin_notices',
 			function () {
 				?>

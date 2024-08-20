@@ -17,7 +17,10 @@
     "query": "query",
     "displayLayout": "displayLayout",
     "heading": "heading",
-    "curation": "curation"
+    "curation": "curation",
+    "pinnedPosts": "posts",
+    "moveData": "moveData",
+    "customPostTitles": "customPostTitles"
   },
   "attributes": {
     "deduplication": {
@@ -45,9 +48,7 @@
       "type": "number"
     },
     "postTypes": {
-      "default": [
-        "post"
-      ],
+      "default": [],
       "items": {
         "type": "string"
       },
@@ -94,6 +95,22 @@
         "OR"
       ],
       "type": "string"
+    },
+    "orderby": {
+      "default": "date",
+      "enum": [
+        "date",
+        "trending"
+      ],
+      "type": "string"
+    },
+    "customPostTitles": {
+      "default": [],
+      "items": {
+        "default": {},
+        "type": "object"
+      },
+      "type": "array"
     }
   }
 }
