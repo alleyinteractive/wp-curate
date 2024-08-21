@@ -63,6 +63,7 @@ export default function Edit({
       customPostTitles.length
       && (currentCustomPostTitle && !isPinned)
     ) {
+      // @ts-ignore
       dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
         customPostTitles: customPostTitles.filter((item) => item?.postId !== postId),
       });
@@ -77,6 +78,7 @@ export default function Edit({
     if (
       (currentCustomPostTitle?.postId && currentCustomPostTitle?.title.length === 0)
       && title === rawTitle) {
+      // @ts-ignore
       dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
         customPostTitles: customPostTitles.filter((item) => item?.postId !== postId),
       });
@@ -109,6 +111,7 @@ export default function Edit({
       ];
     }
 
+    // @ts-ignore
     dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
       customPostTitles: newCustomPostTitles,
     });
@@ -150,6 +153,7 @@ export default function Edit({
         >
           <SelectControl
             label={__('Heading Level')}
+            // @ts-ignore
             value={level.toString()}
             options={[
               { label: 'p', value: '0' },

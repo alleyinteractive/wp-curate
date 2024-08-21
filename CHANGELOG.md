@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.2.1 - 2024-08-15
+
+ - Bug Fix: Handle cases where a pinned post has been deleted or unpublished.
+
 ## 2.2.0 - 2024-08-05
 
 - Enhancement: Ability to customize the post title for a post that appears in a Query block.
