@@ -24,13 +24,12 @@
     "php": "^8.1",
     "alleyinteractive/composer-wordpress-autoloader": "^1.0",
     "alleyinteractive/traverse-reshape": "^2.0",
-    "alleyinteractive/wp-type-extensions": "^2.0",
-    "nunomaduro/collision": "^7.10"
+    "alleyinteractive/wp-type-extensions": "^2.0"
   },
   "require-dev": {
     "alleyinteractive/alley-coding-standards": "^2.0",
     "mantle-framework/testkit": "^1.1",
-    "nunomaduro/collision": "^6.0",
+    "nunomaduro/collision": "^7.10",
     "szepeviktor/phpstan-wordpress": "^1.1"
   },
   "config": {
