@@ -1,0 +1,116 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "wp-curate/query",
+  "version": "0.1.0",
+  "title": "Query",
+  "category": "theme",
+  "icon": "filter",
+  "description": "Custom queries for WP Curate",
+  "textdomain": "wp-curate",
+  "editorScript": "file:index.js",
+  "editorStyle": "file:index.css",
+  "style": [
+    "file:style-index.css"
+  ],
+  "providesContext": {
+    "query": "query",
+    "displayLayout": "displayLayout",
+    "heading": "heading",
+    "curation": "curation",
+    "pinnedPosts": "posts",
+    "moveData": "moveData",
+    "customPostTitles": "customPostTitles"
+  },
+  "attributes": {
+    "deduplication": {
+      "default": "inherit",
+      "enum": [
+        "inherit",
+        "never"
+      ],
+      "type": "string"
+    },
+    "maxNumberOfPosts": {
+      "default": 10,
+      "type": "number"
+    },
+    "minNumberOfPosts": {
+      "default": 1,
+      "type": "number"
+    },
+    "numberOfPosts": {
+      "default": 5,
+      "type": "number"
+    },
+    "offset": {
+      "default": 0,
+      "type": "number"
+    },
+    "postTypes": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "posts": {
+      "default": [],
+      "items": {
+        "type": "number"
+      },
+      "type": "array"
+    },
+    "searchTerm": {
+      "default": "",
+      "type": "string"
+    },
+    "terms": {
+      "default": {},
+      "items": {
+        "default": [],
+        "items": {
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "type": "object"
+    },
+    "termRelations": {
+      "default": {},
+      "items": {
+        "default": "AND",
+        "enum": [
+          "AND",
+          "OR"
+        ],
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "taxRelation": {
+      "default": "AND",
+      "enum": [
+        "AND",
+        "OR"
+      ],
+      "type": "string"
+    },
+    "orderby": {
+      "default": "date",
+      "enum": [
+        "date",
+        "trending"
+      ],
+      "type": "string"
+    },
+    "customPostTitles": {
+      "default": [],
+      "items": {
+        "default": {},
+        "type": "object"
+      },
+      "type": "array"
+    }
+  }
+}
