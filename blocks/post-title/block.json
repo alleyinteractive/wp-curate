@@ -19,7 +19,7 @@
     "supportsLevel": {
       "type": "boolean",
       "default": true
-    },
+    }
   },
   "render": "file:render.php",
   "supports": {
