@@ -2,13 +2,17 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.2.3 - 2024-08-22
+
+- Enhancement: Enable block filter support for Post Title block setting Heading Level select.
+
 ## 2.2.2 - 2024-08-21
 
 - Enhancement: Introduce `SWR` for caching API requests in the Query block.
 
 ## 2.2.1 - 2024-08-15
 
- - Bug Fix: Handle cases where a pinned post has been deleted or unpublished.
+- Bug Fix: Handle cases where a pinned post has been deleted or unpublished.
 
 ## 2.2.0 - 2024-08-05
 
