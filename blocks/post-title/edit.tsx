@@ -147,15 +147,15 @@ export default function Edit({
   return (
     <>
       { titleElement }
-      <InspectorControls>
-        <PanelBody
-          title={__('Setup', 'wp-curate')}
-          initialOpen
-        >
-          {supportsLevel ? (
+      {supportsLevel ? (
+        <InspectorControls>
+          <PanelBody
+            title={__('Setup', 'wp-curate')}
+            initialOpen
+          >
             <SelectControl
               label={__('Heading Level')}
-            // @ts-ignore
+              // @ts-ignore
               value={level.toString()}
               options={[
                 { label: 'p', value: '0' },
@@ -170,9 +170,9 @@ export default function Edit({
                 setAttributes({ level: parseInt(newLevel, 10) });
               }}
             />
-          ) : null }
-        </PanelBody>
-      </InspectorControls>
+          </PanelBody>
+        </InspectorControls>
+      ) : null}
     </>
   );
 }
