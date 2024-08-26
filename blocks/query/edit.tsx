@@ -227,10 +227,10 @@ export default function Edit({
       }
 
       setAttributes({ validPosts });
+      mainDedupe();
     };
     updateValidPosts();
   }, [manualPosts, setAttributes]);
-
 
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
