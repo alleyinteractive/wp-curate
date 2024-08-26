@@ -7,8 +7,12 @@ import { useSelect } from '@wordpress/data';
 import {
   useEffect,
 } from '@wordpress/element';
+import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
+import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
+import apiFetch from '@wordpress/api-fetch';
+
 import type {
   EditProps,
   Option,
@@ -153,6 +157,34 @@ export default function Edit({
     data,
     error,
   ]);
+
+  // Make sure all the manual posts are still valid.
+  useEffect(() => {
+    const updateValidPosts = async () => {
+      const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
+      let validPosts: Number[] = [];
+
+      if (postsToInclude.length > 0) {
+        validPosts = await apiFetch({
+          path: addQueryArgs(
+            '/wp/v2/posts',
+            {
+              offset: 0,
+              orderby: 'include',
+              per_page: postsToInclude.length,
+              type: 'post',
+              include: postsToInclude,
+              _locale: 'user',
+            },
+          ),
+        }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
+      }
+
+      setAttributes({ validPosts });
+      mainDedupe();
+    };
+    updateValidPosts();
+  }, [manualPosts, setAttributes]);
 
   for (let i = 0; i < numberOfPosts; i += 1) {
     if (!manualPosts[i]) {
