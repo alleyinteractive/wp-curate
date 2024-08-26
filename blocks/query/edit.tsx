@@ -1,13 +1,12 @@
 /* eslint-disable camelcase */
+import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
-import apiFetch from '@wordpress/api-fetch';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import {
   useEffect,
 } from '@wordpress/element';
-import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
 import type {
@@ -15,11 +14,10 @@ import type {
   Option,
 } from './types';
 
-import {
-  mainDedupe,
-} from '../../services/deduplicate';
-
+import { mainDedupe } from '../../services/deduplicate';
+import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
+import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 
 import QueryControls from '../../components/QueryControls';
 import './index.scss';
@@ -110,58 +108,39 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
-  const currentPostId = useSelect((select: any) => select('core/editor').getCurrentPostId(), []);
+  const currentPostId = Number(useSelect((select: any) => select('core/editor').getCurrentPostId(), []));
   const postTypeString = postTypes.join(',');
 
-  // Fetch "backfill" posts when categories, tags, or search term change.
-  useEffect(() => {
-    const fetchPosts = async () => {
-      let path = addQueryArgs(
-        '/wp-curate/v1/posts',
-        {
-          search: debouncedSearchTerm,
-          offset,
-          post_type: postTypeString,
-          status: 'publish',
-          per_page: 20,
-          orderby,
-          current_post_id: Number.isInteger(currentPostId) ? currentPostId : 0,
-        },
-      );
-      path += `&${termQueryArgs}`;
-
-      apiFetch({ path }).then((response:any) => {
-        let revisedResponse;
-        // If the response is an array, filter out the current post.
-        if (Array.isArray(response)) {
-          revisedResponse = response.filter((item) => item !== currentPostId);
-        } else if (response.id === currentPostId) {
-          // Response is an object, if id is the current post, nullify it.
-          revisedResponse = null;
-        } else {
-          revisedResponse = response;
-        }
-        if (revisedResponse !== null) {
-          setAttributes({ backfillPosts: revisedResponse as Array<number> });
-        }
-      });
-    };
-    fetchPosts();
-  }, [
-    currentPostId,
-    debouncedSearchTerm,
+  // Construct the API path using query args.
+  const path = `${buildPostsApiPath({
+    search: debouncedSearchTerm,
     offset,
-    orderby,
-    postTypeString,
-    setAttributes,
-    termQueryArgs,
-  ]);
+    postType: postTypeString,
+    status: 'publish',
+    perPage: 20,
+    orderBy: orderby,
+    currentPostId,
+  })}&${termQueryArgs}`;
+
+  // Use SWR to fetch data.
+  const { data, error } = useSWRImmutable(
+    [path, currentPostId],
+    queryBlockPostFetcher,
+  );
+
+  // Handle the fetched data.
+  useEffect(() => {
+    if (data && !error) {
+      setAttributes({ backfillPosts: data });
+    }
+  }, [data, error, setAttributes]);
 
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    console.log('query block useEffect');
-    mainDedupe(['wp-curate/query', 'wp-curate/subquery']);
+    if (data && !error) {
+      mainDedupe(['wp-curate/query', 'wp-curate/subquery']);
+    }
   }, [
     manualPostIds,
     backfillPosts,
@@ -171,6 +150,8 @@ export default function Edit({
     isPostDeduplicating,
     deduplication,
     uniquePinnedPosts,
+    data,
+    error,
   ]);
 
   for (let i = 0; i < numberOfPosts; i += 1) {

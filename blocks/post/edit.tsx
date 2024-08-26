@@ -63,7 +63,8 @@ export default function Edit({
 
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
-  const selected = posts[index];
+  const selected = posts[index] ?? null;
+  const postDeleted = selected !== null && selected !== postId;
 
   const updatePost = useCallback((post: number | null) => {
     const newPosts = [...posts];
@@ -130,8 +131,11 @@ export default function Edit({
         }
         const blockId = parent.dataset.block;
         const parentId = select('core/block-editor').getBlockParentsByBlockName(blockId, 'wp-curate/query')[0];
+        if (!parentId) {
+          return;
+        }
 
-        const oldPosts = select('core/block-editor').getBlockAttributes(parentId).posts;
+        const oldPosts = select('core/block-editor').getBlockAttributes(parentId)?.posts ?? [];
         const newPosts = oldPosts.map((post: number) => (post === newData.postId ? null : post));
         newPosts[targetIndex] = newData.postId;
         // @ts-ignore
@@ -141,7 +145,7 @@ export default function Edit({
         // Remove the post from the source query block if it's not the same as the target block.
         const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId, 'wp-curate/query')[0];
         if (parentId !== sourceParent) {
-          const sourceOldPosts = select('core/block-editor').getBlockAttributes(sourceParent).posts;
+          const sourceOldPosts = select('core/block-editor').getBlockAttributes(sourceParent)?.posts;
           const sourceNewPosts = sourceOldPosts.map(
             (post: number) => (post === newData.postId ? null : post),
           );
@@ -173,8 +177,9 @@ export default function Edit({
           className: classnames(
             'wp-curate-post-block',
             { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
-            { 'wp-curate-post-block--backfill': !selected },
+            { 'wp-curate-post-block--backfill': !selected || postDeleted },
             { 'curate-droppable': moveData.postId && moveData.postId !== postId },
+            { 'wp-curate-error': postDeleted },
           ),
         },
       )}
@@ -182,7 +187,7 @@ export default function Edit({
       <InnerBlocks />
       {isParentOfSelectedBlock || isSelected ? (
         <div className="wp-curate-post-block__actions">
-          {selected ? (
+          {selected && !postDeleted ? (
             <Button
               variant="secondary"
               onClick={toggleMove}
