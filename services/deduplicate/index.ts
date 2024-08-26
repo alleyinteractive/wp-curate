@@ -1,7 +1,4 @@
 import { select, dispatch } from '@wordpress/data';
-import apiFetch from '@wordpress/api-fetch';
-import { addQueryArgs } from '@wordpress/url';
-import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 
 const usedIds = new Map();
 const curatedIds = new Map();
@@ -19,6 +16,7 @@ interface Block {
     query?: {
       include?: number[];
     }
+    validPosts?: number[];
   },
   clientId: string;
   name: string;
@@ -84,7 +82,7 @@ const getQueryBlocks = (blocks: Block[], out: Block[]) => {
  * This is the main function to update all pinned posts. Call it whenever a pinned post
  * changes or the query settings change.
  */
-export async function mainDedupe() {
+export function mainDedupe() {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
@@ -121,7 +119,7 @@ export async function mainDedupe() {
   }
 
   // Loop through all query blocks and set backfilled posts in the open slots.
-  queryBlocks.forEach(async (queryBlock) => {
+  queryBlocks.forEach((queryBlock) => {
     const { attributes } = queryBlock;
     const {
       backfillPosts = null,
@@ -129,30 +127,11 @@ export async function mainDedupe() {
       posts = [],
       numberOfPosts = 5,
       postTypes = ['post'],
+      validPosts = [],
     } = attributes;
     if (!backfillPosts) {
       return;
     }
-
-    const postsToInclude = posts.filter((id) => id !== null).join(',');
-    let validPosts: Number[] = [];
-
-    if (postsToInclude.length > 0) {
-      validPosts = await apiFetch({
-        path: addQueryArgs(
-          '/wp/v2/posts',
-          {
-            offset: 0,
-            orderby: 'include',
-            per_page: posts.length,
-            type: 'post',
-            include: postsToInclude,
-            _locale: 'user',
-          },
-        ),
-      }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
-    }
-
     const postTypeString = postTypes.join(',');
     let postIndex = 0;
 
