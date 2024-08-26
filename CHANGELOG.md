@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.2.4 - 2024-08-26
+
+- Bug Fix: Backfill posts filling out of order in the Editor.
+
 ## 2.2.2 - 2024-08-21
 
 - Enhancement: Introduce `SWR` for caching API requests in the Query block.
