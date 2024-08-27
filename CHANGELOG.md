@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.2.3 - 2024-0826
+
+- Stack post buttons (move, pin, etc.) in smaller block widths.
+
 ## 2.2.2 - 2024-08-21
 
 - Enhancement: Introduce `SWR` for caching API requests in the Query block.
