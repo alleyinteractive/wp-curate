@@ -2,9 +2,13 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
-## 2.2.3 - 2024-08-22
+## 2.3.0 - 2024-08-28
 
 - Enhancement: Enable block filter support for Post Title block setting Heading Level select.
+
+## 2.2.3 - 2024-08-26
+
+- Stack post buttons (move, pin, etc.) in smaller block widths.
 
 ## 2.2.2 - 2024-08-21
 

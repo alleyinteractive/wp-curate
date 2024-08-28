@@ -1,5 +1,7 @@
 .wp-curate-post-block {
   padding: 2px;
+  container-name: wp-curate-block;
+  container-type: inline-size;
 
   &--selected {
     outline: 1px dashed #ccc;
@@ -55,4 +57,22 @@
   right: 0;
   top: 0;
   z-index: 2;
+}
+
+@container wp-curate-block (width < 335px) {
+  .wp-curate-post-block__post-picker {
+    width: 100%;
+  }
+
+  .wp-curate-post-block__actions, .components-button-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    button {
+      margin: 0 0 0.25rem 0 !important;
+      text-align: left;
+      width: 100%;
+    }
+  }
 }
