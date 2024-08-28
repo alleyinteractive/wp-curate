@@ -9,6 +9,7 @@ interface PostTitleEditProps {
   clientId?: string;
   attributes: {
     level?: number;
+    supportsLevel?: boolean;
   };
   context: {
     postId: number;
@@ -48,11 +49,11 @@ export default function Edit({
     query: { postType = 'post' },
     customPostTitles = [],
   } = context;
-  const { level = 3 } = attributes;
+  const { level = 3, supportsLevel } = attributes;
   const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId.toString());
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
-  const TagName = level === 0 ? 'p' : `h${level}`;
+  const TagName = !supportsLevel || level === 0 ? 'p' : `h${level}`;
   const blockProps = useBlockProps();
 
   useEffect(() => {
@@ -146,30 +147,32 @@ export default function Edit({
   return (
     <>
       { titleElement }
-      <InspectorControls>
-        <PanelBody
-          title={__('Setup', 'wp-curate')}
-          initialOpen
-        >
-          <SelectControl
-            label={__('Heading Level')}
-            // @ts-ignore
-            value={level.toString()}
-            options={[
-              { label: 'p', value: '0' },
-              { label: 'h1', value: '1' },
-              { label: 'h2', value: '2' },
-              { label: 'h3', value: '3' },
-              { label: 'h4', value: '4' },
-              { label: 'h5', value: '5' },
-              { label: 'h6', value: '6' },
-            ]}
-            onChange={(newLevel) => {
-              setAttributes({ level: parseInt(newLevel, 10) });
-            }}
-          />
-        </PanelBody>
-      </InspectorControls>
+      {supportsLevel ? (
+        <InspectorControls>
+          <PanelBody
+            title={__('Setup', 'wp-curate')}
+            initialOpen
+          >
+            <SelectControl
+              label={__('Heading Level')}
+              // @ts-ignore
+              value={level.toString()}
+              options={[
+                { label: 'p', value: '0' },
+                { label: 'h1', value: '1' },
+                { label: 'h2', value: '2' },
+                { label: 'h3', value: '3' },
+                { label: 'h4', value: '4' },
+                { label: 'h5', value: '5' },
+                { label: 'h6', value: '6' },
+              ]}
+              onChange={(newLevel) => {
+                setAttributes({ level: parseInt(newLevel, 10) });
+              }}
+            />
+          </PanelBody>
+        </InspectorControls>
+      ) : null}
     </>
   );
 }
