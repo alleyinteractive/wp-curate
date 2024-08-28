@@ -107,7 +107,7 @@ export default function QueryControls({
       ...termRelations,
       [type]: relation,
     };
-    setAttributes({ termRelations: newTermRelationAttrs, backfillPosts: []});
+    setAttributes({ termRelations: newTermRelationAttrs, backfillPosts: [] });
   });
 
   const setNumberOfPosts = (newValue?: number) => {

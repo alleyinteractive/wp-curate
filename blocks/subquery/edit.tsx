@@ -238,11 +238,11 @@ export default function Edit({
     label: type.name,
     value: type.slug,
   }));
-
+  const blockProps = useBlockProps();
   return (
     index === 0 ? (
       <>
-        <div {...useBlockProps()}>
+        <div {...blockProps}>
           <InnerBlocks template={TEMPLATE} />
         </div>
         <QueryControls

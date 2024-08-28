@@ -24,6 +24,7 @@ interface EditProps {
       postId?: number;
       clientId?: string;
     };
+    uniqueId?: string;
   };
   setAttributes: (attributes: any) => void;
   context: {

@@ -27,6 +27,7 @@ final class Subquery_Block_Display implements Feature {
 
 	/**
 	 * Current subquery block unique id.
+	 *
 	 * @var string | null
 	 */
 	private $current_unique_id = null;
@@ -34,12 +35,19 @@ final class Subquery_Block_Display implements Feature {
 	/**
 	 * Filters the block content before it is rendered.
 	 *
-	 * @param string $block_content The block content.
-	 * @param array $parsed_block The block object.
-	 * @param WP_Block $parent_block The parent block object.
+	 * @param string    $block_content The block content.
+	 * @param array     $parsed_block The block object.
+	 * @param \WP_Block $parent_block The parent block object.
 	 * @return string The block content.
+	 *
+	 * @phpstan-param array{
+	 *     blockName: string,
+	 *     attrs: array{
+	 *         uniqueId: string,
+	 *     },
+	 * } $parsed_block The parsed block.
 	 */
-	public function filter_pre_render_block( string | null $block_content, array $parsed_block, \WP_Block | null $parent_block ): string | null {
+	public function filter_pre_render_block( string $block_content, array $parsed_block, \WP_Block $parent_block ): string|null {
 		if ( 'wp-curate/subquery' !== $parsed_block['blockName'] ) {
 			return $block_content;
 		}
@@ -51,7 +59,5 @@ final class Subquery_Block_Display implements Feature {
 		}
 
 		return ' ';
-
-		return $block_content;
 	}
 }

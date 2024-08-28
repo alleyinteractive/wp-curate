@@ -123,7 +123,7 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
     allQueryBlocks.forEach((queryBlock) => {
       // if (queryBlock.name === 'wp-curate/query' && queryBlock.attributes.query) {
       if (queryBlock.attributes.query) {
-        const posts: number[] = queryBlock.attributes.query?.include?.split(',');
+        const posts: string[] | undefined = queryBlock.attributes.query?.include?.toString().split(',');
         if (posts) {
           posts.forEach((post) => {
             if (post) {

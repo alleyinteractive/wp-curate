@@ -55,7 +55,7 @@ function wp_curate_query_block_init(): void {
 		[
 			'allowedPostTypes'  => array_filter(
 				array_map(
-					function( $slug ) {
+					function ( $slug ) {
 						$post_type_object = get_post_type_object( $slug );
 						if ( ! $post_type_object ) {
 							return null;
@@ -72,7 +72,7 @@ function wp_curate_query_block_init(): void {
 			),
 			'allowedTaxonomies' => array_filter(
 				array_map(
-					function( $slug ) {
+					function ( $slug ) {
 						$taxonomy = get_taxonomy( $slug );
 						if ( ! $taxonomy ) {
 							return null;

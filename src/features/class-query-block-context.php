@@ -142,8 +142,10 @@ final class Query_Block_Context implements Feature {
 				),
 			);
 
-			// Pass updated context to the block.
-			$context = $curated_posts->with_query_context( $context, $parsed_block['attrs'], $current_block_type );
+			if ( ! empty( $current_block_type ) ) {
+				// Pass updated context to the block.
+				$context = $curated_posts->with_query_context( $context, $parsed_block['attrs'], $current_block_type );
+			}
 		}
 
 		/*

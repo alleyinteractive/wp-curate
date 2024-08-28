@@ -11,7 +11,7 @@ use Alley\WP\WP_Curate\Supported_Post_Types;
 /**
  * Registers the wp-curate/subquery block using the metadata loaded from the `block.json` file.
  */
-function subquery_subquery_block_init(): void {
+function wp_curate_subquery_block_init(): void {
 	$supported_post_types = new Supported_Post_Types();
 
 	if ( ! $supported_post_types->should_register_block() ) {
@@ -26,7 +26,7 @@ function subquery_subquery_block_init(): void {
 		],
 	);
 }
-add_action( 'init', 'subquery_subquery_block_init' );
+add_action( 'init', 'wp_curate_subquery_block_init' );
 
 /**
  * Renders the `wp-curate/query` block on the server.
@@ -35,7 +35,7 @@ add_action( 'init', 'subquery_subquery_block_init' );
  * @param string       $content    Block default content.
  * @return string Block output.
  */
-function wp_curate_render_subquery_block( $attributes, $content, $block ): string {
+function wp_curate_render_subquery_block( $attributes, $content ): string {
 	$proc = new WP_HTML_Tag_Processor( $content );
 
 	/*
