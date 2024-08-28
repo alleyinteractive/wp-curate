@@ -147,7 +147,6 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
       validPosts = [],
     } = attributes;
     if (!backfillPosts) {
-      console.log('no backfill posts');
       return;
     }
     const postTypeString = postTypes.join(',');
@@ -192,8 +191,6 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
               isUnique = true;
               markUsed(backfillPost);
             }
-          } else {
-            console.log('unable to get a backfill post');
           }
           postIndex += 1;
         } while (isUnique === false && postIndex <= filteredPosts.length);

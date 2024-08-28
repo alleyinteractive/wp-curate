@@ -186,7 +186,6 @@ export default function Edit({
     if (!backfillPostsString.length) {
       return;
     }
-    console.log('subquery block 1st useEffect');
     mainDedupe(['wp-curate/subquery']);
   }, [
     backfillPostsString,
@@ -205,7 +204,6 @@ export default function Edit({
     if (index !== 0) {
       return;
     }
-    console.log('subquery block 2nd useEffect');
     mainDedupe(['wp-curate/query', 'wp-curate/subquery']);
   }, [
     index,

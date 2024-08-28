@@ -195,7 +195,7 @@ export default function QueryControls({
               { /* @ts-ignore */ }
               <TermSelector
                 label={taxonomy.name}
-                subTypes={[taxonomy]}
+                subTypes={[taxonomy.slug]}
                 selected={terms[taxonomy.slug] ?? []}
                 onSelect={(newCategories: Term[]) => setTerms(taxonomy.slug, newCategories)}
                 multiple
