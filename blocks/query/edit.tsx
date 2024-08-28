@@ -22,8 +22,11 @@ import {
   useState,
 } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
+import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
+import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
+
 import type {
   EditProps,
   Option,
@@ -200,6 +203,34 @@ export default function Edit({
     data,
     error,
   ]);
+
+  // Make sure all the manual posts are still valid.
+  useEffect(() => {
+    const updateValidPosts = async () => {
+      const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
+      let validPosts: Number[] = [];
+
+      if (postsToInclude.length > 0) {
+        validPosts = await apiFetch({
+          path: addQueryArgs(
+            '/wp/v2/posts',
+            {
+              offset: 0,
+              orderby: 'include',
+              per_page: postsToInclude.length,
+              type: 'post',
+              include: postsToInclude,
+              _locale: 'user',
+            },
+          ),
+        }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
+      }
+
+      setAttributes({ validPosts });
+      mainDedupe();
+    };
+    updateValidPosts();
+  }, [manualPosts, setAttributes]);
 
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];

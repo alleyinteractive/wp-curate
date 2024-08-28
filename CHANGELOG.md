@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.3.1 - 2024-08-28
+
+- Bug Fix: Backfill posts filling out of order in the Editor.
+
 ## 2.3.0 - 2024-08-28
 
 - Enhancement: Enable block filter support for Post Title block setting Heading Level select.
