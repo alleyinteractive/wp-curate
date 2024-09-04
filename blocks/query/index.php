@@ -48,7 +48,7 @@ function wp_curate_query_block_init(): void {
 	 *
 	 * @param integer $max_posts The maximum number of posts to display.
 	 */
-	$max_posts = apply_filters( 'wp_curate_max_posts', 5 );
+	$max_posts = apply_filters( 'wp_curate_max_posts', 10 );
 
 	/**
 	 * Filter whether to use Parsely.
