@@ -47,6 +47,7 @@ interface Window {
     allowedPostTypes: Array<string>;
     allowedTaxonomies: Array<string>;
     parselyAvailable: string,
+    maxPosts: number,
   };
 }
 
@@ -62,7 +63,6 @@ export default function Edit({
   attributes: {
     backfillPosts = [],
     deduplication = 'inherit',
-    maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
     numberOfPosts = 5,
     offset = 0,
@@ -82,6 +82,7 @@ export default function Edit({
       allowedPostTypes = [],
       allowedTaxonomies = [],
       parselyAvailable = 'false',
+      maxPosts = 10,
     } = {},
   } = (window as any as Window);
 
@@ -326,14 +327,14 @@ export default function Edit({
           title={__('Setup', 'wp-curate')}
           initialOpen
         >
-          {minNumberOfPosts !== undefined && minNumberOfPosts !== maxNumberOfPosts ? (
+          {minNumberOfPosts !== undefined && minNumberOfPosts !== maxPosts ? (
             <RangeControl
               label={__('Number of Posts', 'wp-curate')}
               help={__('The maximum number of posts to show.', 'wp-curate')}
               value={numberOfPosts}
               onChange={setNumberOfPosts}
               min={minNumberOfPosts}
-              max={maxNumberOfPosts}
+              max={maxPosts}
             />
           ) : null}
           <RangeControl
