@@ -44,13 +44,6 @@ function wp_curate_query_block_init(): void {
 	$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
 
 	/**
-	 * Filter the maximum number of posts that can be displayed in the Query block.
-	 *
-	 * @param integer $max_posts The maximum number of posts to display.
-	 */
-	$max_posts = apply_filters( 'wp_curate_max_posts', 10 );
-
-	/**
 	 * Filter whether to use Parsely.
 	 *
 	 * @param bool $use_parsely Whether to use Parsely.
@@ -63,7 +56,6 @@ function wp_curate_query_block_init(): void {
 			'allowedPostTypes'  => $allowed_post_types,
 			'allowedTaxonomies' => $allowed_taxonomies,
 			'parselyAvailable'  => $parsely_available ? 'true' : 'false',
-			'maxPosts'          => $max_posts,
 		]
 	);
 }
