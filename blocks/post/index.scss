@@ -1,5 +1,7 @@
 .wp-curate-post-block {
   padding: 2px;
+  container-name: wp-curate-block;
+  container-type: inline-size;
 
   &--selected {
     outline: 1px dashed #ccc;
@@ -10,8 +12,67 @@
     opacity: 0.5;
   }
 
-  &__post-picker {
+  &__actions {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
     margin-top: 0.5rem;
-    text-align: right;
+
+    &__post-picker {
+      align-self: flex-end;
+    }
+  }
+}
+
+.wp-curate-query-block--move .wp-block-post:hover {
+  cursor: pointer;
+}
+
+.wp-block-post:hover .curate-droppable::after {
+  align-items: center;
+  background: rgba(255,255,255,0.8);
+  border: 2px dashed var(--wp-components-color-accent, var(--wp-admin-theme-color, #3858e9));
+  color: #333;
+  content: "Click to move post here";
+  display: flex;
+  font-size: 40px;
+  font-weight: bold;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  pointer-events: auto;
+  position: absolute;
+  text-align: center;
+  top: 0;
+  width: 100%;
+  z-index: 9999;
+}
+
+.wp-curate-error::after {
+  color: #cc1818;
+  content: "\f534"; // dashicons-warning
+  font-family: "dashicons";
+  font-size: 2.5rem;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 2;
+}
+
+@container wp-curate-block (width < 335px) {
+  .wp-curate-post-block__post-picker {
+    width: 100%;
+  }
+
+  .wp-curate-post-block__actions, .components-button-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    button {
+      margin: 0 0 0.25rem 0 !important;
+      text-align: left;
+      width: 100%;
+    }
   }
 }

@@ -19,6 +19,10 @@ interface EditProps {
     };
     taxRelation?: string;
     orderby?: string;
+    moveData?: {
+      postId?: number;
+      clientId?: string;
+    };
   };
   setAttributes: (attributes: any) => void;
 }

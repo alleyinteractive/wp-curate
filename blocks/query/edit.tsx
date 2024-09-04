@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import useSWRImmutable from 'swr/immutable';
 import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -24,6 +25,8 @@ import { __, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
+import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
+
 import type {
   EditProps,
   Option,
@@ -32,11 +35,10 @@ import type {
   Types,
 } from './types';
 
-import {
-  mainDedupe,
-} from '../../services/deduplicate';
-
+import { mainDedupe } from '../../services/deduplicate';
+import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
+import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 
 import './index.scss';
 
@@ -71,6 +73,7 @@ export default function Edit({
     termRelations = {},
     taxRelation = 'AND',
     orderby = 'date',
+    moveData = {},
   },
   setAttributes,
 }: EditProps) {
@@ -99,7 +102,7 @@ export default function Edit({
   ];
 
   // @ts-ignore
-  const [isPostDeduplicating, postTypeObject] = useSelect(
+  const [isPostDeduplicating, postTypeObject, uniquePinnedPosts] = useSelect(
     (select) => {
       // @ts-ignore
       const editor = select('core/editor');
@@ -114,6 +117,7 @@ export default function Edit({
         Boolean(meta?.wp_curate_deduplication),
         // @ts-ignore
         type ? select('core').getPostType(type) : null,
+        Boolean(meta?.wp_curate_unique_pinned_posts),
       ];
     },
   );
@@ -133,8 +137,27 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
-  const currentPostId = useSelect((select: any) => select('core/editor').getCurrentPostId(), []);
+  const currentPostId = Number(useSelect((select: any) => select('core/editor').getCurrentPostId(), []));
   const postTypeString = postTypes.join(',');
+
+  // Construct the API path using query args.
+  const path = Object.keys(availableTaxonomies).length > 0
+    ? `${buildPostsApiPath({
+      search: debouncedSearchTerm,
+      offset,
+      postType: postTypeString,
+      status: 'publish',
+      perPage: 20,
+      orderBy: orderby,
+      currentPostId,
+    })}&${termQueryArgs}`
+    : undefined;
+
+  // Use SWR to fetch data.
+  const { data, error } = useSWRImmutable(
+    [path, currentPostId],
+    queryBlockPostFetcher,
+  );
 
   // Fetch available taxonomies.
   useEffect(() => {
@@ -156,58 +179,19 @@ export default function Edit({
     fetchTypes();
   }, []);
 
-  // Fetch "backfill" posts when categories, tags, or search term change.
+  // Handle the fetched data.
   useEffect(() => {
-    if (Object.keys(availableTaxonomies).length <= 0) {
-      return;
+    if (data && !error) {
+      setAttributes({ backfillPosts: data });
     }
-    const fetchPosts = async () => {
-      let path = addQueryArgs(
-        '/wp-curate/v1/posts',
-        {
-          search: debouncedSearchTerm,
-          offset,
-          post_type: postTypeString,
-          status: 'publish',
-          per_page: 20,
-          orderby,
-          current_post_id: Number.isInteger(currentPostId) ? currentPostId : 0,
-        },
-      );
-      path += `&${termQueryArgs}`;
-
-      apiFetch({ path }).then((response:any) => {
-        let revisedResponse;
-        // If the response is an array, filter out the current post.
-        if (Array.isArray(response)) {
-          revisedResponse = response.filter((item) => item !== currentPostId);
-        } else if (response.id === currentPostId) {
-          // Response is an object, if id is the current post, nullify it.
-          revisedResponse = null;
-        } else {
-          revisedResponse = response;
-        }
-        if (revisedResponse !== null) {
-          setAttributes({ backfillPosts: revisedResponse as Array<number> });
-        }
-      });
-    };
-    fetchPosts();
-  }, [
-    availableTaxonomies,
-    currentPostId,
-    debouncedSearchTerm,
-    offset,
-    orderby,
-    postTypeString,
-    setAttributes,
-    termQueryArgs,
-  ]);
+  }, [data, error, setAttributes]);
 
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    mainDedupe();
+    if (data && !error) {
+      mainDedupe();
+    }
   }, [
     manualPostIds,
     backfillPosts,
@@ -216,7 +200,38 @@ export default function Edit({
     postTypeString,
     isPostDeduplicating,
     deduplication,
+    uniquePinnedPosts,
+    data,
+    error,
   ]);
+
+  // Make sure all the manual posts are still valid.
+  useEffect(() => {
+    const updateValidPosts = async () => {
+      const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
+      let validPosts: Number[] = [];
+
+      if (postsToInclude.length > 0) {
+        validPosts = await apiFetch({
+          path: addQueryArgs(
+            '/wp/v2/posts',
+            {
+              offset: 0,
+              orderby: 'include',
+              per_page: postsToInclude.length,
+              type: 'post',
+              include: postsToInclude,
+              _locale: 'user',
+            },
+          ),
+        }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
+      }
+
+      setAttributes({ validPosts });
+      mainDedupe();
+    };
+    updateValidPosts();
+  }, [manualPosts, setAttributes]);
 
   const setManualPost = (id: number, index: number) => {
     const newManualPosts = [...manualPosts];
@@ -276,7 +291,7 @@ export default function Edit({
           'wp-curate/post',
           {},
           [
-            ['core/post-title', { isLink: true }],
+            ['wp-curate/post-title', {}],
             ['core/post-excerpt', {}],
           ],
         ],
@@ -298,7 +313,12 @@ export default function Edit({
 
   return (
     <>
-      <div {...useBlockProps()}>
+      <div {...useBlockProps({
+        className: classnames(
+          { 'wp-curate-query-block--move': moveData.postId },
+        ),
+      })}
+      >
         <InnerBlocks template={TEMPLATE} />
       </div>
 

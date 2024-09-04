@@ -16,6 +16,7 @@ interface Block {
     query?: {
       include?: number[];
     }
+    validPosts?: number[];
   },
   clientId: string;
   name: string;
@@ -96,26 +97,26 @@ export function mainDedupe() {
   const blocks: Block[] = select('core/block-editor').getBlocks();
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
+    wp_curate_unique_pinned_posts: wpCurateUniquePinnedPosts = false,
     // @ts-ignore
   } = select('core/editor').getEditedPostAttribute('meta') || {};
 
   const queryBlocks: Block[] = [];
   // Loop through all blocks and find all query blocks.
   getQueryBlocks(blocks, queryBlocks);
-  // Loop through all query blocks and find all pinned posts. Add them to the list of used ids.
-  // Note: This means that a pinned post will be used only once on the page. It cannot be backfilled
-  // earlier on the page. The front end does not currently do this, so it will be commented out
-  // here to match. We should probably add a setting to allow this in both places.
 
-  // queryBlocks.forEach((queryBlock) => {
-  //   const { attributes } = queryBlock;
-  //   const { posts } = attributes;
-  //   posts?.forEach((post) => {
-  //     if (post) {
-  //       deduplicate(post);
-  //     }
-  //   });
-  // });
+  /**
+   * This block of code is responsible for enforcing the unique pinned posts setting in the editor.
+   */
+  if (wpCurateUniquePinnedPosts) {
+    queryBlocks.forEach((queryBlock) => {
+      queryBlock?.attributes?.posts?.forEach((post) => {
+        if (post) {
+          deduplicate(post);
+        }
+      });
+    });
+  }
 
   // Loop through all query blocks and set backfilled posts in the open slots.
   queryBlocks.forEach((queryBlock) => {
@@ -126,6 +127,7 @@ export function mainDedupe() {
       posts = [],
       numberOfPosts = 5,
       postTypes = ['post'],
+      validPosts = [],
     } = attributes;
     if (!backfillPosts) {
       return;
@@ -137,7 +139,9 @@ export function mainDedupe() {
     const allPostIds: Array<number | undefined> = [];
 
     // New array to hold the pinned posts in the order they should be.
-    const manualPostIdArray: Array<number | null> = posts;
+    const manualPostIdArray: Array<number | null> = posts.map(
+      (post) => validPosts.includes(post) ? post : null, // eslint-disable-line no-confusing-arrow
+    );
 
     // Remove any pinned posts from the backfilled posts list.
     const filteredPosts = backfillPosts.filter((post) => !manualPostIdArray.includes(post));
