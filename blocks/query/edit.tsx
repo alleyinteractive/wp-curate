@@ -47,7 +47,7 @@ interface Window {
     allowedPostTypes: Array<string>;
     allowedTaxonomies: Array<string>;
     parselyAvailable: string,
-    maxPosts: number,
+    maxPosts: string,
   };
 }
 
@@ -83,7 +83,7 @@ export default function Edit({
       allowedPostTypes = [],
       allowedTaxonomies = [],
       parselyAvailable = 'false',
-      maxPosts = 10,
+      maxPosts = '10',
     } = {},
   } = (window as any as Window);
 
@@ -92,7 +92,7 @@ export default function Edit({
   }
 
   const maxNumberOfPosts = !maxNumberOfPostsAttr
-    || maxNumberOfPostsAttr > maxPosts ? maxPosts : maxNumberOfPostsAttr;
+    || maxNumberOfPostsAttr > parseInt(maxPosts, 10) ? parseInt(maxPosts, 10) : maxNumberOfPostsAttr; // eslint-disable-line max-len
 
   const andOrOptions = [
     {
@@ -277,6 +277,10 @@ export default function Edit({
       posts: manualPosts.slice(0, newValue),
     });
   };
+
+  if (numberOfPosts > maxNumberOfPosts) {
+    setNumberOfPosts(maxNumberOfPosts);
+  }
 
   for (let i = 0; i < numberOfPosts; i += 1) {
     if (!manualPosts[i]) {
