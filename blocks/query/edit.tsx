@@ -47,6 +47,7 @@ interface Window {
     allowedPostTypes: Array<string>;
     allowedTaxonomies: Array<string>;
     parselyAvailable: string,
+    maxPosts: number,
   };
 }
 
@@ -62,7 +63,7 @@ export default function Edit({
   attributes: {
     backfillPosts = [],
     deduplication = 'inherit',
-    maxNumberOfPosts = 10,
+    maxNumberOfPosts: maxNumberOfPostsAttr,
     minNumberOfPosts = 1,
     numberOfPosts = 5,
     offset = 0,
@@ -82,12 +83,16 @@ export default function Edit({
       allowedPostTypes = [],
       allowedTaxonomies = [],
       parselyAvailable = 'false',
+      maxPosts = 10,
     } = {},
   } = (window as any as Window);
 
   if (!postTypes.length) {
     setAttributes({ postTypes: allowedPostTypes });
   }
+
+  const maxNumberOfPosts = !maxNumberOfPostsAttr
+    || maxNumberOfPostsAttr > maxPosts ? maxPosts : maxNumberOfPostsAttr;
 
   const andOrOptions = [
     {

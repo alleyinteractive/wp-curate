@@ -32,7 +32,6 @@
       "type": "string"
     },
     "maxNumberOfPosts": {
-      "default": 10,
       "type": "number"
     },
     "minNumberOfPosts": {
