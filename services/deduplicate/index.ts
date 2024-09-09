@@ -89,6 +89,11 @@ export function mainDedupe() {
     return;
   }
 
+  // If the block transforms menu is currently open, skip deduplication.
+  if (document.querySelector('.block-editor-block-switcher__popover__preview__parent')) {
+    return;
+  }
+
   running = true;
   // Clear the flag for another run.
   redo = false;
