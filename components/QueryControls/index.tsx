@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import {
@@ -10,10 +11,7 @@ import {
   ToggleControl,
 } from '@wordpress/components';
 import { InspectorControls } from '@wordpress/block-editor';
-import {
-  Fragment,
-  createInterpolateElement,
-} from '@wordpress/element';
+import { createInterpolateElement } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 import type {
@@ -147,7 +145,7 @@ export default function QueryControls({
           <RangeControl
             label={__('Offset', 'wp-curate')}
             help={__('The number of posts to pass over.', 'wp-curate')}
-            onChange={(newValue) => setAttributes({ offset: newValue })}
+            onChange={(next) => setAttributes({ offset: next })}
             value={offset}
             min={0}
             max={20}
@@ -187,7 +185,7 @@ export default function QueryControls({
           <Checkboxes
             label={__('Post Types', 'wp-curate')}
             value={postTypes}
-            onChange={(newValue) => setAttributes({ postTypes: newValue, backfillPosts: [] })}
+            onChange={(next) => setAttributes({ postTypes: next, backfillPosts: [] })}
             options={displayTypes}
           />
           {allowedTaxonomies.map((taxonomy) => (
@@ -208,7 +206,7 @@ export default function QueryControls({
                   )}
                   help={__('AND: Posts must have all selected terms. OR: Posts may have one or more selected terms.', 'wp-curate')}
                   options={andOrOptions}
-                  onChange={(newValue) => setTermRelation(taxonomy.slug, newValue)}
+                  onChange={(next) => setTermRelation(taxonomy.slug, next)}
                   value={termRelations[taxonomy.slug] ?? 'OR'}
                 />
               ) : null}
@@ -220,7 +218,7 @@ export default function QueryControls({
               label={__('Taxonomy Relation', 'wp-curate')}
               help={__('AND: Posts must meet all selected taxonomy requirements. OR: Posts may have meet one or more selected taxonomy requirements.', 'wp-curate')}
               options={andOrOptions}
-              onChange={(newValue) => setAttributes({ taxRelation: newValue, backfillPosts: [] })}
+              onChange={(next) => setAttributes({ taxRelation: next, backfillPosts: [] })}
               value={taxRelation}
             />
           ) : null }

@@ -1,15 +1,13 @@
 /* eslint-disable camelcase */
+import { useEffect } from 'react';
 import { useDebounce } from '@uidotdev/usehooks';
 import apiFetch from '@wordpress/api-fetch';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
-import {
-  useEffect,
-} from '@wordpress/element';
 import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
-import { v4 as uuid } from '@lukeed/uuid';
+import { v4 as uuid } from 'uuid';
 
 import type {
   EditProps,
@@ -35,6 +33,7 @@ interface Window {
     allowedPostTypes: PostTypeOrTerm[];
     allowedTaxonomies: PostTypeOrTerm[];
     parselyAvailable: string,
+    maxPosts: number,
   };
 }
 
@@ -50,7 +49,6 @@ export default function Edit({
   attributes: {
     backfillPosts = [],
     deduplication = 'inherit',
-    maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
     numberOfPosts = 5,
     offset = 0,
@@ -80,6 +78,7 @@ export default function Edit({
       allowedPostTypes = [],
       allowedTaxonomies = [],
       parselyAvailable = 'false',
+      maxPosts = 10,
     } = {},
   } = (window as any as Window);
 
@@ -252,7 +251,7 @@ export default function Edit({
           displayTypes={displayTypes}
           isPostDeduplicating={isPostDeduplicating}
           manualPosts={manualPosts}
-          maxNumberOfPosts={maxNumberOfPosts}
+          maxPosts={maxPosts}
           minNumberOfPosts={minNumberOfPosts}
           numberOfPosts={numberOfPosts}
           offset={offset}

@@ -1,12 +1,10 @@
 /* eslint-disable camelcase */
+import { useEffect } from 'react';
 import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
-import {
-  useEffect,
-} from '@wordpress/element';
 import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
