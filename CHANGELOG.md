@@ -7,6 +7,10 @@ All notable changes to `WP Curate` will be documented in this file.
 - Enhancement: Subquery block added to allow a separate set of posts within a query block.
 see https://github.com/alleyinteractive/wp-curate/issues/200
 
+## 2.3.2 - 2024-09-09
+
+- Bug Fix: Prevent block transforms from crashing the Query block.
+
 ## 2.3.1 - 2024-08-28
 
 - Bug Fix: Backfill posts filling out of order in the Editor.

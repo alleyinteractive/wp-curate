@@ -2,7 +2,6 @@ interface EditProps {
   attributes: {
     backfillPosts?: number[];
     deduplication?: string;
-    maxNumberOfPosts?: number;
     minNumberOfPosts?: number;
     numberOfPosts?: number;
     offset?: number;

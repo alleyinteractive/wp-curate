@@ -33,7 +33,7 @@ type QueryControlsProps = {
   displayTypes: Option[];
   isPostDeduplicating: boolean;
   manualPosts: Array<number | null>;
-  maxNumberOfPosts: number;
+  maxPosts: number;
   minNumberOfPosts: number;
   numberOfPosts: number;
   offset: number;
@@ -60,7 +60,7 @@ export default function QueryControls({
   displayTypes,
   isPostDeduplicating,
   manualPosts,
-  maxNumberOfPosts,
+  maxPosts,
   minNumberOfPosts,
   numberOfPosts,
   offset,
@@ -134,14 +134,14 @@ export default function QueryControls({
           title={__('Setup', 'wp-curate')}
           initialOpen
         >
-          {minNumberOfPosts !== undefined && minNumberOfPosts !== maxNumberOfPosts ? (
+          {minNumberOfPosts !== undefined && minNumberOfPosts !== maxPosts ? (
             <RangeControl
               label={__('Number of Posts', 'wp-curate')}
               help={__('The maximum number of posts to show.', 'wp-curate')}
               value={numberOfPosts}
               onChange={setNumberOfPosts}
               min={minNumberOfPosts}
-              max={maxNumberOfPosts}
+              max={maxPosts}
             />
           ) : null}
           <RangeControl
