@@ -75,6 +75,9 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 
 		$pinned_posts = $attributes['posts'] ?? $block_type->attributes['posts']['default'];
 		$pinned_posts = array_map( function ( $id ) {
+			if ( ! $id ) {
+				return null;
+			}
 			return 'publish' === get_post_status( $id ) ? $id : null;
 		}, $pinned_posts );
 
