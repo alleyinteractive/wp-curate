@@ -81,7 +81,7 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
  * This is the main function to update all pinned posts. Call it whenever a pinned post
  * changes or the query settings change.
  */
-export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
+export function mainDedupe() {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
@@ -106,37 +106,18 @@ export function mainDedupe(blockNames: string[] = ['wp-curate/query']) {
   } = select('core/editor').getEditedPostAttribute('meta') || {};
 
   const queryBlocks: Block[] = [];
-  // Loop through all blocks and find all query blocks.
-  getQueryBlocks(blocks, blockNames, queryBlocks);
-
-  const allQueryBlocks: Block[] = [];
-  getQueryBlocks(blocks, ['wp-curate/query', 'wp-curate/subquery'], allQueryBlocks);
+  getQueryBlocks(blocks, ['wp-curate/query', 'wp-curate/subquery'], queryBlocks);
 
   /**
    * This block of code is responsible for enforcing the unique pinned posts setting in the editor.
    */
   if (wpCurateUniquePinnedPosts) {
-    allQueryBlocks.forEach((queryBlock) => {
+    queryBlocks.forEach((queryBlock) => {
       queryBlock?.attributes?.posts?.forEach((post) => {
         if (post) {
           deduplicate(post);
         }
       });
-    });
-  }
-
-  if (queryBlocks.length !== allQueryBlocks.length) {
-    allQueryBlocks.forEach((queryBlock) => {
-      if (queryBlock.attributes.query) {
-        const posts: string[] | undefined = queryBlock.attributes.query?.include?.toString().split(',');
-        if (posts) {
-          posts.forEach((post) => {
-            if (post) {
-              deduplicate(post);
-            }
-          });
-        }
-      }
     });
   }
 

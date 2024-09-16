@@ -185,7 +185,7 @@ export default function Edit({
     if (!backfillPostsString.length) {
       return;
     }
-    mainDedupe(['wp-curate/subquery']);
+    mainDedupe();
   }, [
     backfillPostsString,
     deduplication,
@@ -203,7 +203,7 @@ export default function Edit({
     if (index !== 0) {
       return;
     }
-    mainDedupe(['wp-curate/query', 'wp-curate/subquery']);
+    mainDedupe();
   }, [
     index,
     manualPostIds,

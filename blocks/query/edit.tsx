@@ -63,6 +63,7 @@ export default function Edit({
     orderby = 'date',
     moveData = {},
   },
+  clientId,
   setAttributes,
 }: EditProps) {
   const {
@@ -79,7 +80,12 @@ export default function Edit({
   }
 
   // @ts-ignore
-  const [isPostDeduplicating, postTypeObject, uniquePinnedPosts] = useSelect(
+  const [
+    isPostDeduplicating,
+    postTypeObject,
+    uniquePinnedPosts,
+    getBlockIndexFunction,
+  ] = useSelect(
     (select) => {
       // @ts-ignore
       const editor = select('core/editor');
@@ -89,15 +95,21 @@ export default function Edit({
       // @ts-ignore
       const meta = editor.getEditedPostAttribute('meta');
 
+      const blockEditor = select('core/block-editor');
+      const { getBlockIndex } = blockEditor;
+
       return [
         // It's possible for usePostMetaValue() to run here before useEntityProp() is available.
         Boolean(meta?.wp_curate_deduplication),
         // @ts-ignore
         type ? select('core').getPostType(type) : null,
         Boolean(meta?.wp_curate_unique_pinned_posts),
+        getBlockIndex,
       ];
     },
+    [],
   );
+  const blockIndex = getBlockIndexFunction(clientId);
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
 
@@ -142,7 +154,7 @@ export default function Edit({
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
     if (data && !error) {
-      mainDedupe(['wp-curate/query', 'wp-curate/subquery']);
+      mainDedupe();
     }
   }, [
     manualPostIds,
@@ -155,6 +167,7 @@ export default function Edit({
     uniquePinnedPosts,
     data,
     error,
+    blockIndex,
   ]);
 
   // Make sure all the manual posts are still valid.
