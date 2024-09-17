@@ -1,7 +1,4 @@
 import { select, dispatch } from '@wordpress/data';
-import apiFetch from '@wordpress/api-fetch';
-import { addQueryArgs } from '@wordpress/url';
-import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 
 const usedIds = new Map();
 const curatedIds = new Map();
@@ -19,6 +16,7 @@ interface Block {
     query?: {
       include?: number[];
     }
+    validPosts?: number[];
   },
   clientId: string;
   name: string;
@@ -66,17 +64,16 @@ export default {
 };
 
 // Recursively find all query blocks.
-const getQueryBlocks = (blocks: Block[], out: Block[]) => {
+const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => {
   blocks.forEach((block: Block) => {
-    if (block.name === 'wp-curate/query') {
+    if (blockNames.includes(block.name)) {
       out.push(block);
-    } else {
-      const { innerBlocks } = block;
-      if (!innerBlocks) {
-        return;
-      }
-      getQueryBlocks(innerBlocks, out);
     }
+    const { innerBlocks } = block;
+    if (!innerBlocks) {
+      return;
+    }
+    getQueryBlocks(innerBlocks, blockNames, out);
   });
 };
 
@@ -84,10 +81,15 @@ const getQueryBlocks = (blocks: Block[], out: Block[]) => {
  * This is the main function to update all pinned posts. Call it whenever a pinned post
  * changes or the query settings change.
  */
-export async function mainDedupe() {
+export function mainDedupe() {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
+    return;
+  }
+
+  // If the block transforms menu is currently open, skip deduplication.
+  if (document.querySelector('.block-editor-block-switcher__popover__preview__parent')) {
     return;
   }
 
@@ -104,8 +106,7 @@ export async function mainDedupe() {
   } = select('core/editor').getEditedPostAttribute('meta') || {};
 
   const queryBlocks: Block[] = [];
-  // Loop through all blocks and find all query blocks.
-  getQueryBlocks(blocks, queryBlocks);
+  getQueryBlocks(blocks, ['wp-curate/query', 'wp-curate/subquery'], queryBlocks);
 
   /**
    * This block of code is responsible for enforcing the unique pinned posts setting in the editor.
@@ -121,7 +122,7 @@ export async function mainDedupe() {
   }
 
   // Loop through all query blocks and set backfilled posts in the open slots.
-  queryBlocks.forEach(async (queryBlock) => {
+  queryBlocks.forEach((queryBlock) => {
     const { attributes } = queryBlock;
     const {
       backfillPosts = null,
@@ -129,30 +130,11 @@ export async function mainDedupe() {
       posts = [],
       numberOfPosts = 5,
       postTypes = ['post'],
+      validPosts = [],
     } = attributes;
     if (!backfillPosts) {
       return;
     }
-
-    const postsToInclude = posts.filter((id) => id !== null).join(',');
-    let validPosts: Number[] = [];
-
-    if (postsToInclude.length > 0) {
-      validPosts = await apiFetch({
-        path: addQueryArgs(
-          '/wp/v2/posts',
-          {
-            offset: 0,
-            orderby: 'include',
-            per_page: posts.length,
-            type: 'post',
-            include: postsToInclude,
-            _locale: 'user',
-          },
-        ),
-      }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
-    }
-
     const postTypeString = postTypes.join(',');
     let postIndex = 0;
 

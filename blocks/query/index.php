@@ -44,6 +44,13 @@ function wp_curate_query_block_init(): void {
 	$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
 
 	/**
+	 * Filter the maximum number of posts that can be displayed in the Query block.
+	 *
+	 * @param integer $max_posts The maximum number of posts to display.
+	 */
+	$max_posts = apply_filters( 'wp_curate_max_posts', 10 );
+
+	/**
 	 * Filter whether to use Parsely.
 	 *
 	 * @param bool $use_parsely Whether to use Parsely.
@@ -53,9 +60,43 @@ function wp_curate_query_block_init(): void {
 		'wp-curate-query-editor-script',
 		'wpCurateQueryBlock',
 		[
-			'allowedPostTypes'  => $allowed_post_types,
-			'allowedTaxonomies' => $allowed_taxonomies,
+			'allowedPostTypes'  => array_filter(
+				array_map(
+					function ( $slug ) {
+						$post_type_object = get_post_type_object( $slug );
+						if ( ! $post_type_object ) {
+							return null;
+						}
+						return (
+							[
+								'name' => $post_type_object->labels->singular_name,
+								'slug' => $slug,
+							]
+						);
+					},
+					$allowed_post_types
+				)
+			),
+			'allowedTaxonomies' => array_filter(
+				array_map(
+					function ( $slug ) {
+						$taxonomy = get_taxonomy( $slug );
+						if ( ! $taxonomy ) {
+							return null;
+						}
+						return (
+							[
+								'name'      => $taxonomy->labels->singular_name,
+								'slug'      => $slug,
+								'rest_base' => $taxonomy->rest_base,
+							]
+						);
+					},
+					$allowed_taxonomies,
+				),
+			),
 			'parselyAvailable'  => $parsely_available ? 'true' : 'false',
+			'maxPosts'          => $max_posts,
 		]
 	);
 }
