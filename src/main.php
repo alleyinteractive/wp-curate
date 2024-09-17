@@ -31,6 +31,7 @@ function main(): void {
 		new Features\Stop_Queries(
 			query_var: $stop_queries_var,
 		),
+		new Features\Subquery_Block_Display(),
 		new Features\Core_Query_Block_Integration(),
 		new Features\Query_Block_Context(
 			post_queries: new Default_Post_Queries(),

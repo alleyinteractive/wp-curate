@@ -42,7 +42,9 @@ export default function Edit({
   isSelected,
 }: PostEditProps) {
   // @ts-ignore
-  const queryParentId = select('core/block-editor').getBlockParentsByBlockName(clientId, 'wp-curate/query')[0];
+  const queryParents = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
+  const queryParentId = queryParents.pop();
+
   // @ts-ignore
   const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {
     attributes: {
@@ -50,12 +52,14 @@ export default function Edit({
       postTypes: [],
     },
   };
+
   const queryBlocks = select('core/block-editor').getBlocksByName('wp-curate/query');
   const {
     attributes: {
       posts = [],
       postTypes = [],
     } = {},
+    name: parentName,
   } = queryParent;
 
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
@@ -175,7 +179,7 @@ export default function Edit({
             'wp-curate-post-block',
             { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
             { 'wp-curate-post-block--backfill': !selected || postDeleted },
-            { 'curate-droppable': moveData.postId && moveData.postId !== postId },
+            { 'curate-droppable': parentName === 'wp-curate/query' && moveData.postId && moveData.postId !== postId },
             { 'wp-curate-error': postDeleted },
           ),
         },
