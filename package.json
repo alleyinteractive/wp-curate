@@ -45,6 +45,7 @@
     "@wordpress/block-editor": "^14.0.0",
     "@wordpress/blocks": "^13.5.0",
     "@wordpress/components": "^28.5.0",
+    "@wordpress/compose": "^7.7.0",
     "@wordpress/core-data": "^7.5.0",
     "@wordpress/data": "^10.5.0",
     "@wordpress/edit-post": "^8.5.0",
@@ -58,13 +59,15 @@
     "prop-types": "^15.8.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "swr": "^2.2.5"
+    "swr": "^2.2.5",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@alleyinteractive/build-tool": "^0.1.4",
     "@alleyinteractive/eslint-config": "^0.1.6",
     "@alleyinteractive/stylelint-config": "^0.0.2",
     "@babel/preset-env": "^7.25.3",
+    "@types/uuid": "^10.0.0",
     "@types/wordpress__edit-post": "^7.5.1",
     "@types/wordpress__plugins": "^3.0.0",
     "@wordpress/babel-preset-default": "^8.5.0",

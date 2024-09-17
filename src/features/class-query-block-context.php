@@ -72,13 +72,16 @@ final class Query_Block_Context implements Feature {
 	 * @return array<string, mixed> Updated context.
 	 */
 	public function filter_query_context( $context, $parsed_block, $parent_block ): array {
-		$current_block      = new Parsed_Block( $parsed_block );
-		$current_block_type = $this->block_type_registry->get_registered( (string) $current_block->block_name() );
-		$plugin_block_type  = $this->block_type_registry->get_registered( 'wp-curate/query' );
+		$current_block              = new Parsed_Block( $parsed_block );
+		$current_block_type         = $this->block_type_registry->get_registered( (string) $current_block->block_name() );
+		$plugin_query_block_type    = $this->block_type_registry->get_registered( 'wp-curate/query' );
+		$plugin_subquery_block_type = $this->block_type_registry->get_registered( 'wp-curate/subquery' );
 
 		// If the block type is a custom 'query' block from our plugin, provide 'query' context.
-		if ( $plugin_block_type instanceof WP_Block_Type && $current_block->block_name() === $plugin_block_type->name ) {
-
+		if (
+			( $plugin_query_block_type instanceof WP_Block_Type && $current_block->block_name() === $plugin_query_block_type->name )
+			|| ( $plugin_subquery_block_type instanceof WP_Block_Type && $current_block->block_name() === $plugin_subquery_block_type->name )
+		) {
 			// Handles the decision to exclude (deduplicate) posts or not, based on a given input.
 			$variable_post_queries = new Variable_Post_Queries(
 				input: function () use ( $parsed_block ) {
@@ -139,8 +142,10 @@ final class Query_Block_Context implements Feature {
 				),
 			);
 
-			// Pass updated context to the block.
-			$context = $curated_posts->with_query_context( $context, $parsed_block['attrs'], $plugin_block_type );
+			if ( ! empty( $current_block_type ) ) {
+				// Pass updated context to the block.
+				$context = $curated_posts->with_query_context( $context, $parsed_block['attrs'], $current_block_type );
+			}
 		}
 
 		/*
@@ -152,8 +157,10 @@ final class Query_Block_Context implements Feature {
 		if (
 			$parent_block instanceof WP_Block
 			&& $current_block_type instanceof WP_Block_Type
-			&& $plugin_block_type instanceof WP_Block_Type
-			&& $parent_block->name === $plugin_block_type->name
+			&& (
+				( $plugin_query_block_type instanceof WP_Block_Type && $parent_block->name === $plugin_query_block_type->name )
+				|| ( $plugin_subquery_block_type instanceof WP_Block_Type && $parent_block->name === $plugin_subquery_block_type->name )
+			)
 			&& in_array( 'query', $current_block_type->uses_context, true ) // @phpstan-ignore-line - uses_context is private in WP_Block_Type but can be accessed via a magic method.
 			&& isset( $parent_block->context['query'] )
 			&& ! isset( $context['query'] )
@@ -174,8 +181,6 @@ final class Query_Block_Context implements Feature {
 		if (
 			$parent_block instanceof WP_Block
 			&& $current_block_type instanceof WP_Block_Type
-			&& $plugin_block_type instanceof WP_Block_Type
-			&& $parent_block->name === $plugin_block_type->name
 			&& in_array( 'query', $current_block_type->uses_context, true ) // @phpstan-ignore-line - uses_context is private in WP_Block_Type but can be accessed via a magic method.
 			&& $current_block->block_name() === 'core/post-template'
 			&& 'wp-curate/query' === $parent_block->name
