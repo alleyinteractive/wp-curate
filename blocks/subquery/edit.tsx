@@ -1,12 +1,14 @@
 /* eslint-disable camelcase */
 import { useEffect } from 'react';
+import useSWRImmutable from 'swr/immutable';
 import { useDebounce } from '@uidotdev/usehooks';
-import apiFetch from '@wordpress/api-fetch';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 import { Template } from '@wordpress/blocks';
+import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
+import apiFetch from '@wordpress/api-fetch';
 import { v4 as uuid } from 'uuid';
 
 import type {
@@ -14,11 +16,11 @@ import type {
   Option,
 } from '../query/types';
 
-import {
-  mainDedupe,
-} from '../../services/deduplicate';
+import { mainDedupe } from '../../services/deduplicate';
 
+import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
+import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 
 import QueryControls from '../../components/QueryControls';
 import './index.scss';
@@ -26,6 +28,7 @@ import './index.scss';
 interface PostTypeOrTerm {
   name: string;
   slug: string;
+  rest_base?: string;
 }
 
 interface Window {
@@ -71,7 +74,6 @@ export default function Edit({
 }: EditProps) {
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
-  const backfillPostsString = backfillPosts.join(',');
 
   const {
     wpCurateQueryBlock: {
@@ -83,11 +85,15 @@ export default function Edit({
   } = (window as any as Window);
 
   if (!postTypes.length) {
-    setAttributes({ postTypes: allowedPostTypes });
+    setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
   }
 
   // @ts-ignore
-  const [isPostDeduplicating, postTypeObject] = useSelect(
+  const [
+    isPostDeduplicating,
+    postTypeObject,
+    uniquePinnedPosts,
+  ] = useSelect(
     (select) => {
       // @ts-ignore
       const editor = select('core/editor');
@@ -102,8 +108,10 @@ export default function Edit({
         Boolean(meta?.wp_curate_deduplication),
         // @ts-ignore
         type ? select('core').getPostType(type) : null,
+        Boolean(meta?.wp_curate_unique_pinned_posts),
       ];
     },
+    [],
   );
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
@@ -118,8 +126,26 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
-  const currentPostId = useSelect((select: any) => select('core/editor').getCurrentPostId(), []);
+  const currentPostId = Number(useSelect((select: any) => select('core/editor').getCurrentPostId(), []));
   const postTypeString = postTypes.join(',');
+
+  // Construct the API path using query args.
+  const path = `${buildPostsApiPath({
+    search: debouncedSearchTerm,
+    offset,
+    postType: postTypeString,
+    status: 'publish',
+    perPage: 20,
+    orderBy: orderby,
+    currentPostId,
+  })}&${termQueryArgs}`;
+
+  // Use SWR to fetch data.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { data, error } = index === 0 ? useSWRImmutable(
+    [path, currentPostId],
+    queryBlockPostFetcher,
+  ) : { data: null, error: null };
 
   useEffect(() => {
     if (!uniqueId) {
@@ -127,54 +153,15 @@ export default function Edit({
     }
   }, [setAttributes, uniqueId]);
 
-  // Fetch "backfill" posts when categories, tags, or search term change.
+  // Handle the fetched data.
   useEffect(() => {
     if (index !== 0) {
       return;
     }
-    const fetchPosts = async () => {
-      let path = addQueryArgs(
-        '/wp-curate/v1/posts',
-        {
-          search: debouncedSearchTerm,
-          offset,
-          post_type: postTypeString,
-          status: 'publish',
-          per_page: 20,
-          orderby,
-          current_post_id: Number.isInteger(currentPostId) ? currentPostId : 0,
-        },
-      );
-      path += `&${termQueryArgs}`;
-
-      apiFetch({ path }).then((response:any) => {
-        let revisedResponse;
-        // If the response is an array, filter out the current post.
-        if (Array.isArray(response)) {
-          revisedResponse = response.filter((item) => item !== currentPostId);
-        } else if (response.id === currentPostId) {
-          // Response is an object, if id is the current post, nullify it.
-          revisedResponse = null;
-        } else {
-          revisedResponse = response;
-        }
-        if (revisedResponse !== null) {
-          setAttributes({ backfillPosts: revisedResponse as Array<number> });
-        }
-      });
-    };
-    fetchPosts();
-  }, [
-    backfillPostsString,
-    currentPostId,
-    debouncedSearchTerm,
-    index,
-    offset,
-    orderby,
-    postTypeString,
-    setAttributes,
-    termQueryArgs,
-  ]);
+    if (data && !error) {
+      setAttributes({ backfillPosts: data });
+    }
+  }, [index, data, error, setAttributes]);
 
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
@@ -182,32 +169,50 @@ export default function Edit({
     if (index !== 0) {
       return;
     }
-    if (!backfillPostsString.length) {
-      return;
+    if (data && !error && backfillPosts.length > 0) {
+      mainDedupe();
     }
-    mainDedupe();
   }, [
-    backfillPostsString,
-    deduplication,
+    manualPostIds,
+    backfillPosts,
+    numberOfPosts,
+    setAttributes,
+    postTypeString,
     index,
     isPostDeduplicating,
-    manualPostIds,
-    numberOfPosts,
-    postTypeString,
-    setAttributes,
+    deduplication,
+    uniquePinnedPosts,
+    data,
+    error,
   ]);
 
-  // Update the query when the backfillPosts change.
-  // The query is passed via context to the core/post-template block.
+  // Make sure all the manual posts are still valid.
   useEffect(() => {
-    if (index !== 0) {
-      return;
-    }
-    mainDedupe();
-  }, [
-    index,
-    manualPostIds,
-  ]);
+    const updateValidPosts = async () => {
+      const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
+      let validPosts: Number[] = [];
+
+      if (postsToInclude.length > 0) {
+        validPosts = await apiFetch({
+          path: addQueryArgs(
+            '/wp/v2/posts',
+            {
+              offset: 0,
+              orderby: 'include',
+              per_page: postsToInclude.length,
+              type: 'post',
+              include: postsToInclude,
+              _locale: 'user',
+            },
+          ),
+        }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
+      }
+
+      setAttributes({ validPosts });
+      mainDedupe();
+    };
+    updateValidPosts();
+  }, [manualPosts, setAttributes]);
 
   for (let i = 0; i < numberOfPosts; i += 1) {
     if (!manualPosts[i]) {

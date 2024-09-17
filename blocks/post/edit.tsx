@@ -59,6 +59,7 @@ export default function Edit({
       posts = [],
       postTypes = [],
     } = {},
+    name: parentName,
   } = queryParent;
 
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
@@ -178,7 +179,7 @@ export default function Edit({
             'wp-curate-post-block',
             { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
             { 'wp-curate-post-block--backfill': !selected || postDeleted },
-            { 'curate-droppable': moveData.postId && moveData.postId !== postId },
+            { 'curate-droppable': parentName === 'wp-curate/query' && moveData.postId && moveData.postId !== postId },
             { 'wp-curate-error': postDeleted },
           ),
         },
