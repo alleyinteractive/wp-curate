@@ -230,10 +230,12 @@ export default function Edit({
       value: type.slug,
     }))
     .filter((type) => {
+      // Inherits globally supported post types if attribute is empty.
       if (!supportsPostTypes.length) {
         return true;
       }
 
+      // Display only supported post types defined by block.
       return supportsPostTypes.includes(type.value);
     });
 
