@@ -77,7 +77,7 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 		$pinned_posts = array_map( fn ( $id ) => $id && 'publish' === get_post_status( $id ) ? $id : null, $pinned_posts );
 
 		$queries = new Positioned_Post_Queries(
-			positioned: is_array( $pinned_posts ) ? $pinned_posts : [],
+			positioned: $pinned_posts,
 			default_per_page: $args['posts_per_page'],
 			origin: $this->queries,
 		);
