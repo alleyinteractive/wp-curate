@@ -13,7 +13,8 @@ function Deduplication() {
   // @ts-ignore - useSelect doesn't export proper types
   const blocks = useSelect((select) => select('core/block-editor').getBlocks(), []);
   const queryBlocksFound = countBlocksByName(blocks, 'wp-curate/query');
-  const twoOrMoreQueryBlocks = queryBlocksFound >= 2;
+  const subQueryBlocksFound = countBlocksByName(blocks, 'wp-curate/subquery');
+  const twoOrMoreQueryBlocks = queryBlocksFound >= 2 || subQueryBlocksFound >= 1;
 
   /**
    * If deduplication is disabled, we should also disable unique pinned posts.

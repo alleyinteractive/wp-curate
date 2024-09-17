@@ -64,17 +64,16 @@ export default {
 };
 
 // Recursively find all query blocks.
-const getQueryBlocks = (blocks: Block[], out: Block[]) => {
+const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => {
   blocks.forEach((block: Block) => {
-    if (block.name === 'wp-curate/query') {
+    if (blockNames.includes(block.name)) {
       out.push(block);
-    } else {
-      const { innerBlocks } = block;
-      if (!innerBlocks) {
-        return;
-      }
-      getQueryBlocks(innerBlocks, out);
     }
+    const { innerBlocks } = block;
+    if (!innerBlocks) {
+      return;
+    }
+    getQueryBlocks(innerBlocks, blockNames, out);
   });
 };
 
@@ -107,8 +106,7 @@ export function mainDedupe() {
   } = select('core/editor').getEditedPostAttribute('meta') || {};
 
   const queryBlocks: Block[] = [];
-  // Loop through all blocks and find all query blocks.
-  getQueryBlocks(blocks, queryBlocks);
+  getQueryBlocks(blocks, ['wp-curate/query', 'wp-curate/subquery'], queryBlocks);
 
   /**
    * This block of code is responsible for enforcing the unique pinned posts setting in the editor.
