@@ -62,6 +62,7 @@ export default function Edit({
     taxRelation = 'AND',
     orderby = 'date',
     moveData = {},
+    hidePostTypes = [],
   },
   clientId,
   setAttributes,
@@ -223,10 +224,12 @@ export default function Edit({
     ],
   ];
 
-  const displayTypes: Option[] = allowedPostTypes.map((type) => ({
-    label: type.name,
-    value: type.slug,
-  }));
+  const displayTypes: Option[] = allowedPostTypes
+    .map((type) => ({
+      label: type.name,
+      value: type.slug,
+    }))
+    .filter((type) => !hidePostTypes.includes(type.value));
 
   return (
     <>

@@ -107,6 +107,14 @@
         "type": "object"
       },
       "type": "array"
+    },
+    "hidePostTypes": {
+      "default": [],
+      "items": {
+        "default": "",
+        "type": "string"
+      },
+      "type": "array"
     }
   }
 }
