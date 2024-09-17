@@ -62,7 +62,7 @@ export default function Edit({
     taxRelation = 'AND',
     orderby = 'date',
     moveData = {},
-    hidePostTypes = [],
+    supportsPostTypes = [],
   },
   clientId,
   setAttributes,
@@ -229,7 +229,13 @@ export default function Edit({
       label: type.name,
       value: type.slug,
     }))
-    .filter((type) => !hidePostTypes.includes(type.value));
+    .filter((type) => {
+      if (!supportsPostTypes.length) {
+        return true;
+      }
+
+      return supportsPostTypes.includes(type.value);
+    });
 
   return (
     <>

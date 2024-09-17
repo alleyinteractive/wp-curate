@@ -108,7 +108,7 @@
       },
       "type": "array"
     },
-    "hidePostTypes": {
+    "supportsPostTypes": {
       "default": [],
       "items": {
         "default": "",
