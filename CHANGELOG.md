@@ -2,10 +2,14 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.4.1 - 2024-09-19
+
+- Enhancement: Enable support for hiding post type selection from block settings UI.
+
 ## 2.4.0 - 2024-08-28
 
 - Enhancement: Subquery block added to allow a separate set of posts within a query block.
-see https://github.com/alleyinteractive/wp-curate/issues/200
+see <https://github.com/alleyinteractive/wp-curate/issues/200>
 
 ## 2.3.3 - 2024-09-16
 

@@ -24,6 +24,7 @@ interface EditProps {
       clientId?: string;
     };
     uniqueId?: string;
+    supportsPostTypes?: string[];
   };
   clientId: string;
   setAttributes: (attributes: any) => void;

@@ -62,6 +62,7 @@ export default function Edit({
     taxRelation = 'AND',
     orderby = 'date',
     moveData = {},
+    supportsPostTypes = [],
   },
   clientId,
   setAttributes,
@@ -223,10 +224,20 @@ export default function Edit({
     ],
   ];
 
-  const displayTypes: Option[] = allowedPostTypes.map((type) => ({
-    label: type.name,
-    value: type.slug,
-  }));
+  const displayTypes: Option[] = allowedPostTypes
+    .map((type) => ({
+      label: type.name,
+      value: type.slug,
+    }))
+    .filter((type) => {
+      // Inherits globally supported post types if attribute is empty.
+      if (!supportsPostTypes.length) {
+        return true;
+      }
+
+      // Display only supported post types defined by block.
+      return supportsPostTypes.includes(type.value);
+    });
 
   return (
     <>
