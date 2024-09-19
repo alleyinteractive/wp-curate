@@ -2,7 +2,7 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
-## 2.5.0 - 2024-09-17
+## 2.4.1 - 2024-09-19
 
 - Enhancement: Enable support for hiding post type selection from block settings UI.
 
