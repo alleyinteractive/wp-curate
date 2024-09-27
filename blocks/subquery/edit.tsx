@@ -200,9 +200,10 @@ export default function Edit({
               offset: 0,
               orderby: 'include',
               per_page: postsToInclude.length,
-              type: 'post',
+              type: postTypeString,
               include: postsToInclude,
               _locale: 'user',
+              context: 'edit',
             },
           ),
         }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
@@ -212,7 +213,7 @@ export default function Edit({
       mainDedupe();
     };
     updateValidPosts();
-  }, [manualPosts, setAttributes]);
+  }, [manualPosts, setAttributes, postTypeString]);
 
   for (let i = 0; i < numberOfPosts; i += 1) {
     if (!manualPosts[i]) {
