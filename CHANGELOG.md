@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.4.2 - 2024-09-27
+
+- Bug Fix: Posts not of type 'post' are flagged as being deleted.
+
 ## 2.4.1 - 2024-09-19
 
 - Enhancement: Enable support for hiding post type selection from block settings UI.
