@@ -32,6 +32,7 @@ type QueryControlsProps = {
   isPostDeduplicating: boolean;
   manualPosts: Array<number | null>;
   maxPosts: number;
+  maxNumberOfPosts: number;
   minNumberOfPosts: number;
   numberOfPosts: number;
   offset: number;
@@ -59,6 +60,7 @@ export default function QueryControls({
   isPostDeduplicating,
   manualPosts,
   maxPosts,
+  maxNumberOfPosts: maxNumberOfPostsAttr,
   minNumberOfPosts,
   numberOfPosts,
   offset,
@@ -83,6 +85,8 @@ export default function QueryControls({
       value: 'OR',
     },
   ];
+
+  const maxNumberOfPosts = !maxNumberOfPostsAttr || maxNumberOfPostsAttr > maxPosts ? maxPosts : maxNumberOfPostsAttr; // eslint-disable-line max-len
 
   const setTerms = ((type: string, newTerms: Term[]) => {
     const cleanedTerms = newTerms.map((term) => (
@@ -110,7 +114,7 @@ export default function QueryControls({
 
   const setNumberOfPosts = (newValue?: number) => {
     setAttributes({
-      numberOfPosts: newValue,
+      numberOfPosts: (newValue && newValue > maxNumberOfPosts) ? maxNumberOfPosts : newValue,
       posts: manualPosts.slice(0, newValue),
     });
   };
@@ -132,14 +136,14 @@ export default function QueryControls({
           title={__('Setup', 'wp-curate')}
           initialOpen
         >
-          {minNumberOfPosts !== undefined && minNumberOfPosts !== maxPosts ? (
+          {minNumberOfPosts !== undefined && minNumberOfPosts !== maxNumberOfPosts ? (
             <RangeControl
               label={__('Number of Posts', 'wp-curate')}
               help={__('The maximum number of posts to show.', 'wp-curate')}
               value={numberOfPosts}
               onChange={setNumberOfPosts}
               min={minNumberOfPosts}
-              max={maxPosts}
+              max={maxNumberOfPosts}
             />
           ) : null}
           <RangeControl
