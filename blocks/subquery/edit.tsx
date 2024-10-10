@@ -52,6 +52,7 @@ export default function Edit({
   attributes: {
     backfillPosts = [],
     deduplication = 'inherit',
+    maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
     numberOfPosts = 5,
     offset = 0,
@@ -258,6 +259,7 @@ export default function Edit({
           isPostDeduplicating={isPostDeduplicating}
           manualPosts={manualPosts}
           maxPosts={maxPosts}
+          maxNumberOfPosts={maxNumberOfPosts}
           minNumberOfPosts={minNumberOfPosts}
           numberOfPosts={numberOfPosts}
           offset={offset}
