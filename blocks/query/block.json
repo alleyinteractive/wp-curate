@@ -110,6 +110,14 @@
         "type": "object"
       },
       "type": "array"
+    },
+    "supportsPostTypes": {
+      "default": [],
+      "items": {
+        "default": "",
+        "type": "string"
+      },
+      "type": "array"
     }
   }
 }

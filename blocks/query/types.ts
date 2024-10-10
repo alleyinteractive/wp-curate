@@ -24,8 +24,17 @@ interface EditProps {
       postId?: number;
       clientId?: string;
     };
+    uniqueId?: string;
+    supportsPostTypes?: string[];
   };
+  clientId: string;
   setAttributes: (attributes: any) => void;
+  context: {
+    postId: number;
+    query: {
+      include?: string;
+    };
+  };
 }
 
 interface Taxonomies {

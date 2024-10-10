@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 import { useEffect } from 'react';
 import useSWRImmutable from 'swr/immutable';
-import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
@@ -10,13 +9,15 @@ import { addQueryArgs } from '@wordpress/url';
 import { Template } from '@wordpress/blocks';
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 import apiFetch from '@wordpress/api-fetch';
+import { v4 as uuid } from 'uuid';
 
 import type {
   EditProps,
   Option,
-} from './types';
+} from '../query/types';
 
 import { mainDedupe } from '../../services/deduplicate';
+
 import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
@@ -35,7 +36,7 @@ interface Window {
     allowedPostTypes: PostTypeOrTerm[];
     allowedTaxonomies: PostTypeOrTerm[];
     parselyAvailable: string,
-    maxPosts: string,
+    maxPosts: number,
   };
 }
 
@@ -51,7 +52,6 @@ export default function Edit({
   attributes: {
     backfillPosts = [],
     deduplication = 'inherit',
-    maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
     numberOfPosts = 5,
     offset = 0,
@@ -62,18 +62,25 @@ export default function Edit({
     termRelations = {},
     taxRelation = 'AND',
     orderby = 'date',
-    moveData = {},
-    supportsPostTypes = [],
+    uniqueId = '',
   },
-  clientId,
   setAttributes,
+  context: {
+    postId,
+    query: {
+      include = '',
+    } = {},
+  },
 }: EditProps) {
+  const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
+  const index = queryInclude.findIndex((id: number) => id === postId);
+
   const {
     wpCurateQueryBlock: {
       allowedPostTypes = [],
       allowedTaxonomies = [],
       parselyAvailable = 'false',
-      maxPosts = '10',
+      maxPosts = 10,
     } = {},
   } = (window as any as Window);
 
@@ -86,7 +93,6 @@ export default function Edit({
     isPostDeduplicating,
     postTypeObject,
     uniquePinnedPosts,
-    getBlockIndexFunction,
   ] = useSelect(
     (select) => {
       // @ts-ignore
@@ -97,21 +103,16 @@ export default function Edit({
       // @ts-ignore
       const meta = editor.getEditedPostAttribute('meta');
 
-      const blockEditor = select('core/block-editor');
-      const { getBlockIndex } = blockEditor;
-
       return [
         // It's possible for usePostMetaValue() to run here before useEntityProp() is available.
         Boolean(meta?.wp_curate_deduplication),
         // @ts-ignore
         type ? select('core').getPostType(type) : null,
         Boolean(meta?.wp_curate_unique_pinned_posts),
-        getBlockIndex,
       ];
     },
     [],
   );
-  const blockIndex = getBlockIndexFunction(clientId);
 
   const debouncedSearchTerm = useDebounce(searchTerm ?? '', 500);
 
@@ -140,22 +141,35 @@ export default function Edit({
   })}&${termQueryArgs}`;
 
   // Use SWR to fetch data.
-  const { data, error } = useSWRImmutable(
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { data, error } = index === 0 ? useSWRImmutable(
     [path, currentPostId],
     queryBlockPostFetcher,
-  );
+  ) : { data: null, error: null };
+
+  useEffect(() => {
+    if (!uniqueId) {
+      setAttributes({ uniqueId: uuid() });
+    }
+  }, [setAttributes, uniqueId]);
 
   // Handle the fetched data.
   useEffect(() => {
+    if (index !== 0) {
+      return;
+    }
     if (data && !error) {
       setAttributes({ backfillPosts: data });
     }
-  }, [data, error, setAttributes]);
+  }, [index, data, error, setAttributes]);
 
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    if (data && !error) {
+    if (index !== 0) {
+      return;
+    }
+    if (data && !error && backfillPosts.length > 0) {
       mainDedupe();
     }
   }, [
@@ -164,12 +178,12 @@ export default function Edit({
     numberOfPosts,
     setAttributes,
     postTypeString,
+    index,
     isPostDeduplicating,
     deduplication,
     uniquePinnedPosts,
     data,
     error,
-    blockIndex,
   ]);
 
   // Make sure all the manual posts are still valid.
@@ -218,62 +232,47 @@ export default function Edit({
           'wp-curate/post',
           {},
           [
-            ['wp-curate/post-title', {}],
-            ['core/post-excerpt', {}],
+            ['core/post-title', { isLink: true, level: 3 }],
           ],
         ],
       ],
     ],
   ];
 
-  const displayTypes: Option[] = allowedPostTypes
-    .map((type) => ({
-      label: type.name,
-      value: type.slug,
-    }))
-    .filter((type) => {
-      // Inherits globally supported post types if attribute is empty.
-      if (!supportsPostTypes.length) {
-        return true;
-      }
-
-      // Display only supported post types defined by block.
-      return supportsPostTypes.includes(type.value);
-    });
-
+  const displayTypes: Option[] = allowedPostTypes.map((type) => ({
+    label: type.name,
+    value: type.slug,
+  }));
+  const blockProps = useBlockProps();
   return (
-    <>
-      <div {...useBlockProps({
-        className: classnames(
-          { 'wp-curate-query-block--move': moveData.postId },
-        ),
-      })}
-      >
-        <InnerBlocks template={TEMPLATE} />
-      </div>
-      <QueryControls
-        allowedPostTypes={allowedPostTypes}
-        allowedTaxonomies={allowedTaxonomies}
-        deduplication={deduplication}
-        displayTypes={displayTypes}
-        isPostDeduplicating={isPostDeduplicating}
-        manualPosts={manualPosts}
-        maxPosts={parseInt(maxPosts, 10)}
-        maxNumberOfPosts={maxNumberOfPosts}
-        minNumberOfPosts={minNumberOfPosts}
-        numberOfPosts={numberOfPosts}
-        offset={offset}
-        orderby={orderby}
-        parselyAvailable={parselyAvailable}
-        postTypeObject={postTypeObject}
-        postTypes={postTypes}
-        searchTerm={searchTerm}
-        setAttributes={setAttributes}
-        taxCount={taxCount}
-        taxRelation={taxRelation}
-        termRelations={termRelations}
-        terms={terms}
-      />
-    </>
+    index === 0 ? (
+      <>
+        <div {...blockProps}>
+          <InnerBlocks template={TEMPLATE} />
+        </div>
+        <QueryControls
+          allowedPostTypes={allowedPostTypes}
+          allowedTaxonomies={allowedTaxonomies}
+          deduplication={deduplication}
+          displayTypes={displayTypes}
+          isPostDeduplicating={isPostDeduplicating}
+          manualPosts={manualPosts}
+          maxPosts={maxPosts}
+          minNumberOfPosts={minNumberOfPosts}
+          numberOfPosts={numberOfPosts}
+          offset={offset}
+          orderby={orderby}
+          parselyAvailable={parselyAvailable}
+          postTypeObject={postTypeObject}
+          postTypes={postTypes}
+          searchTerm={searchTerm}
+          setAttributes={setAttributes}
+          taxCount={taxCount}
+          taxRelation={taxRelation}
+          termRelations={termRelations}
+          terms={terms}
+        />
+      </>
+    ) : null
   );
 }

@@ -2,9 +2,26 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
-## 2.3.3 - 2024-09-12
+## 2.4.3 - 2024-10-10
 
 - Restore maxNumberOfPosts attribute with a default filterable value of maxPosts.
+
+## 2.4.2 - 2024-09-27
+
+- Bug Fix: Posts not of type 'post' are flagged as being deleted.
+
+## 2.4.1 - 2024-09-19
+
+- Enhancement: Enable support for hiding post type selection from block settings UI.
+
+## 2.4.0 - 2024-08-28
+
+- Enhancement: Subquery block added to allow a separate set of posts within a query block.
+see <https://github.com/alleyinteractive/wp-curate/issues/200>
+
+## 2.3.3 - 2024-09-16
+
+- Bug Fix: Hold space on the front end for curated posts that were deleted.
 
 ## 2.3.2 - 2024-09-09
 
