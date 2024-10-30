@@ -1,8 +1,6 @@
 # WP Curate
 
-[![Testing Suite](https://github.com/alleyinteractive/wp-curate/actions/workflows/unit-test.yml/badge.svg)](https://github.com/alleyinteractive/wp-curate/actions/workflows/unit-test.yml)
-[![PHPCS](https://github.com/alleyinteractive/wp-curate/actions/workflows/code-quality.yml/badge.svg)](https://github.com/alleyinteractive/wp-curate/actions/workflows/code-quality.yml)
-[![Node Tests](https://github.com/alleyinteractive/wp-curate/actions/workflows/node-tests.yml/badge.svg)](https://github.com/alleyinteractive/wp-curate/actions/workflows/node-tests.yml)
+[![All Pull Request Tests](https://github.com/alleyinteractive/wp-curate/actions/workflows/all-pr-tests.yml/badge.svg)](https://github.com/alleyinteractive/wp-curate/actions/workflows/all-pr-tests.yml)
 
 A plugin for WordPress to build flexible, curatable layouts for homepages and landing pages.
 
