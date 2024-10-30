@@ -7,6 +7,7 @@
  * Author: Alley Interactive
  * Author URI: https://github.com/alleyinteractive/wp-curate
  * Requires at least: 6.4
+ * Requires PHP: 8.1
  * Tested up to: 6.4
  *
  * Text Domain: wp-curate
