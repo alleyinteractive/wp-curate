@@ -25,6 +25,9 @@ final class Rest_Api implements Feature {
 	public function boot(): void {
 		add_action( 'rest_api_init', [ $this, 'register_endpoints' ] );
 		add_filter( 'rest_post_query', [ $this, 'add_type_param' ], 10, 2 );
+
+		// Register the wp-curate post type to be used for getting posts to the core Post Template block.
+		add_action( 'init', [ $this, 'register_post_type' ] );
 	}
 
 	/**
@@ -181,12 +184,34 @@ final class Rest_Api implements Feature {
 
 		$type = $request->get_param( 'type' );
 
+		// Handle the type parameter when it is a comma separated string of post types.
 		if ( ! empty( $type ) && is_string( $type ) ) {
-			$types                   = explode( ',', $type );
-			$types                   = array_filter( $types, 'post_type_exists' );
+			$types = explode(',', $type);
+
+			// Get the allowed post types.
+			$allowed_post_types = apply_filters('wp_curate_allowed_post_types', ['post']);
+
+			// Filter types against allowed post types and ensure they exist.
+			$types = array_filter( $types, function( $type ) use ( $allowed_post_types ) {
+				return in_array( $type, $allowed_post_types, true ) && post_type_exists( $type );
+			} );
+
 			$query_args['post_type'] = $types;
 		}
 
 		return $query_args;
+	}
+
+	/**
+	 * Registers the wp-curate post type that serves as a proxy for our REST API endpoint.
+	 */
+	public function register_post_type(): void {
+		register_post_type('wp-curate', [
+			'public'                => false,
+			'show_in_rest'          => true,
+			'rest_controller_class' => Curate_Rest_Controller::class,
+			'capability_type'       => 'post',
+			'rewrite'               => false,
+		]);
 	}
 }
