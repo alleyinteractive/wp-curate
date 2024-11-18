@@ -48,7 +48,7 @@ final class Pinned_In_Post_Content implements Post_IDs {
 					$query_blocks = match_blocks(
 						$post->post_content,
 						[
-							'name'       => 'wp-curate/query',
+							'name'       => [ 'wp-curate/query', 'wp-curate/subquery' ],
 							'flatten'    => true,
 							'with_attrs' => 'posts',
 						],

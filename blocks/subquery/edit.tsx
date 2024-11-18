@@ -232,7 +232,7 @@ export default function Edit({
           'wp-curate/post',
           {},
           [
-            ['core/post-title', { isLink: true, level: 3 }],
+            ['wp-curate/post-title', { isLink: true, level: 3 }],
           ],
         ],
       ],

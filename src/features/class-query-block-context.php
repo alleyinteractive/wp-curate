@@ -183,7 +183,7 @@ final class Query_Block_Context implements Feature {
 			&& $current_block_type instanceof WP_Block_Type
 			&& in_array( 'query', $current_block_type->uses_context, true ) // @phpstan-ignore-line - uses_context is private in WP_Block_Type but can be accessed via a magic method.
 			&& $current_block->block_name() === 'core/post-template'
-			&& 'wp-curate/query' === $parent_block->name
+			&& in_array( $parent_block->name, [ 'wp-curate/query', 'wp-curate/subquery' ], true )
 			&& isset( $parent_block->attributes['customPostTitles'] )
 		) {
 			$this->custom_post_titles = $parent_block->attributes['customPostTitles'];
