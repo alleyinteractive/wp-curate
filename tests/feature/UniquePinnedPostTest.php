@@ -142,7 +142,7 @@ class UniquePinnedPostTest extends Test_Case {
 			)
 			->create_and_get( [ 'post_content' => $content ] );
 
-		$page = $this->get( $test_post )->assertOk();
+		$page       = $this->get( $test_post )->assertOk();
 		$wp_content = $this->extract_wp_content( $page->get_content() );
 		$this->assertEquals( 1, substr_count( $wp_content, 'Pinned Post 2' ) );
 	}
@@ -153,7 +153,7 @@ class UniquePinnedPostTest extends Test_Case {
 	 * @param string $html_content The content of the page.
 	 * @return string
 	 */
-	function extract_wp_content( $html_content ) {
+	private function extract_wp_content( $html_content ) {
 		$html = new HtmlDocument();
 		$html->load( $html_content );
 
