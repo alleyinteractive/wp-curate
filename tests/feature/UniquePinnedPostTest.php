@@ -8,6 +8,7 @@
 namespace Alley\WP\WP_Curate\Tests\Feature;
 
 use Alley\WP\WP_Curate\Tests\Test_Case;
+use simplehtmldom\HtmlDocument;
 
 /**
  * A test suite for unique pinned posts.
@@ -112,9 +113,9 @@ class UniquePinnedPostTest extends Test_Case {
 			)
 			->create_and_get( [ 'post_content' => $content ] );
 
-		$page = $this->get( $test_post )->assertOk();
-
-		$this->assertEquals( 2, substr_count( $page->get_content(), 'Pinned Post 1' ) );
+		$page       = $this->get( $test_post )->assertOk();
+		$wp_content = $this->extract_wp_content( $page->get_content() );
+		$this->assertEquals( 2, substr_count( $wp_content, 'Pinned Post 1' ) );
 	}
 
 	/**
@@ -141,8 +142,27 @@ class UniquePinnedPostTest extends Test_Case {
 			)
 			->create_and_get( [ 'post_content' => $content ] );
 
-		$page = $this->get( $test_post )->assertOk();
+		$page       = $this->get( $test_post )->assertOk();
+		$wp_content = $this->extract_wp_content( $page->get_content() );
+		$this->assertEquals( 1, substr_count( $wp_content, 'Pinned Post 2' ) );
+	}
 
-		$this->assertEquals( 1, substr_count( $page->get_content(), 'Pinned Post 2' ) );
+	/**
+	 * Gets the contents of the .entry-content div.
+	 *
+	 * @param string $html_content The content of the page.
+	 * @return string
+	 */
+	private function extract_wp_content( $html_content ) {
+		$html = new HtmlDocument();
+		$html->load( $html_content );
+
+		$div = $html->find( 'div.entry-content', 0 );
+
+		if ( $div ) {
+			return $div->innertext;
+		}
+
+		return '';
 	}
 }
