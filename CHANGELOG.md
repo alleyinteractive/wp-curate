@@ -4,7 +4,7 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## 2.4.3 - 2024-11-18
 
-- Enhancement: Post Title block (which allows override titles) works in Subquery block.
+- Enhancement: Post Title block (which allows title overrides for pinned posts) works in Subquery block.
 
 ## 2.4.2 - 2024-09-27
 
