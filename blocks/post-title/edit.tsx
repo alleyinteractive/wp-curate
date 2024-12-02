@@ -42,7 +42,9 @@ export default function Edit({
   setAttributes,
 }: PostTitleEditProps) {
   // @ts-ignore
-  const queryParentId = select('core/block-editor').getBlockParentsByBlockName(clientId, 'wp-curate/query')[0];
+  const queryParentIds = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
+  const queryParentId = queryParentIds.length ? queryParentIds[queryParentIds.length - 1] : null;
+
   const {
     postId,
     pinnedPosts = [],

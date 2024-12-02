@@ -18,7 +18,9 @@
         "postId"
     ],
     "providesContext": {
-        "query": "query"
+        "query": "query",
+        "pinnedPosts": "posts",
+        "customPostTitles": "customPostTitles"
     },
     "attributes": {
         "deduplication": {
@@ -105,6 +107,14 @@
         "uniqueId": {
             "default": "",
             "type": "string"
+        },
+        "customPostTitles": {
+            "default": [],
+            "items": {
+                "default": {},
+                "type": "object"
+            },
+            "type": "array"
         }
     }
 }
