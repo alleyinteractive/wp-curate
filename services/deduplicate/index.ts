@@ -92,6 +92,10 @@ export function mainDedupe() {
   if (document.querySelector('.block-editor-block-switcher__popover__preview__parent')) {
     return;
   }
+  // Same, but for WordPress 6.7 and later.
+  if (document.querySelector('.block-editor-block-switcher__popover-preview')) {
+    return;
+  }
 
   running = true;
   // Clear the flag for another run.

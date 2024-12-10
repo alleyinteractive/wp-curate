@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.4.5 - 2024-12-10
+
+- Bug Fix: Prevent block transformation preview issues on WordPress 6.7.
+
 ## 2.4.4 - 2024-12-02
 
 - Restore maxNumberOfPosts attribute with a default filterable value of maxPosts.
