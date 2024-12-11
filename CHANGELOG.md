@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.4.6 - 2024-12-11
+
+- Bug Fix: Roll back to React 18.
+
 ## 2.4.5 - 2024-12-10
 
 - Bug Fix: Prevent block transformation preview issues on WordPress 6.7.
