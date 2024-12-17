@@ -249,7 +249,11 @@ export default function Edit({
     index === 0 ? (
       <>
         <div {...blockProps}>
-          <InnerBlocks template={TEMPLATE} />
+          {numberOfPosts > 0 ? (
+            <InnerBlocks template={TEMPLATE} />
+          ) : (
+            <p style={{ fontStyle: 'italic', fontSize: '80%' }}>Subquery Block: 0 posts selected</p>
+          )}
         </div>
         <QueryControls
           allowedPostTypes={allowedPostTypes}
