@@ -5,6 +5,7 @@ import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
+import { __ } from '@wordpress/i18n';
 
 import { Template } from '@wordpress/blocks';
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -249,7 +250,11 @@ export default function Edit({
     index === 0 ? (
       <>
         <div {...blockProps}>
-          <InnerBlocks template={TEMPLATE} />
+          {numberOfPosts > 0 ? (
+            <InnerBlocks template={TEMPLATE} />
+          ) : (
+            <p className="zero-posts">{__('Subquery Block: Number of Posts is set to 0', 'wp-curate')}</p>
+          )}
         </div>
         <QueryControls
           allowedPostTypes={allowedPostTypes}

@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.4.7 - 2024-12-17
+
+- Enhancement: Display a message if number of posts on subquery block is set to 0.
+
 ## 2.4.6 - 2024-12-11
 
 - Bug Fix: Roll back to React 18.
