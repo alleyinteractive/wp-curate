@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.4.9 - 2025-01-13
+
+- Bug Fix: Allow manually resetting custom post title back to original title.
+
 ## 2.4.8 - 2024-12-17
 
 - Bug Fix: Roll back to React 18 again.
