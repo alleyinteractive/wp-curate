@@ -110,6 +110,7 @@ export default function Edit({
         },
       ];
     }
+    // If the custom title matches the original title, we don't want to store it.
     if (title === rawTitle) {
       newCustomPostTitles = newCustomPostTitles.filter((item) => item?.postId !== postId);
     }
