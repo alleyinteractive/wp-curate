@@ -60,21 +60,16 @@ final class Parsely_Support implements Feature {
 	 * @return array<int> An array of post IDs.
 	 */
 	public function get_trending_posts( array $args ): array {
-		$parsely = $GLOBALS['parsely'];
-		if ( ! $parsely ) {
+		global $parsely;
+
+		if ( ! $parsely instanceof Parsely ) { // @phpstan-ignore class.notFound
 			return [];
 		}
-		if ( ! $parsely->api_secret_is_set() ) {
-			return [];
-		}
-		if ( ! class_exists( '\Parsely\Parsely' ) || ! isset( $GLOBALS['parsely'] ) || ! $GLOBALS['parsely'] instanceof Parsely ) {
-			return [];
-		}
-		if ( ! class_exists( '\Parsely\RemoteAPI\Analytics_Posts_API' ) ) {
+		if ( ! $parsely->api_secret_is_set() ) { // @phpstan-ignore class.notFound
 			return [];
 		}
 
-		$parsely_options = $GLOBALS['parsely']->get_options();
+		$parsely_options = $parsely->get_options(); // @phpstan-ignore class.notFound
 		/**
 		 * Filter the period start for the Parsely API.
 		 *
@@ -113,9 +108,16 @@ final class Parsely_Support implements Feature {
 		$cache_key = 'parsely_trending_posts_' . md5( wp_json_encode( $parsely_args ) ); // @phpstan-ignore-line - wp_Json_encode not likely to return false.
 		$ids       = wp_cache_get( $cache_key );
 		if ( false === $ids || ! is_array( $ids ) ) {
-			$api   = new Analytics_Posts_API( $GLOBALS['parsely'] );
-			$posts = $api->get_posts_analytics( $parsely_args );
-			if ( \is_wp_error( $posts ) || ! \is_array( $posts ) ) {
+			$posts = null;
+
+			if ( method_exists( $parsely, 'get_content_api' ) ) {
+				$posts = $parsely->get_content_api()->get_posts( $parsely_args ); // @phpstan-ignore class.notFound
+			} elseif ( class_exists( '\Parsely\RemoteAPI\Analytics_Posts_API' ) ) {
+				$api   = new Analytics_Posts_API( $parsely );
+				$posts = $api->get_posts_analytics( $parsely_args );
+			}
+
+			if ( ! \is_array( $posts ) ) {
 				return [];
 			}
 			$ids = array_map(
