@@ -69,7 +69,7 @@ final class Parsely_Support implements Feature {
 			return [];
 		}
 
-		$parsely_options = $GLOBALS['parsely']->get_options();
+		$parsely_options = $parsely->get_options();
 		/**
 		 * Filter the period start for the Parsely API.
 		 *
