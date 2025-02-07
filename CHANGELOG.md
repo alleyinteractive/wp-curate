@@ -2,10 +2,6 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
-## 2.4.10 - 2025-02-05
-
-- Bug Fix: Fix integration with version 3.17 of the Parsely plugin.
-
 ## 2.4.9 - 2025-01-13
 
 - Bug Fix: Allow manually resetting custom post title back to original title.
