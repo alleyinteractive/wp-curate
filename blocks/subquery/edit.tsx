@@ -5,6 +5,7 @@ import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
+import { __ } from '@wordpress/i18n';
 
 import { Template } from '@wordpress/blocks';
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -52,6 +53,7 @@ export default function Edit({
   attributes: {
     backfillPosts = [],
     deduplication = 'inherit',
+    maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
     numberOfPosts = 5,
     offset = 0,
@@ -248,7 +250,11 @@ export default function Edit({
     index === 0 ? (
       <>
         <div {...blockProps}>
-          <InnerBlocks template={TEMPLATE} />
+          {numberOfPosts > 0 ? (
+            <InnerBlocks template={TEMPLATE} />
+          ) : (
+            <p className="zero-posts">{__('Subquery Block: Number of Posts is set to 0', 'wp-curate')}</p>
+          )}
         </div>
         <QueryControls
           allowedPostTypes={allowedPostTypes}
@@ -258,6 +264,7 @@ export default function Edit({
           isPostDeduplicating={isPostDeduplicating}
           manualPosts={manualPosts}
           maxPosts={maxPosts}
+          maxNumberOfPosts={maxNumberOfPosts}
           minNumberOfPosts={minNumberOfPosts}
           numberOfPosts={numberOfPosts}
           offset={offset}

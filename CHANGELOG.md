@@ -2,6 +2,38 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.4.11 - 2025-02-07
+
+- Changed: Revert integration with Parsely 3.17 because of a fatal error.
+
+## 2.4.10 - 2025-02-06
+
+- Bug Fix: Fix integration with version 3.17 of the Parsely plugin.
+
+## 2.4.9 - 2025-01-13
+
+- Bug Fix: Allow manually resetting custom post title back to original title.
+
+## 2.4.8 - 2024-12-17
+
+- Bug Fix: Roll back to React 18 again.
+
+## 2.4.7 - 2024-12-17
+
+- Enhancement: Display a message if number of posts on subquery block is set to 0.
+
+## 2.4.6 - 2024-12-11
+
+- Bug Fix: Roll back to React 18.
+
+## 2.4.5 - 2024-12-10
+
+- Bug Fix: Prevent block transformation preview issues on WordPress 6.7.
+
+## 2.4.4 - 2024-12-02
+
+- Restore maxNumberOfPosts attribute with a default filterable value of maxPosts.
+
 ## 2.4.3 - 2024-11-18
 
 - Enhancement: Post Title block (which allows title overrides for pinned posts) works in Subquery block.

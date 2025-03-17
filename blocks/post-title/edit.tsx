@@ -92,10 +92,7 @@ export default function Edit({
      * Handle cases for when it's not necessary to update the collection of
      * custom titles
      */
-    if (
-      title === rawTitle
-      || title === currentCustomPostTitle?.title
-    ) {
+    if (title === currentCustomPostTitle?.title) {
       return;
     }
 
@@ -112,6 +109,10 @@ export default function Edit({
           title,
         },
       ];
+    }
+    // If the custom title matches the original title, we don't want to store it.
+    if (title === rawTitle) {
+      newCustomPostTitles = newCustomPostTitles.filter((item) => item?.postId !== postId);
     }
 
     // @ts-ignore
