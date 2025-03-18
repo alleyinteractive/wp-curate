@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.5.0 - 2025-03-18
+
+- Enhancement: Update wp-type-extensions to 3.0.0.
+
 ## 2.4.11 - 2025-02-07
 
 - Changed: Revert integration with Parsely 3.17 because of a fatal error.
