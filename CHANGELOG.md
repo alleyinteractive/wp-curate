@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.6.0 - 2025-04-09
+
+- Enhancement: Update wp-type-extensions to 4.0.0.
+
 ## 2.5.0 - 2025-03-18
 
 - Enhancement: Update wp-type-extensions to 3.0.0.
