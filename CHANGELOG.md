@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.6.2 - 2025-05-15
+
+- Enhancement: Change priority for query block init to 900, to allow more time for registration of custom post types and taxonomies.
+
 ## 2.6.1 - 2025-04-09
 
 - Bug Fix: Revert update to wp-type-extensions to avoid conflicts with the Alleyvate plugin.
