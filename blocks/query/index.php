@@ -100,7 +100,7 @@ function wp_curate_query_block_init(): void {
 		]
 	);
 }
-add_action( 'init', 'wp_curate_query_block_init' );
+add_action( 'init', 'wp_curate_query_block_init', 900 );
 
 /**
  * Renders the `wp-curate/query` block on the server.
