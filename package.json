@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@alleyinteractive/block-editor-tools": "^0.12.2",
-    "@types/jest": "^29.5.14",
+    "@types/jest": "^30.0.0",
     "@types/wordpress__block-editor": "^11.5.0",
     "@uidotdev/usehooks": "^2.4.1",
     "@wordpress/api-fetch": "^7.5.0",
@@ -73,7 +73,7 @@
     "@wordpress/babel-preset-default": "^8.5.0",
     "babel-jest": "^30.0.2",
     "check-node-version": "^4.2.1",
-    "jest": "^30.0.0",
+    "jest": "^30.0.2",
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3",
     "webpack-cli": "^6.0.1",
