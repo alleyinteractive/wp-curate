@@ -99,7 +99,13 @@ final class Query_Block_Context implements Feature {
 						}
 					}
 
-					return false;
+					/**
+					 * Filter to determine if deduplication is enabled for the current block.
+					 *
+					 * @param bool                                 $enabled      Whether deduplication is enabled. Default is false.
+					 * @param array{"attrs": array<string, mixed>} $parsed_block The parsed block attributes.
+					 */
+					return apply_filters( 'wp_curate_deduplication_enabled', false, $parsed_block );
 				},
 				// Exclude posts that have already been used in this request.
 				test: new Comparison( [ 'compared' => true ] ),
