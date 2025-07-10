@@ -17,6 +17,9 @@
         "query",
         "postId"
     ],
+    "parent": [
+      "wp-curate/query"
+    ],
     "providesContext": {
         "query": "query",
         "pinnedPosts": "posts",
