@@ -1,4 +1,5 @@
 import apiFetch from '@wordpress/api-fetch';
+import { __ } from '@wordpress/i18n';
 
 type FetcherProps = [string | undefined, number];
 type PostResponse = number[] | { id: number };
@@ -21,6 +22,14 @@ const queryBlockPostFetcher = (
       revisedResponse = null;
     } else {
       revisedResponse = response;
+    }
+
+    const isValidResponse = revisedResponse
+      && Array.isArray(revisedResponse)
+      && revisedResponse.length > 0;
+
+    if (!isValidResponse) {
+      throw new Error(__('No posts found', 'wp-curate'));
     }
     return revisedResponse;
   });
