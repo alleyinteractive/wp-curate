@@ -2,6 +2,12 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.6.3 - 2025-07-17
+
+- Bug Fix: Require Subquery block to have a parent Query block to prevent errors when used outside of a Query block.
+- Bug Fix: Handle custom taxonomies that do not have a `rest_base` set.
+- Enhancement: Display `No results found.` messages when not posts are found in the Query block.
+
 ## 2.6.2 - 2025-05-15
 
 - Enhancement: Change priority for query block init to 900, to allow more time for registration of custom post types and taxonomies.
