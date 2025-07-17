@@ -23,7 +23,7 @@ export default function buildTermQueryArgs(
   const termQueryArgs: string[] = [];
   allowedTaxonomies.forEach((taxonomy) => {
     if (terms[taxonomy.slug]?.length > 0) {
-      const restBase = taxonomy.rest_base;
+      const restBase = taxonomy.rest_base || taxonomy.slug;
       if (restBase) {
         termQueryArgs.push(`${restBase}[terms]=${terms[taxonomy.slug].map((term) => term.id).join(',')}`);
         if (termRelations[taxonomy.slug] !== '' && typeof termRelations[taxonomy.slug] !== 'undefined') {

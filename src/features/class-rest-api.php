@@ -79,7 +79,7 @@ final class Rest_Api implements Feature {
 		$taxonomies         = array_filter( $taxonomies, 'is_object' );
 		$tax_query          = [];
 		foreach ( $taxonomies as $taxonomy ) {
-			$rest_base = $taxonomy->rest_base;
+			$rest_base = $taxonomy->rest_base ?: $taxonomy->name;
 			if ( empty( $rest_base ) || ! is_string( $rest_base ) ) {
 				continue;
 			}
