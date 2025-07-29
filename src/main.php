@@ -20,6 +20,12 @@ use WP_Block_Type_Registry;
 function main(): void {
 	$stop_queries_var = 'wp_curate_stop_queries';
 	$main_query       = new Global_Post_Query( 'wp_query' );
+
+	/**
+	 * Filter the Seed object for the history of post IDs.
+	 *
+	 * @param Pinned_In_Post_Content $seed The seed for the history of post IDs.
+	 */
 	$seed = apply_filters( 'wp_curate_history_seed', new Pinned_In_Post_Content( $main_query ) );
 
 	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore
