@@ -10,6 +10,7 @@ import { addQueryArgs } from '@wordpress/url';
 import { Template } from '@wordpress/blocks';
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 import apiFetch from '@wordpress/api-fetch';
+import { __ } from '@wordpress/i18n';
 
 import type {
   EditProps,
@@ -249,7 +250,11 @@ export default function Edit({
         ),
       })}
       >
-        <InnerBlocks template={TEMPLATE} />
+        {
+          error ? (
+            <p>{__('No results found.', 'wp-curate')}</p>
+          ) : <InnerBlocks template={TEMPLATE} />
+        }
       </div>
       <QueryControls
         allowedPostTypes={allowedPostTypes}
