@@ -18,7 +18,7 @@
         "postId"
     ],
     "parent": [
-      "wp-curate/query"
+      "wp-curate/post"
     ],
     "providesContext": {
         "query": "query",
