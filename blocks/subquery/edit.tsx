@@ -232,7 +232,26 @@ export default function Edit({
     }
   }
 
-  manualPosts = manualPosts.slice(0, numberOfPosts); // eslint-disable-line no-param-reassign
+  /**
+   * Normalize manualPosts to ensure it has the correct length and no undefined values.
+   */
+  useEffect(() => {
+    if (!isFirstPost) {
+      return;
+    }
+    // Check if normalization is needed.
+    const needsUpdate = manualPosts.length !== numberOfPosts
+      || manualPosts.some((post) => post === undefined);
+
+    if (needsUpdate) {
+      // Create normalized array in one go.
+      const normalizedPosts = Array(numberOfPosts)
+        .fill(null)
+        .map((_, i) => manualPosts[i] || null);
+
+      setAttributes({ posts: normalizedPosts });
+    }
+  }, [isFirstPost, manualPosts, numberOfPosts, setAttributes]);
 
   const TEMPLATE: Template[] = [
     [
