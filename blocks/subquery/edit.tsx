@@ -152,11 +152,10 @@ export default function Edit({
   }, [allowedPostTypes, isFirstPost, postTypes?.length, setAttributes]);
 
   // Use SWR to fetch data.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { data, error } = index === 0 ? useSWRImmutable(
-    [path, currentPostId],
+  const { data, error } = useSWRImmutable(
+    isFirstPost ? [path, currentPostId] : null,
     queryBlockPostFetcher,
-  ) : { data: null, error: null };
+  );
 
   useEffect(() => {
     if (!uniqueId) {
