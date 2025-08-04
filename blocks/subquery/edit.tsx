@@ -198,14 +198,19 @@ export default function Edit({
     error,
   ]);
 
-  // Make sure all the manual posts are still valid.
+  /**
+   * Update validPosts based on manualPosts.
+   */
   useEffect(() => {
+    if (!isFirstPost) {
+      return;
+    }
+
     const updateValidPosts = async () => {
       const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
-      let validPosts: Number[] = [];
 
       if (postsToInclude.length > 0) {
-        validPosts = await apiFetch({
+        await apiFetch<WpRestApiPosts>({
           path: addQueryArgs(
             '/wp/v2/posts',
             {
@@ -218,14 +223,14 @@ export default function Edit({
               context: 'edit',
             },
           ),
-        }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
+        }).then((result) => {
+          const resultIds = result.map((post) => post.id);
+          setAttributes({ validPosts: resultIds });
+        });
       }
-
-      setAttributes({ validPosts });
-      mainDedupe();
     };
     updateValidPosts();
-  }, [manualPosts, setAttributes, postTypeString]);
+  }, [isFirstPost, manualPosts, postTypeString, setAttributes]);
 
   /**
    * Check if deduplication is needed when validPosts are available.
