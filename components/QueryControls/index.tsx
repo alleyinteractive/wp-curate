@@ -194,11 +194,13 @@ export default function QueryControls({
           />
           {allowedTaxonomies.map((taxonomy) => (
             <Fragment key={taxonomy.slug}>
-              { /* @ts-ignore */ }
+              { /* TODO: Fix the @ts-ignore usage. */ }
               <TermSelector
                 label={taxonomy.name}
                 subTypes={[taxonomy.slug]}
+                // @ts-ignore
                 selected={terms[taxonomy.slug] ?? []}
+                // @ts-ignore
                 onSelect={(newCategories: Term[]) => setTerms(taxonomy.slug, newCategories)}
                 multiple
               />
