@@ -172,10 +172,12 @@ export default function Edit({
     if (data && !error) {
       setAttributes({ backfillPosts: data });
     }
-  }, [index, data, error, setAttributes]);
+  }, [data, error, setAttributes, isFirstPost]);
 
-  // Update the query when the backfillPosts change.
-  // The query is passed via context to the core/post-template block.
+  /**
+   * Update the query when the backfillPosts change.
+   * The query is passed via context to the core/post-template block.
+   */
   useEffect(() => {
     if (!isFirstPost) {
       return;
@@ -184,12 +186,11 @@ export default function Edit({
       mainDedupe();
     }
   }, [
+    isFirstPost,
     manualPostIds,
     backfillPosts,
     numberOfPosts,
-    setAttributes,
     postTypeString,
-    index,
     isPostDeduplicating,
     deduplication,
     uniquePinnedPosts,
@@ -226,11 +227,18 @@ export default function Edit({
     updateValidPosts();
   }, [manualPosts, setAttributes, postTypeString]);
 
-  for (let i = 0; i < numberOfPosts; i += 1) {
-    if (!manualPosts[i]) {
-      manualPosts[i] = null; // eslint-disable-line no-param-reassign
+  /**
+   * Check if deduplication is needed when validPosts are available.
+   */
+  useEffect(() => {
+    if (!isFirstPost) {
+      return;
     }
-  }
+
+    if (validPosts.length > 0) {
+      mainDedupe();
+    }
+  }, [isFirstPost, validPosts.length]);
 
   /**
    * Normalize manualPosts to ensure it has the correct length and no undefined values.
@@ -274,6 +282,7 @@ export default function Edit({
     value: type.slug,
   }));
   const blockProps = useBlockProps();
+
   return (
     isFirstPost ? (
       <>
