@@ -165,7 +165,7 @@ export default function Edit({
 
   // Handle the fetched data.
   useEffect(() => {
-    if (index !== 0) {
+    if (!isFirstPost) {
       return;
     }
     if (data && !error) {
@@ -176,7 +176,7 @@ export default function Edit({
   // Update the query when the backfillPosts change.
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
-    if (index !== 0) {
+    if (!isFirstPost) {
       return;
     }
     if (data && !error && backfillPosts.length > 0) {
@@ -255,7 +255,7 @@ export default function Edit({
   }));
   const blockProps = useBlockProps();
   return (
-    index === 0 ? (
+    isFirstPost ? (
       <>
         <div {...blockProps}>
           {numberOfPosts > 0 ? (
