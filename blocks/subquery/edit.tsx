@@ -65,6 +65,7 @@ export default function Edit({
     taxRelation = 'AND',
     orderby = 'date',
     uniqueId = '',
+    validPosts = [],
   },
   setAttributes,
   context: {
