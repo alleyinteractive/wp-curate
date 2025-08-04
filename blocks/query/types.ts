@@ -1,3 +1,5 @@
+import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
+
 interface EditProps {
   attributes: {
     backfillPosts?: number[];
@@ -6,7 +8,7 @@ interface EditProps {
     minNumberOfPosts?: number;
     numberOfPosts?: number;
     offset?: number;
-    posts?: any[];
+    posts?: WpRestApiPosts;
     query: {
       [key: string]: string | number | number[] | string[];
     }
@@ -26,6 +28,7 @@ interface EditProps {
     };
     uniqueId?: string;
     supportsPostTypes?: string[];
+    validPosts?: number[];
   };
   clientId: string;
   setAttributes: (attributes: any) => void;
