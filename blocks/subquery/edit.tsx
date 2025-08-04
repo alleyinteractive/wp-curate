@@ -76,6 +76,7 @@ export default function Edit({
 }: EditProps) {
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
+  const isFirstPost = index === 0;
 
   const {
     wpCurateQueryBlock: {
@@ -85,10 +86,6 @@ export default function Edit({
       maxPosts = 10,
     } = {},
   } = (window as any as Window);
-
-  if (!postTypes.length) {
-    setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
-  }
 
   // @ts-ignore
   const [
@@ -141,6 +138,18 @@ export default function Edit({
     orderBy: orderby,
     currentPostId,
   })}&${termQueryArgs}`;
+
+  useEffect(() => {
+    if (!isFirstPost) {
+      return;
+    }
+
+    if (postTypes?.length > 0) {
+      return;
+    }
+
+    setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
+  }, [allowedPostTypes, isFirstPost, postTypes?.length, setAttributes]);
 
   // Use SWR to fetch data.
   // eslint-disable-next-line react-hooks/rules-of-hooks
