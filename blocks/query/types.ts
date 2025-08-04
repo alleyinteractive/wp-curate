@@ -1,4 +1,4 @@
-import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
+import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
 
 interface EditProps {
   attributes: {
@@ -8,7 +8,7 @@ interface EditProps {
     minNumberOfPosts?: number;
     numberOfPosts?: number;
     offset?: number;
-    posts?: WpRestApiPosts;
+    posts?: Array<WpRestApiPost['id'] | null>;
     query: {
       [key: string]: string | number | number[] | string[];
     }
