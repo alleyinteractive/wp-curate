@@ -182,12 +182,12 @@ export default function Edit({
       if (postsToInclude.length > 0) {
         validPosts = await apiFetch({
           path: addQueryArgs(
-            '/wp/v2/posts',
+            '/wp/v2/wp-curate',
             {
               offset: 0,
               orderby: 'include',
               per_page: postsToInclude.length,
-              type: postTypeString,
+              post_type: postTypeString,
               include: postsToInclude,
               _locale: 'user',
               context: 'edit',
