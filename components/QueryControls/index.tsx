@@ -172,7 +172,7 @@ export default function QueryControls({
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
-                allowedTypes={allowedPostTypes.map((type) => type.slug)}
+                allowedTypes={postTypes}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] || 0}
