@@ -97,6 +97,7 @@ function wp_curate_query_block_init(): void {
 			),
 			'parselyAvailable'  => $parsely_available ? 'true' : 'false',
 			'maxPosts'          => $max_posts,
+			'orderByMetaKeys'   => apply_filters( 'wp_curate_order_by_meta_keys', [] ),
 		]
 	);
 }

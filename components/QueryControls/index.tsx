@@ -24,6 +24,12 @@ type PostTypeOrTerm = {
   slug: string;
 };
 
+interface Window {
+  wpCurateQueryBlock: {
+    orderByMetaKeys: string[];
+  };
+}
+
 type QueryControlsProps = {
   allowedPostTypes: PostTypeOrTerm[];
   allowedTaxonomies: PostTypeOrTerm[];
@@ -33,9 +39,11 @@ type QueryControlsProps = {
   manualPosts: Array<number | null>;
   maxPosts: number;
   maxNumberOfPosts: number;
+  metaKey: string;
   minNumberOfPosts: number;
   numberOfPosts: number;
   offset: number;
+  order: 'asc' | 'desc';
   orderby: string;
   parselyAvailable: string;
   postTypeObject: {
@@ -61,9 +69,11 @@ export default function QueryControls({
   manualPosts,
   maxPosts,
   maxNumberOfPosts: maxNumberOfPostsAttr,
+  metaKey,
   minNumberOfPosts,
   numberOfPosts,
   offset,
+  order,
   orderby,
   parselyAvailable,
   postTypeObject,
@@ -75,6 +85,24 @@ export default function QueryControls({
   termRelations,
   terms,
 }: QueryControlsProps) {
+  const {
+    wpCurateQueryBlock: {
+      orderByMetaKeys = [],
+    } = {},
+  } = (window as any as Window);
+
+  const metaKeyOptions = [];
+  if (orderByMetaKeys.length > 0) {
+    metaKeyOptions.push(
+      { label: __('Select', 'wp-curate'), value: '' },
+    );
+    orderByMetaKeys.forEach((key) => {
+      metaKeyOptions.push(
+        { label: key, value: key },
+      );
+    });
+  }
+
   const andOrOptions = [
     {
       label: __('AND', 'wp-curate'),
@@ -85,6 +113,64 @@ export default function QueryControls({
       value: 'OR',
     },
   ];
+
+  const orderbyOptions = [
+    {
+      label: __('ID', 'wp-curate'),
+      value: 'ID',
+    },
+    {
+      label: __('Author', 'wp-curate'),
+      value: 'author',
+    },
+    {
+      label: __('Title', 'wp-curate'),
+      value: 'title',
+    },
+    {
+      label: __('Name', 'wp-curate'),
+      value: 'name',
+    },
+    {
+      label: __('Type', 'wp-curate'),
+      value: 'type',
+    },
+    {
+      label: __('Date', 'wp-curate'),
+      value: 'date',
+    },
+    {
+      label: __('Modified', 'wp-curate'),
+      value: 'modified',
+    },
+    {
+      label: __('Parent', 'wp-curate'),
+      value: 'parent',
+    },
+    {
+      label: __('Rand', 'wp-curate'),
+      value: 'rand',
+    },
+    {
+      label: __('Comment Count', 'wp-curate'),
+      value: 'comment_count',
+    },
+    {
+      label: __('Relevance', 'wp-curate'),
+      value: 'relevance',
+    },
+    {
+      label: __('Menu Order', 'wp-curate'),
+      value: 'menu_order',
+    },
+  ];
+
+  if (metaKeyOptions.length > 0) {
+    orderbyOptions.push(
+      { label: __('Meta Value', 'wp-curate'), value: 'meta_value' },
+      { label: __('Meta Value (Numeric)', 'wp-curate'), value: 'meta_value_num' },
+    );
+  }
 
   const maxNumberOfPosts = !maxNumberOfPostsAttr || maxNumberOfPostsAttr > maxPosts ? maxPosts : maxNumberOfPostsAttr; // eslint-disable-line max-len
 
@@ -194,7 +280,7 @@ export default function QueryControls({
           />
           {allowedTaxonomies.map((taxonomy) => (
             <Fragment key={taxonomy.slug}>
-              { /* @ts-ignore */ }
+              { /* @ts-ignore */}
               <TermSelector
                 label={taxonomy.name}
                 subTypes={[taxonomy.slug]}
@@ -225,24 +311,48 @@ export default function QueryControls({
               onChange={(next) => setAttributes({ taxRelation: next, backfillPosts: [] })}
               value={taxRelation}
             />
-          ) : null }
+          ) : null}
           <TextControl
             label={__('Search Term', 'wp-curate')}
             onChange={(next) => setAttributes({ searchTerm: next, backfillPosts: [] })}
             value={searchTerm}
           />
-          { parselyAvailable === 'true' ? (
+          <SelectControl
+            label={__('Order By', 'wp-curate')}
+            options={orderbyOptions}
+            onChange={(next) => setAttributes({ orderby: next, backfillPosts: [] })}
+            value={orderby}
+          />
+          {(orderby === 'meta_value' || orderby === 'meta_value_num') && metaKeyOptions.length > 0 ? (
+            <SelectControl
+              label={__('Meta Key', 'wp-curate')}
+              options={metaKeyOptions}
+              onChange={(next) => setAttributes({ metaKey: next, backfillPosts: [] })}
+              value={metaKey}
+            />
+          ) : null}
+          <SelectControl
+            label={__('Order Direction', 'wp-curate')}
+            help={__('Ascending means A-Z or 0-9 or oldest to newest. Descending means Z-A or 9-0 or newest to oldest.', 'wp-curate')}
+            options={[
+              { label: __('Ascending', 'wp-curate'), value: 'asc' },
+              { label: __('Descending', 'wp-curate'), value: 'desc' },
+            ]}
+            onChange={(next) => setAttributes({ order: next, backfillPosts: [] })}
+            value={order}
+          />
+          {parselyAvailable === 'true' ? (
             <ToggleControl
               label={__('Show Trending Content from Parsely', 'wp-curate')}
               help={__('If enabled, the block will show trending content from Parsely.', 'wp-curate')}
               checked={orderby === 'trending'}
               onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date', backfillPosts: [] })}
             />
-          ) : null }
+          ) : null}
         </PanelBody>
       </InspectorControls>
 
-      { /* @ts-ignore */ }
+      { /* @ts-ignore */}
       <InspectorControls group="advanced">
         <RadioControl
           label={__('Deduplication', 'wp-curate')}

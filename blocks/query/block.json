@@ -48,14 +48,14 @@
       "type": "number"
     },
     "postTypes": {
-      "default": [],
+      "default": [ ],
       "items": {
         "type": "string"
       },
       "type": "array"
     },
     "posts": {
-      "default": [],
+      "default": [ ],
       "items": {
         "type": "number"
       },
@@ -66,9 +66,9 @@
       "type": "string"
     },
     "terms": {
-      "default": {},
+      "default": { },
       "items": {
-        "default": [],
+        "default": [ ],
         "items": {
           "type": "object"
         },
@@ -77,7 +77,7 @@
       "type": "object"
     },
     "termRelations": {
-      "default": {},
+      "default": { },
       "items": {
         "default": "AND",
         "enum": [
@@ -99,21 +99,46 @@
     "orderby": {
       "default": "date",
       "enum": [
+        "ID",
+        "author",
+        "title",
+        "name",
+        "type",
         "date",
+        "modified",
+        "parent",
+        "rand",
+        "comment_count",
+        "relevance",
+        "menu_order",
+        "meta_value",
+        "meta_value_num",
         "trending"
       ],
       "type": "string"
     },
+    "order": {
+      "default": "desc",
+      "enum": [
+        "asc",
+        "desc"
+      ],
+      "type": "string"
+    },
+    "metaKey": {
+      "default": "",
+      "type": "string"
+    },
     "customPostTitles": {
-      "default": [],
+      "default": [ ],
       "items": {
-        "default": {},
+        "default": { },
         "type": "object"
       },
       "type": "array"
     },
     "supportsPostTypes": {
-      "default": [],
+      "default": [ ],
       "items": {
         "default": "",
         "type": "string"
