@@ -215,6 +215,12 @@ export default function QueryControls({
     setAttributes({ posts: newManualPosts });
   };
 
+  const maybeClearMetaKey = (orderBy: string) => {
+    if (orderBy !== 'meta_value' && orderBy !== 'meta_value_num' && metaKey) {
+      setAttributes({ metaKey: '' });
+    }
+  };
+
   return (
     <>
       <InspectorControls>
@@ -320,7 +326,10 @@ export default function QueryControls({
           <SelectControl
             label={__('Order By', 'wp-curate')}
             options={orderbyOptions}
-            onChange={(next) => setAttributes({ orderby: next, backfillPosts: [] })}
+            onChange={(next) => {
+              setAttributes({ orderby: next, backfillPosts: [] });
+              maybeClearMetaKey(next);
+            }}
             value={orderby}
           />
           {(orderby === 'meta_value' || orderby === 'meta_value_num') && metaKeyOptions.length > 0 ? (
