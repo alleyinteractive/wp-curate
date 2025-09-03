@@ -62,8 +62,11 @@ final class Rest_Api implements Feature {
 		$offset           = $request->get_param( 'offset' ) ?? 0;
 		$post_type_string = $request->get_param( 'post_type' ) ?? 'post';
 		$per_page         = $request->get_param( 'per_page' ) ?? 20;
+		$orderby          = $request->get_param( 'orderby' ) ?? 'date';
+		$order            = $request->get_param( 'order' ) ?? 'DESC';
 		$trending         = 'trending' === $request->get_param( 'orderby' );
 		$tax_relation     = $request->get_param( 'tax_relation' ) ?? 'OR';
+		$meta_key         = $request->get_param( 'meta_key' ) ?? '';
 
 		if ( ! is_string( $post_type_string ) ) {
 			$post_type_string = 'post';
@@ -127,6 +130,9 @@ final class Rest_Api implements Feature {
 			'offset'              => $offset,
 			'ignore_sticky_posts' => true,
 			'fields'              => 'ids',
+			'orderby'             => $orderby,
+			'order'               => $order,
+			'meta_key'            => $meta_key,
 		];
 		if ( ! empty( $search_term ) ) {
 			$args['s'] = $search_term;

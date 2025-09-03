@@ -19,7 +19,9 @@ interface EditProps {
       [key: string]: string;
     };
     taxRelation?: string;
+    order?: 'asc' | 'desc';
     orderby?: string;
+    metaKey?: string;
     moveData?: {
       postId?: number;
       clientId?: string;

@@ -63,6 +63,8 @@ export default function Edit({
     termRelations = {},
     taxRelation = 'AND',
     orderby = 'date',
+    order = 'desc',
+    metaKey = '',
     moveData = {},
     supportsPostTypes = [],
   },
@@ -137,6 +139,8 @@ export default function Edit({
     status: 'publish',
     perPage: 20,
     orderBy: orderby,
+    order,
+    metaKey,
     currentPostId,
   })}&${termQueryArgs}`;
 
@@ -268,7 +272,9 @@ export default function Edit({
         minNumberOfPosts={minNumberOfPosts}
         numberOfPosts={numberOfPosts}
         offset={offset}
+        order={order}
         orderby={orderby}
+        metaKey={metaKey}
         parselyAvailable={parselyAvailable}
         postTypeObject={postTypeObject}
         postTypes={postTypes}
