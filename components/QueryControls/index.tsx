@@ -174,7 +174,7 @@ export default function QueryControls({
   };
 
   const maybeClearMetaKey = (orderBy: string) => {
-    if (orderBy !== 'meta_value' && orderBy !== 'meta_value_num' && metaKey) {
+    if (orderBy !== 'meta_value' && metaKey) {
       setAttributes({ metaKey: '' });
     }
   };
@@ -275,7 +275,7 @@ export default function QueryControls({
               onChange={(next) => setAttributes({ taxRelation: next, backfillPosts: [] })}
               value={taxRelation}
             />
-          ) : null}
+          ) : null }
           <TextControl
             label={__('Search Term', 'wp-curate')}
             onChange={(next) => setAttributes({ searchTerm: next, backfillPosts: [] })}
@@ -308,18 +308,18 @@ export default function QueryControls({
             onChange={(next) => setAttributes({ order: next, backfillPosts: [] })}
             value={order}
           />
-          {parselyAvailable === 'true' ? (
+          { parselyAvailable === 'true' ? (
             <ToggleControl
               label={__('Show Trending Content from Parsely', 'wp-curate')}
               help={__('If enabled, the block will show trending content from Parsely.', 'wp-curate')}
               checked={orderby === 'trending'}
               onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date', backfillPosts: [] })}
             />
-          ) : null}
+          ) : null }
         </PanelBody>
       </InspectorControls>
 
-      { /* @ts-ignore */}
+      { /* @ts-ignore */ }
       <InspectorControls group="advanced">
         <RadioControl
           label={__('Deduplication', 'wp-curate')}

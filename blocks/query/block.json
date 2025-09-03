@@ -98,12 +98,6 @@
     },
     "orderby": {
       "default": "date",
-      "enum": [
-        "title",
-        "date",
-        "meta_value",
-        "trending"
-      ],
       "type": "string"
     },
     "order": {
