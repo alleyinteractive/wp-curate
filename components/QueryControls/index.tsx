@@ -26,6 +26,7 @@ type PostTypeOrTerm = {
 
 interface Window {
   wpCurateQueryBlock: {
+    rawOrderByOptions: Record<string, string>;
     orderByMetaKeys: string[];
   };
 }
@@ -87,9 +88,18 @@ export default function QueryControls({
 }: QueryControlsProps) {
   const {
     wpCurateQueryBlock: {
+      rawOrderByOptions = {
+        title: __('Title', 'wp-curate'),
+        date: __('Date', 'wp-curate'),
+      },
       orderByMetaKeys = [],
     } = {},
   } = (window as any as Window);
+
+  const orderByOptions = [];
+  for (const [key, label] of Object.entries(rawOrderByOptions)) {
+    orderByOptions.push({ label, value: key });
+  }
 
   const metaKeyOptions = [];
   if (orderByMetaKeys.length > 0) {
@@ -114,61 +124,9 @@ export default function QueryControls({
     },
   ];
 
-  const orderbyOptions = [
-    {
-      label: __('ID', 'wp-curate'),
-      value: 'ID',
-    },
-    {
-      label: __('Author', 'wp-curate'),
-      value: 'author',
-    },
-    {
-      label: __('Title', 'wp-curate'),
-      value: 'title',
-    },
-    {
-      label: __('Name', 'wp-curate'),
-      value: 'name',
-    },
-    {
-      label: __('Type', 'wp-curate'),
-      value: 'type',
-    },
-    {
-      label: __('Date', 'wp-curate'),
-      value: 'date',
-    },
-    {
-      label: __('Modified', 'wp-curate'),
-      value: 'modified',
-    },
-    {
-      label: __('Parent', 'wp-curate'),
-      value: 'parent',
-    },
-    {
-      label: __('Rand', 'wp-curate'),
-      value: 'rand',
-    },
-    {
-      label: __('Comment Count', 'wp-curate'),
-      value: 'comment_count',
-    },
-    {
-      label: __('Relevance', 'wp-curate'),
-      value: 'relevance',
-    },
-    {
-      label: __('Menu Order', 'wp-curate'),
-      value: 'menu_order',
-    },
-  ];
-
   if (metaKeyOptions.length > 0) {
-    orderbyOptions.push(
+    orderByOptions.push(
       { label: __('Meta Value', 'wp-curate'), value: 'meta_value' },
-      { label: __('Meta Value (Numeric)', 'wp-curate'), value: 'meta_value_num' },
     );
   }
 
@@ -286,7 +244,7 @@ export default function QueryControls({
           />
           {allowedTaxonomies.map((taxonomy) => (
             <Fragment key={taxonomy.slug}>
-              { /* @ts-ignore */}
+              { /* @ts-ignore */ }
               <TermSelector
                 label={taxonomy.name}
                 subTypes={[taxonomy.slug]}
@@ -325,14 +283,14 @@ export default function QueryControls({
           />
           <SelectControl
             label={__('Order By', 'wp-curate')}
-            options={orderbyOptions}
+            options={orderByOptions}
             onChange={(next) => {
               setAttributes({ orderby: next, backfillPosts: [] });
               maybeClearMetaKey(next);
             }}
             value={orderby}
           />
-          {(orderby === 'meta_value' || orderby === 'meta_value_num') && metaKeyOptions.length > 0 ? (
+          {(orderby === 'meta_value') && metaKeyOptions.length > 0 ? (
             <SelectControl
               label={__('Meta Key', 'wp-curate')}
               options={metaKeyOptions}
