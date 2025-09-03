@@ -105,9 +105,9 @@ function wp_curate_query_block_init(): void {
 			 * @since 2.6.4
 			 */
 			'rawOrderByOptions' => apply_filters( 'wp_curate_order_by_options', [
-				'date'  => __('Date', 'wp-curate'),
-				'title' => __('Title', 'wp-curate'),
-			]),
+				'date'  => __( 'Date', 'wp-curate' ),
+				'title' => __( 'Title', 'wp-curate' ),
+			] ),
 			/**
 			 * Filters the meta keys available for ordering posts.
 			 *
