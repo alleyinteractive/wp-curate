@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.7.0 - 2025-09-05
+
+- Enhancement: Update wp-type-extensions to 4.0.0.
+
 ## 2.6.4 - 2025-08-29
 
 - Enhancement: Add options to order by different post values and choose the sort direction.
