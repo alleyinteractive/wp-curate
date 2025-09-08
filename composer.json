@@ -24,6 +24,7 @@
     "php": "^8.2",
     "alleyinteractive/composer-wordpress-autoloader": "^1.0",
     "alleyinteractive/traverse-reshape": "^2.0",
+    "alleyinteractive/wp-match-blocks": "^3.1",
     "alleyinteractive/wp-type-extensions": "^4.0"
   },
   "require-dev": {
