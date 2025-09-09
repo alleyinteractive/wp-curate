@@ -149,7 +149,7 @@ export default function Edit({
       return;
     }
 
-    setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
+    setAttributes({ postTypes: allowedPostTypes.map(({ slug }) => slug) });
   }, [allowedPostTypes, isFirstPost, postTypes?.length, setAttributes]);
 
   // Use SWR to fetch data.
