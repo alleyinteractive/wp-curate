@@ -8,7 +8,6 @@ import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
 
 import { Template } from '@wordpress/blocks';
-import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 import apiFetch from '@wordpress/api-fetch';
 import { v4 as uuid } from 'uuid';
 
@@ -213,26 +212,38 @@ export default function Edit({
     const updateValidPosts = async () => {
       const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
 
-      if (postsToInclude.length > 0) {
-        await apiFetch<WpRestApiPosts>({
-          path: addQueryArgs(
-            '/wp/v2/posts',
-            {
-              offset: 0,
-              orderby: 'include',
-              per_page: postsToInclude.length,
-              type: postTypeString,
-              include: postsToInclude,
-              _locale: 'user',
-              context: 'edit',
-            },
-          ),
-        }).then((result) => {
-          const resultIds = result.map((post) => post.id);
-          setAttributes({ validPosts: resultIds });
-        });
+      if (!postsToInclude) {
+        return;
       }
+
+      const result = await apiFetch<unknown>({
+        path: addQueryArgs(
+          '/wp/v2/posts',
+          {
+            offset: 0,
+            orderby: 'include',
+            per_page: postsToInclude.length,
+            type: postTypeString,
+            include: postsToInclude,
+            _locale: 'user',
+            context: 'edit',
+          },
+        ),
+      });
+
+      const resultIds = Array.isArray(result)
+        ? result
+          .filter(
+            (post): post is { id: number } => post
+              && typeof post === 'object'
+              && 'id' in post
+              && typeof post.id === 'number',
+          )
+          .map((post) => post.id)
+        : [];
+      setAttributes({ validPosts: resultIds });
     };
+
     updateValidPosts();
   }, [isFirstPost, manualPosts, postTypeString, setAttributes]);
 
