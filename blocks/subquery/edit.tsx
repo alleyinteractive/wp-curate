@@ -64,6 +64,8 @@ export default function Edit({
     termRelations = {},
     taxRelation = 'AND',
     orderby = 'date',
+    order = 'desc',
+    metaKey = '',
     uniqueId = '',
     validPosts = [],
   },
@@ -136,7 +138,9 @@ export default function Edit({
     postType: postTypeString,
     status: 'publish',
     perPage: 20,
+    order: 'desc',
     orderBy: orderby,
+    metaKey: '',
     currentPostId,
   })}&${termQueryArgs}`;
 
@@ -311,6 +315,8 @@ export default function Edit({
           numberOfPosts={numberOfPosts}
           offset={offset}
           orderby={orderby}
+          order={order}
+          metaKey={metaKey}
           parselyAvailable={parselyAvailable}
           postTypeObject={postTypeObject}
           postTypes={postTypes}

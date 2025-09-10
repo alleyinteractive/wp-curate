@@ -6,7 +6,9 @@ interface PostsApiPathProps {
   postType: string,
   status: 'publish',
   perPage: 20,
+  order: 'asc' | 'desc',
   orderBy: string,
+  metaKey: string,
   currentPostId: number
 }
 
@@ -17,7 +19,9 @@ export default function buildPostsApiPath(pathProps: PostsApiPathProps) {
     post_type: pathProps.postType,
     status: pathProps.status,
     per_page: pathProps.perPage,
+    order: pathProps.order,
     orderby: pathProps.orderBy,
+    meta_key: pathProps.metaKey,
     current_post_id: pathProps.currentPostId,
   });
 }

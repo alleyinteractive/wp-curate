@@ -97,6 +97,25 @@ function wp_curate_query_block_init(): void {
 			),
 			'parselyAvailable'  => $parsely_available ? 'true' : 'false',
 			'maxPosts'          => $max_posts,
+			/**
+			 * Filters the order by options shown in the sidebar of the query block.
+			 *
+			 * @param array<string, string> $options The order by options as value => label pairs.
+			 *
+			 * @since 2.6.4
+			 */
+			'rawOrderByOptions' => apply_filters( 'wp_curate_order_by_options', [
+				'date'  => __( 'Date', 'wp-curate' ),
+				'title' => __( 'Title', 'wp-curate' ),
+			] ),
+			/**
+			 * Filters the meta keys available for ordering posts.
+			 *
+			 * @param array<string> $meta_keys The meta keys that can be used for ordering posts.
+			 *
+			 * @since 2.6.4
+			 */
+			'orderByMetaKeys'   => apply_filters( 'wp_curate_order_by_meta_keys', [] ),
 		]
 	);
 }
