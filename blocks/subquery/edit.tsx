@@ -233,13 +233,16 @@ export default function Edit({
 
       const resultIds = Array.isArray(result)
         ? result
-          .filter(
-            (post): post is { id: number } => post
+          .map((post: unknown) => {
+            if (post
               && typeof post === 'object'
               && 'id' in post
-              && typeof post.id === 'number',
-          )
-          .map((post) => post.id)
+              && typeof post.id === 'number') {
+              return post.id;
+            }
+            return 0;
+          })
+          .filter((id) => id !== 0)
         : [];
       setAttributes({ validPosts: resultIds });
     };
