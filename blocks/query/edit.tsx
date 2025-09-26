@@ -6,6 +6,7 @@ import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
+import { applyFilters } from '@wordpress/hooks';
 
 import { Template } from '@wordpress/blocks';
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -49,6 +50,7 @@ interface Window {
  * @return {WPElement} Element to render.
  */
 export default function Edit({
+  attributes,
   attributes: {
     backfillPosts = [],
     deduplication = 'inherit',
@@ -210,7 +212,7 @@ export default function Edit({
 
   manualPosts = manualPosts.slice(0, numberOfPosts); // eslint-disable-line no-param-reassign
 
-  const TEMPLATE: Template[] = [
+  const defaulTemplate: Template[] = [
     [
       'core/post-template',
       {},
@@ -226,6 +228,16 @@ export default function Edit({
       ],
     ],
   ];
+
+  const TEMPLATE: Template[] = applyFilters(
+    'wpCurate.queryBlock.innerBlocksTemplate',
+    defaulTemplate,
+    {
+      clientId,
+      attributes,
+      blockName: 'wp-curate/query',
+    },
+  ) as Template[];
 
   const displayTypes: Option[] = allowedPostTypes
     .map((type) => ({
