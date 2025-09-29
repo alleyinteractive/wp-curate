@@ -207,6 +207,22 @@ export default function Edit({
             resetText={__('Backfill post', 'wp-curate')}
             replaceText={__('Pin a different post', 'wp-curate')}
           />
+          {
+            // If this post isn't already in the posts list, show a button to pin it.
+            !posts.includes(postId) && !postDeleted
+              ? (
+                <Button
+                  className="wp-curate-post-block__pin-post"
+                  variant="secondary"
+                  onClick={() => {
+                    updatePost(postId);
+                  }}
+                >
+                  {__('Pin this post', 'wp-curate')}
+                </Button>
+              )
+              : null
+          }
         </div>
       ) : null}
     </div>
