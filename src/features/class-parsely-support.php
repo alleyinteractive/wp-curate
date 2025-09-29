@@ -45,8 +45,8 @@ final class Parsely_Support implements Feature {
 	 * @return array<number> Array of post IDs.
 	 */
 	public function add_parsely_trending_posts_query( array $posts, array $args ): array {
-		$parsely = $GLOBALS['parsely'];
-		if ( ! $parsely->api_secret_is_set() ) {
+		$parsely = $GLOBALS['parsely'] ?? null;
+		if ( is_null( $parsely ) || ! $parsely->api_secret_is_set() ) {
 			return $posts;
 		}
 		$trending_posts = $this->get_trending_posts( $args );
@@ -60,7 +60,7 @@ final class Parsely_Support implements Feature {
 	 * @return array<int> An array of post IDs.
 	 */
 	public function get_trending_posts( array $args ): array {
-		$parsely = $GLOBALS['parsely'];
+		$parsely = $GLOBALS['parsely'] ?? null;
 		if ( ! $parsely ) {
 			return [];
 		}
