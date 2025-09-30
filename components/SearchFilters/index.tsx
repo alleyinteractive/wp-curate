@@ -19,7 +19,8 @@ type SearchFiltersProps = {
   allowedTaxonomies: PostTypeOrTerm[];
   displayTypes: Option[];
   postTypes: string[];
-  setAttributes: (value: any) => void;
+  setPostTypes: (value: any) => void;
+  setTerms: (value: any) => void;
   terms: Record<string, Term[]>;
 };
 
@@ -27,33 +28,25 @@ export default function SearchFilters({
   allowedTaxonomies = [],
   displayTypes,
   postTypes,
-  setAttributes,
+  setPostTypes,
+  setTerms,
   terms,
 }: SearchFiltersProps) {
-
-  const setTerms = ((type: string, newTerms: Term[]) => {
-    const cleanedTerms = newTerms.map((term) => (
-      {
-        id: term.id,
-        title: term.title,
-        url: term.url,
-        type: term.type,
-      }
-    ));
+  const updateTerms = ((type: string, newTerms: Term[]) => {
     const newTermAttrs = {
       ...terms,
-      [type]: cleanedTerms,
+      [type]: newTerms,
     };
-    setAttributes({ terms: newTermAttrs, backfillPosts: [] });
+    setTerms(newTermAttrs);
   });
 
   return (
-    <HStack alignment="start" justify="left">
+    <HStack alignment="start" justify="left" spacing={4}>
       <div key="post-types">
         <Checkboxes
           label={__('Post Types', 'wp-curate')}
-          value={postTypes}
-          onChange={(next) => setAttributes({ postTypes: next, backfillPosts: [] })}
+          value={postTypes.length ? postTypes : displayTypes.map((type) => type.value)}
+          onChange={setPostTypes}
           options={displayTypes}
         />
       </div>
@@ -66,7 +59,7 @@ export default function SearchFilters({
             // @ts-ignore
             selected={terms[taxonomy.slug] ?? []}
             // @ts-ignore
-            onSelect={(newCategories: Term[]) => setTerms(taxonomy.slug, newCategories)}
+            onSelect={(newCategories: Term[]) => updateTerms(taxonomy.slug, newCategories)}
             multiple
           />
         </Fragment>

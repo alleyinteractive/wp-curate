@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import {
@@ -33,7 +33,6 @@ interface Window {
 }
 
 type QueryControlsProps = {
-  allowedPostTypes: PostTypeOrTerm[];
   allowedTaxonomies: PostTypeOrTerm[];
   deduplication: string;
   displayTypes: Option[];
@@ -63,7 +62,6 @@ type QueryControlsProps = {
 };
 
 export default function QueryControls({
-  allowedPostTypes,
   allowedTaxonomies = [],
   deduplication,
   displayTypes,
@@ -87,6 +85,9 @@ export default function QueryControls({
   termRelations,
   terms,
 }: QueryControlsProps) {
+  const [filterPostTypes, setFilterPostTypes] = useState<string[]>(postTypes);
+  const [filterTerms, setFilterTerms] = useState<Record<string, Term[]>>(terms);
+
   const {
     wpCurateQueryBlock: {
       rawOrderByOptions = {
@@ -180,6 +181,15 @@ export default function QueryControls({
     }
   };
 
+  // Get an object of taxonomies and termIds for filtering the
+  // PostPicker as <Record<string, number[]>.
+  const params: Record<string, number[]> = {};
+  Object.entries(filterTerms).forEach(([taxonomy, termList]) => {
+    if (termList.length) {
+      params[taxonomy] = termList.map((term) => term.id);
+    }
+  });
+
   return (
     <>
       <InspectorControls>
@@ -223,7 +233,7 @@ export default function QueryControls({
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
-                allowedTypes={postTypes}
+                allowedTypes={filterPostTypes}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] || 0}
@@ -232,11 +242,13 @@ export default function QueryControls({
                   <SearchFilters
                     allowedTaxonomies={allowedTaxonomies}
                     displayTypes={displayTypes}
-                    postTypes={postTypes}
-                    setAttributes={setAttributes}
-                    terms={terms}
+                    postTypes={filterPostTypes}
+                    setPostTypes={setFilterPostTypes}
+                    setTerms={setFilterTerms}
+                    terms={filterTerms}
                   />
                 )}
+                params={params}
               />
             </PanelRow>
           ))}

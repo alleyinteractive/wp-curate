@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import classnames from 'classnames';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { PostPicker } from '@alleyinteractive/block-editor-tools';
@@ -62,6 +63,10 @@ export default function Edit({
     } = {},
     name: parentName,
   } = queryParent;
+  const [filterPostTypes, setFilterPostTypes] = useState<string[]>(postTypes);
+  // TODO: Get this data.
+  // const [filterTerms, setFilterTerms] = useState<Record<string, Term[]>>(terms);
+  const [filterTerms, setFilterTerms] = useState<Record<string, Term[]>>({});
 
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
@@ -172,6 +177,15 @@ export default function Edit({
     }
   };
 
+    // Get an object of taxonomies and termIds for filtering the
+  // PostPicker as <Record<string, number[]>.
+  const params: Record<string, number[]> = {};
+  Object.entries(filterTerms).forEach(([taxonomy, termList]) => {
+    if (termList.length) {
+      params[taxonomy] = termList.map((term) => term.id);
+    }
+  });
+
   return (
     <div
       {...useBlockProps(
@@ -210,18 +224,17 @@ export default function Edit({
             filters={(
               <SearchFilters
                 allowedTaxonomies={[]}
-                displayTypes={postTypes.map((type) => ({ // TODO: get full post type object
-                  label: type,
-                  value: type,
-                }))}
-                postTypes={postTypes}
-                setAttributes={() => {}}
-                taxCount={0}
-                taxRelation="AND"
-                termRelations={{}}
-                terms={{}}
+                displayTypes={[]}
+                // TODO: Get this data.
+                // allowedTaxonomies={allowedTaxonomies}
+                // displayTypes={displayTypes}
+                postTypes={filterPostTypes}
+                setPostTypes={setFilterPostTypes}
+                setTerms={setFilterTerms}
+                terms={filterTerms}
               />
             )}
+            params={params}
           />
         </div>
       ) : null}
