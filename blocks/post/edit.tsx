@@ -7,6 +7,7 @@ import { Button } from '@wordpress/components';
 import { useCallback } from '@wordpress/element';
 
 import NoRender from './norender';
+import SearchFilters from '../../components/SearchFilters';
 
 import './index.scss';
 
@@ -206,6 +207,21 @@ export default function Edit({
             selectText={__('Pin a post', 'wp-curate')}
             resetText={__('Backfill post', 'wp-curate')}
             replaceText={__('Pin a different post', 'wp-curate')}
+            filters={(
+              <SearchFilters
+                allowedTaxonomies={[]}
+                displayTypes={postTypes.map((type) => ({ // TODO: get full post type object
+                  label: type,
+                  value: type,
+                }))}
+                postTypes={postTypes}
+                setAttributes={() => {}}
+                taxCount={0}
+                taxRelation="AND"
+                termRelations={{}}
+                terms={{}}
+              />
+            )}
           />
         </div>
       ) : null}

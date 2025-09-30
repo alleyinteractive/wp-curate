@@ -13,6 +13,7 @@ import {
 import { InspectorControls } from '@wordpress/block-editor';
 import { createInterpolateElement } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
+import SearchFilters from '../SearchFilters';
 
 import type {
   Option,
@@ -227,6 +228,15 @@ export default function QueryControls({
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] || 0}
                 className="manual-posts__picker"
+                filters={(
+                  <SearchFilters
+                    allowedTaxonomies={allowedTaxonomies}
+                    displayTypes={displayTypes}
+                    postTypes={postTypes}
+                    setAttributes={setAttributes}
+                    terms={terms}
+                  />
+                )}
               />
             </PanelRow>
           ))}
