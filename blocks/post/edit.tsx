@@ -203,9 +203,9 @@ export default function Edit({
             value={selected ?? 0}
             previewRender={(NoRender)}
             className="wp-curate-post-block__post-picker"
-            selectText={__('Pin a post', 'wp-curate')}
-            resetText={__('Backfill post', 'wp-curate')}
-            replaceText={__('Pin a different post', 'wp-curate')}
+            selectText={__('Pin a Post', 'wp-curate')}
+            resetText={__('Backfill Post', 'wp-curate')}
+            replaceText={__('Pin a Different Post', 'wp-curate')}
           />
           {
             // If this post isn't already in the posts list, show a button to pin it.
@@ -218,7 +218,7 @@ export default function Edit({
                     updatePost(postId);
                   }}
                 >
-                  {__('Pin this post', 'wp-curate')}
+                  {__('Pin This Post', 'wp-curate')}
                 </Button>
               )
               : null
