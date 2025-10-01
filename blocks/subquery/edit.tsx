@@ -317,7 +317,6 @@ export default function Edit({
           )}
         </div>
         <QueryControls
-          allowedPostTypes={allowedPostTypes}
           allowedTaxonomies={allowedTaxonomies}
           deduplication={deduplication}
           displayTypes={displayTypes}

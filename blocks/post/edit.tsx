@@ -10,6 +10,11 @@ import { useCallback } from '@wordpress/element';
 import NoRender from './norender';
 import SearchFilters from '../../components/SearchFilters';
 
+import type {
+  Term,
+  Option,
+} from '../query/types';
+
 import './index.scss';
 
 interface PostEditProps {
@@ -25,6 +30,19 @@ interface PostEditProps {
     };
   };
   isSelected: boolean;
+}
+
+interface PostTypeOrTerm {
+  name: string;
+  slug: string;
+  rest_base?: string;
+}
+
+interface Window {
+  wpCurateQueryBlock: {
+    allowedTaxonomies: PostTypeOrTerm[];
+    allowedPostTypes: PostTypeOrTerm[];
+  };
 }
 
 /**
@@ -43,6 +61,13 @@ export default function Edit({
   },
   isSelected,
 }: PostEditProps) {
+  const {
+    wpCurateQueryBlock: {
+      allowedTaxonomies = [],
+      allowedPostTypes = [],
+    } = {},
+  } = (window as any as Window);
+
   // @ts-ignore
   const queryParents = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
   const queryParentId = queryParents.pop();
@@ -52,6 +77,8 @@ export default function Edit({
     attributes: {
       posts: [],
       postTypes: [],
+      terms: {},
+      supportsPostTypes: [],
     },
   };
 
@@ -60,13 +87,14 @@ export default function Edit({
     attributes: {
       posts = [],
       postTypes = [],
+      terms = {},
+      supportsPostTypes = [],
     } = {},
     name: parentName,
   } = queryParent;
+
   const [filterPostTypes, setFilterPostTypes] = useState<string[]>(postTypes);
-  // TODO: Get this data.
-  // const [filterTerms, setFilterTerms] = useState<Record<string, Term[]>>(terms);
-  const [filterTerms, setFilterTerms] = useState<Record<string, Term[]>>({});
+  const [filterTerms, setFilterTerms] = useState<Record<string, Term[]>>(terms);
 
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
@@ -177,7 +205,7 @@ export default function Edit({
     }
   };
 
-    // Get an object of taxonomies and termIds for filtering the
+  // Get an object of taxonomies and termIds for filtering the
   // PostPicker as <Record<string, number[]>.
   const params: Record<string, number[]> = {};
   Object.entries(filterTerms).forEach(([taxonomy, termList]) => {
@@ -185,6 +213,21 @@ export default function Edit({
       params[taxonomy] = termList.map((term) => term.id);
     }
   });
+
+  const displayTypes: Option[] = allowedPostTypes
+    .map((type) => ({
+      label: type.name,
+      value: type.slug,
+    }))
+    .filter((type) => {
+      // Inherits globally supported post types if attribute is empty.
+      if (!supportsPostTypes.length) {
+        return true;
+      }
+
+      // Display only supported post types defined by block.
+      return supportsPostTypes.includes(type.value);
+    });
 
   return (
     <div
@@ -212,7 +255,7 @@ export default function Edit({
             </Button>
           ) : <span />}
           <PostPicker
-            allowedTypes={postTypes}
+            allowedTypes={filterPostTypes}
             onUpdate={updatePost}
             onReset={resetPost}
             value={selected ?? 0}
@@ -223,11 +266,8 @@ export default function Edit({
             replaceText={__('Pin a different post', 'wp-curate')}
             filters={(
               <SearchFilters
-                allowedTaxonomies={[]}
-                displayTypes={[]}
-                // TODO: Get this data.
-                // allowedTaxonomies={allowedTaxonomies}
-                // displayTypes={displayTypes}
+                allowedTaxonomies={allowedTaxonomies}
+                displayTypes={displayTypes}
                 postTypes={filterPostTypes}
                 setPostTypes={setFilterPostTypes}
                 setTerms={setFilterTerms}
