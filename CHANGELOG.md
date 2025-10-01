@@ -2,6 +2,10 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.7.1 - 2025-10-01
+
+- Enhancement: Add option to "Pin This Post" so editors can pin the selected post.
+
 ## 2.7.0 - 2025-09-05
 
 - Enhancement: Update wp-type-extensions to 4.0.0.
