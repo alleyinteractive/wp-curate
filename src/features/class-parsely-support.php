@@ -47,7 +47,7 @@ final class Parsely_Support implements Feature {
 	public function add_parsely_trending_posts_query( array $posts, array $args ): array {
 		global $parsely;
 
-		if ( ! $parsely instanceof \Parsely\Parsely || ! $parsely->api_secret_is_set() ) {
+		if ( ! class_exists( '\Parsely\Parsely' ) || empty( $parsely ) || ! $parsely instanceof Parsely || ! $parsely->api_secret_is_set() ) {
 			return $posts;
 		}
 		$trending_posts = $this->get_trending_posts( $args );
