@@ -62,13 +62,10 @@ final class Parsely_Support implements Feature {
 	 */
 	public function get_trending_posts( array $args ): array {
 		global $parsely;
-		if ( ! $parsely ) {
+		if ( ! class_exists( '\Parsely\Parsely' ) || ! isset( $parsely ) || ! $parsely instanceof Parsely ) {
 			return [];
 		}
 		if ( ! $parsely->api_secret_is_set() ) {
-			return [];
-		}
-		if ( ! class_exists( '\Parsely\Parsely' ) || ! isset( $GLOBALS['parsely'] ) || ! $GLOBALS['parsely'] instanceof Parsely ) {
 			return [];
 		}
 		if ( ! class_exists( '\Parsely\RemoteAPI\Analytics_Posts_API' ) ) {
