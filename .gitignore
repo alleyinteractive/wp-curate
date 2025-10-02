@@ -10,6 +10,7 @@ node_modules
 # Cache files
 .phpcs/*.json
 .phpunit.result.cache
+.phpunit.cache/
 
 # Ignore temporary OS files
 .DS_Store
