@@ -24,6 +24,13 @@ type PostTypeOrTerm = {
   slug: string;
 };
 
+interface Window {
+  wpCurateQueryBlock: {
+    rawOrderByOptions: Record<string, string>;
+    orderByMetaKeys: string[];
+  };
+}
+
 type QueryControlsProps = {
   allowedPostTypes: PostTypeOrTerm[];
   allowedTaxonomies: PostTypeOrTerm[];
@@ -33,9 +40,11 @@ type QueryControlsProps = {
   manualPosts: Array<number | null>;
   maxPosts: number;
   maxNumberOfPosts: number;
+  metaKey: string;
   minNumberOfPosts: number;
   numberOfPosts: number;
   offset: number;
+  order: 'asc' | 'desc';
   orderby: string;
   parselyAvailable: string;
   postTypeObject: {
@@ -61,9 +70,11 @@ export default function QueryControls({
   manualPosts,
   maxPosts,
   maxNumberOfPosts: maxNumberOfPostsAttr,
+  metaKey,
   minNumberOfPosts,
   numberOfPosts,
   offset,
+  order,
   orderby,
   parselyAvailable,
   postTypeObject,
@@ -75,6 +86,33 @@ export default function QueryControls({
   termRelations,
   terms,
 }: QueryControlsProps) {
+  const {
+    wpCurateQueryBlock: {
+      rawOrderByOptions = {
+        title: __('Title', 'wp-curate'),
+        date: __('Date', 'wp-curate'),
+      },
+      orderByMetaKeys = [],
+    } = {},
+  } = (window as any as Window);
+
+  const orderByOptions = [];
+  for (const [key, label] of Object.entries(rawOrderByOptions)) {
+    orderByOptions.push({ label, value: key });
+  }
+
+  const metaKeyOptions = [];
+  if (orderByMetaKeys.length > 0) {
+    metaKeyOptions.push(
+      { label: __('Select', 'wp-curate'), value: '' },
+    );
+    orderByMetaKeys.forEach((key) => {
+      metaKeyOptions.push(
+        { label: key, value: key },
+      );
+    });
+  }
+
   const andOrOptions = [
     {
       label: __('AND', 'wp-curate'),
@@ -85,6 +123,12 @@ export default function QueryControls({
       value: 'OR',
     },
   ];
+
+  if (metaKeyOptions.length > 0) {
+    orderByOptions.push(
+      { label: __('Meta Value', 'wp-curate'), value: 'meta_value' },
+    );
+  }
 
   const maxNumberOfPosts = !maxNumberOfPostsAttr || maxNumberOfPostsAttr > maxPosts ? maxPosts : maxNumberOfPostsAttr; // eslint-disable-line max-len
 
@@ -127,6 +171,12 @@ export default function QueryControls({
     }
     newManualPosts.splice(index, 1, id);
     setAttributes({ posts: newManualPosts });
+  };
+
+  const maybeClearMetaKey = (orderBy: string) => {
+    if (orderBy !== 'meta_value' && metaKey) {
+      setAttributes({ metaKey: '' });
+    }
   };
 
   return (
@@ -194,11 +244,13 @@ export default function QueryControls({
           />
           {allowedTaxonomies.map((taxonomy) => (
             <Fragment key={taxonomy.slug}>
-              { /* @ts-ignore */ }
+              { /* TODO: Fix the @ts-ignore usage. */ }
               <TermSelector
                 label={taxonomy.name}
                 subTypes={[taxonomy.slug]}
+                // @ts-ignore
                 selected={terms[taxonomy.slug] ?? []}
+                // @ts-ignore
                 onSelect={(newCategories: Term[]) => setTerms(taxonomy.slug, newCategories)}
                 multiple
               />
@@ -230,6 +282,33 @@ export default function QueryControls({
             label={__('Search Term', 'wp-curate')}
             onChange={(next) => setAttributes({ searchTerm: next, backfillPosts: [] })}
             value={searchTerm}
+          />
+          <SelectControl
+            label={__('Order By', 'wp-curate')}
+            options={orderByOptions}
+            onChange={(next) => {
+              setAttributes({ orderby: next, backfillPosts: [] });
+              maybeClearMetaKey(next);
+            }}
+            value={orderby}
+          />
+          {(orderby === 'meta_value') && metaKeyOptions.length > 0 ? (
+            <SelectControl
+              label={__('Meta Key', 'wp-curate')}
+              options={metaKeyOptions}
+              onChange={(next) => setAttributes({ metaKey: next, backfillPosts: [] })}
+              value={metaKey}
+            />
+          ) : null}
+          <SelectControl
+            label={__('Order Direction', 'wp-curate')}
+            help={__('Ascending means A-Z or 0-9 or oldest to newest. Descending means Z-A or 9-0 or newest to oldest.', 'wp-curate')}
+            options={[
+              { label: __('Ascending', 'wp-curate'), value: 'asc' },
+              { label: __('Descending', 'wp-curate'), value: 'desc' },
+            ]}
+            onChange={(next) => setAttributes({ order: next, backfillPosts: [] })}
+            value={order}
           />
           { parselyAvailable === 'true' ? (
             <ToggleControl

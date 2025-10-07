@@ -98,10 +98,18 @@
     },
     "orderby": {
       "default": "date",
+      "type": "string"
+    },
+    "order": {
+      "default": "desc",
       "enum": [
-        "date",
-        "trending"
+        "asc",
+        "desc"
       ],
+      "type": "string"
+    },
+    "metaKey": {
+      "default": "",
       "type": "string"
     },
     "customPostTitles": {

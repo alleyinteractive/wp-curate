@@ -8,7 +8,6 @@ import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
 
 import { Template } from '@wordpress/blocks';
-import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 import apiFetch from '@wordpress/api-fetch';
 import { v4 as uuid } from 'uuid';
 
@@ -64,7 +63,10 @@ export default function Edit({
     termRelations = {},
     taxRelation = 'AND',
     orderby = 'date',
+    order = 'desc',
+    metaKey = '',
     uniqueId = '',
+    validPosts = [],
   },
   setAttributes,
   context: {
@@ -76,6 +78,7 @@ export default function Edit({
 }: EditProps) {
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
+  const isFirstPost = index === 0;
 
   const {
     wpCurateQueryBlock: {
@@ -85,10 +88,6 @@ export default function Edit({
       maxPosts = 10,
     } = {},
   } = (window as any as Window);
-
-  if (!postTypes.length) {
-    setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
-  }
 
   // @ts-ignore
   const [
@@ -138,16 +137,29 @@ export default function Edit({
     postType: postTypeString,
     status: 'publish',
     perPage: 20,
+    order: 'desc',
     orderBy: orderby,
+    metaKey: '',
     currentPostId,
   })}&${termQueryArgs}`;
 
+  useEffect(() => {
+    if (!isFirstPost) {
+      return;
+    }
+
+    if (postTypes?.length > 0) {
+      return;
+    }
+
+    setAttributes({ postTypes: allowedPostTypes.map(({ slug }) => slug) });
+  }, [allowedPostTypes, isFirstPost, postTypes?.length, setAttributes]);
+
   // Use SWR to fetch data.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { data, error } = index === 0 ? useSWRImmutable(
-    [path, currentPostId],
+  const { data, error } = useSWRImmutable(
+    isFirstPost ? [path, currentPostId] : null,
     queryBlockPostFetcher,
-  ) : { data: null, error: null };
+  );
 
   useEffect(() => {
     if (!uniqueId) {
@@ -157,30 +169,31 @@ export default function Edit({
 
   // Handle the fetched data.
   useEffect(() => {
-    if (index !== 0) {
+    if (!isFirstPost) {
       return;
     }
     if (data && !error) {
       setAttributes({ backfillPosts: data });
     }
-  }, [index, data, error, setAttributes]);
+  }, [data, error, setAttributes, isFirstPost]);
 
-  // Update the query when the backfillPosts change.
-  // The query is passed via context to the core/post-template block.
+  /**
+   * Update the query when the backfillPosts change.
+   * The query is passed via context to the core/post-template block.
+   */
   useEffect(() => {
-    if (index !== 0) {
+    if (!isFirstPost) {
       return;
     }
     if (data && !error && backfillPosts.length > 0) {
       mainDedupe();
     }
   }, [
+    isFirstPost,
     manualPostIds,
     backfillPosts,
     numberOfPosts,
-    setAttributes,
     postTypeString,
-    index,
     isPostDeduplicating,
     deduplication,
     uniquePinnedPosts,
@@ -188,42 +201,88 @@ export default function Edit({
     error,
   ]);
 
-  // Make sure all the manual posts are still valid.
+  /**
+   * Update validPosts based on manualPosts.
+   */
   useEffect(() => {
+    if (!isFirstPost) {
+      return;
+    }
+
     const updateValidPosts = async () => {
       const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
-      let validPosts: Number[] = [];
 
-      if (postsToInclude.length > 0) {
-        validPosts = await apiFetch({
-          path: addQueryArgs(
-            '/wp/v2/posts',
-            {
-              offset: 0,
-              orderby: 'include',
-              per_page: postsToInclude.length,
-              type: postTypeString,
-              include: postsToInclude,
-              _locale: 'user',
-              context: 'edit',
-            },
-          ),
-        }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
+      if (!postsToInclude) {
+        return;
       }
 
-      setAttributes({ validPosts });
-      mainDedupe();
+      const result = await apiFetch<unknown>({
+        path: addQueryArgs(
+          '/wp/v2/posts',
+          {
+            offset: 0,
+            orderby: 'include',
+            per_page: postsToInclude.length,
+            type: postTypeString,
+            include: postsToInclude,
+            _locale: 'user',
+            context: 'edit',
+          },
+        ),
+      });
+
+      const resultIds = Array.isArray(result)
+        ? result
+          .map((post: unknown) => {
+            if (post
+              && typeof post === 'object'
+              && 'id' in post
+              && typeof post.id === 'number') {
+              return post.id;
+            }
+            return 0;
+          })
+          .filter((id) => id !== 0)
+        : [];
+      setAttributes({ validPosts: resultIds });
     };
+
     updateValidPosts();
-  }, [manualPosts, setAttributes, postTypeString]);
+  }, [isFirstPost, manualPosts, postTypeString, setAttributes]);
 
-  for (let i = 0; i < numberOfPosts; i += 1) {
-    if (!manualPosts[i]) {
-      manualPosts[i] = null; // eslint-disable-line no-param-reassign
+  /**
+   * Check if deduplication is needed when validPosts are available.
+   */
+  useEffect(() => {
+    if (!isFirstPost) {
+      return;
     }
-  }
 
-  manualPosts = manualPosts.slice(0, numberOfPosts); // eslint-disable-line no-param-reassign
+    if (validPosts.length > 0) {
+      mainDedupe();
+    }
+  }, [isFirstPost, validPosts.length]);
+
+  /**
+   * Normalize manualPosts to ensure it has the correct length and no undefined values.
+   */
+  useEffect(() => {
+    if (!isFirstPost) {
+      return;
+    }
+    // Check if normalization is needed.
+    const needsUpdate = manualPosts.length !== numberOfPosts
+      || manualPosts.some((post) => post === undefined);
+
+    if (needsUpdate) {
+      // Create normalized array in one go.
+      const normalizedPosts = Array(numberOfPosts)
+        .fill(null)
+        .map((_, i) => manualPosts[i] || null);
+
+      setAttributes({ posts: normalizedPosts });
+    }
+  }, [isFirstPost, manualPosts, numberOfPosts, setAttributes]);
 
   const TEMPLATE: Template[] = [
     [
@@ -246,8 +305,9 @@ export default function Edit({
     value: type.slug,
   }));
   const blockProps = useBlockProps();
+
   return (
-    index === 0 ? (
+    isFirstPost ? (
       <>
         <div {...blockProps}>
           {numberOfPosts > 0 ? (
@@ -269,6 +329,8 @@ export default function Edit({
           numberOfPosts={numberOfPosts}
           offset={offset}
           orderby={orderby}
+          order={order}
+          metaKey={metaKey}
           parselyAvailable={parselyAvailable}
           postTypeObject={postTypeObject}
           postTypes={postTypes}
