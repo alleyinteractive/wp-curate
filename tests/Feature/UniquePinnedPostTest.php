@@ -7,7 +7,7 @@
 
 namespace Alley\WP\WP_Curate\Tests\Feature;
 
-use Alley\WP\WP_Curate\Tests\Test_Case;
+use Alley\WP\WP_Curate\Tests\TestCase;
 use simplehtmldom\HtmlDocument;
 
 /**
@@ -15,7 +15,7 @@ use simplehtmldom\HtmlDocument;
  *
  * @link https://mantle.alley.com/testing/test-framework.html
  */
-class UniquePinnedPostTest extends Test_Case {
+class UniquePinnedPostTest extends TestCase {
 	/**
 	 * Run before each test.
 	 */

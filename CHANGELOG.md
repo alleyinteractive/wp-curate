@@ -2,6 +2,19 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## 2.7.1 - 2025-10-01
+
+- Enhancement: Add option to "Pin This Post" so editors can pin the selected post.
+
+## 2.7.0 - 2025-09-05
+
+- Enhancement: Update wp-type-extensions to 4.0.0.
+
+## 2.6.4 - 2025-08-29
+
+- Enhancement: Add options to order by different post values and choose the sort direction.
+    addresses https://github.com/alleyinteractive/wp-curate/issues/169 and https://github.com/alleyinteractive/wp-curate/issues/158
+
 ## 2.6.3 - 2025-07-17
 
 - Bug Fix: Require Subquery block to have a parent Query block to prevent errors when used outside of a Query block.
