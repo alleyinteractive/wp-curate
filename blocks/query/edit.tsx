@@ -206,13 +206,16 @@ export default function Edit({
     updateValidPosts();
   }, [manualPosts, setAttributes, postTypeString]);
 
-  for (let i = 0; i < numberOfPosts; i += 1) {
-    if (!manualPosts[i]) {
-      manualPosts[i] = null; // eslint-disable-line no-param-reassign
-    }
-  }
+  // When numberOfPosts changes, update manualPosts array.
+  useEffect(() => {
+    if (manualPosts.length !== numberOfPosts) {
+      const normalizedPosts = Array(numberOfPosts)
+        .fill(null)
+        .map((_, i) => manualPosts[i] || null);
 
-  manualPosts = manualPosts.slice(0, numberOfPosts); // eslint-disable-line no-param-reassign
+      setAttributes({ posts: normalizedPosts });
+    }
+  }, [numberOfPosts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const TEMPLATE: Template[] = [
     [
