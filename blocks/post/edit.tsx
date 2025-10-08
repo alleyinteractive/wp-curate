@@ -40,7 +40,6 @@ interface PostTypeOrTerm {
 
 interface Window {
   wpCurateQueryBlock: {
-    allowedTaxonomies: PostTypeOrTerm[];
     allowedPostTypes: PostTypeOrTerm[];
   };
 }
@@ -229,6 +228,8 @@ export default function Edit({
       return supportsPostTypes.includes(type.value);
     });
 
+  const shouldShowFilter = displayTypes.length !== postTypes.length
+    || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
   return (
     <div
       {...useBlockProps(
@@ -266,9 +267,7 @@ export default function Edit({
             replaceText={__('Pin a Different Post', 'wp-curate')}
             filters={(
               <SearchFilters
-                shouldShowFilter={
-                  displayTypes.length !== postTypes.length || Object.keys(terms).length > 0
-                }
+                shouldShowFilter={shouldShowFilter}
                 filtered={filtered}
                 setFiltered={setFiltered}
               />

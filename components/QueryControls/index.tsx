@@ -191,6 +191,8 @@ export default function QueryControls({
     });
   }
 
+  const shouldShowFilter = displayTypes.length !== postTypes.length
+    || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
   return (
     <>
       <InspectorControls>
@@ -241,7 +243,7 @@ export default function QueryControls({
                 className="manual-posts__picker"
                 filters={(
                   <SearchFilters
-                    shouldShowFilter
+                    shouldShowFilter={shouldShowFilter}
                     filtered={filtered}
                     setFiltered={setFiltered}
                   />
