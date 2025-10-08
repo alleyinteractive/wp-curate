@@ -13,14 +13,11 @@
   }
 
   &__actions {
-    align-items: center;
+    align-items: flex-end;
     display: flex;
-    justify-content: space-between;
+    gap: 0.5rem;
+    justify-content: flex-end;
     margin-top: 0.5rem;
-
-    &__post-picker {
-      align-self: flex-end;
-    }
   }
 }
 
@@ -67,10 +64,10 @@
   .wp-curate-post-block__actions, .components-button-group {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
     width: 100%;
 
     button {
-      margin: 0 0 0.25rem 0 !important;
       text-align: left;
       width: 100%;
     }
