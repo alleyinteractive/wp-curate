@@ -226,7 +226,7 @@ final class Rest_Api implements Feature {
 		if ( empty( $tax_query ) ) {
 			return $query_args;
 		}
-		$query_args['tax_query'] = [
+		$query_args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 			$tax_query,
 		];
 		return $query_args;
