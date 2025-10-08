@@ -3,16 +3,6 @@ import {
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-import type {
-  Option,
-  Term,
-} from '../../blocks/query/types';
-
-type PostTypeOrTerm = {
-  name: string;
-  slug: string;
-};
-
 type SearchFiltersProps = {
   shouldShowFilter?: boolean;
   filtered?: boolean;

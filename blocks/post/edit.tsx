@@ -76,7 +76,7 @@ export default function Edit({
     attributes: {
       posts: [],
       postTypes: [],
-      terms: {},
+      terms: {} as Record<string, Term[]>,
       supportsPostTypes: [],
     },
   };
@@ -86,7 +86,7 @@ export default function Edit({
     attributes: {
       posts = [],
       postTypes = [],
-      terms = {},
+      terms = {} as Record<string, Term[]>,
       supportsPostTypes = [],
     } = {},
     name: parentName,
@@ -208,7 +208,7 @@ export default function Edit({
   const params: Record<string, number[]> = {};
   if (filtered) {
     Object.entries(terms).forEach(([taxonomy, termList]) => {
-      if (termList.length) {
+      if (Array.isArray(termList) && termList.length) {
         params[taxonomy] = termList.map((term) => term.id);
       }
     });
@@ -229,7 +229,6 @@ export default function Edit({
       return supportsPostTypes.includes(type.value);
     });
 
-  const allowedPostTypeSlugs = allowedPostTypes.map((type) => type.slug);
   return (
     <div
       {...useBlockProps(
@@ -256,10 +255,7 @@ export default function Edit({
             </Button>
           ) : <span />}
           <PostPicker
-            allowedTypes={filtered
-              ? displayTypes.map((type) => type.value).filter((type) => allowedPostTypeSlugs.includes(type)) // eslint-disable-line max-len
-              : allowedPostTypeSlugs
-            }
+            allowedTypes={filtered ? postTypes : displayTypes.map((type) => type.value)}
             onUpdate={updatePost}
             onReset={resetPost}
             value={selected ?? 0}

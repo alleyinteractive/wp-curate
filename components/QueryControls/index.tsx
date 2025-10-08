@@ -234,7 +234,7 @@ export default function QueryControls({
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
-                allowedTypes={filtered ? displayTypes.map((type) => type.value) : displayTypes.map((type) => type.value)} // eslint-disable-line max-len
+                allowedTypes={filtered ? postTypes : displayTypes.map((type) => type.value)}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] || 0}
