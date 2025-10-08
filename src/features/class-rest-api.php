@@ -200,9 +200,9 @@ final class Rest_Api implements Feature {
 	/**
 	 * Add taxonomy term support to rest post search query if the term param is set.
 	 *
-	 * @param array<array<int, string>|string> $query_args The existing query args.
-	 * @param WP_REST_Request                  $request The REST request.
-	 * @return array<array<int, string>|string>
+	 * @param array<array<int, string>|string>      $query_args The existing query args.
+	 * @param WP_REST_Request<array<string, mixed>> $request The REST request.
+	 * @return array<array<int, array<int, array<string, mixed>>|string>|string>
 	 */
 	public function add_term_support( $query_args, $request ): array {
 		$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
