@@ -18,7 +18,7 @@ export default function SearchFilters({
     shouldShowFilter ? (
       <p>
         <CheckboxControl
-          label={__('Filter results to match Query block setting', 'wp-curate')}
+          label={__('Filter results based on current Query Parameters', 'wp-curate')}
           checked={filtered}
           onChange={setFiltered}
         />
