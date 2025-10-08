@@ -63,7 +63,6 @@ export default function Edit({
 }: PostEditProps) {
   const {
     wpCurateQueryBlock: {
-      allowedTaxonomies = [],
       allowedPostTypes = [],
     } = {},
   } = (window as any as Window);
@@ -93,8 +92,7 @@ export default function Edit({
     name: parentName,
   } = queryParent;
 
-  const [filterPostTypes, setFilterPostTypes] = useState<string[]>(postTypes);
-  const [filterTerms, setFilterTerms] = useState<Record<string, Term[]>>(terms);
+  const [filtered, setFiltered] = useState(true);
 
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
@@ -208,11 +206,13 @@ export default function Edit({
   // Get an object of taxonomies and termIds for filtering the
   // PostPicker as <Record<string, number[]>.
   const params: Record<string, number[]> = {};
-  Object.entries(filterTerms).forEach(([taxonomy, termList]) => {
-    if (termList.length) {
-      params[taxonomy] = termList.map((term) => term.id);
-    }
-  });
+  if (filtered) {
+    Object.entries(terms).forEach(([taxonomy, termList]) => {
+      if (termList.length) {
+        params[taxonomy] = termList.map((term) => term.id);
+      }
+    });
+  }
 
   const displayTypes: Option[] = allowedPostTypes
     .map((type) => ({
@@ -229,6 +229,7 @@ export default function Edit({
       return supportsPostTypes.includes(type.value);
     });
 
+  const allowedPostTypeSlugs = allowedPostTypes.map((type) => type.slug);
   return (
     <div
       {...useBlockProps(
@@ -255,7 +256,10 @@ export default function Edit({
             </Button>
           ) : <span />}
           <PostPicker
-            allowedTypes={filterPostTypes}
+            allowedTypes={filtered
+              ? displayTypes.map((type) => type.value).filter((type) => allowedPostTypeSlugs.includes(type)) // eslint-disable-line max-len
+              : allowedPostTypeSlugs
+            }
             onUpdate={updatePost}
             onReset={resetPost}
             value={selected ?? 0}
@@ -266,12 +270,11 @@ export default function Edit({
             replaceText={__('Pin a Different Post', 'wp-curate')}
             filters={(
               <SearchFilters
-                allowedTaxonomies={allowedTaxonomies}
-                displayTypes={displayTypes}
-                postTypes={filterPostTypes}
-                setPostTypes={setFilterPostTypes}
-                setTerms={setFilterTerms}
-                terms={filterTerms}
+                shouldShowFilter={
+                  displayTypes.length !== postTypes.length || Object.keys(terms).length > 0
+                }
+                filtered={filtered}
+                setFiltered={setFiltered}
               />
             )}
             params={params}

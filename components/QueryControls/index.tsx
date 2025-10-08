@@ -85,8 +85,7 @@ export default function QueryControls({
   termRelations,
   terms,
 }: QueryControlsProps) {
-  const [filterPostTypes, setFilterPostTypes] = useState<string[]>(postTypes);
-  const [filterTerms, setFilterTerms] = useState<Record<string, Term[]>>(terms);
+  const [filtered, setFiltered] = useState(true);
 
   const {
     wpCurateQueryBlock: {
@@ -184,11 +183,13 @@ export default function QueryControls({
   // Get an object of taxonomies and termIds for filtering the
   // PostPicker as <Record<string, number[]>.
   const params: Record<string, number[]> = {};
-  Object.entries(filterTerms).forEach(([taxonomy, termList]) => {
-    if (termList.length) {
-      params[taxonomy] = termList.map((term) => term.id);
-    }
-  });
+  if (filtered) {
+    Object.entries(terms).forEach(([taxonomy, termList]) => {
+      if (termList.length) {
+        params[taxonomy] = termList.map((term) => term.id);
+      }
+    });
+  }
 
   return (
     <>
@@ -233,19 +234,16 @@ export default function QueryControls({
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
-                allowedTypes={filterPostTypes}
+                allowedTypes={filtered ? displayTypes.map((type) => type.value) : displayTypes.map((type) => type.value)} // eslint-disable-line max-len
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] || 0}
                 className="manual-posts__picker"
                 filters={(
                   <SearchFilters
-                    allowedTaxonomies={allowedTaxonomies}
-                    displayTypes={displayTypes}
-                    postTypes={filterPostTypes}
-                    setPostTypes={setFilterPostTypes}
-                    setTerms={setFilterTerms}
-                    terms={filterTerms}
+                    shouldShowFilter
+                    filtered={filtered}
+                    setFiltered={setFiltered}
                   />
                 )}
                 params={params}
