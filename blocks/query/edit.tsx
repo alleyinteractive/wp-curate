@@ -3,11 +3,10 @@ import { useEffect } from 'react';
 import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
-import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
+import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
-import { Template } from '@wordpress/blocks';
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
@@ -23,6 +22,7 @@ import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 
 import QueryControls from '../../components/QueryControls';
+import QueryVariationPicker from '../../components/QueryVariationPicker';
 import './index.scss';
 
 interface PostTypeOrTerm {
@@ -49,6 +49,7 @@ interface Window {
  * @return {WPElement} Element to render.
  */
 export default function Edit({
+  attributes,
   attributes: {
     backfillPosts = [],
     deduplication = 'inherit',
@@ -83,6 +84,12 @@ export default function Edit({
   if (!postTypes.length) {
     setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
   }
+
+  const hasInnerBlocks = useSelect(
+		(select) =>
+			!!select(blockEditorStore).getBlocks(clientId).length,
+		[clientId]
+	);
 
   // @ts-ignore
   const [
@@ -217,23 +224,6 @@ export default function Edit({
     }
   }, [numberOfPosts]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const TEMPLATE: Template[] = [
-    [
-      'core/post-template',
-      {},
-      [
-        [
-          'wp-curate/post',
-          {},
-          [
-            ['wp-curate/post-title', {}],
-            ['core/post-excerpt', {}],
-          ],
-        ],
-      ],
-    ],
-  ];
-
   const displayTypes: Option[] = allowedPostTypes
     .map((type) => ({
       label: type.name,
@@ -249,6 +239,15 @@ export default function Edit({
       return supportsPostTypes.includes(type.value);
     });
 
+  const Content = hasInnerBlocks ? (
+    <InnerBlocks />
+  ) : (
+    <QueryVariationPicker
+      clientId={clientId}
+      attributes={attributes}
+    />
+  );
+
   return (
     <>
       <div {...useBlockProps({
@@ -260,7 +259,9 @@ export default function Edit({
         {
           error ? (
             <p>{__('No results found.', 'wp-curate')}</p>
-          ) : <InnerBlocks template={TEMPLATE} />
+          ) : (
+            Content
+          )
         }
       </div>
       <QueryControls

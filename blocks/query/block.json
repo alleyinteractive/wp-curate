@@ -127,6 +127,10 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "layout": {
+      "default": "list",
+      "type": "string"
     }
   }
 }

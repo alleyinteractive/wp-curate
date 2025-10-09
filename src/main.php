@@ -46,6 +46,8 @@ function main(): void {
 		new Features\Parsely_Support(),
 		new Features\Rest_Api(),
 		new Features\GraphQL(),
+		new Features\Block_Variations(),
+		new Features\Block_Patterns(),
 	);
 	// phpcs:enable
 
