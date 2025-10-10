@@ -80,8 +80,11 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
 /**
  * This is the main function to update all pinned posts. Call it whenever a pinned post
  * changes or the query settings change.
+ *
+ * @param {Block[]} blocks All blocks in the editor.
+ * @param {*} blockEditorDispatch The block editor dispatch object from wp.data.
  */
-export function mainDedupe() {
+export function mainDedupe(blocks: Block[], blockEditorDispatch) {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
@@ -102,7 +105,7 @@ export function mainDedupe() {
   redo = false;
   resetUsedIds();
   // @ts-ignore
-  const blocks: Block[] = select('core/block-editor').getBlocks();
+
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
     wp_curate_unique_pinned_posts: wpCurateUniquePinnedPosts = false,
@@ -128,6 +131,7 @@ export function mainDedupe() {
   // Loop through all query blocks and set backfilled posts in the open slots.
   queryBlocks.forEach((queryBlock) => {
     const { attributes } = queryBlock;
+
     const {
       backfillPosts = null,
       deduplication = 'inherit',
@@ -190,27 +194,26 @@ export function mainDedupe() {
 
     // Update the query block with the new query.
     // @ts-ignore
-    dispatch('core/block-editor')
-      .updateBlockAttributes(
-        queryBlock.clientId,
-        {
-          // Set the query attribute to pass to the child blocks.
-          query: {
-            perPage: numberOfPosts,
-            postType: 'post',
-            type: postTypeString,
-            include: allPostIds.join(','),
-            orderby: 'include',
-          },
-          queryId: 0,
+    blockEditorDispatch.updateBlockAttributes(
+      queryBlock.clientId,
+      {
+        // Set the query attribute to pass to the child blocks.
+        query: {
+          perPage: numberOfPosts,
+          postType: 'post',
+          type: postTypeString,
+          include: allPostIds.join(','),
+          orderby: 'include',
         },
-      );
+        queryId: 0,
+      },
+    );
   });
 
   running = false;
 
   if (redo) {
     // Another run has been requested. Let's run it.
-    mainDedupe();
+    mainDedupe(blocks, blockEditorDispatch);
   }
 }

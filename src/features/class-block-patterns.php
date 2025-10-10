@@ -28,7 +28,7 @@ final class Block_Patterns implements Feature {
 			[
 				'title'       => __( 'WP Curate Query: List', 'wp-curate' ),
 				'description' => _x( 'A list style query block.', 'Block pattern description', 'wp-curate' ),
-				'content'     => '<!-- wp:wp-curate/query --><div class="wp-block-wp-curate-query"><!-- wp:post-template --><!-- wp:post-title {"isLink":true} /--><!-- wp:post-excerpt /--><!-- /wp:post-template --></div><!-- /wp:wp-curate/query -->',
+				'content'     => '<!-- wp:wp-curate/query {"postTypes":["post"]} --><div class="wp-block-wp-curate-query"><!-- wp:post-template --><!-- wp:post-title {"isLink":true} /--><!-- wp:post-excerpt /--><!-- /wp:post-template --></div><!-- /wp:wp-curate/query -->',
 				'categories'  => [ 'curate' ],
 				'keywords'    => [ 'curate', 'query', 'list' ],
 				// 'inserter'    => false,

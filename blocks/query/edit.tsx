@@ -4,7 +4,7 @@ import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
-import { useSelect } from '@wordpress/data';
+import { useSelect, dispatch } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -86,10 +86,13 @@ export default function Edit({
   }
 
   const hasInnerBlocks = useSelect(
-		(select) =>
-			!!select(blockEditorStore).getBlocks(clientId).length,
-		[clientId]
-	);
+    (select) => !!select(blockEditorStore).getBlocks(clientId).length,
+    [clientId],
+  );
+  const blocks = useSelect(
+    (select) => select(blockEditorStore).getBlocks(),
+    [],
+  );
 
   // @ts-ignore
   const [
@@ -168,7 +171,7 @@ export default function Edit({
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
     if (data && !error) {
-      mainDedupe();
+      mainDedupe(blocks, dispatch(blockEditorStore));
     }
   }, [
     manualPostIds,
@@ -208,10 +211,10 @@ export default function Edit({
       }
 
       setAttributes({ validPosts });
-      mainDedupe();
+      mainDedupe(blocks, dispatch(blockEditorStore));
     };
     updateValidPosts();
-  }, [manualPosts, setAttributes, postTypeString]);
+  }, [manualPosts, setAttributes, postTypeString, blockIndex, blocks]);
 
   // When numberOfPosts changes, update manualPosts array.
   useEffect(() => {
@@ -250,6 +253,7 @@ export default function Edit({
 
   return (
     <>
+      <p>{JSON.stringify(attributes)}</p>
       <div {...useBlockProps({
         className: classnames(
           { 'wp-curate-query-block--move': moveData.postId },
