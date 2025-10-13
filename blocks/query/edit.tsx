@@ -4,7 +4,7 @@ import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
-import { useSelect, dispatch } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -160,6 +160,19 @@ export default function Edit({
     queryBlockPostFetcher,
   );
 
+  // Set a default query attribute. This allows previews to work.
+  useEffect(() => {
+    if (!attributes.query) {
+      setAttributes({
+        query: {
+          perPage: numberOfPosts,
+          postType: 'post',
+        },
+        queryId: 0,
+      });
+    }
+  }, [attributes.query, numberOfPosts, setAttributes]);
+
   // Handle the fetched data.
   useEffect(() => {
     if (data && !error) {
@@ -171,7 +184,7 @@ export default function Edit({
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
     if (data && !error) {
-      mainDedupe(blocks, dispatch(blockEditorStore));
+      mainDedupe();
     }
   }, [
     manualPostIds,
@@ -211,7 +224,7 @@ export default function Edit({
       }
 
       setAttributes({ validPosts });
-      mainDedupe(blocks, dispatch(blockEditorStore));
+      mainDedupe();
     };
     updateValidPosts();
   }, [manualPosts, setAttributes, postTypeString, blockIndex, blocks]);
@@ -253,7 +266,6 @@ export default function Edit({
 
   return (
     <>
-      <p>{JSON.stringify(attributes)}</p>
       <div {...useBlockProps({
         className: classnames(
           { 'wp-curate-query-block--move': moveData.postId },
