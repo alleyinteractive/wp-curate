@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import classnames from 'classnames';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { PostPicker } from '@alleyinteractive/block-editor-tools';
@@ -7,6 +8,12 @@ import { Button } from '@wordpress/components';
 import { useCallback } from '@wordpress/element';
 
 import NoRender from './norender';
+import SearchFilters from '../../components/SearchFilters';
+
+import type {
+  Term,
+  Option,
+} from '../query/types';
 
 import './index.scss';
 
@@ -25,6 +32,18 @@ interface PostEditProps {
   isSelected: boolean;
 }
 
+interface PostTypeOrTerm {
+  name: string;
+  slug: string;
+  rest_base?: string;
+}
+
+interface Window {
+  wpCurateQueryBlock: {
+    allowedPostTypes: PostTypeOrTerm[];
+  };
+}
+
 /**
  * The wp-curate/post block edit function.
  *
@@ -41,6 +60,12 @@ export default function Edit({
   },
   isSelected,
 }: PostEditProps) {
+  const {
+    wpCurateQueryBlock: {
+      allowedPostTypes = [],
+    } = {},
+  } = (window as any as Window);
+
   // @ts-ignore
   const queryParents = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
   const queryParentId = queryParents.pop();
@@ -50,6 +75,8 @@ export default function Edit({
     attributes: {
       posts: [],
       postTypes: [],
+      terms: {} as Record<string, Term[]>,
+      supportsPostTypes: [],
     },
   };
 
@@ -58,9 +85,13 @@ export default function Edit({
     attributes: {
       posts = [],
       postTypes = [],
+      terms = {} as Record<string, Term[]>,
+      supportsPostTypes = [],
     } = {},
     name: parentName,
   } = queryParent;
+
+  const [filtered, setFiltered] = useState(true);
 
   const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
   const index = queryInclude.findIndex((id: number) => id === postId);
@@ -171,6 +202,34 @@ export default function Edit({
     }
   };
 
+  // Get an object of taxonomies and termIds for filtering the
+  // PostPicker as <Record<string, number[]>.
+  const params: Record<string, number[]> = {};
+  if (filtered) {
+    Object.entries(terms).forEach(([taxonomy, termList]) => {
+      if (Array.isArray(termList) && termList.length) {
+        params[taxonomy] = termList.map((term) => term.id);
+      }
+    });
+  }
+
+  const displayTypes: Option[] = allowedPostTypes
+    .map((type) => ({
+      label: type.name,
+      value: type.slug,
+    }))
+    .filter((type) => {
+      // Inherits globally supported post types if attribute is empty.
+      if (!supportsPostTypes.length) {
+        return true;
+      }
+
+      // Display only supported post types defined by block.
+      return supportsPostTypes.includes(type.value);
+    });
+
+  const shouldShowFilter = displayTypes.length !== postTypes.length
+    || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
   return (
     <div
       {...useBlockProps(
@@ -197,7 +256,7 @@ export default function Edit({
             </Button>
           ) : <span />}
           <PostPicker
-            allowedTypes={postTypes}
+            allowedTypes={filtered ? postTypes : displayTypes.map((type) => type.value)}
             onUpdate={updatePost}
             onReset={resetPost}
             value={selected ?? 0}
@@ -206,6 +265,14 @@ export default function Edit({
             selectText={__('Pin a Post', 'wp-curate')}
             resetText={__('Backfill Post', 'wp-curate')}
             replaceText={__('Pin a Different Post', 'wp-curate')}
+            filters={(
+              <SearchFilters
+                shouldShowFilter={shouldShowFilter}
+                filtered={filtered}
+                setFiltered={setFiltered}
+              />
+            )}
+            params={params}
           />
           {
             // If this post isn't already in the posts list, show a button to pin it.

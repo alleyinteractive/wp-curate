@@ -25,6 +25,7 @@ final class Rest_Api implements Feature {
 	public function boot(): void {
 		add_action( 'rest_api_init', [ $this, 'register_endpoints' ] );
 		add_filter( 'rest_post_query', [ $this, 'add_type_param' ], 10, 2 );
+		add_filter( 'rest_post_search_query', [ $this, 'add_term_support' ], 10, 2 );
 	}
 
 	/**
@@ -193,6 +194,41 @@ final class Rest_Api implements Feature {
 			$query_args['post_type'] = $types;
 		}
 
+		return $query_args;
+	}
+
+	/**
+	 * Add taxonomy term support to rest post search query if the term param is set.
+	 *
+	 * @param array<array<int, string>|string>      $query_args The existing query args.
+	 * @param WP_REST_Request<array<string, mixed>> $request The REST request.
+	 * @return array<array<int, array<int, array<string, mixed>>|string>|string>
+	 */
+	public function add_term_support( $query_args, $request ): array {
+		$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
+		$taxonomies         = array_map( 'get_taxonomy', $allowed_taxonomies );
+		$taxonomies         = array_filter( $taxonomies, 'is_object' );
+		$tax_query          = [];
+		foreach ( $taxonomies as $taxonomy ) {
+			$tax_name = $taxonomy->name;
+			if ( empty( $tax_name ) || ! is_string( $tax_name ) ) {
+				continue;
+			}
+			if ( ! $request->get_param( $tax_name ) ) {
+				continue;
+			}
+			$tax_query[] = [
+				'taxonomy' => $tax_name,
+				'field'    => 'term_id',
+				'terms'    => $request->get_param( $tax_name ),
+			];
+		}
+		if ( empty( $tax_query ) ) {
+			return $query_args;
+		}
+		$query_args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+			$tax_query,
+		];
 		return $query_args;
 	}
 }
