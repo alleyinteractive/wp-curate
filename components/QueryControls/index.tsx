@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
 import {
@@ -13,6 +13,7 @@ import {
 import { InspectorControls } from '@wordpress/block-editor';
 import { createInterpolateElement } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
+import SearchFilters from '../SearchFilters';
 
 import type {
   Option,
@@ -32,7 +33,6 @@ interface Window {
 }
 
 type QueryControlsProps = {
-  allowedPostTypes: PostTypeOrTerm[];
   allowedTaxonomies: PostTypeOrTerm[];
   deduplication: string;
   displayTypes: Option[];
@@ -62,7 +62,6 @@ type QueryControlsProps = {
 };
 
 export default function QueryControls({
-  allowedPostTypes,
   allowedTaxonomies = [],
   deduplication,
   displayTypes,
@@ -86,6 +85,8 @@ export default function QueryControls({
   termRelations,
   terms,
 }: QueryControlsProps) {
+  const [filtered, setFiltered] = useState(true);
+
   const {
     wpCurateQueryBlock: {
       rawOrderByOptions = {
@@ -179,6 +180,19 @@ export default function QueryControls({
     }
   };
 
+  // Get an object of taxonomies and termIds for filtering the
+  // PostPicker as <Record<string, number[]>.
+  const params: Record<string, number[]> = {};
+  if (filtered) {
+    Object.entries(terms).forEach(([taxonomy, termList]) => {
+      if (termList.length) {
+        params[taxonomy] = termList.map((term) => term.id);
+      }
+    });
+  }
+
+  const shouldShowFilter = displayTypes.length !== postTypes.length
+    || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
   return (
     <>
       <InspectorControls>
@@ -222,11 +236,19 @@ export default function QueryControls({
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
-                allowedTypes={allowedPostTypes.map((type) => type.slug)}
+                allowedTypes={filtered ? postTypes : displayTypes.map((type) => type.value)}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] || 0}
                 className="manual-posts__picker"
+                filters={(
+                  <SearchFilters
+                    shouldShowFilter={shouldShowFilter}
+                    filtered={filtered}
+                    setFiltered={setFiltered}
+                  />
+                )}
+                params={params}
               />
             </PanelRow>
           ))}
