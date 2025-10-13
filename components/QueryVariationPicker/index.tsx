@@ -1,8 +1,9 @@
 import { useBlockProps, store as blockEditorStore, __experimentalBlockVariationPicker } from '@wordpress/block-editor';
-import { useDispatch, dispatch, select } from '@wordpress/data';
+import { useDispatch, dispatch } from '@wordpress/data';
 import { createBlocksFromInnerBlocksTemplate } from '@wordpress/blocks';
 import { blockTable } from '@wordpress/icons';
 import { __ } from '@wordpress/i18n';
+import { Button } from '@wordpress/components';
 
 import useScopedBlockVariations from '../../services/useScopedBlockVariations';
 
@@ -22,9 +23,16 @@ export default function QueryVariationPicker(
   const blockProps = useBlockProps();
   return (
     <div {...blockProps}>
+      <Button
+        __next40pxDefaultSize
+        variant="primary"
+        onClick={() => setIsPatternSelectionModalOpen(true)}
+      >
+        { __('Choose', 'wp-curate') }
+      </Button>
       <__experimentalBlockVariationPicker // eslint-disable-line react/jsx-pascal-case
         icon={blockTable}
-        label={__('Choose a layout', 'wp-curate')}
+        label={__('Query', 'wp-curate')}
         variations={scopeVariations}
         onSelect={(variation) => {
           if (variation.innerBlocks) {

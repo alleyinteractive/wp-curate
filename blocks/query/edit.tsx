@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -22,7 +22,8 @@ import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 
 import QueryControls from '../../components/QueryControls';
-import QueryVariationPicker from '../../components/QueryVariationPicker';
+import QueryPlaceholder from '../../components/QueryPlaceholder';
+import PatternSelectionModal from '../../components/PatternSelectionModal';
 import './index.scss';
 
 interface PostTypeOrTerm {
@@ -72,6 +73,7 @@ export default function Edit({
   clientId,
   setAttributes,
 }: EditProps) {
+    const [isPatternSelectionModalOpen, setIsPatternSelectionModalOpen] = useState(false);
   const {
     wpCurateQueryBlock: {
       allowedPostTypes = [],
@@ -254,9 +256,12 @@ export default function Edit({
   const Content = hasInnerBlocks ? (
     <InnerBlocks />
   ) : (
-    <QueryVariationPicker
+    <QueryPlaceholder
+      name="wp-curate-query"
       clientId={clientId}
       attributes={attributes}
+      openPatternSelectionModal={() => setIsPatternSelectionModalOpen(true)}
+
     />
   );
 
@@ -268,6 +273,13 @@ export default function Edit({
         ),
       })}
       >
+        { isPatternSelectionModalOpen ? (
+          <PatternSelectionModal
+            clientId={clientId}
+            attributes={attributes}
+            setIsPatternSelectionModalOpen={setIsPatternSelectionModalOpen}
+          />
+        ) : null}
         {
           error ? (
             <p>{__('No results found.', 'wp-curate')}</p>

@@ -31,7 +31,18 @@ final class Block_Patterns implements Feature {
 				'content'     => '<!-- wp:wp-curate/query {"postTypes":["post"]} --><div class="wp-block-wp-curate-query"><!-- wp:post-template --><!-- wp:wp-curate/post --><div class="wp-block-wp-curate-post"><!-- wp:post-featured-image /--><!-- wp:post-title {"isLink":true} /--></div><!-- /wp:wp-curate/post --><!-- /wp:post-template --></div><!-- /wp:wp-curate/query -->',
 				'categories'  => [ 'curate' ],
 				'keywords'    => [ 'curate', 'query', 'list' ],
-				// 'inserter'    => false,
+				'blockTypes'  => [ 'wp-curate/query' ],
+			],
+		);
+		register_block_pattern(
+			'wp-curate/query-list-2',
+			[
+				'title'       => __( 'WP Curate Query: List 2', 'wp-curate' ),
+				'description' => _x( 'A list style query block.', 'Block pattern description', 'wp-curate' ),
+				'content'     => '<!-- wp:wp-curate/query {"postTypes":["post"]} --><div class="wp-block-wp-curate-query"><!-- wp:post-template --><!-- wp:wp-curate/post --><div class="wp-block-wp-curate-post"><!-- wp:post-title {"isLink":true} /--><!-- wp:post-featured-image /--><!-- wp:post-excerpt /--></div><!-- /wp:wp-curate/post --><!-- /wp:post-template --></div><!-- /wp:wp-curate/query -->',
+				'categories'  => [ 'curate' ],
+				'keywords'    => [ 'curate', 'query', 'list' ],
+				'blockTypes'  => [ 'wp-curate/query' ],
 			],
 		);
 	}
