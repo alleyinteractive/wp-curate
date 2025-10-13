@@ -43,14 +43,20 @@ final class Block_Variations implements Feature {
 						'attributes' => [],
 						'innerBlocks' => [
 							[
-								'name'       => 'core/post-title',
-								'attributes' => [
-									'isLink' => true,
-								],
-							],
-							[
-								'name'       => 'core/post-excerpt',
+								'name' => 'wp-curate/post',
 								'attributes' => [],
+								'innerBlocks' => [
+									[
+										'name'       => 'core/post-title',
+										'attributes' => [
+											'isLink' => true,
+										],
+									],
+									[
+										'name'       => 'core/post-excerpt',
+										'attributes' => [],
+									],
+								],
 							],
 						],
 					],
@@ -71,13 +77,19 @@ final class Block_Variations implements Feature {
 						'attributes' => [],
 						'innerBlocks' => [
 							[
-								'name'       => 'core/post-featured-image',
+								'name' => 'wp-curate/post',
 								'attributes' => [],
-							],
-							[
-								'name'       => 'core/post-title',
-								'attributes' => [
-									'isLink' => true,
+								'innerBlocks' => [
+									[
+										'name'       => 'core/post-featured-image',
+										'attributes' => [],
+									],
+									[
+										'name'       => 'core/post-title',
+										'attributes' => [
+											'isLink' => true,
+										],
+									],
 								],
 							],
 						],

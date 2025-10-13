@@ -89,10 +89,6 @@ export default function Edit({
     (select) => !!select(blockEditorStore).getBlocks(clientId).length,
     [clientId],
   );
-  const blocks = useSelect(
-    (select) => select(blockEditorStore).getBlocks(),
-    [],
-  );
 
   // @ts-ignore
   const [
@@ -227,7 +223,7 @@ export default function Edit({
       mainDedupe();
     };
     updateValidPosts();
-  }, [manualPosts, setAttributes, postTypeString, blockIndex, blocks]);
+  }, [manualPosts, setAttributes, postTypeString, blockIndex]);
 
   // When numberOfPosts changes, update manualPosts array.
   useEffect(() => {

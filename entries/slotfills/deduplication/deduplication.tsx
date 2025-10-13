@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { ToggleControl } from '@wordpress/components';
-import { PluginDocumentSettingPanel } from '@wordpress/edit-post';
+import { PluginDocumentSettingPanel } from '@wordpress/editor';
 import { __ } from '@wordpress/i18n';
 import { usePostMetaValue } from '@alleyinteractive/block-editor-tools';
 import { useSelect } from '@wordpress/data';
