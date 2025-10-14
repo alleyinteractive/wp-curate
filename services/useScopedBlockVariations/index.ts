@@ -30,6 +30,7 @@ import type { BlockVariation } from '@wordpress/blocks';
 export default function useScopedBlockVariations(attributes: Record<string, any>) {
   const { activeVariationName, blockVariations } = useSelect(
     (select) => {
+      // @ts-expect-error
       const { getActiveBlockVariation, getBlockVariations } = select(blocksStore);
       return {
         activeVariationName: getActiveBlockVariation(

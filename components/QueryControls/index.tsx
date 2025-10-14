@@ -261,7 +261,7 @@ export default function QueryControls({
           <Checkboxes
             label={__('Post Types', 'wp-curate')}
             value={postTypes}
-            onChange={(next) => setAttributes({ postTypes: next, backfillPosts: [] })}
+            onChange={(next: string[]) => setAttributes({ postTypes: next, backfillPosts: [] })}
             options={displayTypes}
           />
           {allowedTaxonomies.map((taxonomy) => (

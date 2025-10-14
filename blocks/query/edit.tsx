@@ -88,6 +88,7 @@ export default function Edit({
   }
 
   const hasInnerBlocks = useSelect(
+    // @ts-expect-error
     (select) => !!select(blockEditorStore).getBlocks(clientId).length,
     [clientId],
   );

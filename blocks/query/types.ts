@@ -1,4 +1,6 @@
 import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
+import type { InnerBlockTemplate } from 'wordpress__blocks';
+import type { JSX } from 'react';
 
 interface EditProps {
   attributes: {
@@ -76,4 +78,35 @@ export type {
   Types,
   Option,
   Term,
+};
+
+export type Block = {
+  name: string;
+  attributes?: Record<string, any>;
+};
+
+export type BlockPattern = {
+  blocks: Block[];
+  slug?: string; // optional in the settings object, but needed for register
+  title: string;
+  description?: string;
+  content: string;
+  categories?: string[];
+  keywords?: string[];
+  viewScript?: string;
+  postTypes?: string[];
+  blockTypes?: string[];
+  scope?: ('inserter' | 'block')[];
+  rank?: number;
+};
+
+export type BlockVariation = {
+  name: string;
+  title: string;
+  description?: string;
+  icon?: string | { src: string } | JSX.Element;
+  isDefault?: boolean;
+  attributes?: Record<string, any>;
+  innerBlocks?: InnerBlockTemplate[];
+  scope?: ('inserter' | 'block')[];
 };
