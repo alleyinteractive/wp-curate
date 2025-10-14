@@ -1,6 +1,4 @@
 import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
-import type { InnerBlockTemplate } from 'wordpress__blocks';
-import type { JSX } from 'react';
 
 interface EditProps {
   attributes: {
@@ -98,15 +96,4 @@ export type BlockPattern = {
   blockTypes?: string[];
   scope?: ('inserter' | 'block')[];
   rank?: number;
-};
-
-export type BlockVariation = {
-  name: string;
-  title: string;
-  description?: string;
-  icon?: string | { src: string } | JSX.Element;
-  isDefault?: boolean;
-  attributes?: Record<string, any>;
-  innerBlocks?: InnerBlockTemplate[];
-  scope?: ('inserter' | 'block')[];
 };

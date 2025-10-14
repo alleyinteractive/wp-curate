@@ -4,6 +4,7 @@
 import removeAccents from 'remove-accents';
 
 import type { BlockPattern } from '../../blocks/query/types';
+
 /**
  * Sanitizes the search input string.
  *

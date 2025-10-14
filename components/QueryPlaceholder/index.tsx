@@ -20,7 +20,7 @@ import { useResizeObserver } from '@wordpress/compose';
 /**
  * Internal dependencies
  */
-import { BlockVariation } from '../../blocks/query/types';
+import type { BlockVariation, InnerBlockTemplate } from 'wordpress__blocks';
 import { useScopedBlockVariations } from '../../services/utils';
 import { useBlockPatterns } from '../PatternSelectionModal';
 
@@ -51,7 +51,7 @@ function QueryVariationPicker({
             replaceInnerBlocks(
               clientId,
               createBlocksFromInnerBlocksTemplate(
-                variation.innerBlocks,
+                variation.innerBlocks as InnerBlockTemplate[],
               ),
               false,
             );

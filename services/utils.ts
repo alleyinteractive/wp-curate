@@ -25,13 +25,9 @@ import type { BlockInstance, BlockVariation } from 'wordpress__blocks';
  */
 
 /**
- * Clones a pattern's blocks and then recurses over that list of blocks,
- * transforming them to retain some `query` attribute properties.
- * For now we retain the `postType` and `inherit` properties as they are
- * fundamental for the expected functionality of the block and don't affect
- * its design and presentation.
+ * Clones a pattern's blocks.
  *
- * Returns the cloned/transformed blocks and array of existing Query
+ * Returns the cloned blocks and array of existing Query
  * client ids for further manipulation, in order to avoid multiple recursions.
  *
  * @param {WPBlock[]}        blocks               The list of blocks to look
@@ -46,7 +42,6 @@ export const getTransformedBlocksFromPattern = (
   queryBlockAttributes: Record<string, any>,
 ) => {
   const {
-    query: { postType, inherit },
     namespace,
   } = queryBlockAttributes;
   const clonedBlocks = blocks.map((block: BlockInstance) => cloneBlock(block));
@@ -55,11 +50,6 @@ export const getTransformedBlocksFromPattern = (
   while (blocksQueue.length > 0) {
     const block = blocksQueue.shift();
     if (block?.name === 'wp-curate/query') {
-      block.attributes.query = {
-        ...block.attributes.query,
-        postType,
-        inherit,
-      };
       if (namespace) {
         block.attributes.namespace = namespace;
       }
