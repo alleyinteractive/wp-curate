@@ -226,7 +226,7 @@ export default function Edit({
       mainDedupe();
     };
     updateValidPosts();
-  }, [manualPosts, setAttributes, postTypeString, blockIndex]);
+  }, [manualPosts, setAttributes, postTypeString]);
 
   // When numberOfPosts changes, update manualPosts array.
   useEffect(() => {
@@ -262,7 +262,6 @@ export default function Edit({
       clientId={clientId}
       attributes={attributes}
       openPatternSelectionModal={() => setIsPatternSelectionModalOpen(true)}
-
     />
   );
 

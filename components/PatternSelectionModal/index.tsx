@@ -5,8 +5,6 @@ import { useState, useMemo } from '@wordpress/element';
 import { useDispatch } from '@wordpress/data';
 import { Modal, SearchControl } from '@wordpress/components';
 import {
-  // @ts-expect-error: BlockContextProvider is not yet typed in @types/wordpress__block-editor
-  BlockContextProvider,
   store as blockEditorStore,
   // @ts-expect-error: __experimentalBlockPatternsList is not yet in @types/wordpress__block-editor
   __experimentalBlockPatternsList as BlockPatternsList,
@@ -32,8 +30,8 @@ export function useBlockPatterns(clientId: string, attributes: Record<string, an
     attributes,
   );
   const allPatterns = usePatterns(clientId, blockNameForPatterns);
-  // Filter out any patterns that don't have Query as their root block
-  // so that a Query block is always replaced by another Query block.
+  // Filter out any patterns that don't have wp-curate/query as their root block
+  // so that a wp-curate/query block is always replaced by another wp-curate/query block.
   const rootBlockPatterns = useMemo(
     () => allPatterns.filter(
       (pattern: BlockPattern) => pattern.blocks?.[0]?.name === blockNameForPatterns,
@@ -60,16 +58,7 @@ export function PatternSelection({
   const [searchValue, setSearchValue] = useState('');
   const { replaceBlock, selectBlock } = useDispatch(blockEditorStore);
   const blockPatterns = useBlockPatterns(clientId, attributes);
-  /*
-   * When we preview Query Loop blocks we should prefer the current
-   * block's postType, which is passed through block context.
-   */
-  const blockPreviewContext = useMemo(
-    () => ({
-      previewPostType: attributes.query.postType,
-    }),
-    [attributes.query.postType],
-  );
+
   const filteredBlockPatterns = useMemo(
     () => searchPatterns(blockPatterns, searchValue),
     [blockPatterns, searchValue],
@@ -98,13 +87,11 @@ export function PatternSelection({
           />
         </div>
       ) : null }
-      <BlockContextProvider value={blockPreviewContext}>
-        <BlockPatternsList
-          blockPatterns={filteredBlockPatterns}
-          onClickPattern={onBlockPatternSelect}
-          showTitlesAsTooltip={showTitlesAsTooltip}
-        />
-      </BlockContextProvider>
+      <BlockPatternsList
+        blockPatterns={filteredBlockPatterns}
+        onClickPattern={onBlockPatternSelect}
+        showTitlesAsTooltip={showTitlesAsTooltip}
+      />
     </div>
   );
 }
@@ -122,7 +109,7 @@ export default function PatternSelectionModal({
 }: PatternSelectionModalProps) {
   return (
     <Modal
-      overlayClassName="block-library-query-pattern__selection-modal"
+      overlayClassName="wp-curate-query block-library-query-pattern__selection-modal"
       title={__('Choose a pattern')}
       onRequestClose={() => setIsPatternSelectionModalOpen(false)}
       isFullScreen

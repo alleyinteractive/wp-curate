@@ -9,17 +9,7 @@ import {
   store as blocksStore,
 } from '@wordpress/blocks';
 
-import type { BlockInstance } from 'wordpress__blocks';
-import type { BlockVariation } from '../blocks/query/types';
-
-/** @typedef {import('@wordpress/blocks').WPBlockVariation} WPBlockVariation */
-/** @typedef {import('@wordpress/components/build-types/query-controls/types').OrderByOption} OrderByOption */ // eslint-disable-line max-len
-
-/**
- * @typedef IHasNameAndId
- * @property {string|number} id   The entity's id.
- * @property {string}        name The entity's name.
- */
+import type { BlockInstance, BlockVariation } from 'wordpress__blocks';
 
 /**
  * The object used in Query block that contains info and helper mappings
@@ -41,15 +31,15 @@ import type { BlockVariation } from '../blocks/query/types';
  * fundamental for the expected functionality of the block and don't affect
  * its design and presentation.
  *
- * Returns the cloned/transformed blocks and array of existing Query Loop
+ * Returns the cloned/transformed blocks and array of existing Query
  * client ids for further manipulation, in order to avoid multiple recursions.
  *
  * @param {WPBlock[]}        blocks               The list of blocks to look
  *                                                through and transform(mutate).
- * @param {Record<string,*>} queryBlockAttributes The existing Query Loop's attributes.
+ * @param {Record<string,*>} queryBlockAttributes The existing Query's attributes.
  * @return {{ newBlocks: WPBlock[], queryClientIds: string[] }} An object with the
  *                                                cloned/transformed blocks and all
- *                                                the Query Loop clients from these blocks.
+ *                                                the Query clients from these blocks.
  */
 export const getTransformedBlocksFromPattern = (
   blocks: BlockInstance[],
@@ -87,9 +77,9 @@ export const getTransformedBlocksFromPattern = (
  * and if there are available specific patterns for this variation.
  * If there are, these patterns are going to be the only ones suggested to
  * the user in setup and replace flow, without including the default ones
- * for Query Loop.
+ * for Query.
  *
- * If there are no such patterns, the default ones for Query Loop are going
+ * If there are no such patterns, the default ones for Query are going
  * to be suggested.
  *
  * @param {string} clientId   The block's client ID.
@@ -132,7 +122,7 @@ export function useBlockNameForPatterns(clientId: string, attributes: Record<str
  *
  * If there are, these variations are going to be the only ones suggested
  * to the user in setup flow when clicking to `start blank`, without including
- * the default ones for Query Loop.
+ * the default ones for Query.
  *
  * If there are no such scoped `block` variations, the default ones for Query
  * Loop are going to be suggested.
@@ -140,13 +130,13 @@ export function useBlockNameForPatterns(clientId: string, attributes: Record<str
  * The way we determine such variations is with the convention that they have the `namespace`
  * attribute defined as an array. This array should contain the names(`name` property) of any
  * variations they want to be connected to.
- * For example, if we have a `Query Loop` scoped `inserter` variation with the name `products`,
+ * For example, if we have a `Query` scoped `inserter` variation with the name `products`,
  * we can connect a scoped `block` variation by setting its `namespace` attribute to `['products']`.
  * If the user selects this variation, the `namespace` attribute will be overridden by the
  * main `inserter` variation.
  *
  * @param {Object} attributes The block's attributes.
- * @return {WPBlockVariation[]} The block variations to be suggested in setup flow,
+ * @return {BlockVariation[]} The block variations to be suggested in setup flow,
  * when clicking to `start blank`.
  */
 export function useScopedBlockVariations(attributes: Record<string, any>) {
@@ -198,13 +188,3 @@ export const usePatterns = (clientId: string, name: string) => useSelect(
   },
   [name, clientId],
 );
-
-/**
- * The object returned by useUnsupportedBlocks with info about the type of
- * unsupported blocks present inside the Query block.
- *
- * @typedef  {Object}  UnsupportedBlocksInfo
- * @property {boolean} hasBlocksFromPlugins True if blocks from plugins are present.
- * @property {boolean} hasPostContentBlock  True if a 'core/post-content' block is present.
- * @property {boolean} hasUnsupportedBlocks True if there are any unsupported blocks.
- */
