@@ -73,7 +73,7 @@ export default function Edit({
   clientId,
   setAttributes,
 }: EditProps) {
-    const [isPatternSelectionModalOpen, setIsPatternSelectionModalOpen] = useState(false);
+  const [isPatternSelectionModalOpen, setIsPatternSelectionModalOpen] = useState(false);
   const {
     wpCurateQueryBlock: {
       allowedPostTypes = [],
