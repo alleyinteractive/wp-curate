@@ -33,9 +33,9 @@ final class Block_Variations implements Feature {
 	public function register_variations( $variations, $block_type ) {
 		if ( 'wp-curate/query' === $block_type->name ) {
 			$variations[] = [
-				'name'        => 'wp-curate/list-style',
-				'title'       => __( 'List', 'wp-curate' ),
-				'description' => __( 'A list style variation for the query block.', 'wp-curate' ),
+				'name'        => 'wp-curate/title-date',
+				'title'       => __( 'Title & Date', 'wp-curate' ),
+				'description' => __( 'Each post contains the title and date.', 'wp-curate' ),
 				'isDefault'   => true,
 				'scope'       => [ 'block' ],
 				'innerBlocks' => [
@@ -48,7 +48,39 @@ final class Block_Variations implements Feature {
 								'attributes'  => [],
 								'innerBlocks' => [
 									[
-										'name'       => 'core/post-title',
+										'name'       => 'wp-curate/post-title',
+										'attributes' => [
+											'isLink' => true,
+										],
+									],
+									[
+										'name'       => 'core/post-date',
+										'attributes' => [],
+									],
+								],
+							],
+						],
+					],
+				],
+				'icon'        => 'list-view',
+			];
+			$variations[] = [
+				'name'        => 'wp-curate/title-excerpt',
+				'title'       => __( 'Title & Excerpt', 'wp-curate' ),
+				'description' => __( 'Each post contains the title and excerpt.', 'wp-curate' ),
+				'isDefault'   => true,
+				'scope'       => [ 'block' ],
+				'innerBlocks' => [
+					[
+						'name'        => 'core/post-template',
+						'attributes'  => [],
+						'innerBlocks' => [
+							[
+								'name'        => 'wp-curate/post',
+								'attributes'  => [],
+								'innerBlocks' => [
+									[
+										'name'       => 'wp-curate/post-title',
 										'attributes' => [
 											'isLink' => true,
 										],
@@ -65,9 +97,46 @@ final class Block_Variations implements Feature {
 				'icon'        => 'list-view',
 			];
 			$variations[] = [
-				'name'        => 'wp-curate/grid-style',
-				'title'       => __( 'Grid', 'wp-curate' ),
-				'description' => __( 'A grid style variation for the query block.', 'wp-curate' ),
+				'name'        => 'wp-curate/title-date-excerpt',
+				'title'       => __( 'Title, Date, & Excerpt', 'wp-curate' ),
+				'description' => __( 'Each post contains the title, date, and excerpt.', 'wp-curate' ),
+				'isDefault'   => true,
+				'scope'       => [ 'block' ],
+				'innerBlocks' => [
+					[
+						'name'        => 'core/post-template',
+						'attributes'  => [],
+						'innerBlocks' => [
+							[
+								'name'        => 'wp-curate/post',
+								'attributes'  => [],
+								'innerBlocks' => [
+									[
+										'name'       => 'wp-curate/post-title',
+										'attributes' => [
+											'isLink' => true,
+										],
+									],
+									[
+										'name'       => 'core/post-date',
+										'attributes' => [],
+									],
+									[
+										'name'       => 'core/post-excerpt',
+										'attributes' => [],
+									],
+								],
+							],
+						],
+					],
+				],
+				'icon'        => 'list-view',
+			];
+			$variations[] = [
+				'name'        => 'wp-curate/image-date-title',
+				'title'       => __( 'Image, Date, & Title', 'wp-curate' ),
+				'description' => __( 'Each post contains the image, date, and title.', 'wp-curate' ),
+				'isDefault'   => true,
 				'scope'       => [ 'block' ],
 				'innerBlocks' => [
 					[
@@ -83,7 +152,11 @@ final class Block_Variations implements Feature {
 										'attributes' => [],
 									],
 									[
-										'name'       => 'core/post-title',
+										'name'       => 'core/post-date',
+										'attributes' => [],
+									],
+									[
+										'name'       => 'wp-curate/post-title',
 										'attributes' => [
 											'isLink' => true,
 										],
@@ -93,7 +166,7 @@ final class Block_Variations implements Feature {
 						],
 					],
 				],
-				'icon'        => 'grid-view',
+				'icon'        => 'list-view',
 			];
 		}
 		return $variations;
