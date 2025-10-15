@@ -4,9 +4,10 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## 2.7.2 - 2025-10-15
 
-- Enhancement: Post Picker modal filtered to match Query block settings by default.
+- Enhancement: Post Picker results filtered to match Query block parameters by default.
 - Enhancement: Text alignment support in Post Title block.
-- Bug fix: Fix issue where changing number of posts lower caused some posts to be hidden.
+- Bug fix: Fix issue where reducing number of posts caused some posts to be hidden in the editor.
+- Bug fix: Fix PHP warnings.
 
 ## 2.7.1 - 2025-10-01
 
