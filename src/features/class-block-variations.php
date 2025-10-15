@@ -4,6 +4,7 @@
  *
  * @package WP_Curate
  */
+
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
@@ -39,12 +40,12 @@ final class Block_Variations implements Feature {
 				'scope'       => [ 'block' ],
 				'innerBlocks' => [
 					[
-						'name'       => 'core/post-template',
-						'attributes' => [],
+						'name'        => 'core/post-template',
+						'attributes'  => [],
 						'innerBlocks' => [
 							[
-								'name' => 'wp-curate/post',
-								'attributes' => [],
+								'name'        => 'wp-curate/post',
+								'attributes'  => [],
 								'innerBlocks' => [
 									[
 										'name'       => 'core/post-title',
@@ -73,12 +74,12 @@ final class Block_Variations implements Feature {
 				'scope'       => [ 'block' ],
 				'innerBlocks' => [
 					[
-						'name'       => 'core/post-template',
-						'attributes' => [],
+						'name'        => 'core/post-template',
+						'attributes'  => [],
 						'innerBlocks' => [
 							[
-								'name' => 'wp-curate/post',
-								'attributes' => [],
+								'name'        => 'wp-curate/post',
+								'attributes'  => [],
 								'innerBlocks' => [
 									[
 										'name'       => 'core/post-featured-image',

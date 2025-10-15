@@ -4,6 +4,7 @@
  *
  * @package WP_Curate
  */
+
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
