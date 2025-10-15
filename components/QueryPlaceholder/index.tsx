@@ -76,16 +76,6 @@ export default function QueryPlaceholder({
   openPatternSelectionModal,
 }: QueryPlaceholderProps) {
   const [isStartingBlank, setIsStartingBlank] = useState(false);
-  const [containerWidth, setContainerWidth] = useState(0);
-
-  // Use ResizeObserver to monitor container width.
-  const resizeObserverRef = useResizeObserver(([entry]) => {
-    setContainerWidth(entry.contentRect.width);
-  });
-
-  const SMALL_CONTAINER_BREAKPOINT = 160;
-
-  const isSmallContainer = containerWidth > 0 && containerWidth < SMALL_CONTAINER_BREAKPOINT;
 
   const { blockType, activeBlockVariation } = useSelect(
     (select) => {
@@ -120,20 +110,16 @@ export default function QueryPlaceholder({
       />
     );
   }
+
   return (
     <div {...blockProps}>
       <Placeholder
         className="block-editor-media-placeholder"
-        icon={!isSmallContainer && icon}
-        label={!isSmallContainer && label}
-        instructions={
-          !isSmallContainer
-            ? __('Choose a pattern for the query or start blank.', 'wp-curate')
-            : ''
-        }
-        withIllustration={isSmallContainer}
+        icon={icon}
+        label={label}
+        instructions={__('Choose a pattern for the query or start blank.', 'wp-curate')}
       >
-        { !!hasPatterns && !isSmallContainer ? (
+        { hasPatterns ? (
           <Button
             __next40pxDefaultSize
             variant="primary"
@@ -143,17 +129,15 @@ export default function QueryPlaceholder({
           </Button>
         ) : null }
 
-        {!isSmallContainer ? (
-          <Button
-            __next40pxDefaultSize
-            variant="secondary"
-            onClick={() => {
-              setIsStartingBlank(true);
-            }}
-          >
-            { __('Start blank') }
-          </Button>
-        ) : null}
+        <Button
+          __next40pxDefaultSize
+          variant="secondary"
+          onClick={() => {
+            setIsStartingBlank(true);
+          }}
+        >
+          { __('Start blank', 'wp-curate') }
+        </Button>
       </Placeholder>
     </div>
   );

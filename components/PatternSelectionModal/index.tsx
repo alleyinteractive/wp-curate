@@ -82,8 +82,8 @@ export function PatternSelection({
             __nextHasNoMarginBottom
             onChange={setSearchValue}
             value={searchValue}
-            label={__('Search')}
-            placeholder={__('Search')}
+            label={__('Search', 'wp-curate')}
+            placeholder={__('Search', 'wp-curate')}
           />
         </div>
       ) : null }
@@ -110,7 +110,7 @@ export default function PatternSelectionModal({
   return (
     <Modal
       overlayClassName="wp-curate-query block-library-query-pattern__selection-modal"
-      title={__('Choose a pattern')}
+      title={__('Choose a pattern', 'wp-curate')}
       onRequestClose={() => setIsPatternSelectionModalOpen(false)}
       isFullScreen
     >

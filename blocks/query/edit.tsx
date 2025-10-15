@@ -258,7 +258,7 @@ export default function Edit({
     <InnerBlocks />
   ) : (
     <QueryPlaceholder
-      name="wp-curate-query"
+      name="wp-curate/query"
       clientId={clientId}
       attributes={attributes}
       openPatternSelectionModal={() => setIsPatternSelectionModalOpen(true)}
