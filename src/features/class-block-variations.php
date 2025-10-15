@@ -36,9 +36,6 @@ final class Block_Variations implements Feature {
 				'name'        => 'wp-curate/list-style',
 				'title'       => __( 'List', 'wp-curate' ),
 				'description' => __( 'A list style variation for the query block.', 'wp-curate' ),
-				'attributes'  => [
-					'layout' => 'list',
-				],
 				'isDefault'   => true,
 				'scope'       => [ 'block' ],
 				'innerBlocks' => [
@@ -71,9 +68,6 @@ final class Block_Variations implements Feature {
 				'name'        => 'wp-curate/grid-style',
 				'title'       => __( 'Grid', 'wp-curate' ),
 				'description' => __( 'A grid style variation for the query block.', 'wp-curate' ),
-				'attributes'  => [
-					'layout' => 'grid',
-				],
 				'scope'       => [ 'block' ],
 				'innerBlocks' => [
 					[

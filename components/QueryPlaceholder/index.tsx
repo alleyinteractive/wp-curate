@@ -15,7 +15,6 @@ import {
 } from '@wordpress/block-editor';
 import { Button, Placeholder } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useResizeObserver } from '@wordpress/compose';
 
 /**
  * Internal dependencies
@@ -96,9 +95,7 @@ export default function QueryPlaceholder({
     || activeBlockVariation?.icon
     || blockType?.icon?.src;
   const label = activeBlockVariation?.title || blockType?.title;
-  const blockProps = useBlockProps({
-    ref: resizeObserverRef,
-  });
+  const blockProps = useBlockProps();
 
   if (isStartingBlank) {
     return (
