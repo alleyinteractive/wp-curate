@@ -23,12 +23,12 @@ final class Block_Variations implements Feature {
 	/**
 	 * Register block variations.
 	 *
-	 * @param array  $variations The block variations.
+	 * @param array          $variations The block variations.
 	 * @param \WP_Block_Type $block_type The block type.
 	 * @return array The modified block variations.
 	 *
 	 * @phpstan-param list<array<string, mixed>> $variations
-     * @phpstan-return list<array<string, mixed>>
+	 * @phpstan-return list<array<string, mixed>>
 	 */
 	public function register_variations( $variations, $block_type ) {
 		if ( 'wp-curate/query' === $block_type->name ) {
