@@ -13,11 +13,19 @@
   "style": [
     "file:style-index.css"
   ],
+  "attributes": {
+    "postId": {
+      "type": "number"
+    }
+  },
   "usesContext": [
     "postId",
     "query",
     "moveData"
   ],
+  "providesContext": {
+    "postId": "postId"
+  },
   "render": "file:render.php",
   "supports": {
     "inserter": false

@@ -1,27 +1,12 @@
 import { select, dispatch } from '@wordpress/data';
+import type { Block } from '../../types/block';
+import recursivelyFindPostBlocks from '../recursivelyFindPostBlocks';
 
 const usedIds = new Map();
 const curatedIds = new Map();
 
 let running = false;
 let redo = false;
-
-interface Block {
-  attributes: {
-    backfillPosts?: number[];
-    deduplication?: string;
-    numberOfPosts?: number;
-    posts?: number[];
-    postTypes?: string[];
-    query?: {
-      include?: number[];
-    }
-    validPosts?: number[];
-  },
-  clientId: string;
-  name: string;
-  innerBlocks?: Block[];
-}
 
 /**
  * Checks if a post has been used already on this page. If so, return false. If not
@@ -127,6 +112,8 @@ export function mainDedupe() {
 
   // Loop through all query blocks and set backfilled posts in the open slots.
   queryBlocks.forEach((queryBlock) => {
+    const hasPostTemplateBlock = queryBlock.innerBlocks?.some((block) => block.name === 'core/post-template');
+
     const { attributes } = queryBlock;
     const {
       backfillPosts = null,
@@ -188,23 +175,39 @@ export function mainDedupe() {
       allPostIds.push(manualPost || backfillPost);
     });
 
-    // Update the query block with the new query.
-    // @ts-ignore
-    dispatch('core/block-editor')
-      .updateBlockAttributes(
-        queryBlock.clientId,
-        {
-          // Set the query attribute to pass to the child blocks.
-          query: {
-            perPage: numberOfPosts,
-            postType: 'post',
-            type: postTypeString,
-            include: allPostIds.join(','),
-            orderby: 'include',
+    if (hasPostTemplateBlock) {
+      // Update the query block with the new query.
+      // @ts-ignore
+      dispatch('core/block-editor')
+        .updateBlockAttributes(
+          queryBlock.clientId,
+          {
+            // Set the query attribute to pass to the child blocks.
+            query: {
+              perPage: numberOfPosts,
+              postType: 'post',
+              type: postTypeString,
+              include: allPostIds.join(','),
+              orderby: 'include',
+            },
+            queryId: 0,
           },
-          queryId: 0,
-        },
-      );
+        );
+    } else {
+      const postBlocks: Block[] = [];
+      recursivelyFindPostBlocks(queryBlock, postBlocks);
+      postBlocks.forEach((postBlock, index) => {
+        // Update each post block with the correct post id.
+        // @ts-ignore
+        dispatch('core/block-editor')
+          .updateBlockAttributes(
+            postBlock.clientId,
+            {
+              postId: allPostIds[index] || 0,
+            },
+          );
+      });
+    }
   });
 
   running = false;

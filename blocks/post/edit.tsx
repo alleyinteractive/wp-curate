@@ -7,8 +7,10 @@ import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
 import { useCallback } from '@wordpress/element';
 
+import type { Block } from '../../types/block';
 import NoRender from './norender';
 import SearchFilters from '../../components/SearchFilters';
+import recursivelyFindPostBlocks from '../../services/recursivelyFindPostBlocks';
 
 import type {
   Term,
@@ -30,6 +32,9 @@ interface PostEditProps {
     };
   };
   isSelected: boolean;
+  attributes: {
+    postId?: number;
+  };
 }
 
 interface PostTypeOrTerm {
@@ -52,14 +57,18 @@ interface Window {
 export default function Edit({
   clientId,
   context: {
-    postId,
+    postId: contextPostId,
     query: {
       include = '',
     } = {},
     moveData = {},
   },
   isSelected,
+  attributes: {
+    postId: attributePostId,
+  }
 }: PostEditProps) {
+  const postId = attributePostId || contextPostId;
   const {
     wpCurateQueryBlock: {
       allowedPostTypes = [],
@@ -69,6 +78,9 @@ export default function Edit({
   // @ts-ignore
   const queryParents = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
   const queryParentId = queryParents.pop();
+
+  const templateBlockParents = select('core/block-editor').getBlockParentsByBlockName(clientId, 'core/post-template');
+  const hasPostTemplateBlock = templateBlockParents.length > 0;
 
   // @ts-ignore
   const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {
@@ -93,9 +105,18 @@ export default function Edit({
 
   const [filtered, setFiltered] = useState(true);
 
-  const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
-  const index = queryInclude.findIndex((id: number) => id === postId);
-  const selected = posts[index] ?? null;
+  let selected = null;
+  let index = null;
+  if (hasPostTemplateBlock) {
+    const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
+    index = queryInclude.findIndex((id: number) => id === postId);
+    selected = posts[index] ?? null;
+  } else {
+    const postBlocks: Block[] = [];
+    recursivelyFindPostBlocks(queryParent, postBlocks);
+    index = postBlocks.findIndex((block) => block.clientId === clientId);
+    selected = posts[index] ?? null;
+  }
   const postDeleted = selected !== null && selected !== postId;
 
   const updatePost = useCallback((post: number | null) => {
