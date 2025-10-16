@@ -3,7 +3,7 @@
  * and in the editor.
  */
 
-.wp-block-wp-curate-query{
+.wp-block-wp-curate-query {
   &.threeup {
     ul.block-editor-block-list__block,
     ul.wp-block-post-template {
@@ -36,6 +36,40 @@
       // Hide excerpt on smaller posts.
       li.wp-block-post:nth-child(n + 2) .wp-block-post-excerpt {
         display: none;
+      }
+    }
+  }
+
+  &.onexfour {
+    ul.block-editor-block-list__block,
+    ul.wp-block-post-template {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+
+      li.wp-block-post {
+        margin-block-start: 0;
+      }
+
+      li.wp-block-post:nth-child(1) {
+        grid-column: 1 / 2;
+        grid-row: span 4;
+      }
+
+      // Posts 2 and above go in the right column.
+      li.wp-block-post:nth-child(n + 2) {
+        grid-column: 2 / 3;
+      }
+
+      // Hide excerpt and featured image on smaller posts.
+      li.wp-block-post:nth-child(n + 2) .wp-block-post-excerpt,
+      li.wp-block-post:nth-child(n + 2) .wp-block-post-featured-image {
+        display: none;
+      }
+
+      // Set top margin of title to 0 on smaller posts.
+      li.wp-block-post:nth-child(n + 2) .wp-block-wp-curate-post-title {
+        margin: 0;
       }
     }
   }

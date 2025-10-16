@@ -46,5 +46,16 @@ final class Block_Patterns implements Feature {
 				'blockTypes'  => [ 'wp-curate/query' ],
 			],
 		);
+		register_block_pattern(
+			'wp-curate/query-1x4',
+			[
+				'title'       => __( 'WP Curate Query: 1 x 4', 'wp-curate' ),
+				'description' => __( 'A query block with one large post and four smaller posts.', 'wp-curate' ),
+				'content'     => '<!-- wp:wp-curate/query {"numberOfPosts":5,"postTypes":["post"],"className":"onexfour"} --><div class="wp-block-wp-curate-query onexfour"><!-- wp:post-template --><!-- wp:wp-curate/post --><div class="wp-block-wp-curate-post"><!-- wp:post-featured-image /--><!-- wp:wp-curate/post-title {"isLink":true,"fontSize":"large"} /--><!-- wp:post-date /--><!-- wp:post-excerpt /--></div><!-- /wp:wp-curate/post --><!-- /wp:post-template --></div><!-- /wp:wp-curate/query -->',
+				'categories'  => [ 'curate' ],
+				'keywords'    => [ 'curate', 'query', 'list' ],
+				'blockTypes'  => [ 'wp-curate/query' ],
+			],
+		);
 	}
 }
