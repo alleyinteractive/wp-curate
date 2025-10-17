@@ -173,23 +173,24 @@ export function mainDedupe() {
       allPostIds.push(manualPost || backfillPost);
     });
 
-    const postBlocks: Block[] = [];
-    recursivelyFindBlocksByName(queryBlock, ['wp-curate/post', 'core/post-template'], postBlocks);
-    postBlocks.forEach((postBlock) => {
-      if (postBlock.name === 'wp-curate/post') {
+    const curateableBlocks: Block[] = [];
+    recursivelyFindBlocksByName(queryBlock, ['wp-curate/post', 'core/post-template'], curateableBlocks);
+    console.log('curateableBlocks', curateableBlocks);
+    const postBlockCount = curateableBlocks.filter((block) => block.name === 'wp-curate/post').length;
+    curateableBlocks.forEach((curateableBlock) => {
+      if (curateableBlock.name === 'wp-curate/post') {
         // Update each post block with the correct post id.
         // @ts-ignore
         dispatch('core/block-editor')
           .updateBlockAttributes(
-            postBlock.clientId,
+            curateableBlock.clientId,
             {
               postId: allPostIds.shift() || 0,
             },
           );
-      } else if (postBlock.name === 'core/post-template') {
+      } else if (curateableBlock.name === 'core/post-template') {
         // Update the query block with the new query.
-        // TODO: Adjust the count here to remove any blocks not in post template.
-        const templateIds = allPostIds.splice(0, numberOfPosts);
+        const templateIds = allPostIds.splice(0, numberOfPosts - postBlockCount);
         // @ts-ignore
         dispatch('core/block-editor')
           .updateBlockAttributes(
@@ -197,7 +198,7 @@ export function mainDedupe() {
             {
               // Set the query attribute to pass to the child blocks.
               query: {
-                perPage: numberOfPosts,
+                perPage: templateIds.length,
                 postType: 'post',
                 type: postTypeString,
                 include: templateIds.join(','),

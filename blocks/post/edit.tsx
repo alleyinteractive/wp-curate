@@ -19,6 +19,8 @@ import type {
 } from '../query/types';
 
 import './index.scss';
+import { template } from '@wordpress/editor/build-types/store/reducer';
+import { number } from 'prop-types';
 
 interface PostEditProps {
   clientId: string;
@@ -100,9 +102,30 @@ export default function Edit({
       postTypes = [],
       terms = {} as Record<string, Term[]>,
       supportsPostTypes = [],
+      numberOfPosts = 0,
     } = {},
     name: parentName,
   } = queryParent;
+
+  const curateableBlocks: Block[] = [];
+  recursivelyFindBlocksByName(queryParent, ['wp-curate/post', 'core/post-template'], curateableBlocks);
+  const postBlockCount = curateableBlocks.filter((block) => block.name === 'wp-curate/post').length;
+  let templateBlockIndex = 0;
+  let templateBlockPostCount = 0;
+  if (hasPostTemplateBlock) {
+    const templateBlockId = templateBlockParents[0];
+    templateBlockIndex = curateableBlocks.findIndex((block) => block.clientId === templateBlockId);
+  } else {
+    const thisBlockIndex = curateableBlocks.findIndex((block) => block.clientId === clientId);
+    templateBlockIndex = curateableBlocks.findIndex((block) => block.name === 'core/post-template');
+    // If there's a template block before this one, offset the index by the number of posts
+    // that would be rendered inside the template block.
+    if (templateBlockIndex !== -1 && templateBlockIndex < thisBlockIndex) {
+      // Number of posts, minus the total number of post blocks,
+      // removing the post block in the template block.
+      templateBlockPostCount = numberOfPosts - postBlockCount;
+    }
+  }
 
   const [filtered, setFiltered] = useState(true);
 
@@ -110,13 +133,13 @@ export default function Edit({
   let index = null;
   if (hasPostTemplateBlock) {
     const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
-    index = queryInclude.findIndex((id: number) => id === postId);
+    index = queryInclude.findIndex((id: number) => id === postId) + templateBlockIndex;
     selected = posts[index] ?? null;
   } else {
     const postBlocks: Block[] = [];
     recursivelyFindBlocksByName(queryParent, 'wp-curate/post', postBlocks);
     // TODO: Offset index to include any post blocks outside of a post template block.
-    index = postBlocks.findIndex((block) => block.clientId === clientId);
+    index = postBlocks.findIndex((block) => block.clientId === clientId) + templateBlockPostCount;
     selected = posts[index] ?? null;
   }
   const postDeleted = selected !== null && selected !== postId;

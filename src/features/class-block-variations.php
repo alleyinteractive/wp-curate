@@ -38,6 +38,9 @@ final class Block_Variations implements Feature {
 				'description' => __( 'Each post contains the title and date.', 'wp-curate' ),
 				'isDefault'   => true,
 				'scope'       => [ 'block' ],
+				'attributes'  => [
+					'postTypes' => [ 'post' ],
+				],
 				'innerBlocks' => [
 					[
 						'name'        => 'core/post-template',
@@ -70,6 +73,9 @@ final class Block_Variations implements Feature {
 				'description' => __( 'Each post contains the title and excerpt.', 'wp-curate' ),
 				'isDefault'   => true,
 				'scope'       => [ 'block' ],
+				'attributes'  => [
+					'postTypes' => [ 'post' ],
+				],
 				'innerBlocks' => [
 					[
 						'name'        => 'core/post-template',
@@ -102,6 +108,9 @@ final class Block_Variations implements Feature {
 				'description' => __( 'Each post contains the title, date, and excerpt.', 'wp-curate' ),
 				'isDefault'   => true,
 				'scope'       => [ 'block' ],
+				'attributes'  => [
+					'postTypes' => [ 'post' ],
+				],
 				'innerBlocks' => [
 					[
 						'name'        => 'core/post-template',
@@ -138,6 +147,9 @@ final class Block_Variations implements Feature {
 				'description' => __( 'Each post contains the image, date, and title.', 'wp-curate' ),
 				'isDefault'   => true,
 				'scope'       => [ 'block' ],
+				'attributes'  => [
+					'postTypes' => [ 'post' ],
+				],
 				'innerBlocks' => [
 					[
 						'name'        => 'core/post-template',
@@ -167,21 +179,6 @@ final class Block_Variations implements Feature {
 					],
 				],
 				'icon'        => 'list-view',
-			];
-		}
-		if ( 'wp-curate/post' === $block_type->name ) {
-			$variations[] = [
-				'name'        => 'wp-curate/standalone-post',
-				'title'       => __( 'Non-Post Template Post Block', 'wp-curate' ),
-				'description' => __( 'Post Block for use outside of a Post Template.', 'wp-curate' ),
-				'isDefault'   => true,
-				'scope'       => [ 'block' ],
-				'providesContext' => [
-					'postId' => 'postId',
-				],
-				'attributes'  => [
-					'postId' => 0,
-				],
 			];
 		}
 		return $variations;

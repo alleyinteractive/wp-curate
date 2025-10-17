@@ -252,7 +252,7 @@ export default function Edit({
   }, [numberOfPosts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (attributeNumberOfPosts !== numberOfPosts) {
+    if (attributeNumberOfPosts !== numberOfPosts && numberOfPosts !== 0) {
       setAttributes({ numberOfPosts });
     }
   }, [numberOfPosts, attributeNumberOfPosts, setAttributes]);
