@@ -36,6 +36,7 @@ type QueryControlsProps = {
   allowedTaxonomies: PostTypeOrTerm[];
   deduplication: string;
   displayTypes: Option[];
+  hasTemplateBlock?: boolean;
   isPostDeduplicating: boolean;
   manualPosts: Array<number | null>;
   maxPosts: number;
@@ -65,6 +66,7 @@ export default function QueryControls({
   allowedTaxonomies = [],
   deduplication,
   displayTypes,
+  hasTemplateBlock = true,
   isPostDeduplicating,
   manualPosts,
   maxPosts,
@@ -200,16 +202,18 @@ export default function QueryControls({
           title={__('Setup', 'wp-curate')}
           initialOpen
         >
-          {minNumberOfPosts !== undefined && minNumberOfPosts !== maxNumberOfPosts ? (
-            <RangeControl
-              label={__('Number of Posts', 'wp-curate')}
-              help={__('The maximum number of posts to show.', 'wp-curate')}
-              value={numberOfPosts}
-              onChange={setNumberOfPosts}
-              min={minNumberOfPosts}
-              max={maxNumberOfPosts}
-            />
-          ) : null}
+          {hasTemplateBlock
+            && minNumberOfPosts !== undefined
+            && minNumberOfPosts !== maxNumberOfPosts ? (
+              <RangeControl
+                label={__('Number of Posts', 'wp-curate')}
+                help={__('The maximum number of posts to show.', 'wp-curate')}
+                value={numberOfPosts}
+                onChange={setNumberOfPosts}
+                min={minNumberOfPosts}
+                max={maxNumberOfPosts}
+              />
+            ) : null}
           <RangeControl
             label={__('Offset', 'wp-curate')}
             help={__('The number of posts to pass over.', 'wp-curate')}

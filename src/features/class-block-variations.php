@@ -169,6 +169,21 @@ final class Block_Variations implements Feature {
 				'icon'        => 'list-view',
 			];
 		}
+		if ( 'wp-curate/post' === $block_type->name ) {
+			$variations[] = [
+				'name'        => 'wp-curate/standalone-post',
+				'title'       => __( 'Non-Post Template Post Block', 'wp-curate' ),
+				'description' => __( 'Post Block for use outside of a Post Template.', 'wp-curate' ),
+				'isDefault'   => true,
+				'scope'       => [ 'block' ],
+				'providesContext' => [
+					'postId' => 'postId',
+				],
+				'attributes'  => [
+					'postId' => 0,
+				],
+			];
+		}
 		return $variations;
 	}
 }

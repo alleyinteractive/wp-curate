@@ -20,7 +20,7 @@ interface PostTitleEditProps {
       include?: string;
       orderby?: string;
     };
-    pinnedPosts?: Array<number>;
+    pinnedPosts?: Array<number | null>;
     customPostTitles?: {
       postId: number;
       title: string;
@@ -74,6 +74,10 @@ export default function Edit({
   }, [isPinned, postId, customPostTitles, currentCustomPostTitle, setAttributes, queryParentId]);
 
   const handleOnChange = (title: string) => {
+    if (!postId) {
+      return;
+    }
+
     /**
     * Handle case for removing custom title from the collection if a
     * custom title no longer exists.

@@ -19,6 +19,10 @@
     justify-content: flex-end;
     margin-top: 0.5rem;
   }
+
+  .wp-block-post-excerpt__more-text {
+    display: none;
+  }
 }
 
 .wp-curate-query-block--move .wp-block-post:hover {

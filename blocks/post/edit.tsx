@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import classnames from 'classnames';
-import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
+// @ts-expect-error BlockContextProvider not available in types yet.
+import { InnerBlocks, useBlockProps, BlockContextProvider } from '@wordpress/block-editor';
 import { PostPicker } from '@alleyinteractive/block-editor-tools';
 import { dispatch, select, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
@@ -10,7 +11,7 @@ import { useCallback } from '@wordpress/element';
 import type { Block } from '../../types/block';
 import NoRender from './norender';
 import SearchFilters from '../../components/SearchFilters';
-import recursivelyFindPostBlocks from '../../services/recursivelyFindPostBlocks';
+import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
 
 import type {
   Term,
@@ -66,7 +67,7 @@ export default function Edit({
   isSelected,
   attributes: {
     postId: attributePostId,
-  }
+  },
 }: PostEditProps) {
   const postId = attributePostId || contextPostId;
   const {
@@ -113,7 +114,8 @@ export default function Edit({
     selected = posts[index] ?? null;
   } else {
     const postBlocks: Block[] = [];
-    recursivelyFindPostBlocks(queryParent, postBlocks);
+    recursivelyFindBlocksByName(queryParent, 'wp-curate/post', postBlocks);
+    // TODO: Offset index to include any post blocks outside of a post template block.
     index = postBlocks.findIndex((block) => block.clientId === clientId);
     selected = posts[index] ?? null;
   }
@@ -265,7 +267,9 @@ export default function Edit({
         },
       )}
     >
-      <InnerBlocks />
+      <BlockContextProvider value={{ postId }}>
+        <InnerBlocks />
+      </BlockContextProvider>
       {isParentOfSelectedBlock || isSelected ? (
         <div className="wp-curate-post-block__actions">
           {selected && !postDeleted ? (

@@ -1,6 +1,6 @@
 import { select, dispatch } from '@wordpress/data';
 import type { Block } from '../../types/block';
-import recursivelyFindPostBlocks from '../recursivelyFindPostBlocks';
+import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
 
 const usedIds = new Map();
 const curatedIds = new Map();
@@ -112,8 +112,6 @@ export function mainDedupe() {
 
   // Loop through all query blocks and set backfilled posts in the open slots.
   queryBlocks.forEach((queryBlock) => {
-    const hasPostTemplateBlock = queryBlock.innerBlocks?.some((block) => block.name === 'core/post-template');
-
     const { attributes } = queryBlock;
     const {
       backfillPosts = null,
@@ -175,39 +173,41 @@ export function mainDedupe() {
       allPostIds.push(manualPost || backfillPost);
     });
 
-    if (hasPostTemplateBlock) {
-      // Update the query block with the new query.
-      // @ts-ignore
-      dispatch('core/block-editor')
-        .updateBlockAttributes(
-          queryBlock.clientId,
-          {
-            // Set the query attribute to pass to the child blocks.
-            query: {
-              perPage: numberOfPosts,
-              postType: 'post',
-              type: postTypeString,
-              include: allPostIds.join(','),
-              orderby: 'include',
-            },
-            queryId: 0,
-          },
-        );
-    } else {
-      const postBlocks: Block[] = [];
-      recursivelyFindPostBlocks(queryBlock, postBlocks);
-      postBlocks.forEach((postBlock, index) => {
+    const postBlocks: Block[] = [];
+    recursivelyFindBlocksByName(queryBlock, ['wp-curate/post', 'core/post-template'], postBlocks);
+    postBlocks.forEach((postBlock) => {
+      if (postBlock.name === 'wp-curate/post') {
         // Update each post block with the correct post id.
         // @ts-ignore
         dispatch('core/block-editor')
           .updateBlockAttributes(
             postBlock.clientId,
             {
-              postId: allPostIds[index] || 0,
+              postId: allPostIds.shift() || 0,
             },
           );
-      });
-    }
+      } else if (postBlock.name === 'core/post-template') {
+        // Update the query block with the new query.
+        // TODO: Adjust the count here to remove any blocks not in post template.
+        const templateIds = allPostIds.splice(0, numberOfPosts);
+        // @ts-ignore
+        dispatch('core/block-editor')
+          .updateBlockAttributes(
+            queryBlock.clientId,
+            {
+              // Set the query attribute to pass to the child blocks.
+              query: {
+                perPage: numberOfPosts,
+                postType: 'post',
+                type: postTypeString,
+                include: templateIds.join(','),
+                orderby: 'include',
+              },
+              queryId: 0,
+            },
+          );
+      }
+    });
   });
 
   running = false;
