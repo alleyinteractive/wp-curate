@@ -19,8 +19,6 @@ import type {
 } from '../query/types';
 
 import './index.scss';
-import { template } from '@wordpress/editor/build-types/store/reducer';
-import { number } from 'prop-types';
 
 interface PostEditProps {
   clientId: string;
@@ -138,8 +136,10 @@ export default function Edit({
   } else {
     const postBlocks: Block[] = [];
     recursivelyFindBlocksByName(queryParent, 'wp-curate/post', postBlocks);
-    // TODO: Offset index to include any post blocks outside of a post template block.
-    index = postBlocks.findIndex((block) => block.clientId === clientId) + templateBlockPostCount;
+    // the index of the post block within the query block
+    index = postBlocks.findIndex((block) => block.clientId === clientId)
+      - 1 // minus 1, because we count the post block inside the post template block.
+      + templateBlockPostCount; // plus the number of posts in the post template block.
     selected = posts[index] ?? null;
   }
   const postDeleted = selected !== null && selected !== postId;

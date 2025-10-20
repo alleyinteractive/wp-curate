@@ -36,6 +36,7 @@ type QueryControlsProps = {
   allowedTaxonomies: PostTypeOrTerm[];
   deduplication: string;
   displayTypes: Option[];
+  hasNonTemplatePostBlocks: boolean;
   hasTemplateBlock?: boolean;
   isPostDeduplicating: boolean;
   manualPosts: Array<number | null>;
@@ -66,6 +67,7 @@ export default function QueryControls({
   allowedTaxonomies = [],
   deduplication,
   displayTypes,
+  hasNonTemplatePostBlocks = false,
   hasTemplateBlock = true,
   isPostDeduplicating,
   manualPosts,
@@ -192,6 +194,9 @@ export default function QueryControls({
       }
     });
   }
+  const helpText = hasNonTemplatePostBlocks
+    ? __('The maximum number of posts to show. Note: There are post blocks outside of a post template block that will also display posts, so the minimum number of posts cannot be below this number.', 'wp-curate') // eslint-disable-line max-len
+    : __('The maximum number of posts to show.', 'wp-curate');
 
   const shouldShowFilter = displayTypes.length !== postTypes.length
     || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
@@ -207,7 +212,7 @@ export default function QueryControls({
             && minNumberOfPosts !== maxNumberOfPosts ? (
               <RangeControl
                 label={__('Number of Posts', 'wp-curate')}
-                help={__('The maximum number of posts to show.', 'wp-curate')}
+                help={helpText}
                 value={numberOfPosts}
                 onChange={setNumberOfPosts}
                 min={minNumberOfPosts}

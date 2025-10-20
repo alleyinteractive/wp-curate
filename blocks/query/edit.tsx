@@ -310,12 +310,13 @@ export default function Edit({
         allowedTaxonomies={allowedTaxonomies}
         deduplication={deduplication}
         displayTypes={displayTypes}
+        hasNonTemplatePostBlocks={postBlockCount > 0}
         hasTemplateBlock={hasTemplateBlock}
         isPostDeduplicating={isPostDeduplicating}
         manualPosts={manualPosts}
         maxPosts={parseInt(maxPosts, 10)}
         maxNumberOfPosts={maxNumberOfPosts}
-        minNumberOfPosts={minNumberOfPosts}
+        minNumberOfPosts={Math.max(minNumberOfPosts, postBlockCount)}
         numberOfPosts={numberOfPosts}
         offset={offset}
         order={order}

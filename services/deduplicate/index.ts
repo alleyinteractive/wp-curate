@@ -175,7 +175,6 @@ export function mainDedupe() {
 
     const curateableBlocks: Block[] = [];
     recursivelyFindBlocksByName(queryBlock, ['wp-curate/post', 'core/post-template'], curateableBlocks);
-    console.log('curateableBlocks', curateableBlocks);
     const postBlockCount = curateableBlocks.filter((block) => block.name === 'wp-curate/post').length;
     curateableBlocks.forEach((curateableBlock) => {
       if (curateableBlock.name === 'wp-curate/post') {
