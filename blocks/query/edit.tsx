@@ -6,6 +6,7 @@ import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
+import { Notice } from '@wordpress/components';
 
 import { Template } from '@wordpress/blocks';
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -259,7 +260,12 @@ export default function Edit({
       >
         {
           error ? (
-            <p>{__('No results found.', 'wp-curate')}</p>
+            <Notice
+              status="warning"
+              isDismissible={false}
+            >
+              {__('WP Curate Query - No posts matching criteria found.', 'wp-curate')}
+            </Notice>
           ) : <InnerBlocks template={TEMPLATE} />
         }
       </div>
