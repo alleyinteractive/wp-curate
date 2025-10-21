@@ -14,13 +14,12 @@
     "file:style-index.css"
   ],
   "usesContext": [
-    "allPostIds",
     "postId",
     "query",
     "moveData"
   ],
   "render": "file:render.php",
   "supports": {
-    "inserter": false
+    "inserter": true
   }
 }

@@ -3,40 +3,5 @@
  * and in the editor.
  */
 
-.wp-block-wp-curate-query {
-  &.threeup {
-    ul.block-editor-block-list__block,
-    ul.wp-block-post-template {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 1rem;
-
-      li.wp-block-post {
-        margin-block-start: 0;
-      }
-    }
-  }
-
-  &.onextwo {
-    ul.block-editor-block-list__block,
-    ul.wp-block-post-template {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 1rem;
-
-      li.wp-block-post {
-        margin-block-start: 0;
-      }
-
-      li.wp-block-post:nth-child(1) {
-        grid-column: 1 / 2;
-        grid-row: span 2;
-      }
-
-      // Hide excerpt on smaller posts.
-      li.wp-block-post:nth-child(n + 2) .wp-block-post-excerpt {
-        display: none;
-      }
-    }
-  }
-}
+// .wp-block-wp-curate-query {
+// }
