@@ -140,7 +140,6 @@ final class Query_Block_Context implements Feature {
 					qv: $this->stop_queries_var,
 					origin: $plugin_curated_posts,
 				),
-				inner_blocks: $parsed_block['innerBlocks'] ?? [],
 			);
 
 			if ( ! empty( $current_block_type ) ) {

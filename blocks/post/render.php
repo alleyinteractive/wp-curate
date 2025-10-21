@@ -11,7 +11,4 @@
  *
  * @package wp-curate
  */
-echo '<pre>';
-var_dump( $block->context );
-echo '</pre>';
 echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered by Gutenberg.
