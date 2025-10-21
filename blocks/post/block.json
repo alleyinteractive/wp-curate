@@ -14,6 +14,7 @@
     "file:style-index.css"
   ],
   "usesContext": [
+    "allPostIds",
     "postId",
     "query",
     "moveData"

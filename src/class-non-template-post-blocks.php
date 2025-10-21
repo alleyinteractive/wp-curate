@@ -12,23 +12,23 @@ use WP_Block;
 /**
  * Find post blocks that are not in Post Template blocks and assign a post id to them directly.
  */
-final class Non_Template_Post_Blocks {
+final class Non_Template_Post_Blocks implements Curated_Posts {
 	/**
-	 * New Recorded_Curated_Posts instance.
+	 * New Curated_Posts instance.
 	 *
 	 *
-	 * @param Recorded_Curated_Posts The recorded curated posts.
+	 * @param Curated_Posts The recorded curated posts.
 	 */
-	static Recorded_Curated_Posts $modified_curated_posts;
+	private Curated_Posts $modified_curated_posts;
 
 	/**
 	 * Set up.
 	 *
-	 * @param Recorded_Curated_Posts $recorded_curated_posts The recorded curated posts.
+	 * @param Curated_Posts $curated_posts The recorded curated posts.
 	 * @param WP_Block[]             $inner_blocks           The inner blocks to process.
 	 */
 	public function __construct(
-		private readonly Recorded_Curated_Posts $recorded_curated_posts,
+		private readonly Curated_Posts $curated_posts,
 		private readonly array $inner_blocks,
 	) {}
 
@@ -60,7 +60,7 @@ final class Non_Template_Post_Blocks {
 	 */
 	public function assign_post_ids(): void {
 		$blocks   = $this->get_post_and_post_template_blocks( $this->inner_blocks );
-		$post_ids = $this->recorded_curated_posts->get_post_ids_envelope()->to_array();
+		$post_ids = $this->curated_posts->get_post_ids_envelope()->to_array();
 		$post_block_count = array_filter(
 			$blocks,
 			fn( WP_Block $block ) => 'wp-curate/post' === $block->block_name
@@ -79,5 +79,23 @@ final class Non_Template_Post_Blocks {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Populate query block context from curation fields.
+	 *
+	 * @param array<string, mixed> $context    Query block context.
+	 * @param array<string, mixed> $attributes Curation field settings.
+	 * @param WP_Block_Type        $block_type Block type.
+	 * @return array{"query": array<string, mixed>} Updated context.
+	 */
+	public function with_query_context( array $context, array $attributes, WP_Block_Type $block_type ): array {
+		$context = $this->origin->with_query_context( $context, $attributes, $block_type );
+
+		if ( isset( $context['query']['include'] ) && is_array( $context['query']['include'] ) ) {
+			$this->history->record( $context['query']['include'] );
+		}
+
+		return $context;
 	}
 }

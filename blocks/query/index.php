@@ -131,14 +131,22 @@ add_action( 'init', 'wp_curate_query_block_init', 900 );
 function wp_curate_render_query_block( $attributes, $content ): string {
 	$proc = new WP_HTML_Tag_Processor( $content );
 
+	$found = false;
+
+	while ( $proc->next_tag( array( 'tag_name' => 'div' ) ) ) {
+		if ( $proc->get_attribute( 'class' ) && str_contains( $proc->get_attribute( 'class' ), 'wp-block-wp-curate-post' ) ) {
+			$found = true;
+			break;
+		}
+	}
 	/*
-	 * If a query returns no posts -- denoted by the absence of a list in the content -- don't
-	 * show any of the inner content.
+	 * If a query returns no posts -- denoted by the absence of an item with class `wp-block-wp-curate-post`
+	 * in the content -- don't show any of the inner content.
 	 *
 	 * This approach is not great because the inner blocks will have been rendered already and their
 	 * scripts and styles will have been enqueued, but it's not clear what other options are
 	 * available because the post template inner block needs to render for us to know whether there
 	 * are any posts to begin with.
 	 */
-	return $proc->next_tag( [ 'tag_name' => 'ul' ] ) === true || $proc->next_tag( [ 'tag_name' => 'ol' ] ) === true ? $content : '';
+	return $found ? $content : '';
 }

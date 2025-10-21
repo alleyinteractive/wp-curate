@@ -137,9 +137,11 @@ export default function Edit({
     const postBlocks: Block[] = [];
     recursivelyFindBlocksByName(queryParent, 'wp-curate/post', postBlocks);
     // the index of the post block within the query block
-    index = postBlocks.findIndex((block) => block.clientId === clientId)
-      - 1 // minus 1, because we count the post block inside the post template block.
-      + templateBlockPostCount; // plus the number of posts in the post template block.
+    index = postBlocks.findIndex((block) => block.clientId === clientId);
+    if (templateBlockIndex < index && templateBlockIndex !== -1) {
+      index -= 1; // minus 1 if for the Post block inside the template block.
+    }
+    index += templateBlockPostCount;
     selected = posts[index] ?? null;
   }
   const postDeleted = selected !== null && selected !== postId;
