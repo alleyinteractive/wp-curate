@@ -18,9 +18,9 @@ final class Recorded_Curated_Posts implements Curated_Posts {
 	 * New Curated_Posts instance.
 	 *
 	 *
-	 * @param Curated_Posts The curated_posts inside the template block to set as context.
+	 * @param array The curated_posts inside the template block to set as context.
 	 */
-	private Curated_Posts $modified_curated_posts;
+	private array $modified_curated_posts;
 
 	/**
 	 * Set up.
@@ -43,14 +43,14 @@ final class Recorded_Curated_Posts implements Curated_Posts {
 	private function get_post_and_post_template_blocks( array $blocks ): array {
 		$found_blocks = [];
 		foreach ( $blocks as $block ) {
-			if ( 'wp-curate/post' === $block->block_name || 'core/post-template' === $block->block_name ) {
+			if ( 'wp-curate/post' === $block['blockName'] || 'core/post-template' === $block['blockName'] ) {
 				$found_blocks[] = $block;
 			}
 
-			if ( ! empty( $block->inner_blocks ) ) {
+			if ( ! empty( $block['innerBlocks'] ) ) {
 				$found_blocks = array_merge(
 					$found_blocks,
-					$this->get_post_and_post_template_blocks( $block->inner_blocks )
+					$this->get_post_and_post_template_blocks( $block['innerBlocks'] )
 				);
 			}
 		}
@@ -60,25 +60,24 @@ final class Recorded_Curated_Posts implements Curated_Posts {
 	/**
 	 * Assign post IDs to non-template post blocks and update the modified curated posts.
 	 */
-	public function assign_post_ids(): void {
+	public function assign_post_ids( array $post_ids ): void {
+		$this->modified_curated_posts = [];
 		$blocks   = $this->get_post_and_post_template_blocks( $this->inner_blocks );
-		// var_dump( $this->origin );
-		$post_ids = $this->origin->get_post_ids_envelope()->to_array();
-		$post_block_count = array_filter(
+		$post_block_count = \count( array_filter(
 			$blocks,
-			fn( WP_Block $block ) => 'wp-curate/post' === $block->block_name
-		).count();
+			fn( $block ) => 'wp-curate/post' === $block['blockName']
+		) );
 		foreach ( $blocks as $block ) {
-			if ( 'wp-curate/post' === $block->block_name && ! isset( $block['attributes']['postId'] ) ) {
+			if ( 'wp-curate/post' === $block['blockName'] && ! isset( $block['attributes']['postId'] ) ) {
 				if ( empty( $post_ids ) ) {
 					break;
 				}
 				$block['attributes']['postId'] = array_shift( $post_ids );
 			}
-			if ( 'core/post-template' === $block->block_name ) {
+			if ( 'core/post-template' === $block['blockName'] ) {
 				// Once we hit a post-template block, we stop assigning post IDs to inner post blocks.
 				for ( $i = 0; $i < $post_block_count; $i++ ) {
-					self::$modified_curated_posts[] = array_shift( $post_ids );
+					$this->modified_curated_posts[] = array_shift( $post_ids );
 				}
 			}
 		}
@@ -96,7 +95,7 @@ final class Recorded_Curated_Posts implements Curated_Posts {
 		$context = $this->origin->with_query_context( $context, $attributes, $block_type );
 
 		if ( isset( $context['query']['include'] ) && is_array( $context['query']['include'] ) ) {
-			// $this->assign_post_ids();
+			$this->assign_post_ids( $context['query']['include'] );
 
 			$this->history->record( $context['query']['include'] );
 			$context['allPostIds'] = $context['query']['include'];
