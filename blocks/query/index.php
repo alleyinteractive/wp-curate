@@ -133,12 +133,13 @@ function wp_curate_render_query_block( $attributes, $content ): string {
 
 	$found = false;
 
-	while ( $proc->next_tag( array( 'tag_name' => 'div' ) ) ) {
+	while ( $proc->next_tag( [ 'tag_name' => 'div' ] ) ) {
 		if ( $proc->get_attribute( 'class' ) && str_contains( $proc->get_attribute( 'class' ), 'wp-block-wp-curate-post' ) ) {
 			$found = true;
 			break;
 		}
 	}
+
 	/*
 	 * If a query returns no posts -- denoted by the absence of an item with class `wp-block-wp-curate-post`
 	 * in the content -- don't show any of the inner content.
