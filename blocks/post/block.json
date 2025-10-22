@@ -13,7 +13,13 @@
   "style": [
     "file:style-index.css"
   ],
+  "attributes": {
+    "index": {
+      "type": "number"
+    }
+  },
   "usesContext": [
+    "allPostIds",
     "postId",
     "query",
     "moveData"
