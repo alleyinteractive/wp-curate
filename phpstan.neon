@@ -5,6 +5,16 @@ parameters:
 	# Level 9 is the highest level
 	level: max
 
+	scanDirectories:
+		- ./vendor
+
+	ignoreErrors:
+		- '#maybeint of function absint#'
+		- '#of function sanitize_text_field expects string#'
+
+	excludePaths:
+		- src/features/class-parsely-support.php
+
 	paths:
 		- blocks/
 		- entries/

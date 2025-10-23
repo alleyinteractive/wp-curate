@@ -7,6 +7,8 @@
 
 namespace Alley\WP\WP_Curate;
 
+use function Mantle\Support\Helpers\register_meta_helper;
+
 /**
  * The post types that should allow the Curation blocks and related meta.
  */
