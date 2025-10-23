@@ -25,12 +25,14 @@
     "alleyinteractive/composer-wordpress-autoloader": "^1.0",
     "alleyinteractive/traverse-reshape": "^2.0",
     "alleyinteractive/wp-match-blocks": "^4.2",
-    "alleyinteractive/wp-type-extensions": "^4.0"
+    "alleyinteractive/wp-type-extensions": "^4.0",
+    "mantle-framework/support": "^1.12"
   },
   "require-dev": {
     "alleyinteractive/alley-coding-standards": "^2.0",
     "mantle-framework/testkit": "^1.12",
-    "szepeviktor/phpstan-wordpress": "^2.0"
+    "szepeviktor/phpstan-wordpress": "^2.0",
+    "wp-graphql/wp-graphql": "^2.3"
   },
   "config": {
     "allow-plugins": {
@@ -46,6 +48,11 @@
     }
   },
   "extra": {
+    "installer-paths": {
+      "vendor/wp-graphql/wp-graphql": [
+        "wp-graphql/wp-graphql"
+      ]
+    },
     "wordpress-autoloader": {
       "autoload": {
         "Alley\\WP\\WP_Curate": "src"

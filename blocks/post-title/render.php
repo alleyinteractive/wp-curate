@@ -13,13 +13,15 @@
  * @package wp-curate
  */
 
-$current_post_id = intval( $block->context['postId'] );
+use function Mantle\Support\Helpers\mixed;
+
+$current_post_id = mixed( $block->context['postId'] )->int();
 
 if ( empty( $current_post_id ) ) {
 	return;
 }
 
-$custom_post_titles = ! empty( $block->context['customPostTitles'] ) ? $block->context['customPostTitles'] : [];
+$custom_post_titles = ! empty( $block->context['customPostTitles'] ) && is_array( $block->context['customPostTitles'] ) ? $block->context['customPostTitles'] : [];
 $post_title         = get_the_title( $current_post_id );
 $post_link          = get_the_permalink( $current_post_id );
 $level              = is_int( $attributes['level'] ) ? intval( $attributes['level'] ) : 0;
@@ -32,7 +34,7 @@ if ( empty( $post_title ) || empty( $post_link ) ) {
 // Use custom post title, if available.
 if ( 0 < count( $custom_post_titles ) ) {
 	foreach ( $custom_post_titles as $value ) {
-		if ( $value['postId'] === $current_post_id ) {
+		if ( is_array( $value ) && isset( $value['postId'] ) && $value['postId'] === $current_post_id && is_string( $value['title'] ) ) {
 			$post_title = $value['title'];
 			break;
 		}

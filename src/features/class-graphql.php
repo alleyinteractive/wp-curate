@@ -65,6 +65,11 @@ final class GraphQL implements Feature {
 	 * Set up.
 	 */
 	public function __construct() {
+		/**
+		 * Define the allowed post types.
+		 *
+		 * @param string[] $allowed_post_types Array of allowed post types.
+		 */
 		$this->allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
 	}
 
@@ -87,7 +92,7 @@ final class GraphQL implements Feature {
 		 *
 		 * @see https://www.wpgraphql.com/functions/register_graphql_interface_type
 		 */
-		register_graphql_interface_type( // @phpstan-ignore-line
+		register_graphql_interface_type(
 			'WPCurateInterface',
 			[
 				'description' => __( 'Represents the interface type a WP Curate post', 'wp-curate' ),
