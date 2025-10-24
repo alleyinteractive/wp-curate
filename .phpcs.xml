@@ -61,4 +61,8 @@
   <rule ref="WordPress.Files">
     <exclude-pattern>tests/*</exclude-pattern>
   </rule>
+
+  <rule ref="Squiz.PHP.DisallowMultipleAssignments.Found">
+    <exclude-pattern>tests/*</exclude-pattern>
+  </rule>
 </ruleset>

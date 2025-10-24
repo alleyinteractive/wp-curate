@@ -18,6 +18,9 @@ use function Mantle\Testing\block_factory;
  * Test the queries that fill the query block.
  */
 class QueryTest extends TestCase {
+	/**
+	 * Test querying posts by a specific taxonomy term.
+	 */
 	public function test_query_posts_by_taxonomies(): void {
 		$categorized_posts = collect( static::factory()->post
 			->with_terms( $category = static::factory()->category->create_and_get() )
@@ -31,10 +34,10 @@ class QueryTest extends TestCase {
 			'post_content' => block_factory()->preset( 'wp-curate/query', [
 				'attributes' => [
 					'numberOfPosts' => 10,
-					'terms' => [
+					'terms'         => [
 						'category' => [
 							[
-								'id' => $category->term_id,
+								'id'    => $category->term_id,
 								'title' => $category->name,
 							],
 						],
@@ -55,6 +58,9 @@ class QueryTest extends TestCase {
 			->assertDontSee( $other_posts->get( 2 )->post_title );
 	}
 
+	/**
+	 * Test querying posts by multiple taxonomies with OR relation.
+	 */
 	public function test_query_posts_by_taxonomies_or_operator(): void {
 		$category_1_posts = collect( static::factory()->post
 			->with_terms( $category_1 = static::factory()->category->create_and_get() )
@@ -73,14 +79,14 @@ class QueryTest extends TestCase {
 					'termRelations' => [
 						'category' => 'OR',
 					],
-					'terms' => [
+					'terms'         => [
 						'category' => [
 							[
-								'id' => $category_1->term_id,
+								'id'    => $category_1->term_id,
 								'title' => $category_1->name,
 							],
 							[
-								'id' => $category_2->term_id,
+								'id'    => $category_2->term_id,
 								'title' => $category_2->name,
 							],
 						],
@@ -100,6 +106,9 @@ class QueryTest extends TestCase {
 			] );
 	}
 
+	/**
+	 * Test querying posts with a search term.
+	 */
 	public function test_query_posts_with_a_search_term(): void {
 		$posts = collect( static::factory()->post
 			->create_ordered_set( 5, args: [ 'post_title' => 'Example' ] ) )
@@ -113,7 +122,7 @@ class QueryTest extends TestCase {
 			'post_content' => block_factory()->preset( 'wp-curate/query', [
 				'attributes' => [
 					'numberOfPosts' => 10,
-					'searchTerm'   => 'Example',
+					'searchTerm'    => 'Example',
 				],
 			] ),
 		] ) );
@@ -128,15 +137,79 @@ class QueryTest extends TestCase {
 			->assertDontSee( $other_posts->get( 0 )->post_title );
 	}
 
+	/**
+	 * Test querying posts in ascending order.
+	 */
 	public function test_query_posts_in_ascending_order(): void {
-		$this->markTestIncomplete( 'This test needs to be implemented.' );
+		$posts = self::create_ordered_set( 5 );
+
+		$this->set_front_page( $page = static::factory()->page->create_and_get( [
+			'post_content' => block_factory()->preset( 'wp-curate/query', [
+				'attributes' => [
+					'numberOfPosts' => 5,
+					'order'         => 'asc',
+				],
+			] ),
+		] ) );
+
+		$this->get( '/' )
+			->assertOk()
+			->assertQueryTrue( 'is_front_page', 'is_page', 'is_singular' )
+			->assertQueriedObjectId( $page->ID )
+			// Ensure all posts appear in the proper order.
+			->assertSeeInOrder( $posts->values()->pluck( 'post_title' )->all() );
 	}
 
+	/**
+	 * Test ordering posts by title.
+	 */
 	public function test_query_posts_order_by_title(): void {
-		$this->markTestIncomplete( 'This test needs to be implemented.' );
+		static::factory()->post->create_and_get( [ 'post_title' => 'Banana' ] );
+		static::factory()->post->create_and_get( [ 'post_title' => 'Apple' ] );
+		static::factory()->post->create_and_get( [ 'post_title' => 'Cherry' ] );
+
+		$this->set_front_page( $page = static::factory()->page->create_and_get( [
+			'post_content' => block_factory()->preset( 'wp-curate/query', [
+				'attributes' => [
+					'numberOfPosts' => 5,
+					'order'         => 'asc',
+					'orderby'       => 'title',
+				],
+			] ),
+		] ) );
+
+		$this->get( '/' )
+			->assertOk()
+			->assertQueryTrue( 'is_front_page', 'is_page', 'is_singular' )
+			->assertQueriedObjectId( $page->ID )
+			->assertSeeInOrder( [ 'Apple', 'Banana', 'Cherry' ] );
 	}
 
+	/**
+	 * Test querying posts in a custom post type.
+	 */
 	public function test_query_posts_in_custom_post_type(): void {
-		$this->markTestIncomplete( 'This test needs to be implemented.' );
+		register_post_type( 'book', [
+			'public' => true,
+			'label'  => 'Books',
+		] );
+
+		$post = static::factory()->post->create_and_get( [ 'post_date' => now()->subDays( 1 )->toDateTimeString() ] );
+		$book = static::factory()->book->create_and_get();
+
+		$this->set_front_page( $page = static::factory()->page->create_and_get( [
+			'post_content' => block_factory()->preset( 'wp-curate/query', [
+				'attributes' => [
+					'numberOfPosts' => 5,
+					'postTypes'     => [ 'post', 'book' ],
+				],
+			] ),
+		] ) );
+
+		$this->get( '/' )
+			->assertOk()
+			->assertQueryTrue( 'is_front_page', 'is_page', 'is_singular' )
+			->assertQueriedObjectId( $page->ID )
+			->assertSeeInOrder( [ $book->post_title, $post->post_title ] );
 	}
 }

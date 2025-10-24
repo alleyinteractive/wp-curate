@@ -113,6 +113,9 @@ class PinnedPostTest extends TestCase {
 			->assertSeeInOrder( $posts->reverse()->values()->pluck( 'post_title' )->all() );
 	}
 
+	/**
+	 * Test that a draft post can be pinned but will not appear on the front end.
+	 */
 	public function test_it_will_not_display_a_draft_pinned_post(): void {
 		$posts = static::create_ordered_set( 5 );
 
