@@ -134,7 +134,7 @@ function wp_curate_render_query_block( $attributes, $content ): string {
 	$found = false;
 
 	while ( $proc->next_tag( [ 'tag_name' => 'div' ] ) ) {
-		if ( $proc->get_attribute( 'class' ) && str_contains( $proc->get_attribute( 'class' ), 'wp-block-wp-curate-post' ) ) {
+		if ( $proc->get_attribute( 'class' ) && str_contains( (string) $proc->get_attribute( 'class' ), 'wp-block-wp-curate-post' ) ) {
 			$found = true;
 			break;
 		}

@@ -190,27 +190,31 @@ export default function Edit({
 
     const clickHandler = (e: MouseEvent) => {
       let targetElement = e.target as HTMLElement;
-      // We want the wp-block-post element, not the wp-curate-post-block element.
-      if (targetElement.classList.contains('wp-curate-post-block')) {
-        targetElement = targetElement.parentElement as HTMLElement;
+      // If this one is hidden, select the previous one.
+      if (targetElement.style.display === 'none' && targetElement.previousElementSibling) {
+        targetElement = targetElement.previousElementSibling as HTMLElement;
       }
-      if (!targetElement.classList.contains('wp-block-post')
+      // We want the wp-curate-post-block element not the wp-block-post element.
+      if (targetElement.classList.contains('wp-block-post')) {
+        targetElement = targetElement.querySelectorAll('.wp-curate-post-block')[0] as HTMLElement;
+      }
+      if (!targetElement.classList.contains('wp-curate-post-block')
         && !targetElement.classList.contains('components-button')
       ) {
         window.removeEventListener('click', clickHandler);
         cancelMove();
-      } else if (targetElement.classList.contains('wp-block-post')) {
+      } else if (targetElement.classList.contains('wp-block-wp-curate-post')) {
         e.preventDefault();
-        const parent = targetElement.parentNode as HTMLElement;
+        // Get the parent wp-query block.
+        const parent = targetElement.closest('[data-type="wp-curate/query"]') as HTMLElement;
         if (!parent) {
           return;
         }
-        let targetIndex = Array.prototype.indexOf.call(parent.children, targetElement);
-        if (parent.classList.contains('is-selected')) {
-          targetIndex -= 1;
-        }
-        const blockId = parent.dataset.block;
-        const parentId = select('core/block-editor').getBlockParentsByBlockName(blockId, 'wp-curate/query')[0];
+        const parentChildren = parent.querySelectorAll('.wp-curate-post-block');
+        const visibleChildren = [...parentChildren].filter((el) => el.parentElement?.style?.display !== 'none');
+
+        const targetIndex = Array.prototype.indexOf.call(visibleChildren, targetElement);
+        const parentId = parent.dataset.block;
         if (!parentId) {
           return;
         }

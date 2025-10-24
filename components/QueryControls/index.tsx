@@ -36,7 +36,7 @@ type QueryControlsProps = {
   allowedTaxonomies: PostTypeOrTerm[];
   deduplication: string;
   displayTypes: Option[];
-  hasNonTemplatePostBlocks: boolean;
+  hasNonTemplatePostBlocks?: boolean;
   hasTemplateBlock?: boolean;
   isPostDeduplicating: boolean;
   manualPosts: Array<number | null>;

@@ -209,6 +209,7 @@ export default function Edit({
     data,
     error,
     blockIndex,
+    postBlockCount,
   ]);
 
   // Make sure all the manual posts are still valid.

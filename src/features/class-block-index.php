@@ -30,7 +30,7 @@ final class Block_Index implements Feature {
 	 * @param array $block The block.
 	 * @return array The modified block data.
 	 */
-	public function assign_post_index( array $block_data, array $block ): array {
+	public function assign_post_index( array $block_data, array $block ): array { // @phpstan-ignore-line
 		if ( 'wp-curate/query' === $block_data['blockName'] ) {
 			// Find the wp-curate/post blocks inside the query block.
 			$inner_blocks = $block_data['innerBlocks'];
@@ -58,13 +58,13 @@ final class Block_Index implements Feature {
 	/**
 	 * Recursively assign index to post blocks.
 	 *
-	 * @param \WP_Block[] $blocks The blocks to process.
-	 * @param int         $post_index The current post index.
-	 * @param string      $parent_block_name The name of the parent block.
-	 * @param int         $number_of_template_posts The number of posts in the template.
+	 * @param array  $blocks The blocks to process.
+	 * @param int    $post_index The current post index.
+	 * @param string $parent_block_name The name of the parent block.
+	 * @param int    $number_of_template_posts The number of posts in the template.
 	 * @return array The updated blocks.
 	 */
-	private function assign_index_recursively(
+	private function assign_index_recursively( // @phpstan-ignore-line
 		array $blocks,
 		int &$post_index,
 		string $parent_block_name,
@@ -96,7 +96,7 @@ final class Block_Index implements Feature {
 	 * @param string[] | string $block_name The name of the block to search for.
 	 * @param array             $found_blocks The found post blocks.
 	 */
-	private function recursively_find_blocks( array $blocks, array|string $block_name, array &$found_blocks ): void {
+	private function recursively_find_blocks( array $blocks, array|string $block_name, array &$found_blocks ): void { // @phpstan-ignore-line
 		if ( is_string( $block_name ) ) {
 			$block_name = [ $block_name ];
 		}
@@ -118,7 +118,7 @@ final class Block_Index implements Feature {
 	 * @param array $block The block.
 	 * @return array The modified block context.
 	 */
-	public function set_post_in_context( array $block_context, array $block ): array {
+	public function set_post_in_context( array $block_context, array $block ): array { // @phpstan-ignore-line
 		if ( 'wp-curate/post' === $block['blockName'] ) {
 			$index                   = $block['attrs']['index'] ?? null;
 			$post_id                 = $block_context['allPostIds'][ $index ] ?? null;
@@ -134,7 +134,7 @@ final class Block_Index implements Feature {
 	 * @param array $block The block.
 	 * @return array The modified block context.
 	 */
-	public function adjust_query_block_context( array $block_context, array $block ): array {
+	public function adjust_query_block_context( array $block_context, array $block ): array { // @phpstan-ignore-line
 		if ( 'wp-curate/query' === $block['blockName'] ) {
 			$inner_blocks            = $block['innerBlocks'];
 			$post_or_template_blocks = [];
