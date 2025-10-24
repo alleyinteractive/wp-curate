@@ -78,7 +78,7 @@ export default function Edit({
 
   // @ts-ignore
   const queryParents = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
-  const queryParentId = queryParents.pop();
+  const queryParentId = queryParents[queryParents.length - 1];
 
   const templateBlockParents = select('core/block-editor').getBlockParentsByBlockName(clientId, 'core/post-template');
   const hasPostTemplateBlock = templateBlockParents.length > 0;
@@ -111,7 +111,7 @@ export default function Edit({
   let templateBlockIndex = 0;
   let templateBlockPostCount = 0;
   if (hasPostTemplateBlock) {
-    const templateBlockId = templateBlockParents[0];
+    const templateBlockId = templateBlockParents[templateBlockParents.length - 1];
     templateBlockIndex = curateableBlocks.findIndex((block) => block.clientId === templateBlockId);
   } else {
     const thisBlockIndex = curateableBlocks.findIndex((block) => block.clientId === clientId);
