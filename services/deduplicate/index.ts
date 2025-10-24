@@ -67,9 +67,9 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
  * changes or the query settings change.
  *
  * @param {Block[]} blocks All blocks in the editor.
- * @param {*} blockEditorDispatch The block editor dispatch object from wp.data.
+ * @param {*} updateBlockAttributes The block editor dispatch object from wp.data.
  */
-export function mainDedupe(blocks: Block[], blockEditorDispatch) {
+export function mainDedupe(blocks: Block[], updateBlockAttributes) {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
@@ -178,36 +178,35 @@ export function mainDedupe(blocks: Block[], blockEditorDispatch) {
     const curateableBlocks: Block[] = [];
     recursivelyFindBlocksByName(queryBlock, ['wp-curate/post', 'core/post-template'], curateableBlocks);
     const postBlockCount = curateableBlocks.filter((block) => block.name === 'wp-curate/post').length;
+
     curateableBlocks.forEach((curateableBlock) => {
       if (curateableBlock.name === 'wp-curate/post') {
         // Update each post block with the correct post id.
         // @ts-ignore
-        blockEditorDispatch
-          .updateBlockAttributes(
-            curateableBlock.clientId,
-            {
-              postId: allPostIds.shift() || 0,
-            },
-          );
+        updateBlockAttributes(
+          curateableBlock.clientId,
+          {
+            postId: allPostIds.shift() || 0,
+          },
+        );
       } else if (curateableBlock.name === 'core/post-template') {
         // Update the query block with the new query.
         const templateIds = allPostIds.splice(0, numberOfPosts - postBlockCount);
         // @ts-ignore
-        dispatch('core/block-editor')
-          .updateBlockAttributes(
-            queryBlock.clientId,
-            {
-              // Set the query attribute to pass to the child blocks.
-              query: {
-                perPage: templateIds.length,
-                postType: 'post',
-                type: postTypeString,
-                include: templateIds.join(','),
-                orderby: 'include',
-              },
-              queryId: 0,
+        updateBlockAttributes(
+          queryBlock.clientId,
+          {
+            // Set the query attribute to pass to the child blocks.
+            query: {
+              perPage: templateIds.length,
+              postType: 'post',
+              type: postTypeString,
+              include: templateIds.join(','),
+              orderby: 'include',
             },
-          );
+            queryId: 0,
+          },
+        );
       }
     });
   });

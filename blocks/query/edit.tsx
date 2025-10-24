@@ -200,7 +200,7 @@ export default function Edit({
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
     if (data && !error) {
-      mainDedupe(blocks, dispatch(blockEditorStore));
+      mainDedupe(blocks, dispatch(blockEditorStore).updateBlockAttributes);
     }
   }, [
     manualPostIds,
@@ -215,6 +215,7 @@ export default function Edit({
     error,
     blockIndex,
     postBlockCount,
+    blocks,
   ]);
 
   // Make sure all the manual posts are still valid.
@@ -241,10 +242,10 @@ export default function Edit({
       }
 
       setAttributes({ validPosts });
-      mainDedupe(blocks, dispatch(blockEditorStore));
+      mainDedupe(blocks, dispatch(blockEditorStore).updateBlockAttributes);
     };
     updateValidPosts();
-  }, [manualPosts, setAttributes, postTypeString]);
+  }, [manualPosts, setAttributes, postTypeString, blocks]);
 
   // When numberOfPosts changes, update manualPosts array.
   useEffect(() => {
