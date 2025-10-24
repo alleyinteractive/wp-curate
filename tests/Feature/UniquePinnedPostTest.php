@@ -12,9 +12,7 @@ use Alley\WP\WP_Curate\Tests\TestCase;
 use function Mantle\Support\Helpers\html_string;
 
 /**
- * A test suite for unique pinned posts.
- *
- * @link https://mantle.alley.com/testing/test-framework.html
+ * Test the unique pinned post functionality.
  */
 class UniquePinnedPostTest extends TestCase {
 	/**
