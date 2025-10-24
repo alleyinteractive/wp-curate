@@ -19,9 +19,7 @@ class DeduplicationTest extends TestCase {
 	 * Test that deduplication works across two query blocks on the same page.
 	 */
 	public function test_it_can_deduplicate_across_two_query_blocks(): void {
-		$posts = static::create_ordered_set( 10 )
-			->reverse()
-			->values();
+		$posts = static::create_ordered_set( 10 )->reverse()->values();
 
 		$this->set_front_page( $page = static::factory()->page->with_meta( 'wp_curate_deduplication', '1' )->create_and_get( [
 			'post_content' => block_factory()->blocks(
@@ -50,9 +48,7 @@ class DeduplicationTest extends TestCase {
 	 * Test that a individual query block can disable deduplication on a per-block basis.
 	 */
 	public function test_it_can_override_deduplication_per_block(): void {
-		$posts = static::create_ordered_set( 10 )
-			->reverse()
-			->values();
+		$posts = static::create_ordered_set( 10 )->reverse()->values();
 
 		$this->set_front_page( $page = static::factory()->page->with_meta( 'wp_curate_deduplication', '1' )->create_and_get( [
 			'post_content' => block_factory()->blocks(

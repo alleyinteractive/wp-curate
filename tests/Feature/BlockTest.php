@@ -19,9 +19,7 @@ class BlockTest extends TestCase {
 	 * Test that a homepage curated with the query block works as expected.
 	 */
 	public function test_curate_a_homepage(): void {
-		$posts = static::create_ordered_set( 10 )
-			->reverse()
-			->values();
+		$posts = static::create_ordered_set( 10 )->reverse()->values();
 
 		$this->set_front_page( $page = static::factory()->page->create_and_get( [
 			'post_content' => block_factory()->preset( 'wp-curate/query', [
@@ -48,9 +46,7 @@ class BlockTest extends TestCase {
 	 * Test that a page curated with the query block with an offset works as expected.
 	 */
 	public function test_curate_a_page_with_offset(): void {
-		$posts = static::create_ordered_set( 10 )
-			->reverse()
-			->values();
+		$posts = static::create_ordered_set( 10 )->reverse()->values();
 
 		$this->set_front_page( $page = static::factory()->page->create_and_get( [
 			'post_content' => block_factory()->preset( 'wp-curate/query', [
