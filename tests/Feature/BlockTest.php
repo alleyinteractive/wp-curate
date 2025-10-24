@@ -16,11 +16,11 @@ use function Mantle\Testing\block_factory;
  * Test the general block functionality of WP Curate.
  */
 class BlockTest extends TestCase {
+	/**
+	 * Test that a homepage curated with the query block works as expected.
+	 */
 	public function test_curate_a_homepage(): void {
-		$posts = static::factory()->post->create_ordered_set( 10 );
-
-		$posts = collect( $posts )
-			->map( fn ( int $post_id ) => get_post( $post_id ) )
+		$posts = static::create_ordered_set( 10 )
 			->reverse()
 			->values();
 
@@ -45,11 +45,11 @@ class BlockTest extends TestCase {
 			->assertQuerySelectorExists( '.wp-block-post-excerpt__excerpt' );
 	}
 
+	/**
+	 * Test that a page curated with the query block with an offset works as expected.
+	 */
 	public function test_curate_a_page_with_offset(): void {
-		$posts = static::factory()->post->create_ordered_set( 10 );
-
-		$posts = collect( $posts )
-			->map( fn ( int $post_id ) => get_post( $post_id ) )
+		$posts = static::create_ordered_set( 10 )
 			->reverse()
 			->values();
 

@@ -7,13 +7,14 @@
 
 namespace Alley\WP\WP_Curate\Tests;
 
+use Mantle\Support\Collection;
 use Mantle\Testing\Block_Factory;
 use Mantle\Testing\Concerns\Refresh_Database;
 use Mantle\Testkit\Test_Case as TestkitTest_Case;
 use PHPUnit\Framework\Attributes\BeforeClass;
 use WP_Post;
 
-use function Mantle\Testing\block_factory;
+use function Mantle\Support\Helpers\collect;
 
 /**
  * WP Curate Base Test Case
@@ -60,6 +61,19 @@ abstract class TestCase extends TestkitTest_Case {
 				),
 			);
 		} );
+	}
+
+	/**
+	 * Create an ordered set of posts and return their objects.
+	 *
+	 * @param int                  $count Number of posts to create.
+	 * @param array<string, mixed> $arguments Additional arguments for post creation.
+	 *
+	 * @return Collection<int, WP_Post> Array of post objects.
+	 */
+	protected static function create_ordered_set( int $count, array $arguments = [] ): Collection {
+		return collect( static::factory()->post->create_ordered_set( $count, $arguments ) )
+			->map( fn ( int $id ): WP_Post => get_post( $id ) );
 	}
 
 	/**
