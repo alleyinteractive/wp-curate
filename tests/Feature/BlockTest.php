@@ -9,7 +9,6 @@ namespace Alley\WP\WP_Curate\Tests\Feature;
 
 use Alley\WP\WP_Curate\Tests\TestCase;
 
-use function Mantle\Support\Helpers\collect;
 use function Mantle\Testing\block_factory;
 
 /**
