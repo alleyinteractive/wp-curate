@@ -30,7 +30,8 @@
   cursor: pointer;
 }
 
-.wp-curate-post-block.curate-droppable::after {
+.wp-block-post:hover .wp-curate-post-block.curate-droppable::after,
+.wp-curate-post-block.curate-droppable:hover::after {
   align-items: center;
   background: rgba(255,255,255,0.8);
   border: 2px dashed var(--wp-components-color-accent, var(--wp-admin-theme-color, #3858e9));
