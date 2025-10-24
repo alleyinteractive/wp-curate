@@ -65,8 +65,11 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
 /**
  * This is the main function to update all pinned posts. Call it whenever a pinned post
  * changes or the query settings change.
+ *
+ * @param {Block[]} blocks All blocks in the editor.
+ * @param {*} blockEditorDispatch The block editor dispatch object from wp.data.
  */
-export function mainDedupe() {
+export function mainDedupe(blocks: Block[], blockEditorDispatch) {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
@@ -87,7 +90,6 @@ export function mainDedupe() {
   redo = false;
   resetUsedIds();
   // @ts-ignore
-  const blocks: Block[] = select('core/block-editor').getBlocks();
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
     wp_curate_unique_pinned_posts: wpCurateUniquePinnedPosts = false,
@@ -180,7 +182,7 @@ export function mainDedupe() {
       if (curateableBlock.name === 'wp-curate/post') {
         // Update each post block with the correct post id.
         // @ts-ignore
-        dispatch('core/block-editor')
+        blockEditorDispatch
           .updateBlockAttributes(
             curateableBlock.clientId,
             {
@@ -214,6 +216,6 @@ export function mainDedupe() {
 
   if (redo) {
     // Another run has been requested. Let's run it.
-    mainDedupe();
+    mainDedupe(blocks, blockEditorDispatch);
   }
 }

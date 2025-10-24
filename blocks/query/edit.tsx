@@ -4,7 +4,7 @@ import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
-import { useSelect } from '@wordpress/data';
+import { useSelect, dispatch } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -95,6 +95,11 @@ export default function Edit({
     [clientId],
   );
   const hasInnerBlocks = thisBlock ? thisBlock.innerBlocks.length > 0 : false;
+
+  const blocks = useSelect(
+    (select) => select(blockEditorStore).getBlocks(),
+    [],
+  );
 
   const postBlocks: Block[] = [];
   recursivelyFindBlocksByName(thisBlock, ['wp-curate/post', 'core/post-template'], postBlocks);
@@ -195,7 +200,7 @@ export default function Edit({
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
     if (data && !error) {
-      mainDedupe();
+      mainDedupe(blocks, dispatch(blockEditorStore));
     }
   }, [
     manualPostIds,
@@ -236,7 +241,7 @@ export default function Edit({
       }
 
       setAttributes({ validPosts });
-      mainDedupe();
+      mainDedupe(blocks, dispatch(blockEditorStore));
     };
     updateValidPosts();
   }, [manualPosts, setAttributes, postTypeString]);
