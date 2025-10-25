@@ -65,7 +65,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@alleyinteractive/build-tool": "^0.2.2",
+    "@alleyinteractive/build-tool": "^0.3.0",
     "@alleyinteractive/eslint-config": "^0.2.0",
     "@alleyinteractive/stylelint-config": "^0.1.0",
     "@babel/preset-env": "^7.28.3",
