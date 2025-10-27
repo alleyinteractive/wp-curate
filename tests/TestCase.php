@@ -83,6 +83,9 @@ abstract class TestCase extends Testkit {
 		parent::setUp();
 
 		$this->set_permalink_structure( '/%postname%/' );
+
+		// Clear wp-curate's history of used post IDs.
+		do_action( 'wp_curate_clear_history_post_ids' );
 	}
 
 	/**

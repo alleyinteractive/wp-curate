@@ -8,6 +8,7 @@
 namespace Alley\WP\WP_Curate\Tests\Feature;
 
 use Alley\WP\WP_Curate\Tests\TestCase;
+use Mantle\Testing\Utils;
 
 use function Mantle\Testing\block_factory;
 
@@ -15,6 +16,15 @@ use function Mantle\Testing\block_factory;
  * Test the deduplication functionality of the plugin.
  */
 class DeduplicationTest extends TestCase {
+	/**
+	 * Run before each test.
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+
+		Utils::delete_all_data();
+	}
+
 	/**
 	 * Test that deduplication works across two query blocks on the same page.
 	 */
