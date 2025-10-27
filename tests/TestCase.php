@@ -10,7 +10,7 @@ namespace Alley\WP\WP_Curate\Tests;
 use Mantle\Support\Collection;
 use Mantle\Testing\Block_Factory;
 use Mantle\Testing\Concerns\Refresh_Database;
-use Mantle\Testkit\Test_Case as TestkitTest_Case;
+use Mantle\Testkit\TestCase as Testkit;
 use PHPUnit\Framework\Attributes\BeforeClass;
 use WP_Post;
 
@@ -19,7 +19,7 @@ use function Mantle\Support\Helpers\collect;
 /**
  * WP Curate Base Test Case
  */
-abstract class TestCase extends TestkitTest_Case {
+abstract class TestCase extends Testkit {
 	use Refresh_Database;
 
 	/**
