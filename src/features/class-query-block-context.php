@@ -186,7 +186,14 @@ final class Query_Block_Context implements Feature {
 			&& in_array( $parent_block->name, [ 'wp-curate/query', 'wp-curate/subquery' ], true )
 			&& isset( $parent_block->attributes['customPostTitles'] )
 		) {
-			$this->custom_post_titles = $parent_block->attributes['customPostTitles'];
+			/**
+			 * Custom post titles from the parent block.
+			 *
+			 * @var array<array{'postId': int, 'title': string}> $custom_post_titles
+			 */
+			$custom_post_titles = $parent_block->attributes['customPostTitles'];
+
+			$this->custom_post_titles = $custom_post_titles;
 		}
 
 		// Manually assign custom post titles to 'wp-curate/post-title' context.

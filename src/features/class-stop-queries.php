@@ -43,7 +43,7 @@ final class Stop_Queries implements Feature {
 	 * @return array<string, mixed> Updated query arguments.
 	 */
 	public function filter_query_loop_block_query_vars( $query, $block ): array {
-		if ( isset( $block->context['query'][ $this->query_var ] ) ) {
+		if ( isset( $block->context['query'] ) && is_array( $block->context['query'] ) && isset( $block->context['query'][ $this->query_var ] ) ) {
 			$query[ $this->query_var ] = $block->context['query'][ $this->query_var ];
 		}
 
