@@ -1,25 +1,39 @@
 name: "All Pull Request Tests"
 
 on:
+  push:
+    branches:
+      - develop
   pull_request:
     branches:
       - develop
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
+  find-wordpress-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.get-versions.outputs.versions }}
+    steps:
+      - name: Get WordPress Versions
+        id: get-versions
+        run: echo "versions=$(curl -s https://api.wordpress.org/core/version-check/1.7/ | jq -r '.offers[] | select(.response == "autoupdate").version' | head -n 3 | sort -u | sed 's/\.[^.]*$//' | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+
   # We use a single job to ensure that all steps
   # run in the same environment and reduce the number of minutes used.
   pr-tests:
     # Don't run on draft PRs
     if: github.event.pull_request.draft == false
+    needs: find-wordpress-versions
     runs-on: ubuntu-latest
     # Timeout after 10 minutes
     timeout-minutes: 10
     # Define a matrix of PHP/WordPress versions to test against
     strategy:
+      fail-fast: false
       matrix:
         php: [8.2, 8.3, 8.4]
-        wordpress: ["latest"]
+        wordpress: ${{fromJson(needs.find-wordpress-versions.outputs.versions)}}
     # Cancel any existing runs of this workflow
     concurrency:
       group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}-P${{ matrix.php }}-WP${{ matrix.wordpress }}
