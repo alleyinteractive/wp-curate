@@ -21,6 +21,15 @@ jobs:
       matrix:
         php: [8.2, 8.3, 8.4]
         wordpress: ["latest"]
+        include:
+          - php: 8.3
+            wordpress: "6.5"
+          - php: 8.3
+            wordpress: "6.6"
+          - php: 8.3
+            wordpress: "6.7"
+          - php: 8.3
+            wordpress: "6.8"
     # Cancel any existing runs of this workflow
     concurrency:
       group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}-P${{ matrix.php }}-WP${{ matrix.wordpress }}
