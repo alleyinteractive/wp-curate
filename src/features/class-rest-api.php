@@ -96,9 +96,9 @@ final class Rest_Api implements Feature {
 			if ( empty( $terms ) ) {
 				continue;
 			}
-			$terms       = explode( ',', $terms );
+			$terms       = explode( ',', $terms ); // @phpstan-ignore-line argument.type
 			$terms       = array_map( 'intval', $terms );
-			$terms       = array_filter( $terms, 'term_exists' ); // @phpstan-ignore-line
+			$terms       = array_filter( $terms, 'term_exists' ); // @phpstan-ignore-line argument.type
 			$tax_query[] = [
 				'taxonomy' => $taxonomy->name,
 				'field'    => 'term_id',
@@ -205,22 +205,26 @@ final class Rest_Api implements Feature {
 	 * @return array<array<int, array<int, array<string, mixed>>|string>|string>
 	 */
 	public function add_term_support( $query_args, $request ): array {
+		/**
+		 * Filter the taxonomies allowed.
+		 *
+		 * @param string[] $taxonomies
+		 */
 		$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
 		$taxonomies         = array_map( 'get_taxonomy', $allowed_taxonomies );
 		$taxonomies         = array_filter( $taxonomies, 'is_object' );
 		$tax_query          = [];
 		foreach ( $taxonomies as $taxonomy ) {
-			$tax_name = $taxonomy->name;
-			if ( empty( $tax_name ) || ! is_string( $tax_name ) ) {
+			if ( empty( $taxonomy->name ) ) {
 				continue;
 			}
-			if ( ! $request->get_param( $tax_name ) ) {
+			if ( ! $request->get_param( $taxonomy->name ) ) {
 				continue;
 			}
 			$tax_query[] = [
-				'taxonomy' => $tax_name,
+				'taxonomy' => $taxonomy->name,
 				'field'    => 'term_id',
-				'terms'    => $request->get_param( $tax_name ),
+				'terms'    => $request->get_param( $taxonomy->name ),
 			];
 		}
 		if ( empty( $tax_query ) ) {

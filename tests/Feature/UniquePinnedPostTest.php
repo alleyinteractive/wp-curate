@@ -8,7 +8,8 @@
 namespace Alley\WP\WP_Curate\Tests\Feature;
 
 use Alley\WP\WP_Curate\Tests\TestCase;
-use simplehtmldom\HtmlDocument;
+
+use function Mantle\Support\Helpers\html_string;
 
 /**
  * A test suite for unique pinned posts.
@@ -153,16 +154,7 @@ class UniquePinnedPostTest extends TestCase {
 	 * @param string $html_content The content of the page.
 	 * @return string
 	 */
-	private function extract_wp_content( $html_content ) {
-		$html = new HtmlDocument();
-		$html->load( $html_content );
-
-		$div = $html->find( 'div.entry-content', 0 );
-
-		if ( $div ) {
-			return $div->innertext;
-		}
-
-		return '';
+	private function extract_wp_content( string $html_content ): string {
+		return html_string( $html_content )->first_by_selector( 'div.entry-content' )->text();
 	}
 }
