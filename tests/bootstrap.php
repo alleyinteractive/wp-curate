@@ -5,6 +5,11 @@
  * @package wp-curate
  */
 
+// Ensure that the plugin is built before proceeding.
+if ( ! file_exists( __DIR__ . '/../build/query/index.php' ) ) {
+	throw new \RuntimeException( 'The plugin must be built before running tests. Please run `npm run build`.' );
+}
+
 /**
  * Visit {@see https://mantle.alley.com/testing/test-framework.html} to learn more.
  */
