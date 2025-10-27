@@ -11,6 +11,6 @@
 \Mantle\Testing\manager()
 	->maybe_rsync_plugin()
 	->with_sqlite()
-	// Load the main file of the plugin.
+	->with_theme( 'twentytwentyfive' )
 	->loaded( fn () => require_once __DIR__ . '/../wp-curate.php' )
 	->install();
