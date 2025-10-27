@@ -181,13 +181,13 @@ export default function Edit({
     if (!attributes.query) {
       setAttributes({
         query: {
-          perPage: numberOfPosts,
+          perPage: numberOfPosts - postBlockCount,
           postType: 'post',
         },
         queryId: 0,
       });
     }
-  }, [attributes.query, numberOfPosts, setAttributes]);
+  }, [attributes.query, numberOfPosts, postBlockCount, setAttributes]);
 
   // Handle the fetched data.
   useEffect(() => {
