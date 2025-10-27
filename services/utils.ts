@@ -1,6 +1,10 @@
 /**
  * WordPress dependencies
+ *
+ * Derived from WordPress Block Editor's Query block utils.
+ * @link https://github.com/WordPress/gutenberg/blob/trunk/packages/block-library/src/query/utils.js
  */
+
 import { useSelect } from '@wordpress/data';
 import { useMemo } from '@wordpress/element';
 import { store as blockEditorStore } from '@wordpress/block-editor';
@@ -10,19 +14,6 @@ import {
 } from '@wordpress/blocks';
 
 import type { BlockInstance, BlockVariation } from 'wordpress__blocks';
-
-/**
- * The object used in Query block that contains info and helper mappings
- * from an array of IHasNameAndId objects.
- *
- * @typedef {Object} QueryEntitiesInfo
- * @property {IHasNameAndId[]}               entities  The array of entities.
- * @property {Object<string, IHasNameAndId>} mapById   Object mapping with the id as
- *                                                     key and the entity as value.
- * @property {Object<string, IHasNameAndId>} mapByName Object mapping with the name as
- *                                                     key and the entity as value.
- * @property {string[]}                      names     Array with the entities' names.
- */
 
 /**
  * Clones a pattern's blocks.
@@ -169,7 +160,7 @@ export function useScopedBlockVariations(attributes: Record<string, any>) {
  * @param {string} name     The block type name.
  * @return {Object[]} An array of valid block patterns.
  */
-export const usePatterns = (clientId: string, name: string) => useSelect(
+export const usePatterns = (clientId: string, name: string): BlockPattern => useSelect(
   (select) => {
     // @ts-expect-error
     const { getBlockRootClientId, getPatternsByBlockTypes } = select(blockEditorStore);

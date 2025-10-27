@@ -5,6 +5,8 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import {
   createBlocksFromInnerBlocksTemplate,
   store as blocksStore,
+  BlockVariation,
+  InnerBlockTemplate,
 } from '@wordpress/blocks';
 import { useState } from '@wordpress/element';
 import {
@@ -19,7 +21,6 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import type { BlockVariation, InnerBlockTemplate } from 'wordpress__blocks';
 import { useScopedBlockVariations } from '../../services/utils';
 import { useBlockPatterns } from '../PatternSelectionModal';
 

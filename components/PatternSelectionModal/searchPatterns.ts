@@ -53,7 +53,7 @@ export function getPatternSearchRank(pattern: BlockPattern, searchValue: string)
 }
 
 /**
- * Filters an pattern list given a search term.
+ * Filters a pattern list given a search term.
  *
  * @param {Array}  patterns    Item list
  * @param {string} searchValue Search input.
@@ -65,10 +65,10 @@ export function searchPatterns(patterns: BlockPattern[] = [], searchValue = '') 
     return patterns;
   }
 
-  const rankedPatterns = patterns
-    .map((pattern: BlockPattern) => [pattern, getPatternSearchRank(pattern, searchValue)])
-    .filter(([, rank]) => rank as number > 0);
+  const rankedPatterns: Array<[BlockPattern, number]> = patterns
+    .map((pattern: BlockPattern): [BlockPattern, number] => [pattern, getPatternSearchRank(pattern, searchValue)])
+    .filter(([, rank]): rank is number => rank > 0);
 
-  rankedPatterns.sort(([, rank1], [, rank2]) => (rank2 as number) - (rank1 as number));
+  rankedPatterns.sort(([, rank1], [, rank2]) => rank2 - rank1);
   return rankedPatterns.map(([pattern]) => pattern);
 }
