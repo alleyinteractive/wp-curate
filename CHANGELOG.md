@@ -5,6 +5,7 @@ All notable changes to `WP Curate` will be documented in this file.
 ## Unreleased
 
 - Upgrade to PHPStan to 2.0.
+- Added unit tests for existing plugin functionality.
 
 ## 2.7.2 - 2025-10-15
 
