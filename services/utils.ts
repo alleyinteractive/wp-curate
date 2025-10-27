@@ -169,7 +169,7 @@ export function useScopedBlockVariations(attributes: Record<string, any>) {
  * @param {string} name     The block type name.
  * @return {Object[]} An array of valid block patterns.
  */
-export const usePatterns = (clientId: string, name: string) => useSelect(
+export const usePatterns = (clientId: string, name: string): BlockPattern => useSelect(
   (select) => {
     // @ts-expect-error
     const { getBlockRootClientId, getPatternsByBlockTypes } = select(blockEditorStore);
