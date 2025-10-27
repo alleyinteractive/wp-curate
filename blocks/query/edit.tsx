@@ -4,7 +4,7 @@ import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
-import { useSelect, dispatch } from '@wordpress/data';
+import { useSelect, dispatch, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -91,15 +91,10 @@ export default function Edit({
 
   const thisBlock = useSelect(
     // @ts-expect-error
-    (select) => select(blockEditorStore).getBlocksByClientId(clientId)[0],
+    (innerSelect) => innerSelect(blockEditorStore).getBlocksByClientId(clientId)[0],
     [clientId],
   );
   const hasInnerBlocks = thisBlock ? thisBlock.innerBlocks.length > 0 : false;
-
-  const blocks = useSelect(
-    (select) => select(blockEditorStore).getBlocks(),
-    [],
-  );
 
   const postBlocks: Block[] = [];
   recursivelyFindBlocksByName(thisBlock, ['wp-curate/post', 'core/post-template'], postBlocks);
@@ -117,9 +112,9 @@ export default function Edit({
     uniquePinnedPosts,
     getBlockIndexFunction,
   ] = useSelect(
-    (select) => {
+    (innerSelect) => {
       // @ts-ignore
-      const editor = select('core/editor');
+      const editor = innerSelect('core/editor');
 
       // @ts-ignore
       const type = editor.getEditedPostAttribute('type');
@@ -154,7 +149,7 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
-  const currentPostId = Number(useSelect((select: any) => select('core/editor').getCurrentPostId(), []));
+  const currentPostId = Number(useSelect((innerSelect: any) => innerSelect('core/editor').getCurrentPostId(), []));
   const postTypeString = postTypes.join(',');
 
   // Construct the API path using query args.
@@ -200,7 +195,10 @@ export default function Edit({
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
     if (data && !error) {
-      mainDedupe(blocks, dispatch(blockEditorStore).updateBlockAttributes);
+      // @ts-expect-error Methods not fully typed.
+      const currentBlocks = select(blockEditorStore).getBlocks();
+
+      mainDedupe(currentBlocks, dispatch(blockEditorStore));
     }
   }, [
     manualPostIds,
@@ -215,7 +213,6 @@ export default function Edit({
     error,
     blockIndex,
     postBlockCount,
-    blocks,
   ]);
 
   // Make sure all the manual posts are still valid.
@@ -242,10 +239,17 @@ export default function Edit({
       }
 
       setAttributes({ validPosts });
-      mainDedupe(blocks, dispatch(blockEditorStore).updateBlockAttributes);
+
+      // @ts-expect-error Methods not fully typed.
+      const currentBlocks = select(blockEditorStore).getBlocks();
+      mainDedupe(currentBlocks, dispatch(blockEditorStore));
     };
     updateValidPosts();
-  }, [manualPosts, setAttributes, postTypeString, blocks]);
+  }, [
+    manualPosts,
+    setAttributes,
+    postTypeString,
+  ]);
 
   // When numberOfPosts changes, update manualPosts array.
   useEffect(() => {

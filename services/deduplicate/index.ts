@@ -1,4 +1,4 @@
-import { select, dispatch } from '@wordpress/data';
+import { select } from '@wordpress/data';
 import type { Block } from '../../types/block';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
 
@@ -67,9 +67,9 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
  * changes or the query settings change.
  *
  * @param {Block[]} blocks All blocks in the editor.
- * @param {*} updateBlockAttributes The block editor dispatch object from wp.data.
+ * @param {object} blockEditorDispatch The block editor dispatch object from wp.data.
  */
-export function mainDedupe(blocks: Block[], updateBlockAttributes) {
+export function mainDedupe(blocks: Block[], blockEditorDispatch: any) {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
@@ -183,7 +183,7 @@ export function mainDedupe(blocks: Block[], updateBlockAttributes) {
       if (curateableBlock.name === 'wp-curate/post') {
         // Update each post block with the correct post id.
         // @ts-ignore
-        updateBlockAttributes(
+        blockEditorDispatch.updateBlockAttributes(
           curateableBlock.clientId,
           {
             postId: allPostIds.shift() || 0,
@@ -193,7 +193,7 @@ export function mainDedupe(blocks: Block[], updateBlockAttributes) {
         // Update the query block with the new query.
         const templateIds = allPostIds.splice(0, numberOfPosts - postBlockCount);
         // @ts-ignore
-        updateBlockAttributes(
+        blockEditorDispatch.updateBlockAttributes(
           queryBlock.clientId,
           {
             // Set the query attribute to pass to the child blocks.
