@@ -2,8 +2,12 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
-## Unreleased
+## 3.0.0
 
+- Support for previews of Query block and Patterns.
+- Pattern/Variation picker when inserting a Query block.
+- Post blocks can now exist outside of Post Template blocks, allowing for more complex layouts
+  and individual inner blocks on the Post block.
 - Upgrade to PHPStan to 2.0.
 - Added unit tests for existing plugin functionality.
 
