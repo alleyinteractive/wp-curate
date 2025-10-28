@@ -1,6 +1,9 @@
 import { select, dispatch } from '@wordpress/data';
+import { store as blockEditorStore } from '@wordpress/block-editor';
 import type { Block } from '../../types/block';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
+
+type BlockEditorDispatch = ReturnType<typeof dispatch<typeof blockEditorStore>>;
 
 const usedIds = new Map();
 const curatedIds = new Map();
@@ -65,8 +68,11 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
 /**
  * This is the main function to update all pinned posts. Call it whenever a pinned post
  * changes or the query settings change.
+ *
+ * @param {Block[]} blocks All blocks in the editor.
+ * @param {BlockEditorDispatch} blockEditorDispatch The block editor dispatch object from wp.data.
  */
-export function mainDedupe() {
+export function mainDedupe(blocks: Block[], blockEditorDispatch: BlockEditorDispatch) {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
@@ -87,7 +93,6 @@ export function mainDedupe() {
   redo = false;
   resetUsedIds();
   // @ts-ignore
-  const blocks: Block[] = select('core/block-editor').getBlocks();
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
     wp_curate_unique_pinned_posts: wpCurateUniquePinnedPosts = false,
@@ -176,36 +181,35 @@ export function mainDedupe() {
     const curateableBlocks: Block[] = [];
     recursivelyFindBlocksByName(queryBlock, ['wp-curate/post', 'core/post-template'], curateableBlocks);
     const postBlockCount = curateableBlocks.filter((block) => block.name === 'wp-curate/post').length;
+
     curateableBlocks.forEach((curateableBlock) => {
       if (curateableBlock.name === 'wp-curate/post') {
         // Update each post block with the correct post id.
         // @ts-ignore
-        dispatch('core/block-editor')
-          .updateBlockAttributes(
-            curateableBlock.clientId,
-            {
-              postId: allPostIds.shift() || 0,
-            },
-          );
+        blockEditorDispatch.updateBlockAttributes(
+          curateableBlock.clientId,
+          {
+            postId: allPostIds.shift() || 0,
+          },
+        );
       } else if (curateableBlock.name === 'core/post-template') {
         // Update the query block with the new query.
         const templateIds = allPostIds.splice(0, numberOfPosts - postBlockCount);
         // @ts-ignore
-        dispatch('core/block-editor')
-          .updateBlockAttributes(
-            queryBlock.clientId,
-            {
-              // Set the query attribute to pass to the child blocks.
-              query: {
-                perPage: templateIds.length,
-                postType: 'post',
-                type: postTypeString,
-                include: templateIds.join(','),
-                orderby: 'include',
-              },
-              queryId: 0,
+        blockEditorDispatch.updateBlockAttributes(
+          queryBlock.clientId,
+          {
+            // Set the query attribute to pass to the child blocks.
+            query: {
+              perPage: templateIds.length,
+              postType: 'post',
+              type: postTypeString,
+              include: templateIds.join(','),
+              orderby: 'include',
             },
-          );
+            queryId: 0,
+          },
+        );
       }
     });
   });
@@ -214,6 +218,6 @@ export function mainDedupe() {
 
   if (redo) {
     // Another run has been requested. Let's run it.
-    mainDedupe();
+    mainDedupe(blocks, blockEditorDispatch);
   }
 }

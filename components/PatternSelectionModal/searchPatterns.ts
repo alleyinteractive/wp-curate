@@ -66,8 +66,12 @@ export function searchPatterns(patterns: BlockPattern[] = [], searchValue = '') 
   }
 
   const rankedPatterns: Array<[BlockPattern, number]> = patterns
-    .map((pattern: BlockPattern): [BlockPattern, number] => [pattern, getPatternSearchRank(pattern, searchValue)])
-    .filter(([, rank]): rank is number => rank > 0);
+    .map(
+      (pattern: BlockPattern): [BlockPattern, number] => [
+        pattern, getPatternSearchRank(pattern, searchValue),
+      ],
+    )
+    .filter(([, rank]) => rank > 0);
 
   rankedPatterns.sort(([, rank1], [, rank2]) => rank2 - rank1);
   return rankedPatterns.map(([pattern]) => pattern);

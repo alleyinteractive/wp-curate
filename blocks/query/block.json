@@ -128,5 +128,39 @@
       },
       "type": "array"
     }
+  },
+  "example": {
+    "attributes": {
+      "numberOfPosts": 3,
+      "postTypes": [
+        "post"
+      ],
+      "deduplication": "inherit"
+    },
+    "innerBlocks": [
+      {
+        "name": "core/post-template",
+        "innerBlocks": [
+          {
+            "name": "wp-curate/post",
+            "attributes": {},
+            "innerBlocks": [
+              {
+                "name": "core/post-featured-image",
+                "attributes": {}
+              },
+              {
+                "name": "core/post-title",
+                "attributes": {}
+              },
+              {
+                "name": "core/post-date",
+                "attributes": {}
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }
