@@ -29,7 +29,7 @@ export function useBlockPatterns(clientId: string, attributes: Record<string, an
     clientId,
     attributes,
   );
-  const allPatterns = usePatterns(clientId, blockNameForPatterns);
+  const allPatterns: BlockPattern[] = usePatterns(clientId, blockNameForPatterns);
   // Filter out any patterns that don't have wp-curate/query as their root block
   // so that a wp-curate/query block is always replaced by another wp-curate/query block.
   const rootBlockPatterns = useMemo(

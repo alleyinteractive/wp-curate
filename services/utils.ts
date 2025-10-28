@@ -13,7 +13,8 @@ import {
   store as blocksStore,
 } from '@wordpress/blocks';
 
-import type { BlockInstance, BlockVariation } from 'wordpress__blocks';
+import type { BlockInstance, BlockVariation } from '@wordpress/blocks';
+import type { BlockPattern } from '../blocks/query/types';
 
 /**
  * Clones a pattern's blocks.
@@ -160,7 +161,7 @@ export function useScopedBlockVariations(attributes: Record<string, any>) {
  * @param {string} name     The block type name.
  * @return {Object[]} An array of valid block patterns.
  */
-export const usePatterns = (clientId: string, name: string): BlockPattern => useSelect(
+export const usePatterns = (clientId: string, name: string): BlockPattern[] => useSelect(
   (select) => {
     // @ts-expect-error
     const { getBlockRootClientId, getPatternsByBlockTypes } = select(blockEditorStore);

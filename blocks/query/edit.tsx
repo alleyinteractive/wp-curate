@@ -4,7 +4,7 @@ import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
-import { useSelect } from '@wordpress/data';
+import { useSelect, dispatch, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -15,11 +15,13 @@ import type {
   EditProps,
   Option,
 } from './types';
+import type { Block } from '../../types/block';
 
 import { mainDedupe } from '../../services/deduplicate';
 import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
+import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
 
 import QueryControls from '../../components/QueryControls';
 import QueryPlaceholder from '../../components/QueryPlaceholder';
@@ -56,7 +58,7 @@ export default function Edit({
     deduplication = 'inherit',
     maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
-    numberOfPosts = 5,
+    numberOfPosts: attributeNumberOfPosts = 5,
     offset = 0,
     posts: manualPosts = [],
     postTypes = [],
@@ -87,11 +89,21 @@ export default function Edit({
     setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
   }
 
-  const hasInnerBlocks = useSelect(
+  const thisBlock = useSelect(
     // @ts-expect-error
-    (select) => !!select(blockEditorStore).getBlocks(clientId).length,
+    (innerSelect) => innerSelect(blockEditorStore).getBlocksByClientId(clientId)[0],
     [clientId],
   );
+  const hasInnerBlocks = thisBlock ? thisBlock.innerBlocks.length > 0 : false;
+
+  const postBlocks: Block[] = [];
+  recursivelyFindBlocksByName(thisBlock, ['wp-curate/post', 'core/post-template'], postBlocks);
+  const hasTemplateBlock = postBlocks.some((block) => block.name === 'core/post-template');
+  const postBlockCount = postBlocks.filter((block) => block.name === 'wp-curate/post').length;
+
+  const numberOfPosts = hasTemplateBlock
+    ? attributeNumberOfPosts
+    : postBlockCount;
 
   // @ts-ignore
   const [
@@ -100,9 +112,9 @@ export default function Edit({
     uniquePinnedPosts,
     getBlockIndexFunction,
   ] = useSelect(
-    (select) => {
+    (innerSelect) => {
       // @ts-ignore
-      const editor = select('core/editor');
+      const editor = innerSelect('core/editor');
 
       // @ts-ignore
       const type = editor.getEditedPostAttribute('type');
@@ -137,7 +149,7 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
-  const currentPostId = Number(useSelect((select: any) => select('core/editor').getCurrentPostId(), []));
+  const currentPostId = Number(useSelect((innerSelect: any) => innerSelect('core/editor').getCurrentPostId(), []));
   const postTypeString = postTypes.join(',');
 
   // Construct the API path using query args.
@@ -164,13 +176,13 @@ export default function Edit({
     if (!attributes.query) {
       setAttributes({
         query: {
-          perPage: numberOfPosts,
+          perPage: numberOfPosts - postBlockCount,
           postType: 'post',
         },
         queryId: 0,
       });
     }
-  }, [attributes.query, numberOfPosts, setAttributes]);
+  }, [attributes.query, numberOfPosts, postBlockCount, setAttributes]);
 
   // Handle the fetched data.
   useEffect(() => {
@@ -183,7 +195,10 @@ export default function Edit({
   // The query is passed via context to the core/post-template block.
   useEffect(() => {
     if (data && !error) {
-      mainDedupe();
+      // @ts-expect-error Methods not fully typed.
+      const currentBlocks = select(blockEditorStore).getBlocks();
+
+      mainDedupe(currentBlocks, dispatch(blockEditorStore));
     }
   }, [
     manualPostIds,
@@ -197,6 +212,7 @@ export default function Edit({
     data,
     error,
     blockIndex,
+    postBlockCount,
   ]);
 
   // Make sure all the manual posts are still valid.
@@ -223,10 +239,17 @@ export default function Edit({
       }
 
       setAttributes({ validPosts });
-      mainDedupe();
+
+      // @ts-expect-error Methods not fully typed.
+      const currentBlocks = select(blockEditorStore).getBlocks();
+      mainDedupe(currentBlocks, dispatch(blockEditorStore));
     };
     updateValidPosts();
-  }, [manualPosts, setAttributes, postTypeString]);
+  }, [
+    manualPosts,
+    setAttributes,
+    postTypeString,
+  ]);
 
   // When numberOfPosts changes, update manualPosts array.
   useEffect(() => {
@@ -238,6 +261,12 @@ export default function Edit({
       setAttributes({ posts: normalizedPosts });
     }
   }, [numberOfPosts]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (attributeNumberOfPosts !== numberOfPosts && numberOfPosts !== 0) {
+      setAttributes({ numberOfPosts });
+    }
+  }, [numberOfPosts, attributeNumberOfPosts, setAttributes]);
 
   const displayTypes: Option[] = allowedPostTypes
     .map((type) => ({
@@ -292,11 +321,13 @@ export default function Edit({
         allowedTaxonomies={allowedTaxonomies}
         deduplication={deduplication}
         displayTypes={displayTypes}
+        hasNonTemplatePostBlocks={postBlockCount > 0}
+        hasTemplateBlock={hasTemplateBlock}
         isPostDeduplicating={isPostDeduplicating}
         manualPosts={manualPosts}
         maxPosts={parseInt(maxPosts, 10)}
         maxNumberOfPosts={maxNumberOfPosts}
-        minNumberOfPosts={minNumberOfPosts}
+        minNumberOfPosts={Math.max(minNumberOfPosts, postBlockCount)}
         numberOfPosts={numberOfPosts}
         offset={offset}
         order={order}
