@@ -1,27 +1,12 @@
 import { select, dispatch } from '@wordpress/data';
+import type { Block } from '../../types/block';
+import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
 
 const usedIds = new Map();
 const curatedIds = new Map();
 
 let running = false;
 let redo = false;
-
-interface Block {
-  attributes: {
-    backfillPosts?: number[];
-    deduplication?: string;
-    numberOfPosts?: number;
-    posts?: number[];
-    postTypes?: string[];
-    query?: {
-      include?: number[];
-    }
-    validPosts?: number[];
-  },
-  clientId: string;
-  name: string;
-  innerBlocks?: Block[];
-}
 
 /**
  * Checks if a post has been used already on this page. If so, return false. If not
@@ -188,23 +173,41 @@ export function mainDedupe() {
       allPostIds.push(manualPost || backfillPost);
     });
 
-    // Update the query block with the new query.
-    // @ts-ignore
-    dispatch('core/block-editor')
-      .updateBlockAttributes(
-        queryBlock.clientId,
-        {
-          // Set the query attribute to pass to the child blocks.
-          query: {
-            perPage: numberOfPosts,
-            postType: 'post',
-            type: postTypeString,
-            include: allPostIds.join(','),
-            orderby: 'include',
-          },
-          queryId: 0,
-        },
-      );
+    const curateableBlocks: Block[] = [];
+    recursivelyFindBlocksByName(queryBlock, ['wp-curate/post', 'core/post-template'], curateableBlocks);
+    const postBlockCount = curateableBlocks.filter((block) => block.name === 'wp-curate/post').length;
+    curateableBlocks.forEach((curateableBlock) => {
+      if (curateableBlock.name === 'wp-curate/post') {
+        // Update each post block with the correct post id.
+        // @ts-ignore
+        dispatch('core/block-editor')
+          .updateBlockAttributes(
+            curateableBlock.clientId,
+            {
+              postId: allPostIds.shift() || 0,
+            },
+          );
+      } else if (curateableBlock.name === 'core/post-template') {
+        // Update the query block with the new query.
+        const templateIds = allPostIds.splice(0, numberOfPosts - postBlockCount);
+        // @ts-ignore
+        dispatch('core/block-editor')
+          .updateBlockAttributes(
+            queryBlock.clientId,
+            {
+              // Set the query attribute to pass to the child blocks.
+              query: {
+                perPage: templateIds.length,
+                postType: 'post',
+                type: postTypeString,
+                include: templateIds.join(','),
+                orderby: 'include',
+              },
+              queryId: 0,
+            },
+          );
+      }
+    });
   });
 
   running = false;

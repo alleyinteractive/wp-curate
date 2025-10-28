@@ -33,6 +33,7 @@ function main(): void {
 		),
 		new Features\Subquery_Block_Display(),
 		new Features\Core_Query_Block_Integration(),
+		new Features\Block_Index(),
 		new Features\Query_Block_Context(
 			post_queries: new Default_Post_Queries(),
 			history: new History(

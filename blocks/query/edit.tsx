@@ -15,11 +15,13 @@ import type {
   EditProps,
   Option,
 } from './types';
+import type { Block } from '../../types/block';
 
 import { mainDedupe } from '../../services/deduplicate';
 import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
+import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
 
 import QueryControls from '../../components/QueryControls';
 import QueryPlaceholder from '../../components/QueryPlaceholder';
@@ -56,7 +58,7 @@ export default function Edit({
     deduplication = 'inherit',
     maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
-    numberOfPosts = 5,
+    numberOfPosts: attributeNumberOfPosts = 5,
     offset = 0,
     posts: manualPosts = [],
     postTypes = [],
@@ -87,11 +89,21 @@ export default function Edit({
     setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
   }
 
-  const hasInnerBlocks = useSelect(
+  const thisBlock = useSelect(
     // @ts-expect-error
-    (select) => !!select(blockEditorStore).getBlocks(clientId).length,
+    (select) => select(blockEditorStore).getBlocksByClientId(clientId)[0],
     [clientId],
   );
+  const hasInnerBlocks = thisBlock ? thisBlock.innerBlocks.length > 0 : false;
+
+  const postBlocks: Block[] = [];
+  recursivelyFindBlocksByName(thisBlock, ['wp-curate/post', 'core/post-template'], postBlocks);
+  const hasTemplateBlock = postBlocks.some((block) => block.name === 'core/post-template');
+  const postBlockCount = postBlocks.filter((block) => block.name === 'wp-curate/post').length;
+
+  const numberOfPosts = hasTemplateBlock
+    ? attributeNumberOfPosts
+    : postBlockCount;
 
   // @ts-ignore
   const [
@@ -197,6 +209,7 @@ export default function Edit({
     data,
     error,
     blockIndex,
+    postBlockCount,
   ]);
 
   // Make sure all the manual posts are still valid.
@@ -238,6 +251,12 @@ export default function Edit({
       setAttributes({ posts: normalizedPosts });
     }
   }, [numberOfPosts]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (attributeNumberOfPosts !== numberOfPosts && numberOfPosts !== 0) {
+      setAttributes({ numberOfPosts });
+    }
+  }, [numberOfPosts, attributeNumberOfPosts, setAttributes]);
 
   const displayTypes: Option[] = allowedPostTypes
     .map((type) => ({
@@ -292,11 +311,13 @@ export default function Edit({
         allowedTaxonomies={allowedTaxonomies}
         deduplication={deduplication}
         displayTypes={displayTypes}
+        hasNonTemplatePostBlocks={postBlockCount > 0}
+        hasTemplateBlock={hasTemplateBlock}
         isPostDeduplicating={isPostDeduplicating}
         manualPosts={manualPosts}
         maxPosts={parseInt(maxPosts, 10)}
         maxNumberOfPosts={maxNumberOfPosts}
-        minNumberOfPosts={minNumberOfPosts}
+        minNumberOfPosts={Math.max(minNumberOfPosts, postBlockCount)}
         numberOfPosts={numberOfPosts}
         offset={offset}
         order={order}
