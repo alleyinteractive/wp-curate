@@ -1,6 +1,9 @@
-import { select } from '@wordpress/data';
+import { select, dispatch } from '@wordpress/data';
+import { store as blockEditorStore } from '@wordpress/block-editor';
 import type { Block } from '../../types/block';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
+
+type BlockEditorDispatch = ReturnType<typeof dispatch<typeof blockEditorStore>>;
 
 const usedIds = new Map();
 const curatedIds = new Map();
@@ -67,9 +70,9 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
  * changes or the query settings change.
  *
  * @param {Block[]} blocks All blocks in the editor.
- * @param {object} blockEditorDispatch The block editor dispatch object from wp.data.
+ * @param {BlockEditorDispatch} blockEditorDispatch The block editor dispatch object from wp.data.
  */
-export function mainDedupe(blocks: Block[], blockEditorDispatch: any) {
+export function mainDedupe(blocks: Block[], blockEditorDispatch: BlockEditorDispatch) {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
