@@ -2,8 +2,8 @@
 import { useEffect } from 'react';
 import useSWRImmutable from 'swr/immutable';
 import { useDebounce } from '@uidotdev/usehooks';
-import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
-import { useSelect, select, dispatch } from '@wordpress/data';
+import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
+import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
 
@@ -186,9 +186,7 @@ export default function Edit({
       return;
     }
     if (data && !error && backfillPosts.length > 0) {
-      // @ts-expect-error Methods not fully typed.
-      const currentBlocks = select(blockEditorStore).getBlocks();
-      mainDedupe(currentBlocks, dispatch(blockEditorStore));
+      mainDedupe();
     }
   }, [
     isFirstPost,
@@ -261,9 +259,7 @@ export default function Edit({
     }
 
     if (validPosts.length > 0) {
-      // @ts-expect-error Methods not fully typed.
-      const currentBlocks = select(blockEditorStore).getBlocks();
-      mainDedupe(currentBlocks, dispatch(blockEditorStore));
+      mainDedupe();
     }
   }, [isFirstPost, validPosts.length]);
 

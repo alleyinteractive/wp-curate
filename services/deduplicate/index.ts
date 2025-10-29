@@ -3,8 +3,6 @@ import { store as blockEditorStore } from '@wordpress/block-editor';
 import type { Block } from '../../types/block';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
 
-type BlockEditorDispatch = ReturnType<typeof dispatch<typeof blockEditorStore>>;
-
 const usedIds = new Map();
 const curatedIds = new Map();
 
@@ -68,11 +66,8 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
 /**
  * This is the main function to update all pinned posts. Call it whenever a pinned post
  * changes or the query settings change.
- *
- * @param {Block[]} blocks All blocks in the editor.
- * @param {BlockEditorDispatch} blockEditorDispatch The block editor dispatch object from wp.data.
  */
-export function mainDedupe(blocks: Block[], blockEditorDispatch: BlockEditorDispatch) {
+export function mainDedupe() {
   if (running) {
     // Only one run at a time, but mark that another run has been requested.
     redo = true;
@@ -98,6 +93,9 @@ export function mainDedupe(blocks: Block[], blockEditorDispatch: BlockEditorDisp
     wp_curate_unique_pinned_posts: wpCurateUniquePinnedPosts = false,
     // @ts-ignore
   } = select('core/editor').getEditedPostAttribute('meta') || {};
+
+  // @ts-expect-error Methods not fully typed.
+  const blocks = select(blockEditorStore).getBlocks();
 
   const queryBlocks: Block[] = [];
   getQueryBlocks(blocks, ['wp-curate/query', 'wp-curate/subquery'], queryBlocks);
@@ -186,7 +184,7 @@ export function mainDedupe(blocks: Block[], blockEditorDispatch: BlockEditorDisp
       if (curateableBlock.name === 'wp-curate/post') {
         // Update each post block with the correct post id.
         // @ts-ignore
-        blockEditorDispatch.updateBlockAttributes(
+        dispatch(blockEditorStore).updateBlockAttributes(
           curateableBlock.clientId,
           {
             postId: allPostIds.shift() || 0,
@@ -196,7 +194,7 @@ export function mainDedupe(blocks: Block[], blockEditorDispatch: BlockEditorDisp
         // Update the query block with the new query.
         const templateIds = allPostIds.splice(0, numberOfPosts - postBlockCount);
         // @ts-ignore
-        blockEditorDispatch.updateBlockAttributes(
+        dispatch(blockEditorStore).updateBlockAttributes(
           queryBlock.clientId,
           {
             // Set the query attribute to pass to the child blocks.
@@ -218,6 +216,6 @@ export function mainDedupe(blocks: Block[], blockEditorDispatch: BlockEditorDisp
 
   if (redo) {
     // Another run has been requested. Let's run it.
-    mainDedupe(blocks, blockEditorDispatch);
+    mainDedupe();
   }
 }
