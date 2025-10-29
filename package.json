@@ -59,7 +59,7 @@
     "dompurify": "^3.3.0",
     "prop-types": "^15.8.1",
     "react": "^18.0.0",
-    "react-dom": "19.1.1",
+    "react-dom": "^18.0.0",
     "save-dev": "^0.0.1-security",
     "swr": "^2.3.6",
     "uuid": "^13.0.0"
