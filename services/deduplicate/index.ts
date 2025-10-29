@@ -87,15 +87,13 @@ export function mainDedupe() {
   // Clear the flag for another run.
   redo = false;
   resetUsedIds();
-  // @ts-ignore
+  // @ts-expect-error Methods not fully typed.
+  const blocks: Block[] = select(blockEditorStore).getBlocks();
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
     wp_curate_unique_pinned_posts: wpCurateUniquePinnedPosts = false,
     // @ts-ignore
   } = select('core/editor').getEditedPostAttribute('meta') || {};
-
-  // @ts-expect-error Methods not fully typed.
-  const blocks = select(blockEditorStore).getBlocks();
 
   const queryBlocks: Block[] = [];
   getQueryBlocks(blocks, ['wp-curate/query', 'wp-curate/subquery'], queryBlocks);
