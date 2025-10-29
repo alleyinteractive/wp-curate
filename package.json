@@ -54,7 +54,6 @@
     "@wordpress/icons": "^10.31.0",
     "@wordpress/plugins": "^7.31.0",
     "@wordpress/url": "^4.31.0",
-    "ajv": "^8.17.1",
     "classnames": "^2.5.1",
     "dompurify": "^3.3.0",
     "prop-types": "^15.8.1",
