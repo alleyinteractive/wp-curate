@@ -14,6 +14,8 @@ import { InspectorControls } from '@wordpress/block-editor';
 import { createInterpolateElement } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import SearchFilters from '../SearchFilters';
+import { useDispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
 
 import type {
   Option,
@@ -191,6 +193,8 @@ export default function QueryControls({
     });
   }
 
+  const { createNotice } = useDispatch(noticesStore);
+
   const shouldShowFilter = displayTypes.length !== postTypes.length
     || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
   return (
@@ -261,7 +265,22 @@ export default function QueryControls({
           <Checkboxes
             label={__('Post Types', 'wp-curate')}
             value={postTypes}
-            onChange={(next) => setAttributes({ postTypes: next, backfillPosts: [] })}
+            onChange={(next: string[]) => {
+              // Prevent unchecking the last post type.
+              if (next.length === 0) {
+                createNotice(
+                  'warning',
+                  __('At least one post type must be selected.', 'wp-curate'),
+                  {
+                    type: 'snackbar',
+                    isDismissible: true,
+                  }
+                );
+                // Don't update attributes/return early if none are selected.
+                return;
+              }
+              setAttributes({ postTypes: next, backfillPosts: [] });
+            }}
             options={displayTypes}
           />
           {allowedTaxonomies.map((taxonomy) => (
