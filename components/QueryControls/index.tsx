@@ -276,7 +276,7 @@ export default function QueryControls({
                     isDismissible: true,
                   }
                 );
-                // Don't update attributes/return early if none are selected.
+                // Don't update attributes/return early if user is trying to deselect the last option.
                 return;
               }
               setAttributes({ postTypes: next, backfillPosts: [] });
