@@ -77,3 +77,23 @@ export type {
   Option,
   Term,
 };
+
+export type Block = {
+  name: string;
+  attributes?: Record<string, any>;
+};
+
+export type BlockPattern = {
+  blocks: Block[];
+  slug?: string; // optional in the settings object, but needed for register
+  title: string;
+  description?: string;
+  content: string;
+  categories?: string[];
+  keywords?: string[];
+  viewScript?: string;
+  postTypes?: string[];
+  blockTypes?: string[];
+  scope?: ('inserter' | 'block')[];
+  rank?: number;
+};

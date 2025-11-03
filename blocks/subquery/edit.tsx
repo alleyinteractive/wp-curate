@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import useSWRImmutable from 'swr/immutable';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
-import { useSelect } from '@wordpress/data';
+import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
 
@@ -95,9 +95,9 @@ export default function Edit({
     postTypeObject,
     uniquePinnedPosts,
   ] = useSelect(
-    (select) => {
+    (innerSelect) => {
       // @ts-ignore
-      const editor = select('core/editor');
+      const editor = innerSelect('core/editor');
 
       // @ts-ignore
       const type = editor.getEditedPostAttribute('type');
@@ -127,7 +127,7 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
-  const currentPostId = Number(useSelect((select: any) => select('core/editor').getCurrentPostId(), []));
+  const currentPostId = Number(useSelect((innerSelect: any) => innerSelect('core/editor').getCurrentPostId(), []));
   const postTypeString = postTypes.join(',');
 
   // Construct the API path using query args.

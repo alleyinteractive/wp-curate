@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import classnames from 'classnames';
-import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
+// @ts-expect-error BlockContextProvider not available in types yet.
+import { InnerBlocks, useBlockProps, BlockContextProvider } from '@wordpress/block-editor';
 import { PostPicker } from '@alleyinteractive/block-editor-tools';
 import { dispatch, select, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
 import { useCallback } from '@wordpress/element';
 
+import type { Block } from '../../types/block';
 import NoRender from './norender';
 import SearchFilters from '../../components/SearchFilters';
+import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
 
 import type {
   Term,
@@ -30,6 +33,9 @@ interface PostEditProps {
     };
   };
   isSelected: boolean;
+  attributes: {
+    postId?: number;
+  };
 }
 
 interface PostTypeOrTerm {
@@ -52,14 +58,18 @@ interface Window {
 export default function Edit({
   clientId,
   context: {
-    postId,
+    postId: contextPostId,
     query: {
       include = '',
     } = {},
     moveData = {},
   },
   isSelected,
+  attributes: {
+    postId: attributePostId,
+  },
 }: PostEditProps) {
+  const postId = attributePostId || contextPostId;
   const {
     wpCurateQueryBlock: {
       allowedPostTypes = [],
@@ -68,7 +78,10 @@ export default function Edit({
 
   // @ts-ignore
   const queryParents = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
-  const queryParentId = queryParents.pop();
+  const queryParentId = queryParents[queryParents.length - 1];
+
+  const templateBlockParents = select('core/block-editor').getBlockParentsByBlockName(clientId, 'core/post-template');
+  const hasPostTemplateBlock = templateBlockParents.length > 0;
 
   // @ts-ignore
   const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {
@@ -87,15 +100,50 @@ export default function Edit({
       postTypes = [],
       terms = {} as Record<string, Term[]>,
       supportsPostTypes = [],
+      numberOfPosts = 0,
     } = {},
     name: parentName,
   } = queryParent;
 
+  const curateableBlocks: Block[] = [];
+  recursivelyFindBlocksByName(queryParent, ['wp-curate/post', 'core/post-template'], curateableBlocks);
+  const postBlockCount = curateableBlocks.filter((block) => block.name === 'wp-curate/post').length;
+  let templateBlockIndex = 0;
+  let templateBlockPostCount = 0;
+  if (hasPostTemplateBlock) {
+    const templateBlockId = templateBlockParents[templateBlockParents.length - 1];
+    templateBlockIndex = curateableBlocks.findIndex((block) => block.clientId === templateBlockId);
+  } else {
+    const thisBlockIndex = curateableBlocks.findIndex((block) => block.clientId === clientId);
+    templateBlockIndex = curateableBlocks.findIndex((block) => block.name === 'core/post-template');
+    // If there's a template block before this one, offset the index by the number of posts
+    // that would be rendered inside the template block.
+    if (templateBlockIndex !== -1 && templateBlockIndex < thisBlockIndex) {
+      // Number of posts, minus the total number of post blocks,
+      // removing the post block in the template block.
+      templateBlockPostCount = numberOfPosts - postBlockCount;
+    }
+  }
+
   const [filtered, setFiltered] = useState(true);
 
-  const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
-  const index = queryInclude.findIndex((id: number) => id === postId);
-  const selected = posts[index] ?? null;
+  let selected = null;
+  let index = null;
+  if (hasPostTemplateBlock) {
+    const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
+    index = queryInclude.findIndex((id: number) => id === postId) + templateBlockIndex;
+    selected = posts[index] ?? null;
+  } else {
+    const postBlocks: Block[] = [];
+    recursivelyFindBlocksByName(queryParent, 'wp-curate/post', postBlocks);
+    // the index of the post block within the query block
+    index = postBlocks.findIndex((block) => block.clientId === clientId);
+    if (templateBlockIndex < index && templateBlockIndex !== -1) {
+      index -= 1; // minus 1 if for the Post block inside the template block.
+    }
+    index += templateBlockPostCount;
+    selected = posts[index] ?? null;
+  }
   const postDeleted = selected !== null && selected !== postId;
 
   const updatePost = useCallback((post: number | null) => {
@@ -142,27 +190,31 @@ export default function Edit({
 
     const clickHandler = (e: MouseEvent) => {
       let targetElement = e.target as HTMLElement;
-      // We want the wp-block-post element, not the wp-curate-post-block element.
-      if (targetElement.classList.contains('wp-curate-post-block')) {
-        targetElement = targetElement.parentElement as HTMLElement;
+      // If this one is hidden, select the previous one.
+      if (targetElement.style.display === 'none' && targetElement.previousElementSibling) {
+        targetElement = targetElement.previousElementSibling as HTMLElement;
       }
-      if (!targetElement.classList.contains('wp-block-post')
+      // We want the wp-curate-post-block element not the wp-block-post element.
+      if (targetElement.classList.contains('wp-block-post')) {
+        targetElement = targetElement.querySelectorAll('.wp-curate-post-block')[0] as HTMLElement;
+      }
+      if (!targetElement.classList.contains('wp-curate-post-block')
         && !targetElement.classList.contains('components-button')
       ) {
         window.removeEventListener('click', clickHandler);
         cancelMove();
-      } else if (targetElement.classList.contains('wp-block-post')) {
+      } else if (targetElement.classList.contains('wp-block-wp-curate-post')) {
         e.preventDefault();
-        const parent = targetElement.parentNode as HTMLElement;
+        // Get the parent wp-query block.
+        const parent = targetElement.closest('[data-type="wp-curate/query"]') as HTMLElement;
         if (!parent) {
           return;
         }
-        let targetIndex = Array.prototype.indexOf.call(parent.children, targetElement);
-        if (parent.classList.contains('is-selected')) {
-          targetIndex -= 1;
-        }
-        const blockId = parent.dataset.block;
-        const parentId = select('core/block-editor').getBlockParentsByBlockName(blockId, 'wp-curate/query')[0];
+        const parentChildren = parent.querySelectorAll('.wp-curate-post-block');
+        const visibleChildren = [...parentChildren].filter((el) => el.parentElement?.style?.display !== 'none');
+
+        const targetIndex = Array.prototype.indexOf.call(visibleChildren, targetElement);
+        const parentId = parent.dataset.block;
         if (!parentId) {
           return;
         }
@@ -244,7 +296,9 @@ export default function Edit({
         },
       )}
     >
-      <InnerBlocks />
+      <BlockContextProvider value={{ postId }}>
+        <InnerBlocks />
+      </BlockContextProvider>
       {isParentOfSelectedBlock || isSelected ? (
         <div className="wp-curate-post-block__actions">
           {selected && !postDeleted ? (
