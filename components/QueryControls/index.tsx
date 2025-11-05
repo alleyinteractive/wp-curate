@@ -14,6 +14,8 @@ import { InspectorControls } from '@wordpress/block-editor';
 import { createInterpolateElement } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import SearchFilters from '../SearchFilters';
+import { useDispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
 
 import type {
   Option,
@@ -198,6 +200,8 @@ export default function QueryControls({
     ? __('The maximum number of posts to show. Note: There are post blocks outside of a post template block that will also display posts, so the minimum number of posts cannot be below this number.', 'wp-curate') // eslint-disable-line max-len
     : __('The maximum number of posts to show.', 'wp-curate');
 
+  const { createNotice } = useDispatch(noticesStore);
+
   const shouldShowFilter = displayTypes.length !== postTypes.length
     || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
   return (
@@ -270,7 +274,22 @@ export default function QueryControls({
           <Checkboxes
             label={__('Post Types', 'wp-curate')}
             value={postTypes}
-            onChange={(next: string[]) => setAttributes({ postTypes: next, backfillPosts: [] })}
+            onChange={(next: string[]) => {
+              // Prevent unchecking the last post type.
+              if (next.length === 0) {
+                createNotice(
+                  'warning',
+                  __('At least one post type must be selected.', 'wp-curate'),
+                  {
+                    type: 'snackbar',
+                    isDismissible: true,
+                  }
+                );
+                // Don't update attributes/return early if user is trying to deselect the last option.
+                return;
+              }
+              setAttributes({ postTypes: next, backfillPosts: [] });
+            }}
             options={displayTypes}
           />
           {allowedTaxonomies.map((taxonomy) => (

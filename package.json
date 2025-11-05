@@ -54,6 +54,7 @@
     "@wordpress/element": "^6.32.0",
     "@wordpress/i18n": "^6.5.0",
     "@wordpress/icons": "^11.0.0",
+    "@wordpress/notices": "^5.34.0",
     "@wordpress/plugins": "^7.32.0",
     "@wordpress/url": "^4.32.0",
     "ajv": "^8.17.1",
