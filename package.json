@@ -76,7 +76,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@types/uuid": "^11.0.0",
-    "@types/wordpress__edit-post": "^7.5.1",
+    "@types/wordpress__edit-post": "^8.4.2",
     "@wordpress/babel-preset-default": "^8.32.0",
     "babel-jest": "^30.2.0",
     "check-node-version": "^4.2.1",
