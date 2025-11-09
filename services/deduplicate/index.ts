@@ -3,6 +3,12 @@ import { store as blockEditorStore } from '@wordpress/block-editor';
 import type { Block } from '../../types/block';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
 
+interface Window {
+  wpCurateQueryBlock: {
+    includeFuturePosts: boolean;
+  };
+}
+
 const usedIds = new Map();
 const curatedIds = new Map();
 
@@ -82,6 +88,12 @@ export function mainDedupe() {
   if (document.querySelector('.block-editor-block-switcher__popover-preview')) {
     return;
   }
+
+  const {
+    wpCurateQueryBlock: {
+      includeFuturePosts,
+    } = {},
+  } = (window as any as Window);
 
   running = true;
   // Clear the flag for another run.
@@ -202,6 +214,7 @@ export function mainDedupe() {
               type: postTypeString,
               include: templateIds.join(','),
               orderby: 'include',
+              wp_curate_include_future: includeFuturePosts,
             },
             queryId: 0,
           },

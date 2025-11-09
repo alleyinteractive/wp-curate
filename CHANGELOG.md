@@ -2,7 +2,11 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
-## 3.0.0
+## Unreleased
+
+- Enhancement: Enable pinning scheduled posts via `wp_curate_include_future_posts` filter.
+
+## 3.0.0 - 2025-10-31
 
 - Support for previews of Query block and Patterns.
 - Pattern/Variation picker when inserting a Query block.
