@@ -11,6 +11,7 @@ module.exports = {
   },
   modulePathIgnorePatterns: [
     '.buddy-tests',
+    'vendor',
   ],
   testEnvironment: 'node',
 };

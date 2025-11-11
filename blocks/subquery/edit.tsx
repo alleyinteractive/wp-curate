@@ -9,7 +9,7 @@ import { __ } from '@wordpress/i18n';
 
 import { Template } from '@wordpress/blocks';
 import apiFetch from '@wordpress/api-fetch';
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid } from 'uuid'; // eslint-disable-line import/no-unresolved
 
 import type {
   EditProps,
