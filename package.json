@@ -34,7 +34,7 @@
     "stylelint:fix": "stylelint --fix \"**/*.scss\"",
     "stylelint": "stylelint \"**/*.scss\" --allow-empty-input",
     "test:watch": "jest --watch",
-    "test": "jest --passWithNoTests"
+    "test": "npm run check-types && npm run lint && npm run stylelint && npm run jest"
   },
   "dependencies": {
     "@alleyinteractive/block-editor-tools": "^0.14.0",
