@@ -13,9 +13,9 @@ import {
 import { InspectorControls } from '@wordpress/block-editor';
 import { createInterpolateElement } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import SearchFilters from '../SearchFilters';
 import { useDispatch } from '@wordpress/data';
 import { store as noticesStore } from '@wordpress/notices';
+import SearchFilters from '../SearchFilters';
 
 import type {
   Option,
@@ -283,9 +283,10 @@ export default function QueryControls({
                   {
                     type: 'snackbar',
                     isDismissible: true,
-                  }
+                  },
                 );
-                // Don't update attributes/return early if user is trying to deselect the last option.
+                // Don't update attributes/return early if user is trying to
+                // deselect the last option.
                 return;
               }
               setAttributes({ postTypes: next, backfillPosts: [] });
