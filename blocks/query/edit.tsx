@@ -40,6 +40,7 @@ interface Window {
     allowedTaxonomies: PostTypeOrTerm[];
     parselyAvailable: string,
     maxPosts: string,
+    includeFuturePosts: boolean,
   };
 }
 
@@ -82,6 +83,7 @@ export default function Edit({
       allowedTaxonomies = [],
       parselyAvailable = 'false',
       maxPosts = '10',
+      includeFuturePosts,
     } = {},
   } = (window as any as Window);
 
@@ -228,6 +230,7 @@ export default function Edit({
               per_page: postsToInclude.length,
               type: postTypeString,
               include: postsToInclude,
+              status: includeFuturePosts ? ['publish', 'future'] : 'publish',
               _locale: 'user',
               context: 'edit',
             },
@@ -244,6 +247,7 @@ export default function Edit({
     manualPosts,
     setAttributes,
     postTypeString,
+    includeFuturePosts,
   ]);
 
   // When numberOfPosts changes, update manualPosts array.

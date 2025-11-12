@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
-import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import classnames from 'classnames';
+
+import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import {
   PanelBody,
   PanelRow,
@@ -15,7 +16,9 @@ import { createInterpolateElement } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { useDispatch } from '@wordpress/data';
 import { store as noticesStore } from '@wordpress/notices';
+
 import SearchFilters from '../SearchFilters';
+import { postTypeWithFuture } from '../../services/utils';
 
 import type {
   Option,
@@ -31,6 +34,7 @@ interface Window {
   wpCurateQueryBlock: {
     rawOrderByOptions: Record<string, string>;
     orderByMetaKeys: string[];
+    includeFuturePosts: boolean;
   };
 }
 
@@ -100,6 +104,7 @@ export default function QueryControls({
         date: __('Date', 'wp-curate'),
       },
       orderByMetaKeys = [],
+      includeFuturePosts,
     } = {},
   } = (window as any as Window);
 
@@ -204,6 +209,7 @@ export default function QueryControls({
 
   const shouldShowFilter = displayTypes.length !== postTypes.length
     || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
+
   return (
     <>
       <InspectorControls>
@@ -254,6 +260,8 @@ export default function QueryControls({
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] || 0}
                 className="manual-posts__picker"
+                // @ts-ignore This function does work with this prop.
+                getPostType={includeFuturePosts ? postTypeWithFuture : null}
                 filters={(
                   <SearchFilters
                     shouldShowFilter={shouldShowFilter}
@@ -261,7 +269,10 @@ export default function QueryControls({
                     setFiltered={setFiltered}
                   />
                 )}
-                params={params}
+                params={{
+                  ...params,
+                  wp_curate_include_future: Number(includeFuturePosts),
+                }}
               />
             </PanelRow>
           ))}

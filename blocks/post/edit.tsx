@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import classnames from 'classnames';
+import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
+
 // @ts-expect-error BlockContextProvider not available in types yet.
 import { InnerBlocks, useBlockProps, BlockContextProvider } from '@wordpress/block-editor';
-import { PostPicker } from '@alleyinteractive/block-editor-tools';
+import { PostPicker, usePostById } from '@alleyinteractive/block-editor-tools';
 import { dispatch, select, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
-import { Button } from '@wordpress/components';
+import { Button, Notice } from '@wordpress/components';
 import { useCallback } from '@wordpress/element';
 
 import type { Block } from '../../types/block';
 import NoRender from './norender';
 import SearchFilters from '../../components/SearchFilters';
 import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
+import { postTypeWithFuture } from '../../services/utils';
 
 import type {
   Term,
@@ -47,6 +50,7 @@ interface PostTypeOrTerm {
 interface Window {
   wpCurateQueryBlock: {
     allowedPostTypes: PostTypeOrTerm[];
+    includeFuturePosts: boolean;
   };
 }
 
@@ -73,6 +77,7 @@ export default function Edit({
   const {
     wpCurateQueryBlock: {
       allowedPostTypes = [],
+      includeFuturePosts,
     } = {},
   } = (window as any as Window);
 
@@ -282,6 +287,13 @@ export default function Edit({
 
   const shouldShowFilter = displayTypes.length !== postTypes.length
     || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
+
+  const postObj = usePostById(
+    postId,
+    // @ts-ignore This function does work with this argument.
+    includeFuturePosts ? postTypeWithFuture : null,
+  ) as WpRestApiPost | null;
+
   return (
     <div
       {...useBlockProps(
@@ -296,6 +308,15 @@ export default function Edit({
         },
       )}
     >
+      {typeof postObj === 'object' && postObj !== null && 'status' in postObj && postObj.status === 'future' ? (
+        <Notice
+          status="warning"
+          isDismissible={false}
+        >
+          {__('Scheduled', 'wp-curate')}
+        </Notice>
+      ) : null}
+
       <BlockContextProvider value={{ postId }}>
         <InnerBlocks />
       </BlockContextProvider>
@@ -314,6 +335,8 @@ export default function Edit({
             onUpdate={updatePost}
             onReset={resetPost}
             value={selected ?? 0}
+            // @ts-ignore This function does work with this prop.
+            getPostType={includeFuturePosts ? postTypeWithFuture : null}
             previewRender={(NoRender)}
             className="wp-curate-post-block__post-picker"
             selectText={__('Pin a Post', 'wp-curate')}
@@ -326,7 +349,10 @@ export default function Edit({
                 setFiltered={setFiltered}
               />
             )}
-            params={params}
+            params={{
+              ...params,
+              wp_curate_include_future: includeFuturePosts,
+            }}
           />
           {
             // If this post isn't already in the posts list, show a button to pin it.

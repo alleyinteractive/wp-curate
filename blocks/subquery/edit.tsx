@@ -37,6 +37,7 @@ interface Window {
     allowedTaxonomies: PostTypeOrTerm[];
     parselyAvailable: string,
     maxPosts: number,
+    includeFuturePosts: boolean,
   };
 }
 
@@ -86,6 +87,7 @@ export default function Edit({
       allowedTaxonomies = [],
       parselyAvailable = 'false',
       maxPosts = 10,
+      includeFuturePosts,
     } = {},
   } = (window as any as Window);
 
@@ -225,6 +227,7 @@ export default function Edit({
             per_page: postsToInclude.length,
             type: postTypeString,
             include: postsToInclude,
+            status: includeFuturePosts ? ['publish', 'future'] : 'publish',
             _locale: 'user',
             context: 'edit',
           },
@@ -248,7 +251,7 @@ export default function Edit({
     };
 
     updateValidPosts();
-  }, [isFirstPost, manualPosts, postTypeString, setAttributes]);
+  }, [includeFuturePosts, isFirstPost, manualPosts, postTypeString, setAttributes]);
 
   /**
    * Check if deduplication is needed when validPosts are available.

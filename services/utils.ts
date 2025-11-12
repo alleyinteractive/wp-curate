@@ -5,6 +5,7 @@
  * @link https://github.com/WordPress/gutenberg/blob/trunk/packages/block-library/src/query/utils.js
  */
 
+import apiFetch from '@wordpress/api-fetch';
 import { useSelect } from '@wordpress/data';
 import { useMemo } from '@wordpress/element';
 import { store as blockEditorStore } from '@wordpress/block-editor';
@@ -12,6 +13,7 @@ import {
   cloneBlock,
   store as blocksStore,
 } from '@wordpress/blocks';
+import { addQueryArgs } from '@wordpress/url';
 
 import type { BlockInstance, BlockVariation } from '@wordpress/blocks';
 import type { BlockPattern } from '../blocks/query/types';
@@ -170,3 +172,32 @@ export const usePatterns = (clientId: string, name: string): BlockPattern[] => u
   },
   [name, clientId],
 );
+
+/**
+ * Custom function for use with usePostById to get the post type that includes scheduled posts.
+ *
+ * @param {number} postId The post ID.
+ * @return {Promise<string|null>} The post type or null if not found.
+ */
+export const postTypeWithFuture = async (postId: number) => {
+  let type = null;
+
+  const path = addQueryArgs('/wp/v2/search', {
+    include: postId,
+    wp_curate_include_future: 1,
+  });
+
+  const results = await apiFetch({ path });
+
+  if (
+    Array.isArray(results)
+    && results.length > 0
+    && typeof results[0] === 'object'
+    && results[0] !== null
+    && 'subtype' in results[0]
+  ) {
+    type = results[0].subtype;
+  }
+
+  return type;
+};
