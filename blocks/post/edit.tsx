@@ -16,7 +16,6 @@ import SearchFilters from '../../components/SearchFilters';
 import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
 import { postTypeWithFuture } from '../../services/utils';
 
-
 import type {
   Term,
   Option,
