@@ -6,6 +6,7 @@
   backupGlobals="false"
   colors="true"
   cacheDirectory=".phpunit.cache"
+  failOnAllIssues="true"
 >
   <testsuites>
     <testsuite name="Feature">

@@ -20,7 +20,7 @@ interface PostTitleEditProps {
       include?: string;
       orderby?: string;
     };
-    pinnedPosts?: Array<number>;
+    pinnedPosts?: Array<number | null>;
     customPostTitles?: {
       postId: number;
       title: string;
@@ -46,13 +46,13 @@ export default function Edit({
   const queryParentId = queryParentIds.length ? queryParentIds[queryParentIds.length - 1] : null;
 
   const {
-    postId,
+    postId = null,
     pinnedPosts = [],
-    query: { postType = 'post' },
+    query: { postType = 'post' } = {},
     customPostTitles = [],
   } = context;
   const { level = 3, supportsLevel } = attributes;
-  const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId.toString());
+  const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId?.toString());
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
   const TagName = !supportsLevel || level === 0 ? 'p' : `h${level}`;
@@ -74,6 +74,10 @@ export default function Edit({
   }, [isPinned, postId, customPostTitles, currentCustomPostTitle, setAttributes, queryParentId]);
 
   const handleOnChange = (title: string) => {
+    if (!postId) {
+      return;
+    }
+
     /**
     * Handle case for removing custom title from the collection if a
     * custom title no longer exists.

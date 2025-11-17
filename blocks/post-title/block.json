@@ -23,6 +23,9 @@
   },
   "render": "file:render.php",
   "supports": {
-    "inserter": false
+    "inserter": true,
+    "typography": {
+      "textAlign": true
+    }
   }
 }

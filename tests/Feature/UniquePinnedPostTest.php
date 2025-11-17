@@ -8,12 +8,11 @@
 namespace Alley\WP\WP_Curate\Tests\Feature;
 
 use Alley\WP\WP_Curate\Tests\TestCase;
-use simplehtmldom\HtmlDocument;
+
+use function Mantle\Support\Helpers\html_string;
 
 /**
- * A test suite for unique pinned posts.
- *
- * @link https://mantle.alley.com/testing/test-framework.html
+ * Test the unique pinned post functionality.
  */
 class UniquePinnedPostTest extends TestCase {
 	/**
@@ -22,38 +21,9 @@ class UniquePinnedPostTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->set_permalink_structure( '/%postname%/' );
-
-		static::factory()->post->create(
-			[
-				'post_title' => 'Test Post 1',
-			]
-		);
-		static::factory()->post->create(
-			[
-				'post_title' => 'Test Post 2',
-			]
-		);
-		static::factory()->post->create(
-			[
-				'post_title' => 'Test Post 3',
-			]
-		);
-		static::factory()->post->create(
-			[
-				'post_title' => 'Test Post 4',
-			]
-		);
-		static::factory()->post->create(
-			[
-				'post_title' => 'Test Post 5',
-			]
-		);
-		static::factory()->post->create(
-			[
-				'post_title' => 'Test Post 6',
-			]
-		);
+		for ( $i = 1; $i <= 6; $i++ ) {
+			static::factory()->post->create( [ 'post_title' => "Test Post $i" ] );
+		}
 	}
 
 	/**
@@ -153,16 +123,7 @@ class UniquePinnedPostTest extends TestCase {
 	 * @param string $html_content The content of the page.
 	 * @return string
 	 */
-	private function extract_wp_content( $html_content ) {
-		$html = new HtmlDocument();
-		$html->load( $html_content );
-
-		$div = $html->find( 'div.entry-content', 0 );
-
-		if ( $div ) {
-			return $div->innertext;
-		}
-
-		return '';
+	private function extract_wp_content( string $html_content ): string {
+		return html_string( $html_content )->first_by_selector( 'div.entry-content' )->text();
 	}
 }
