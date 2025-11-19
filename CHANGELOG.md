@@ -5,6 +5,7 @@ All notable changes to `WP Curate` will be documented in this file.
 ## Unreleased
 
 - Enhancement: Enable pinning scheduled posts via `wp_curate_include_future_posts` filter.
+- Bug fix: Fix issue where pinning a post would not update the preview in the editor when "Show template" was enabled.
 
 ## 3.0.0 - 2025-10-31
 

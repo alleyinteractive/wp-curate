@@ -99,8 +99,17 @@ export function mainDedupe() {
   // Clear the flag for another run.
   redo = false;
   resetUsedIds();
+
   // @ts-expect-error Methods not fully typed.
-  const blocks: Block[] = select(blockEditorStore).getBlocks();
+  const { getBlocksByName, getBlocks } = select(blockEditorStore);
+
+  /**
+   * There isn't support yet for deduplicating posts throughout an entire template.
+   * If we're in template mode, narrow the scope to just the blocks in post content.
+   */
+  const root: Block[] = getBlocksByName('core/post-content');
+  const blocks: Block[] = root.length === 1 ? getBlocks(root) : getBlocks();
+
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
     wp_curate_unique_pinned_posts: wpCurateUniquePinnedPosts = false,
