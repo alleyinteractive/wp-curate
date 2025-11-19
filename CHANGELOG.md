@@ -2,6 +2,26 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## Unreleased
+
+- Enhancement: Enable pinning scheduled posts via `wp_curate_include_future_posts` filter.
+
+## 3.0.0 - 2025-10-31
+
+- Support for previews of Query block and Patterns.
+- Pattern/Variation picker when inserting a Query block.
+- Post blocks can now exist outside of Post Template blocks, allowing for more complex layouts
+  and individual inner blocks on the Post block.
+- Upgrade to PHPStan to 2.0.
+- Added unit tests for existing plugin functionality.
+
+## 2.7.2 - 2025-10-15
+
+- Enhancement: Post Picker results filtered to match Query block parameters by default.
+- Enhancement: Text alignment support in Post Title block.
+- Bug fix: Fix issue where reducing number of posts caused some posts to be hidden in the editor.
+- Bug fix: Fix PHP warnings.
+
 ## 2.7.1 - 2025-10-01
 
 - Enhancement: Add option to "Pin This Post" so editors can pin the selected post.

@@ -51,7 +51,7 @@ final class History implements Post_IDs {
 		}
 
 		foreach ( $post_ids as $post_id ) {
-			if ( \is_int( $post_id ) ) {
+			if ( \is_int( $post_id ) ) { // @phpstan-ignore-line function.alreadyNarrowedType
 				$this->ids[ $post_id ] = true;
 			}
 		}

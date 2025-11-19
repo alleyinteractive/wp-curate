@@ -67,7 +67,7 @@ final class Pinned_In_Post_Content implements Post_IDs {
 			}
 		}
 
-		$out = new Legal_Object_IDs( new Post_IDs_Envelope( $out ) );
+		$out = new Legal_Object_IDs( new Post_IDs_Envelope( $out ) ); // @phpstan-ignore-line argument.type
 
 		return $out->post_ids();
 	}

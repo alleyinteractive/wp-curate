@@ -54,11 +54,11 @@ final class Core_Query_Block_Integration implements Feature {
 
 		// Support arrays of post types.
 		if ( is_array( $post_type ) ) {
-			$query['post_type'] = array_filter( $post_type, 'is_post_type_viewable' );
+			$query['post_type'] = array_filter( $post_type, 'is_post_type_viewable' ); // @phpstan-ignore-line argument.type
 		}
 
 		if ( is_array( $include ) ) {
-			$query['post__in'] = array_map( 'intval', $include );
+			$query['post__in'] = array_map( 'intval', $include ); // @phpstan-ignore-line argument.type
 		}
 
 		if ( is_string( $orderby ) ) {

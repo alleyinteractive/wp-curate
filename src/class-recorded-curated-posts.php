@@ -31,12 +31,17 @@ final class Recorded_Curated_Posts implements Curated_Posts {
 	 * @param array<string, mixed> $context    Query block context.
 	 * @param array<string, mixed> $attributes Curation field settings.
 	 * @param WP_Block_Type        $block_type Block type.
-	 * @return array{"query": array<string, mixed>} Updated context.
+	 * @return array{query?: array{include?: int[]}} Updated context.
 	 */
 	public function with_query_context( array $context, array $attributes, WP_Block_Type $block_type ): array {
+		/**
+		 * Query context.
+		 *
+		 * @var array{query?: array{include?: int[]}} $context
+		 */
 		$context = $this->origin->with_query_context( $context, $attributes, $block_type );
 
-		if ( isset( $context['query']['include'] ) && is_array( $context['query']['include'] ) ) {
+		if ( isset( $context['query']['include'] ) && is_array( $context['query']['include'] ) ) { // @phpstan-ignore-line booleanAnd.rightAlwaysTrue
 			$this->history->record( $context['query']['include'] );
 		}
 
