@@ -49,8 +49,8 @@ if ( ! file_exists( __DIR__ . '/vendor/wordpress-autoload.php' ) ) {
 
 		return;
 	}
-} else {
-	// Load Composer dependencies.
+} elseif ( ! class_exists( __NAMESPACE__ . '\Features\REST_API' ) ) {
+	// Load Composer dependencies if not already loaded.
 	require_once __DIR__ . '/vendor/wordpress-autoload.php';
 }
 
