@@ -4,7 +4,8 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
-Nothing yet.
+- Enhancement: Query Parameters listed before Select Posts in Query block sidebar, for a better user experience, as
+Select Posts duplicates functionality available in the main editor.
 
 ## 3.1.0 - 2025-11-24
 
