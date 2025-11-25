@@ -239,7 +239,6 @@ export default function Edit({
         });
         // Remove the post from the source query block if it's not the same as the target block.
         const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId, ['wp-curate/query', 'wp-curate/subquery']).pop();
-        console.log('sourceParent', sourceParent);
         if (parentId !== sourceParent) {
           const sourceOldPosts = select('core/block-editor').getBlockAttributes(sourceParent)?.posts;
           const sourceNewPosts = sourceOldPosts.map(
