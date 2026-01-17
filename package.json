@@ -74,7 +74,7 @@
     "@alleyinteractive/eslint-config": "^0.2.0",
     "@alleyinteractive/stylelint-config": "^0.1.0",
     "@alleyinteractive/tsconfig": "^0.3.0",
-    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-env": "^7.28.6",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@types/wordpress__edit-post": "^8.4.2",
