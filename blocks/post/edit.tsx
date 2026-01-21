@@ -308,7 +308,7 @@ export default function Edit({
             'wp-curate-post-block',
             { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
             { 'wp-curate-post-block--backfill': !selected || postDeleted },
-            { 'curate-droppable': parentName === 'wp-curate/query' && moveData.postId && moveData.postId !== postId },
+            { 'curate-droppable': (parentName === 'wp-curate/query' || parentName === 'wp-curate/subquery') && moveData.postId && moveData.postId !== postId },
             { 'wp-curate-error': postDeleted },
           ),
         },

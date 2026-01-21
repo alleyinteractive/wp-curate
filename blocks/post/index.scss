@@ -56,12 +56,7 @@
   text-align: center;
   top: 0;
   width: 100%;
-  z-index: 5000;
-}
-
-.wp-block-post:hover .wp-block-wp-curate-subquery .wp-curate-post-block.curate-droppable::after,
-.wp-curate-post-block.curate-droppable:hover .wp-block-wp-curate-subquery .wp-curate-post-block.curate-droppable::after {
-  z-index: 6000;
+  z-index: 1;
 }
 
 .wp-curate-error::after {
