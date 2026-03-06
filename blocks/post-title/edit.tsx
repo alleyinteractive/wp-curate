@@ -13,6 +13,7 @@ interface PostTitleEditProps {
   };
   context: {
     postId: number;
+    postType?: string;
     query: {
       perPage?: number;
       postType?: string;
@@ -47,10 +48,12 @@ export default function Edit({
 
   const {
     postId = null,
+    postType: contextPostType,
     pinnedPosts = [],
-    query: { postType = 'post' } = {},
+    query: { postType: queryPostType = 'post' } = {},
     customPostTitles = [],
   } = context;
+  const postType = contextPostType || queryPostType;
   const { level = 3, supportsLevel } = attributes;
   const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId?.toString());
   const isPinned = pinnedPosts.includes(postId);
