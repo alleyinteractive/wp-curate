@@ -60,7 +60,7 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request $request The request object.
 	 * @return array<int> The post IDs.
 	 */
-	public function get_posts( WP_REST_Request $request ): array { // phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.ContentAfterBrace @phpstan-ignore-line
+	public function get_posts( WP_REST_Request $request ): array { // phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.ContentAfterBrace
 		$search_term      = $request->get_param( 'search' ) ?? '';
 		$offset           = $request->get_param( 'offset' ) ?? 0;
 		$post_type_string = $request->get_param( 'post_type' ) ?? 'post';
@@ -179,7 +179,6 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request                  $request The REST request.
 	 * @return array<array<int, string>|string>
 	 */
-	// @phpstan-ignore-next-line
 	public function add_type_param( $query_args, $request ): array { // phpcs:ignore Squiz.Commenting.FunctionComment.WrongStyle
 		// Check if the user is logged in.
 		if ( ! \is_user_logged_in() ) {
@@ -210,7 +209,7 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request $request    The REST request.
 	 * @return mixed[]
 	 */
-	public function add_include_future_param( // @phpstan-ignore-line missingType.generics
+	public function add_include_future_param(
 		$query_args,
 		$request
 	) {
@@ -303,7 +302,7 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request $request    The request used.
 	 * @return mixed[] Filtered query arguments.
 	 */
-	public function add_future_support( // @phpstan-ignore-line missingType.generics
+	public function add_future_support(
 		$query_args,
 		$request
 	) {

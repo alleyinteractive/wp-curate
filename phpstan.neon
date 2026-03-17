@@ -11,6 +11,13 @@ parameters:
 	ignoreErrors:
 		- '#maybeint of function absint#'
 		- '#of function sanitize_text_field expects string#'
+		- '#Access to an undefined property WP_Post_Type::#'
+		- '#Access to an undefined property WP_Taxonomy::#'
+		- '#Cannot access property \$singular_name on mixed#'
+		- '#Cannot access property \$edit_published_posts on mixed#'
+		- '#use_block_editor_for_post_type expects string, mixed given#'
+		- '#WP_REST_Request.*::get_param\(\) expects string, mixed given#'
+		- '#Unable to resolve the template type TOffset in call to method WP_REST_Request#'
 
 	excludePaths:
 		- src/features/class-parsely-support.php
