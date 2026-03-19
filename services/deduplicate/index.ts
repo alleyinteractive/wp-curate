@@ -190,19 +190,25 @@ export function mainDedupe() {
     recursivelyFindBlocksByName(queryBlock, ['wp-curate/post', 'core/post-template'], curateableBlocks);
     const postBlockCount = curateableBlocks.filter((block) => block.name === 'wp-curate/post').length;
 
+    // Track all resolved post IDs to set as allPostIds context on the query block.
+    const resolvedPostIds: Array<number | undefined> = [];
+
     curateableBlocks.forEach((curateableBlock) => {
       if (curateableBlock.name === 'wp-curate/post') {
+        const postId = allPostIds.shift() || 0;
+        resolvedPostIds.push(postId);
         // Update each post block with the correct post id.
         // @ts-ignore
         dispatch(blockEditorStore).updateBlockAttributes(
           curateableBlock.clientId,
           {
-            postId: allPostIds.shift() || 0,
+            postId,
           },
         );
       } else if (curateableBlock.name === 'core/post-template') {
         // Update the query block with the new query.
         const templateIds = allPostIds.splice(0, numberOfPosts - postBlockCount);
+        resolvedPostIds.push(...templateIds);
         // @ts-ignore
         dispatch(blockEditorStore).updateBlockAttributes(
           queryBlock.clientId,
@@ -221,6 +227,16 @@ export function mainDedupe() {
         );
       }
     });
+
+    // Set allPostIds on the query block so descendants (e.g., wp-curate/subquery)
+    // can determine post position via context without relying on query.include.
+    // @ts-ignore
+    dispatch(blockEditorStore).updateBlockAttributes(
+      queryBlock.clientId,
+      {
+        allPostIds: resolvedPostIds.filter(Boolean), // Filter out falsy values (0, undefined).
+      },
+    );
   });
 
   running = false;

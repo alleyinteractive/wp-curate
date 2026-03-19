@@ -72,13 +72,17 @@ export default function Edit({
   setAttributes,
   context: {
     postId,
+    allPostIds = [],
     query: {
       include = '',
     } = {},
   },
 }: EditProps) {
-  const queryInclude = include.split(',').map((id: string) => parseInt(id, 10));
-  const index = queryInclude.findIndex((id: number) => id === postId);
+  // Use allPostIds context if available; fall back to query.include for backwards compatibility.
+  const queryPostIds = allPostIds.length > 0
+    ? allPostIds
+    : include.split(',').map((id: string) => parseInt(id, 10));
+  const index = queryPostIds.findIndex((id: number) => id === postId);
   const isFirstPost = index === 0;
 
   const {
