@@ -15,6 +15,7 @@
   ],
   "providesContext": {
     "query": "query",
+    "allPostIds": "allPostIds",
     "displayLayout": "displayLayout",
     "heading": "heading",
     "curation": "curation",
