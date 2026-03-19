@@ -210,7 +210,7 @@ export function mainDedupe() {
             // Set the query attribute to pass to the child blocks.
             query: {
               perPage: templateIds.length,
-              postType: 'post',
+              postType: postTypeString,
               type: postTypeString,
               include: templateIds.join(','),
               orderby: 'include',
