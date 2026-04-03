@@ -85,7 +85,8 @@ final class Rest_Api implements Feature {
 		$taxonomies         = array_filter( $taxonomies, 'is_object' );
 		$tax_query          = [];
 		foreach ( $taxonomies as $taxonomy ) {
-			$rest_base = $taxonomy->rest_base ?: $taxonomy->name; // @phpstan-ignore property.notFound
+			// @phpstan-ignore-next-line property.notFound (WP_Taxonomy::$name, WP_Taxonomy::$rest_base)
+			$rest_base = $taxonomy->rest_base ?: $taxonomy->name;
 			if ( empty( $rest_base ) || ! is_string( $rest_base ) ) {
 				continue;
 			}
