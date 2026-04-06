@@ -69,7 +69,7 @@ function wp_curate_query_block_init(): void {
 						}
 						return (
 							[
-								'name' => $post_type_object->labels->singular_name,
+								'name' => $post_type_object->labels->singular_name, // @phpstan-ignore property.notFound, property.nonObject
 								'slug' => $slug,
 							]
 						);
@@ -86,9 +86,9 @@ function wp_curate_query_block_init(): void {
 						}
 						return (
 							[
-								'name'      => $taxonomy->labels->singular_name,
+								'name'      => $taxonomy->labels->singular_name, // @phpstan-ignore property.notFound, property.nonObject
 								'slug'      => $slug,
-								'rest_base' => $taxonomy->rest_base,
+								'rest_base' => $taxonomy->rest_base, // @phpstan-ignore property.notFound
 							]
 						);
 					},
