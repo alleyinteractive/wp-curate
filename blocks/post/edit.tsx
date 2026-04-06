@@ -317,7 +317,7 @@ export default function Edit({
         </Notice>
       ) : null}
 
-      <BlockContextProvider value={{ postId }}>
+      <BlockContextProvider value={{ postId, postType: postObj?.type }}>
         <InnerBlocks />
       </BlockContextProvider>
       {isParentOfSelectedBlock || isSelected ? (
