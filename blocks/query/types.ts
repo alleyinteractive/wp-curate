@@ -36,6 +36,7 @@ interface EditProps {
   setAttributes: (attributes: any) => void;
   context: {
     postId: number;
+    allPostIds?: number[];
     query: {
       include?: string;
     };
