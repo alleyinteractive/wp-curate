@@ -3,11 +3,21 @@ import classnames from 'classnames';
 import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
 
 // @ts-expect-error BlockContextProvider not available in types yet.
-import { BlockContextProvider, BlockControls, InnerBlocks, useBlockProps } from '@wordpress/block-editor';
+import {
+  BlockContextProvider,
+  BlockControls,
+  InnerBlocks,
+  useBlockProps,
+} from '@wordpress/block-editor';
 import { PostPicker, usePostById } from '@alleyinteractive/block-editor-tools';
 import { dispatch, select, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
-import { Button, Notice, ToolbarGroup, ToolbarButton } from '@wordpress/components';
+import {
+  Button,
+  Notice,
+  ToolbarGroup,
+  ToolbarButton,
+} from '@wordpress/components';
 import { useCallback } from '@wordpress/element';
 import { pencil, seen } from '@wordpress/icons';
 
