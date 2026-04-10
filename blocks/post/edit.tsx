@@ -312,6 +312,7 @@ export default function Edit({
       <BlockControls>
         <ToolbarGroup>
           <ToolbarButton
+            disabled={!postId}
             icon={pencil}
             label={__('Edit post in a new tab', 'wp-curate')}
             onClick={() => {
@@ -320,9 +321,11 @@ export default function Edit({
           />
           <ToolbarButton
             icon={seen}
-            label={__('View Post in a new tab', 'wp-curate')}
+            label={__('View post in a new tab', 'wp-curate')}
             onClick={() => {
-              window.open(postObj?.link, '_blank');
+              if (postObj?.link) {
+                window.open(postObj?.link, '_blank');
+              }
             }}
           />
         </ToolbarGroup>
