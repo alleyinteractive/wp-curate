@@ -2,8 +2,8 @@ import { useState } from 'react';
 import classnames from 'classnames';
 import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
 
-// @ts-expect-error BlockContextProvider not available in types yet.
 import {
+  // @ts-expect-error BlockContextProvider not available in types yet.
   BlockContextProvider,
   BlockControls,
   InnerBlocks,
