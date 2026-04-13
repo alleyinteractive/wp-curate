@@ -20,6 +20,7 @@ import {
 } from '@wordpress/components';
 import { useCallback } from '@wordpress/element';
 import { pencil, seen } from '@wordpress/icons';
+import { addQueryArgs } from '@wordpress/url';
 
 import type { Block } from '../../types/block';
 import NoRender from './norender';
@@ -326,7 +327,11 @@ export default function Edit({
             icon={pencil}
             label={__('Edit post in a new tab', 'wp-curate')}
             onClick={() => {
-              window.open(`/wp-admin/post.php?post=${postId}&action=edit`, '_blank');
+              const editUrl = addQueryArgs('post.php', {
+                post: postId,
+                action: 'edit',
+              });
+              window.open(editUrl, '_blank');
             }}
           />
           <ToolbarButton
