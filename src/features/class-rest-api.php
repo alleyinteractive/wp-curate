@@ -60,7 +60,7 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request $request The request object.
 	 * @return array<int> The post IDs.
 	 */
-	public function get_posts( WP_REST_Request $request ): array { // phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.ContentAfterBrace @phpstan-ignore-line
+	public function get_posts( WP_REST_Request $request ): array { // phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.ContentAfterBrace
 		$search_term      = $request->get_param( 'search' ) ?? '';
 		$offset           = $request->get_param( 'offset' ) ?? 0;
 		$post_type_string = $request->get_param( 'post_type' ) ?? 'post';
@@ -85,6 +85,7 @@ final class Rest_Api implements Feature {
 		$taxonomies         = array_filter( $taxonomies, 'is_object' );
 		$tax_query          = [];
 		foreach ( $taxonomies as $taxonomy ) {
+			// @phpstan-ignore-next-line property.notFound (WP_Taxonomy::$name, WP_Taxonomy::$rest_base)
 			$rest_base = $taxonomy->rest_base ?: $taxonomy->name;
 			if ( empty( $rest_base ) || ! is_string( $rest_base ) ) {
 				continue;
@@ -102,7 +103,7 @@ final class Rest_Api implements Feature {
 			$terms       = array_map( 'intval', $terms );
 			$terms       = array_filter( $terms, 'term_exists' ); // @phpstan-ignore-line argument.type
 			$tax_query[] = [
-				'taxonomy' => $taxonomy->name,
+				'taxonomy' => $taxonomy->name, // @phpstan-ignore property.notFound
 				'field'    => 'term_id',
 				'terms'    => $terms,
 				'operator' => 'AND' === $operator ? 'AND' : 'IN',
@@ -179,7 +180,6 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request                  $request The REST request.
 	 * @return array<array<int, string>|string>
 	 */
-	// @phpstan-ignore-next-line
 	public function add_type_param( $query_args, $request ): array { // phpcs:ignore Squiz.Commenting.FunctionComment.WrongStyle
 		// Check if the user is logged in.
 		if ( ! \is_user_logged_in() ) {
@@ -210,7 +210,7 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request $request    The REST request.
 	 * @return mixed[]
 	 */
-	public function add_include_future_param( // @phpstan-ignore-line missingType.generics
+	public function add_include_future_param(
 		$query_args,
 		$request
 	) {
@@ -233,7 +233,7 @@ final class Rest_Api implements Feature {
 
 						if (
 							$pt_object
-							&& isset( $pt_object->cap->edit_published_posts )
+							&& isset( $pt_object->cap->edit_published_posts ) // @phpstan-ignore property.notFound, property.nonObject
 							&& is_string( $pt_object->cap->edit_published_posts )
 							&& current_user_can( $pt_object->cap->edit_published_posts )
 						) {
@@ -275,16 +275,17 @@ final class Rest_Api implements Feature {
 		$taxonomies         = array_filter( $taxonomies, 'is_object' );
 		$tax_query          = [];
 		foreach ( $taxonomies as $taxonomy ) {
-			if ( empty( $taxonomy->name ) ) {
+			$name = $taxonomy->name; // @phpstan-ignore property.notFound
+			if ( ! is_string( $name ) || empty( $name ) ) {
 				continue;
 			}
-			if ( ! $request->get_param( $taxonomy->name ) ) {
+			if ( ! $request->get_param( $name ) ) {
 				continue;
 			}
 			$tax_query[] = [
-				'taxonomy' => $taxonomy->name,
+				'taxonomy' => $name,
 				'field'    => 'term_id',
-				'terms'    => $request->get_param( $taxonomy->name ),
+				'terms'    => $request->get_param( $name ),
 			];
 		}
 		if ( empty( $tax_query ) ) {
@@ -303,7 +304,7 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request $request    The request used.
 	 * @return mixed[] Filtered query arguments.
 	 */
-	public function add_future_support( // @phpstan-ignore-line missingType.generics
+	public function add_future_support(
 		$query_args,
 		$request
 	) {
@@ -321,7 +322,7 @@ final class Rest_Api implements Feature {
 
 						if (
 							$pt_object
-							&& isset( $pt_object->cap->edit_published_posts )
+							&& isset( $pt_object->cap->edit_published_posts ) // @phpstan-ignore property.notFound, property.nonObject
 							&& is_string( $pt_object->cap->edit_published_posts )
 							&& current_user_can( $pt_object->cap->edit_published_posts )
 						) {

@@ -3,7 +3,7 @@
   "apiVersion": 2,
   "name": "wp-curate/query",
   "version": "0.1.0",
-  "title": "Query",
+  "title": "Curatable Query",
   "category": "theme",
   "icon": "filter",
   "description": "Custom queries for WP Curate",
