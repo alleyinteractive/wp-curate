@@ -2,13 +2,25 @@ import { useState } from 'react';
 import classnames from 'classnames';
 import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
 
-// @ts-expect-error BlockContextProvider not available in types yet.
-import { InnerBlocks, useBlockProps, BlockContextProvider } from '@wordpress/block-editor';
+import {
+  // @ts-expect-error BlockContextProvider not available in types yet.
+  BlockContextProvider,
+  BlockControls,
+  InnerBlocks,
+  useBlockProps,
+} from '@wordpress/block-editor';
 import { PostPicker, usePostById } from '@alleyinteractive/block-editor-tools';
 import { dispatch, select, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
-import { Button, Notice } from '@wordpress/components';
+import {
+  Button,
+  Notice,
+  ToolbarGroup,
+  ToolbarButton,
+} from '@wordpress/components';
 import { useCallback } from '@wordpress/element';
+import { pencil, seen } from '@wordpress/icons';
+import { addQueryArgs } from '@wordpress/url';
 
 import type { Block } from '../../types/block';
 import NoRender from './norender';
@@ -308,6 +320,32 @@ export default function Edit({
         },
       )}
     >
+      <BlockControls>
+        <ToolbarGroup>
+          <ToolbarButton
+            disabled={!postId}
+            icon={pencil}
+            label={__('Edit post in a new tab', 'wp-curate')}
+            onClick={() => {
+              const editUrl = addQueryArgs('post.php', {
+                post: postId,
+                action: 'edit',
+              });
+              window.open(editUrl, '_blank');
+            }}
+          />
+          <ToolbarButton
+            icon={seen}
+            label={__('View post in a new tab', 'wp-curate')}
+            onClick={() => {
+              if (postObj?.link) {
+                window.open(postObj?.link, '_blank');
+              }
+            }}
+          />
+        </ToolbarGroup>
+      </BlockControls>
+
       {typeof postObj === 'object' && postObj !== null && 'status' in postObj && postObj.status === 'future' ? (
         <Notice
           status="warning"
