@@ -49,6 +49,11 @@ final class Rest_Api implements Feature {
 						'description' => __( 'The ID of the post being edited, if any.', 'wp-curate' ),
 						'default'     => 0,
 					],
+					'backfill_days'   => [
+						'type'        => 'integer',
+						'description' => __( 'Limit backfill posts to those published within this many days. 0 means no limit.', 'wp-curate' ),
+						'default'     => 30,
+					],
 				],
 			]
 		);
@@ -143,6 +148,23 @@ final class Rest_Api implements Feature {
 		}
 		if ( ! empty( $tax_query ) ) {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+		}
+
+		/**
+		 * Filters the number of days to limit backfill posts to for this request.
+		 * Return 0 to disable the date limit. The filter receives the per-block value
+		 * so site-wide overrides can ignore it.
+		 *
+		 * @param int $backfill_days Days to limit backfill posts. 0 means no limit.
+		 */
+		$backfill_days = (int) apply_filters( 'wp_curate_backfill_days', (int) ( $request->get_param( 'backfill_days' ) ?? 30 ) );
+		if ( $backfill_days > 0 ) {
+			$args['date_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_date_query
+				[
+					'after'     => gmdate( 'Y-m-d', (int) strtotime( "-{$backfill_days} days" ) ),
+					'inclusive' => true,
+				],
+			];
 		}
 
 		/**
