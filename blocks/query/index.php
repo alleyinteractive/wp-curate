@@ -123,7 +123,13 @@ function wp_curate_query_block_init(): void {
 			 *
 			 * @param bool $include_future_posts Whether to include scheduled posts.
 			 */
-			'includeFuturePosts' => apply_filters( 'wp_curate_include_future_posts', false ),
+			'includeFuturePosts'  => apply_filters( 'wp_curate_include_future_posts', false ),
+			/**
+			 * The site-wide default for the backfill date limit, in days. 0 means no limit.
+			 * Derived from the wp_curate_backfill_days filter so the editor reflects any
+			 * server-side override.
+			 */
+			'defaultBackfillDays' => (int) apply_filters( 'wp_curate_backfill_days', 30 ),
 		],
 	);
 }
