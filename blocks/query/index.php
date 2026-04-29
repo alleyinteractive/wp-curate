@@ -61,7 +61,7 @@ function wp_curate_query_block_init(): void {
 		'wp-curate-query-editor-script',
 		'wpCurateQueryBlock',
 		[
-			'allowedPostTypes'   => array_filter(
+			'allowedPostTypes'    => array_filter(
 				array_map(
 					function ( $slug ) {
 						$post_type_object = get_post_type_object( $slug );
@@ -78,7 +78,7 @@ function wp_curate_query_block_init(): void {
 					$allowed_post_types
 				)
 			),
-			'allowedTaxonomies'  => array_filter(
+			'allowedTaxonomies'   => array_filter(
 				array_map(
 					function ( $slug ) {
 						$taxonomy = get_taxonomy( $slug );
@@ -96,8 +96,8 @@ function wp_curate_query_block_init(): void {
 					$allowed_taxonomies,
 				),
 			),
-			'parselyAvailable'   => $parsely_available ? 'true' : 'false',
-			'maxPosts'           => $max_posts,
+			'parselyAvailable'    => $parsely_available ? 'true' : 'false',
+			'maxPosts'            => $max_posts,
 			/**
 			 * Filters the order by options shown in the sidebar of the query block.
 			 *
@@ -105,7 +105,7 @@ function wp_curate_query_block_init(): void {
 			 *
 			 * @since 2.6.4
 			 */
-			'rawOrderByOptions'  => apply_filters( 'wp_curate_order_by_options', [
+			'rawOrderByOptions'   => apply_filters( 'wp_curate_order_by_options', [
 				'date'  => __( 'Date', 'wp-curate' ),
 				'title' => __( 'Title', 'wp-curate' ),
 			] ),
@@ -116,7 +116,7 @@ function wp_curate_query_block_init(): void {
 			 *
 			 * @since 2.6.4
 			 */
-			'orderByMetaKeys'    => apply_filters( 'wp_curate_order_by_meta_keys', [] ),
+			'orderByMetaKeys'     => apply_filters( 'wp_curate_order_by_meta_keys', [] ),
 			/**
 			 * Filters whether to allow scheduled posts to be selected in the post picker.
 			 *
