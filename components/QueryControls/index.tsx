@@ -40,6 +40,7 @@ interface Window {
 
 type QueryControlsProps = {
   allowedTaxonomies: PostTypeOrTerm[];
+  backfillDays: number;
   deduplication: string;
   displayTypes: Option[];
   hasNonTemplatePostBlocks?: boolean;
@@ -71,6 +72,7 @@ type QueryControlsProps = {
 
 export default function QueryControls({
   allowedTaxonomies = [],
+  backfillDays,
   deduplication,
   displayTypes,
   hasNonTemplatePostBlocks = false,
@@ -380,6 +382,20 @@ export default function QueryControls({
               onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date', backfillPosts: [] })}
             />
           ) : null }
+          <SelectControl
+            label={__('Backfill Date Limit', 'wp-curate')}
+            help={__('Limit backfill posts to those published within this period. Shorter windows improve performance on large sites.', 'wp-curate')}
+            options={[
+              { label: __('30 days', 'wp-curate'), value: '30' },
+              { label: __('60 days', 'wp-curate'), value: '60' },
+              { label: __('90 days', 'wp-curate'), value: '90' },
+              { label: __('6 months', 'wp-curate'), value: '180' },
+              { label: __('1 year', 'wp-curate'), value: '365' },
+              { label: __('No limit', 'wp-curate'), value: '0' },
+            ]}
+            onChange={(next) => setAttributes({ backfillDays: parseInt(next, 10), backfillPosts: [] })}
+            value={String(backfillDays)}
+          />
         </PanelBody>
       </InspectorControls>
 
