@@ -78,7 +78,8 @@ class BackfillDaysTest extends TestCase {
 		$mid_range_posts = collect( static::factory()->post->create_ordered_set( 3, starting_date: now()->subDays( 60 ) ) )
 			->map( fn ( int $id ): WP_Post => get_post( $id ) );
 
-		add_filter( 'wp_curate_backfill_days', fn () => 90 );
+		$filter = fn () => 90;
+		add_filter( 'wp_curate_backfill_days', $filter );
 
 		$this->set_front_page( $page = static::factory()->page->create_and_get( [
 			'post_content' => block_factory()->preset( 'wp-curate/query', [
@@ -94,6 +95,6 @@ class BackfillDaysTest extends TestCase {
 			->assertQueriedObjectId( $page->ID )
 			->assertSeeInOrder( $mid_range_posts->reverse()->values()->pluck( 'post_title' )->all() );
 
-		remove_all_filters( 'wp_curate_backfill_days' );
+		remove_filter( 'wp_curate_backfill_days', $filter );
 	}
 }
