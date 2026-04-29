@@ -16,6 +16,30 @@
   ],
   "repositories": [
     {
+      "type": "package",
+      "package": {
+        "name": "wp-graphql/wp-graphql",
+        "version": "2.12.0",
+        "type": "wordpress-plugin",
+        "require": {
+          "webonyx/graphql-php": "15.31.5"
+        },
+        "autoload": {
+          "psr-4": {
+            "WPGraphQL\\": "src/"
+          },
+          "classmap": [
+            "deprecated/",
+            "src/WPGraphQL.php"
+          ]
+        },
+        "dist": {
+          "url": "https://github.com/wp-graphql/wp-graphql/releases/download/wp-graphql/v2.12.0/wp-graphql.zip",
+          "type": "zip"
+        }
+      }
+    },
+    {
       "type": "vcs",
       "url": "git@github.com:alleyinteractive/wp-type-extensions.git"
     }
@@ -32,7 +56,7 @@
     "alleyinteractive/alley-coding-standards": "^2.0",
     "mantle-framework/testkit": "^1.12",
     "szepeviktor/phpstan-wordpress": "^2.0",
-    "wp-graphql/wp-graphql": "^2.3"
+    "wp-graphql/wp-graphql": "2.12.0"
   },
   "config": {
     "allow-plugins": {
