@@ -72,7 +72,7 @@ export default function Edit({
     metaKey = '',
     moveData = {},
     supportsPostTypes = [],
-    backfillDays = 30,
+    backfillDays,
   },
   clientId,
   setAttributes,
@@ -85,8 +85,10 @@ export default function Edit({
       parselyAvailable = 'false',
       maxPosts = '10',
       includeFuturePosts,
+      defaultBackfillDays = 30, // matches Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS; localized via wpCurateQueryBlockData
     } = {},
   } = (window as any as Window);
+  const resolvedBackfillDays = backfillDays ?? defaultBackfillDays;
 
   if (!postTypes.length) {
     setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
@@ -166,7 +168,7 @@ export default function Edit({
     order,
     metaKey,
     currentPostId,
-    backfillDays,
+    backfillDays: resolvedBackfillDays,
   })}&${termQueryArgs}`;
 
   // Use SWR to fetch data.
@@ -326,7 +328,7 @@ export default function Edit({
       </div>
       <QueryControls
         allowedTaxonomies={allowedTaxonomies}
-        backfillDays={backfillDays}
+        backfillDays={resolvedBackfillDays}
         deduplication={deduplication}
         displayTypes={displayTypes}
         hasNonTemplatePostBlocks={postBlockCount > 0}
