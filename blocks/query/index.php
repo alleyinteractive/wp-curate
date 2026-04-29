@@ -5,6 +5,7 @@
  * @package wp-curate
  */
 
+use Alley\WP\WP_Curate\Plugin_Curated_Posts;
 use Alley\WP\WP_Curate\Supported_Post_Types;
 
 /**
@@ -129,7 +130,7 @@ function wp_curate_query_block_init(): void {
 			 * Derived from the wp_curate_backfill_days filter so the editor reflects any
 			 * server-side override.
 			 */
-			'defaultBackfillDays' => (int) apply_filters( 'wp_curate_backfill_days', 30 ),
+			'defaultBackfillDays' => (int) apply_filters( 'wp_curate_backfill_days', Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS ),
 		],
 	);
 }
