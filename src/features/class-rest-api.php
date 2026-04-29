@@ -151,21 +151,9 @@ final class Rest_Api implements Feature {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 		}
 
-		/**
-		 * Filters the number of days to limit backfill posts to for this request.
-		 * Return 0 to disable the date limit. The filter receives the per-block value
-		 * so site-wide overrides can ignore it.
-		 *
-		 * @param int $backfill_days Days to limit backfill posts. 0 means no limit.
-		 */
-		$backfill_days = (int) apply_filters( 'wp_curate_backfill_days', (int) ( $request->get_param( 'backfill_days' ) ?? Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS ) );
-		if ( $backfill_days > 0 ) {
-			$args['date_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_date_query
-				[
-					'after'     => gmdate( 'Y-m-d', (int) strtotime( "-{$backfill_days} days" ) ),
-					'inclusive' => true,
-				],
-			];
+		$date_query = Plugin_Curated_Posts::date_query_for_backfill( (int) ( $request->get_param( 'backfill_days' ) ?? Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS ) );
+		if ( ! empty( $date_query ) ) {
+			$args['date_query'] = $date_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_date_query
 		}
 
 		/**
