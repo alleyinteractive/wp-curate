@@ -31,6 +31,7 @@ interface EditProps {
     uniqueId?: string;
     supportsPostTypes?: string[];
     validPosts?: number[];
+    backfillDays?: number;
   };
   clientId: string;
   setAttributes: (attributes: any) => void;
