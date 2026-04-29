@@ -77,6 +77,23 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 			$args['s'] = $search_term;
 		}
 
+		/**
+		 * Filters the number of days to limit backfill posts to.
+		 * Return 0 to disable the date limit. The filter receives the per-block value
+		 * so site-wide overrides can ignore it.
+		 *
+		 * @param int $backfill_days Days to limit backfill posts. 0 means no limit.
+		 */
+		$backfill_days = (int) apply_filters( 'wp_curate_backfill_days', (int) ( $attributes['backfillDays'] ?? 30 ) );
+		if ( $backfill_days > 0 ) {
+			$args['date_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_date_query
+				[
+					'after'     => gmdate( 'Y-m-d', (int) strtotime( "-{$backfill_days} days" ) ),
+					'inclusive' => true,
+				],
+			];
+		}
+
 		$pinned_posts = $attributes['posts'] ?? data_get( $block_type->attributes, 'posts.default', [] );
 		$pinned_posts = array_map(
 			fn ( $id ) => is_numeric( $id ) && 'publish' === get_post_status( (int) $id ) ? (int) $id : null,
