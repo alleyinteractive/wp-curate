@@ -18,6 +18,11 @@ use function Mantle\Support\Helpers\mixed;
  */
 final class Plugin_Curated_Posts implements Curated_Posts {
 	/**
+	 * Default number of days to limit backfill posts. Mirrored in block.json and edit.tsx.
+	 */
+	const DEFAULT_BACKFILL_DAYS = 30;
+
+	/**
 	 * Set up.
 	 *
 	 * @param Post_Queries $queries Available queries.
@@ -84,7 +89,7 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 		 *
 		 * @param int $backfill_days Days to limit backfill posts. 0 means no limit.
 		 */
-		$backfill_days = (int) apply_filters( 'wp_curate_backfill_days', (int) ( $attributes['backfillDays'] ?? 30 ) );
+		$backfill_days = (int) apply_filters( 'wp_curate_backfill_days', (int) ( $attributes['backfillDays'] ?? self::DEFAULT_BACKFILL_DAYS ) );
 		if ( $backfill_days > 0 ) {
 			$args['date_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_date_query
 				[
