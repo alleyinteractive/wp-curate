@@ -68,13 +68,14 @@ class RestApiBackfillDaysTest extends TestCase {
 			'post_date' => now()->subDays( 60 )->toDateTimeString(),
 		] );
 
-		add_filter( 'wp_curate_backfill_days', fn () => 90 );
+		$filter = fn () => 90;
+		add_filter( 'wp_curate_backfill_days', $filter );
 
 		$ids = $this->get_json( '/wp-json/wp-curate/v1/posts?backfill_days=30' )
 			->assertOk()
 			->json();
 
-		remove_all_filters( 'wp_curate_backfill_days' );
+		remove_filter( 'wp_curate_backfill_days', $filter );
 
 		$this->assertContains( $mid_range_post->ID, $ids );
 	}
