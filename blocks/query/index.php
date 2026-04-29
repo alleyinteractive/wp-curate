@@ -56,7 +56,9 @@ function wp_curate_query_block_init(): void {
 	 *
 	 * @param bool $use_parsely Whether to use Parsely.
 	 */
-	$parsely_available = apply_filters( 'wp_curate_use_parsely', false );
+	$parsely_available       = apply_filters( 'wp_curate_use_parsely', false );
+	$default_backfill_filter = apply_filters( 'wp_curate_backfill_days', Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS );
+	$default_backfill_days   = is_numeric( $default_backfill_filter ) ? (int) $default_backfill_filter : Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS;
 	wp_localize_script(
 		'wp-curate-query-editor-script',
 		'wpCurateQueryBlock',
@@ -130,7 +132,7 @@ function wp_curate_query_block_init(): void {
 			 * Derived from the wp_curate_backfill_days filter so the editor reflects any
 			 * server-side override.
 			 */
-			'defaultBackfillDays' => (int) apply_filters( 'wp_curate_backfill_days', Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS ),
+			'defaultBackfillDays' => $default_backfill_days,
 		],
 	);
 }

@@ -151,7 +151,8 @@ final class Rest_Api implements Feature {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 		}
 
-		$date_query = Plugin_Curated_Posts::date_query_for_backfill( (int) ( $request->get_param( 'backfill_days' ) ?? Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS ) );
+		$backfill_days_raw = $request->get_param( 'backfill_days' ) ?? Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS;
+		$date_query        = Plugin_Curated_Posts::date_query_for_backfill( is_numeric( $backfill_days_raw ) ? (int) $backfill_days_raw : Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS );
 		if ( ! empty( $date_query ) ) {
 			$args['date_query'] = $date_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_date_query
 		}

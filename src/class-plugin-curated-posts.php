@@ -111,7 +111,8 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 			$args['s'] = $search_term;
 		}
 
-		$date_query = self::date_query_for_backfill( (int) ( $attributes['backfillDays'] ?? self::DEFAULT_BACKFILL_DAYS ) );
+		$backfill_days_raw = $attributes['backfillDays'] ?? self::DEFAULT_BACKFILL_DAYS;
+		$date_query        = self::date_query_for_backfill( is_numeric( $backfill_days_raw ) ? (int) $backfill_days_raw : self::DEFAULT_BACKFILL_DAYS );
 		if ( ! empty( $date_query ) ) {
 			$args['date_query'] = $date_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_date_query
 		}
