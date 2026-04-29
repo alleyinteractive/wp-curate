@@ -55,11 +55,26 @@ export default {
   resetUsedIds,
 };
 
-// Recursively find all query blocks.
+/**
+ * Recursively collects all blocks matching `blockNames` into `out`.
+ *
+ * For reusable blocks (`core/block`), inner blocks are resolved from the block
+ * editor store rather than read from `innerBlocks`, since reusable block
+ * content is not nested directly on the block object.
+ */
 const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => {
   blocks.forEach((block: Block) => {
     if (blockNames.includes(block.name)) {
       out.push(block);
+    }
+    // For reusable blocks, resolve their inner blocks from the store.
+    if (block.name === 'core/block') {
+      // @ts-expect-error Methods not fully typed.
+      const reusableInnerBlocks: Block[] = select(blockEditorStore).getBlocks(block.clientId);
+      if (reusableInnerBlocks?.length) {
+        getQueryBlocks(reusableInnerBlocks, blockNames, out);
+      }
+      return;
     }
     const { innerBlocks } = block;
     if (!innerBlocks) {
