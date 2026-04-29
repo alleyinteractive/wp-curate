@@ -41,6 +41,7 @@ interface Window {
     parselyAvailable: string,
     maxPosts: string,
     includeFuturePosts: boolean,
+    defaultBackfillDays: number,
   };
 }
 
@@ -85,7 +86,8 @@ export default function Edit({
       parselyAvailable = 'false',
       maxPosts = '10',
       includeFuturePosts,
-      defaultBackfillDays = 30, // matches Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS; localized via wpCurateQueryBlockData
+      // matches Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS; localized via wpCurateQueryBlockData
+      defaultBackfillDays = 30,
     } = {},
   } = (window as any as Window);
   const resolvedBackfillDays = backfillDays ?? defaultBackfillDays;

@@ -393,7 +393,10 @@ export default function QueryControls({
               { label: __('1 year', 'wp-curate'), value: '365' },
               { label: __('No limit', 'wp-curate'), value: '0' },
             ]}
-            onChange={(next) => setAttributes({ backfillDays: parseInt(next, 10), backfillPosts: [] })}
+            onChange={(next) => setAttributes({
+              backfillDays: parseInt(next, 10),
+              backfillPosts: [],
+            })}
             value={String(backfillDays) as '0' | '30' | '60' | '90' | '180' | '365'}
           />
         </PanelBody>
