@@ -7,6 +7,7 @@ parameters:
 
 	scanDirectories:
 		- ./vendor
+		- ./wp-content/plugins/wp-graphql
 
 	ignoreErrors:
 		- '#maybeint of function absint#'

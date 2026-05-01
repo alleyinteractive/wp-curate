@@ -85,7 +85,6 @@ final class Rest_Api implements Feature {
 		$taxonomies         = array_filter( $taxonomies, 'is_object' );
 		$tax_query          = [];
 		foreach ( $taxonomies as $taxonomy ) {
-			// @phpstan-ignore-next-line property.notFound (WP_Taxonomy::$name, WP_Taxonomy::$rest_base)
 			$rest_base = $taxonomy->rest_base ?: $taxonomy->name;
 			if ( empty( $rest_base ) || ! is_string( $rest_base ) ) {
 				continue;
@@ -103,7 +102,7 @@ final class Rest_Api implements Feature {
 			$terms       = array_map( 'intval', $terms );
 			$terms       = array_filter( $terms, 'term_exists' ); // @phpstan-ignore-line argument.type
 			$tax_query[] = [
-				'taxonomy' => $taxonomy->name, // @phpstan-ignore property.notFound
+				'taxonomy' => $taxonomy->name,
 				'field'    => 'term_id',
 				'terms'    => $terms,
 				'operator' => 'AND' === $operator ? 'AND' : 'IN',
@@ -233,7 +232,7 @@ final class Rest_Api implements Feature {
 
 						if (
 							$pt_object
-							&& isset( $pt_object->cap->edit_published_posts ) // @phpstan-ignore property.notFound, property.nonObject
+							&& isset( $pt_object->cap->edit_published_posts )
 							&& is_string( $pt_object->cap->edit_published_posts )
 							&& current_user_can( $pt_object->cap->edit_published_posts )
 						) {
@@ -275,8 +274,8 @@ final class Rest_Api implements Feature {
 		$taxonomies         = array_filter( $taxonomies, 'is_object' );
 		$tax_query          = [];
 		foreach ( $taxonomies as $taxonomy ) {
-			$name = $taxonomy->name; // @phpstan-ignore property.notFound
-			if ( ! is_string( $name ) || empty( $name ) ) {
+			$name = $taxonomy->name;
+			if ( empty( $name ) ) {
 				continue;
 			}
 			if ( ! $request->get_param( $name ) ) {
@@ -322,7 +321,7 @@ final class Rest_Api implements Feature {
 
 						if (
 							$pt_object
-							&& isset( $pt_object->cap->edit_published_posts ) // @phpstan-ignore property.notFound, property.nonObject
+							&& isset( $pt_object->cap->edit_published_posts )
 							&& is_string( $pt_object->cap->edit_published_posts )
 							&& current_user_can( $pt_object->cap->edit_published_posts )
 						) {
