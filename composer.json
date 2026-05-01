@@ -16,6 +16,11 @@
   ],
   "repositories": [
     {
+      "type": "composer",
+      "url": "https://wpackagist.org",
+      "only": ["wpackagist-plugin/wp-graphql"]
+    },
+    {
       "type": "vcs",
       "url": "git@github.com:alleyinteractive/wp-type-extensions.git"
     }
@@ -32,11 +37,12 @@
     "alleyinteractive/alley-coding-standards": "^2.0",
     "mantle-framework/testkit": "^1.12",
     "szepeviktor/phpstan-wordpress": "^2.0",
-    "wp-graphql/wp-graphql": "^2.3"
+    "wpackagist-plugin/wp-graphql": "2.12.0"
   },
   "config": {
     "allow-plugins": {
       "alleyinteractive/composer-wordpress-autoloader": true,
+      "composer/installers": true,
       "dealerdirect/phpcodesniffer-composer-installer": true,
       "pestphp/pest-plugin": true
     },
@@ -48,11 +54,6 @@
     }
   },
   "extra": {
-    "installer-paths": {
-      "vendor/wp-graphql/wp-graphql": [
-        "wp-graphql/wp-graphql"
-      ]
-    },
     "wordpress-autoloader": {
       "autoload": {
         "Alley\\WP\\WP_Curate": "src"
