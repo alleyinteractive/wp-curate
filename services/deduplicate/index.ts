@@ -1,4 +1,4 @@
-import { select, dispatch } from '@wordpress/data';
+import { select, dispatch, subscribe } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import type { Block } from '../../types/block';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
@@ -14,6 +14,8 @@ const curatedIds = new Map();
 
 let running = false;
 let redo = false;
+// Prevents stacking multiple subscriptions when synced patterns are pending.
+let patternSubscribeActive = false;
 
 /**
  * Checks if a post has been used already on this page. If so, return false. If not
@@ -60,9 +62,12 @@ export default {
  *
  * For reusable blocks (`core/block`), inner blocks are resolved from the block
  * editor store rather than read from `innerBlocks`, since reusable block
- * content is not nested directly on the block object.
+ * content is not nested directly on the block object. Returns the clientIds of
+ * any synced patterns whose inner blocks are not yet loaded in the store, so
+ * mainDedupe can re-run once they become available.
  */
-const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => {
+const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]): string[] => {
+  const unresolvedIds: string[] = [];
   blocks.forEach((block: Block) => {
     if (blockNames.includes(block.name)) {
       out.push(block);
@@ -72,7 +77,10 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
       // @ts-expect-error Methods not fully typed.
       const reusableInnerBlocks: Block[] = select(blockEditorStore).getBlocks(block.clientId);
       if (reusableInnerBlocks?.length) {
-        getQueryBlocks(reusableInnerBlocks, blockNames, out);
+        unresolvedIds.push(...getQueryBlocks(reusableInnerBlocks, blockNames, out));
+      } else {
+        // Inner blocks not yet loaded; will re-run mainDedupe once they are.
+        unresolvedIds.push(block.clientId);
       }
       return;
     }
@@ -80,8 +88,9 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]) => 
     if (!innerBlocks) {
       return;
     }
-    getQueryBlocks(innerBlocks, blockNames, out);
+    unresolvedIds.push(...getQueryBlocks(innerBlocks, blockNames, out));
   });
+  return unresolvedIds;
 };
 
 /**
@@ -132,7 +141,7 @@ export function mainDedupe() {
   } = select('core/editor').getEditedPostAttribute('meta') || {};
 
   const queryBlocks: Block[] = [];
-  getQueryBlocks(blocks, ['wp-curate/query', 'wp-curate/subquery'], queryBlocks);
+  const unresolvedPatternIds = getQueryBlocks(blocks, ['wp-curate/query', 'wp-curate/subquery'], queryBlocks);
 
   /**
    * This block of code is responsible for enforcing the unique pinned posts setting in the editor.
@@ -268,5 +277,21 @@ export function mainDedupe() {
   if (redo) {
     // Another run has been requested. Let's run it.
     mainDedupe();
+  } else if (unresolvedPatternIds.length > 0 && !patternSubscribeActive) {
+    // One or more synced patterns had inner blocks that weren't loaded yet when
+    // getQueryBlocks ran. Subscribe to the block editor store and re-run once
+    // all of them are resolved so deduplication reflects their pinned posts.
+    patternSubscribeActive = true;
+    const unsubscribe = subscribe(() => {
+      const allResolved = unresolvedPatternIds.every(
+        // @ts-expect-error Methods not fully typed.
+        (id) => (select(blockEditorStore).getBlocks(id) ?? []).length > 0,
+      );
+      if (allResolved) {
+        patternSubscribeActive = false;
+        unsubscribe();
+        mainDedupe();
+      }
+    }, blockEditorStore);
   }
 }
