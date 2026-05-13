@@ -52,7 +52,7 @@ final class Pinned_In_Post_Content implements Post_IDs {
 			}
 		}
 
-		$out = new Legal_Object_IDs( new Post_IDs_Envelope( $out ) ); // @phpstan-ignore-line argument.type
+		$out = new Legal_Object_IDs( new Post_IDs_Envelope( $out ) );
 
 		return $out->post_ids();
 	}
@@ -99,7 +99,8 @@ final class Pinned_In_Post_Content implements Post_IDs {
 
 		if ( is_array( $pattern_blocks ) ) {
 			foreach ( $pattern_blocks as $pattern_block ) {
-				$ref = (int) ( $pattern_block['attrs']['ref'] ?? 0 );
+				$ref_value = $pattern_block['attrs']['ref'] ?? 0;
+				$ref       = is_scalar( $ref_value ) && is_numeric( $ref_value ) ? (int) $ref_value : 0;
 
 				if ( ! $ref || in_array( $ref, $visited_refs, true ) ) {
 					continue;
