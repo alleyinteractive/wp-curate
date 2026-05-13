@@ -6,10 +6,8 @@ import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
-
 import apiFetch from '@wordpress/api-fetch';
 
-type TemplateItem = [string, Record<string, unknown>?, TemplateItem[]?];
 import { v4 as uuid } from 'uuid'; // eslint-disable-line import/no-unresolved
 
 import type {
@@ -25,6 +23,8 @@ import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 
 import QueryControls from '../../components/QueryControls';
 import './index.scss';
+
+type TemplateItem = [string, Record<string, unknown>?, TemplateItem[]?];
 
 interface PostTypeOrTerm {
   name: string;
