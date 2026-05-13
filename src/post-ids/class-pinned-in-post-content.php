@@ -81,7 +81,10 @@ final class Pinned_In_Post_Content implements Post_IDs {
 		if ( is_array( $query_blocks ) ) {
 			foreach ( $query_blocks as $block ) {
 				if ( isset( $block['attrs']['posts'] ) && is_array( $block['attrs']['posts'] ) ) {
-					$out = array_merge( $out, $block['attrs']['posts'] );
+					$out = array_merge(
+						$out,
+						array_filter( $block['attrs']['posts'], 'is_int' ),
+					);
 				}
 			}
 		}
