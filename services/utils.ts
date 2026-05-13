@@ -15,7 +15,7 @@ import {
 } from '@wordpress/blocks';
 import { addQueryArgs } from '@wordpress/url';
 
-import type { BlockInstance, BlockVariation } from '@wordpress/blocks';
+import type { Block, BlockVariation } from '@wordpress/blocks';
 import type { BlockPattern } from '../blocks/query/types';
 
 /**
@@ -32,13 +32,13 @@ import type { BlockPattern } from '../blocks/query/types';
  *                                                the Query clients from these blocks.
  */
 export const getTransformedBlocksFromPattern = (
-  blocks: BlockInstance[],
+  blocks: Block[],
   queryBlockAttributes: Record<string, any>,
 ) => {
   const {
     namespace,
   } = queryBlockAttributes;
-  const clonedBlocks = blocks.map((block: BlockInstance) => cloneBlock(block));
+  const clonedBlocks = blocks.map((block: Block) => cloneBlock(block));
   const queryClientIds = [];
   const blocksQueue = [...clonedBlocks];
   while (blocksQueue.length > 0) {
@@ -49,7 +49,7 @@ export const getTransformedBlocksFromPattern = (
       }
       queryClientIds.push(block.clientId);
     }
-    block?.innerBlocks?.forEach((innerBlock: BlockInstance) => {
+    block?.innerBlocks?.forEach((innerBlock: Block) => {
       blocksQueue.push(innerBlock);
     });
   }
@@ -75,7 +75,6 @@ export function useBlockNameForPatterns(clientId: string, attributes: Record<str
     (select) => {
       const activeVariationName = select(
         blocksStore,
-        // @ts-expect-error
       ).getActiveBlockVariation('wp-curate/query', attributes)?.name;
 
       if (!activeVariationName) {
@@ -126,14 +125,13 @@ export function useBlockNameForPatterns(clientId: string, attributes: Record<str
 export function useScopedBlockVariations(attributes: Record<string, any>) {
   const { activeVariationName, blockVariations } = useSelect(
     (select) => {
-      // @ts-expect-error
       const { getActiveBlockVariation, getBlockVariations } = select(blocksStore);
       return {
         activeVariationName: getActiveBlockVariation(
           'wp-curate/query',
           attributes,
         )?.name,
-        blockVariations: getBlockVariations('wp-curate/query', 'block'),
+        blockVariations: getBlockVariations('wp-curate/query', 'block') ?? [],
       };
     },
     [attributes],
@@ -146,7 +144,7 @@ export function useScopedBlockVariations(attributes: Record<string, any>) {
       return blockVariations.filter(isNotConnected);
     }
     const connectedVariations = blockVariations.filter(
-      (variation: BlockVariation) => variation.attributes?.namespace?.includes(activeVariationName),
+      (variation: BlockVariation) => (variation.attributes?.namespace as string[] | undefined)?.includes(activeVariationName),
     );
     if (connectedVariations.length) {
       return connectedVariations;
