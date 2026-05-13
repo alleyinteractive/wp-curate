@@ -144,7 +144,9 @@ export function useScopedBlockVariations(attributes: Record<string, any>) {
       return blockVariations.filter(isNotConnected);
     }
     const connectedVariations = blockVariations.filter(
-      (variation: BlockVariation) => (variation.attributes?.namespace as string[] | undefined)?.includes(activeVariationName),
+      (variation: BlockVariation) => (
+        variation.attributes?.namespace as string[] | undefined
+      )?.includes(activeVariationName),
     );
     if (connectedVariations.length) {
       return connectedVariations;

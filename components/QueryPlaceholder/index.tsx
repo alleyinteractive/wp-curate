@@ -52,7 +52,9 @@ function QueryVariationPicker({
             replaceInnerBlocks(
               clientId,
               createBlocksFromInnerBlocksTemplate(
-                variation.innerBlocks as Array<Block | [string, Record<string, unknown>?, Array<unknown>?]>,
+                variation.innerBlocks as Array<
+                Block | [string, Record<string, unknown>?, Array<unknown>?]
+                >,
               ),
               false,
             );
