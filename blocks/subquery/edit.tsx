@@ -7,8 +7,9 @@ import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
 
-import { Template } from '@wordpress/blocks';
 import apiFetch from '@wordpress/api-fetch';
+
+type TemplateItem = [string, Record<string, unknown>?, TemplateItem[]?];
 import { v4 as uuid } from 'uuid'; // eslint-disable-line import/no-unresolved
 
 import type {
@@ -291,7 +292,7 @@ export default function Edit({
     }
   }, [isFirstPost, manualPosts, numberOfPosts, setAttributes]);
 
-  const TEMPLATE: Template[] = [
+  const TEMPLATE: TemplateItem[] = [
     [
       'core/post-template',
       {},
