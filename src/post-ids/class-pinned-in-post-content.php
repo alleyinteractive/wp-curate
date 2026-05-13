@@ -11,10 +11,10 @@ use Alley\WP\Legal_Object_IDs;
 use Alley\WP\Post_IDs\Post_IDs_Envelope;
 use Alley\WP\Types\Post_IDs;
 use Alley\WP\Types\Post_Query;
+use WP_Post;
 
 use function Alley\WP\match_blocks;
 
-use WP_Post;
 
 /**
  * Post IDs from pinned posts in post content.
