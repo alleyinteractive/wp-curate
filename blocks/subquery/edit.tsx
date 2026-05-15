@@ -6,9 +6,8 @@ import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
-
-import { Template } from '@wordpress/blocks';
 import apiFetch from '@wordpress/api-fetch';
+
 import { v4 as uuid } from 'uuid'; // eslint-disable-line import/no-unresolved
 
 import type {
@@ -24,6 +23,8 @@ import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 
 import QueryControls from '../../components/QueryControls';
 import './index.scss';
+
+type TemplateItem = [string, Record<string, unknown>?, TemplateItem[]?];
 
 interface PostTypeOrTerm {
   name: string;
@@ -291,7 +292,7 @@ export default function Edit({
     }
   }, [isFirstPost, manualPosts, numberOfPosts, setAttributes]);
 
-  const TEMPLATE: Template[] = [
+  const TEMPLATE: TemplateItem[] = [
     [
       'core/post-template',
       {},
