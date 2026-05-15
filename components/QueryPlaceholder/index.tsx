@@ -5,8 +5,9 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import {
   createBlocksFromInnerBlocksTemplate,
   store as blocksStore,
+  Block,
   BlockVariation,
-  InnerBlockTemplate,
+  BlockTypeIconDescriptor,
 } from '@wordpress/blocks';
 import { useState } from '@wordpress/element';
 import {
@@ -15,7 +16,7 @@ import {
   __experimentalBlockVariationPicker as BlockVariationPicker,
   useBlockProps,
 } from '@wordpress/block-editor';
-import { Button, Placeholder } from '@wordpress/components';
+import { Button, Placeholder, type IconType } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 /**
@@ -27,7 +28,7 @@ import { useBlockPatterns } from '../PatternSelectionModal';
 interface QueryVariationPickerProps {
   clientId: string;
   attributes: Record<string, any>;
-  icon: string | { src: string; foreground: string; background: string } | undefined;
+  icon: IconType | undefined;
   label: string | undefined;
 }
 
@@ -51,7 +52,9 @@ function QueryVariationPicker({
             replaceInnerBlocks(
               clientId,
               createBlocksFromInnerBlocksTemplate(
-                variation.innerBlocks as InnerBlockTemplate[],
+                variation.innerBlocks as Array<
+                Block | [string, Record<string, unknown>?, Array<unknown>?]
+                >,
               ),
               false,
             );
@@ -79,7 +82,6 @@ export default function QueryPlaceholder({
 
   const { blockType, activeBlockVariation } = useSelect(
     (select) => {
-      // @ts-expect-error
       const { getActiveBlockVariation, getBlockType } = select(blocksStore);
       return {
         blockType: getBlockType(name),
@@ -92,9 +94,11 @@ export default function QueryPlaceholder({
     [name, attributes],
   );
   const hasPatterns = !!useBlockPatterns(clientId, attributes).length;
-  const icon = activeBlockVariation?.icon?.src
+  const icon = (
+    (activeBlockVariation?.icon as BlockTypeIconDescriptor | undefined)?.src
     || activeBlockVariation?.icon
-    || blockType?.icon?.src;
+    || blockType?.icon?.src
+  ) as IconType | undefined;
   const label = activeBlockVariation?.title || blockType?.title;
   const blockProps = useBlockProps();
 
