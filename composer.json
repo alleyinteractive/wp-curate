@@ -54,6 +54,11 @@
     }
   },
   "extra": {
+    "installer-paths": {
+      "../{$name}": [
+        "type:wordpress-plugin"
+      ]
+    },
     "wordpress-autoloader": {
       "autoload": {
         "Alley\\WP\\WP_Curate": "src"
