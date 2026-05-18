@@ -64,7 +64,10 @@ final class Positioned_Post_Queries implements Post_Queries {
 		// Insert dynamic posts into the available slots in the map of positioned posts.
 		do {
 			if ( null === current( $out ) ) {
-				$out[ key( $out ) ] = array_shift( $backfill_ids );
+				$key = key( $out );
+				if ( ! is_null( $key ) ) {
+					$out[ $key ] = array_shift( $backfill_ids );
+				}
 			}
 		} while ( next( $out ) !== false && count( $backfill_ids ) > 0 ); // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
 
