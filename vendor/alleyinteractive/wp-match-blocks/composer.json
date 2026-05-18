@@ -1,0 +1,75 @@
+{
+  "name": "alleyinteractive/wp-match-blocks",
+  "description": "Match WordPress blocks in the given content.",
+  "license": "GPL-2.0-or-later",
+  "type": "library",
+  "authors": [
+    {
+      "name": "Alley",
+      "email": "info@alley.com"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "ext-simplexml": "*",
+    "alleyinteractive/composer-wordpress-autoloader": "^1.0",
+    "alleyinteractive/laminas-validator-extensions": "^2.0",
+    "alleyinteractive/wp-type-extensions": "^4.0",
+    "symfony/serializer": "^7.2"
+  },
+  "require-dev": {
+    "alleyinteractive/alley-coding-standards": "^2.0",
+    "ergebnis/composer-normalize": "^2.44",
+    "mantle-framework/testkit": "^1.2",
+    "szepeviktor/phpstan-wordpress": "^1.3"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "autoload": {
+    "files": [
+      "src/match-blocks.php",
+      "src/internals/internals.php"
+    ]
+  },
+  "autoload-dev": {
+    "Alley\\WP\\Tests": "tests/"
+  },
+  "config": {
+    "allow-plugins": {
+      "alleyinteractive/composer-wordpress-autoloader": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "ergebnis/composer-normalize": true
+    },
+    "lock": false,
+    "sort-packages": true
+  },
+  "extra": {
+    "composer-normalize": {
+      "indent-size": 2,
+      "indent-style": "space"
+    },
+    "wordpress-autoloader": {
+      "autoload": {
+        "Alley\\WP\\": "src/"
+      }
+    }
+  },
+  "scripts": {
+    "pre-install-cmd": [
+      "@tidy"
+    ],
+    "post-install-cmd": [
+      "@tidy"
+    ],
+    "phpcbf": "phpcbf",
+    "phpcs": "phpcs",
+    "phpstan": "phpstan -v --memory-limit=512M",
+    "phpunit": "phpunit",
+    "test": [
+      "@phpcs",
+      "@phpstan",
+      "@phpunit"
+    ],
+    "tidy": "[ $COMPOSER_DEV_MODE -eq 0 ] || composer normalize"
+  }
+}
