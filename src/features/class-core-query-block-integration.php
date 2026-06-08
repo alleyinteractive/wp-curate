@@ -48,8 +48,8 @@ final class Core_Query_Block_Integration implements Feature {
 		);
 
 		// Make all query blocks 'no_found_rows => true' unless attributes include '"foundRows": true'
-		// or the block contains a pagination block (which requires found rows to calculate page count).
-		if ( true !== $found_rows && ! $this->has_query_pagination( $block ) ) {
+		// or this is a pagination block that needs found rows to calculate page count.
+		if ( true !== $found_rows && ! in_array( $block->name, [ 'core/query-pagination-next', 'core/query-pagination-numbers', 'core/query-pagination-previous', 'core/query-total' ], true ) ) {
 			$query['no_found_rows'] = true;
 		}
 
@@ -70,21 +70,5 @@ final class Core_Query_Block_Integration implements Feature {
 		$query['ignore_sticky_posts'] ??= true;
 
 		return $query;
-	}
-
-	/**
-	 * Checks whether a block contains a 'core/query-pagination' inner block at any depth.
-	 *
-	 * @param WP_Block $block Block instance.
-	 * @return bool
-	 */
-	private function has_query_pagination( WP_Block $block ): bool {
-		foreach ( $block->inner_blocks as $inner ) {
-			if ( 'core/query-pagination' === $inner->name || $this->has_query_pagination( $inner ) ) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 }
