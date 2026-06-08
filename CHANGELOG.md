@@ -6,6 +6,10 @@ All notable changes to `WP Curate` will be documented in this file.
 
 Nothing yet.
 
+## 3.2.0 -- 2026-06-xx
+
+- Enhancement: Support wp-type-extensions 5.
+
 ## 3.1.0 - 2025-11-24
 
 - Enhancement: Enable pinning scheduled posts via `wp_curate_include_future_posts` filter.

@@ -30,7 +30,7 @@
     "alleyinteractive/composer-wordpress-autoloader": "^1.0",
     "alleyinteractive/traverse-reshape": "^2.0",
     "alleyinteractive/wp-match-blocks": "^4.2",
-    "alleyinteractive/wp-type-extensions": "^4.0",
+    "alleyinteractive/wp-type-extensions": "^4.0 || ^5.0",
     "mantle-framework/support": "^1.12"
   },
   "require-dev": {
