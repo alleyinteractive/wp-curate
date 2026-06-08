@@ -8,7 +8,12 @@ Nothing yet.
 
 ## 3.2.0 -- 2026-06-xx
 
+- Enhancement: Add "edit" and "view" buttons to the Post block toolbar.
 - Enhancement: Support wp-type-extensions 5.
+- Changed: Query block retitled "Curatable Query" to avoid confusion with the core query block.
+- Bug fix: Fix issue where query blocks in synced patterns would not work and would not be considered when deduplicating.
+- Bug fix: Fix issue where the Post Title block would not receive the correct `postType` context.
+- Bug fix: Fix issue where subqueries would fail to render without ancestor `core/post-template` blocks.
 
 ## 3.1.0 - 2025-11-24
 
