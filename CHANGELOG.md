@@ -6,7 +6,7 @@ All notable changes to `WP Curate` will be documented in this file.
 
 Nothing yet.
 
-## 3.2.0 -- 2026-06-xx
+## 3.2.0 -- 2026-06-09
 
 - Enhancement: Add "edit" and "view" buttons to the Post block toolbar.
 - Enhancement: Support wp-type-extensions 5.
