@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Get WordPress Versions
         id: get-versions
-        run: echo "versions=$(curl -s https://api.wordpress.org/core/version-check/1.7/ | jq -r '.offers[] | select(.response == "autoupdate").version' | head -n 3 | sort -u | sed 's/\.[^.]*$//' | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+        run: echo "versions=$(curl -s https://api.wordpress.org/core/version-check/1.7/ | jq -r '.offers[] | select(.response == "autoupdate").version' | head -n 3 | sort -u | sed -E 's/^([0-9]+\.[0-9]+)\.[0-9]+$/\1/' | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
   # We use a single job to ensure that all steps
   # run in the same environment and reduce the number of minutes used.
@@ -61,6 +61,7 @@ jobs:
           php-version: '${{ matrix.php }}'
           wordpress-version: '${{ matrix.wordpress }}'
           skip-wordpress-install: 'true'
+
   # This required job ensures that all PR checks have passed before merging.
   all-pr-checks-passed:
     name: All PR checks passed
