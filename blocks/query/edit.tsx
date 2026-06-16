@@ -1,13 +1,12 @@
 /* eslint-disable camelcase */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
-import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
-import { useSelect } from '@wordpress/data';
+import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
+import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
-import { Template } from '@wordpress/blocks';
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
@@ -16,13 +15,17 @@ import type {
   EditProps,
   Option,
 } from './types';
+import type { Block } from '../../types/block';
 
 import { mainDedupe } from '../../services/deduplicate';
 import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
+import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
 
 import QueryControls from '../../components/QueryControls';
+import QueryPlaceholder from '../../components/QueryPlaceholder';
+import PatternSelectionModal from '../../components/PatternSelectionModal';
 import './index.scss';
 
 interface PostTypeOrTerm {
@@ -37,6 +40,7 @@ interface Window {
     allowedTaxonomies: PostTypeOrTerm[];
     parselyAvailable: string,
     maxPosts: string,
+    includeFuturePosts: boolean,
   };
 }
 
@@ -49,12 +53,13 @@ interface Window {
  * @return {WPElement} Element to render.
  */
 export default function Edit({
+  attributes,
   attributes: {
     backfillPosts = [],
     deduplication = 'inherit',
     maxNumberOfPosts = 10,
     minNumberOfPosts = 1,
-    numberOfPosts = 5,
+    numberOfPosts: attributeNumberOfPosts = 5,
     offset = 0,
     posts: manualPosts = [],
     postTypes = [],
@@ -63,24 +68,44 @@ export default function Edit({
     termRelations = {},
     taxRelation = 'AND',
     orderby = 'date',
+    order = 'desc',
+    metaKey = '',
     moveData = {},
     supportsPostTypes = [],
   },
   clientId,
   setAttributes,
 }: EditProps) {
+  const [isPatternSelectionModalOpen, setIsPatternSelectionModalOpen] = useState(false);
   const {
     wpCurateQueryBlock: {
       allowedPostTypes = [],
       allowedTaxonomies = [],
       parselyAvailable = 'false',
       maxPosts = '10',
+      includeFuturePosts,
     } = {},
   } = (window as any as Window);
 
   if (!postTypes.length) {
     setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
   }
+
+  const thisBlock = useSelect(
+    // @ts-expect-error
+    (innerSelect) => innerSelect(blockEditorStore).getBlocksByClientId(clientId)[0],
+    [clientId],
+  );
+  const hasInnerBlocks = thisBlock ? thisBlock.innerBlocks.length > 0 : false;
+
+  const postBlocks: Block[] = [];
+  recursivelyFindBlocksByName(thisBlock, ['wp-curate/post', 'core/post-template'], postBlocks);
+  const hasTemplateBlock = postBlocks.some((block) => block.name === 'core/post-template');
+  const postBlockCount = postBlocks.filter((block) => block.name === 'wp-curate/post').length;
+
+  const numberOfPosts = hasTemplateBlock
+    ? attributeNumberOfPosts
+    : postBlockCount;
 
   // @ts-ignore
   const [
@@ -89,9 +114,9 @@ export default function Edit({
     uniquePinnedPosts,
     getBlockIndexFunction,
   ] = useSelect(
-    (select) => {
+    (innerSelect) => {
       // @ts-ignore
-      const editor = select('core/editor');
+      const editor = innerSelect('core/editor');
 
       // @ts-ignore
       const type = editor.getEditedPostAttribute('type');
@@ -126,7 +151,7 @@ export default function Edit({
   );
 
   const manualPostIds = manualPosts.map((post) => (post ?? null)).join(',');
-  const currentPostId = Number(useSelect((select: any) => select('core/editor').getCurrentPostId(), []));
+  const currentPostId = Number(useSelect((innerSelect: any) => innerSelect('core/editor').getCurrentPostId(), []));
   const postTypeString = postTypes.join(',');
 
   // Construct the API path using query args.
@@ -137,6 +162,8 @@ export default function Edit({
     status: 'publish',
     perPage: 20,
     orderBy: orderby,
+    order,
+    metaKey,
     currentPostId,
   })}&${termQueryArgs}`;
 
@@ -145,6 +172,25 @@ export default function Edit({
     [path, currentPostId],
     queryBlockPostFetcher,
   );
+
+  // Set a default query attribute. This allows previews to work.
+  useEffect(() => {
+    if (!attributes.query) {
+      setAttributes({
+        query: {
+          perPage: numberOfPosts - postBlockCount,
+          postType: postTypeString,
+        },
+        queryId: 0,
+      });
+    }
+  }, [
+    attributes.query,
+    numberOfPosts,
+    postBlockCount,
+    postTypeString,
+    setAttributes,
+  ]);
 
   // Handle the fetched data.
   useEffect(() => {
@@ -171,6 +217,7 @@ export default function Edit({
     data,
     error,
     blockIndex,
+    postBlockCount,
   ]);
 
   // Make sure all the manual posts are still valid.
@@ -189,6 +236,7 @@ export default function Edit({
               per_page: postsToInclude.length,
               type: postTypeString,
               include: postsToInclude,
+              status: includeFuturePosts ? ['publish', 'future'] : 'publish',
               _locale: 'user',
               context: 'edit',
             },
@@ -197,35 +245,33 @@ export default function Edit({
       }
 
       setAttributes({ validPosts });
+
       mainDedupe();
     };
     updateValidPosts();
-  }, [manualPosts, setAttributes, postTypeString]);
+  }, [
+    manualPosts,
+    setAttributes,
+    postTypeString,
+    includeFuturePosts,
+  ]);
 
-  for (let i = 0; i < numberOfPosts; i += 1) {
-    if (!manualPosts[i]) {
-      manualPosts[i] = null; // eslint-disable-line no-param-reassign
+  // When numberOfPosts changes, update manualPosts array.
+  useEffect(() => {
+    if (manualPosts.length !== numberOfPosts) {
+      const normalizedPosts = Array(numberOfPosts)
+        .fill(null)
+        .map((_, i) => manualPosts[i] || null);
+
+      setAttributes({ posts: normalizedPosts });
     }
-  }
+  }, [numberOfPosts]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  manualPosts = manualPosts.slice(0, numberOfPosts); // eslint-disable-line no-param-reassign
-
-  const TEMPLATE: Template[] = [
-    [
-      'core/post-template',
-      {},
-      [
-        [
-          'wp-curate/post',
-          {},
-          [
-            ['wp-curate/post-title', {}],
-            ['core/post-excerpt', {}],
-          ],
-        ],
-      ],
-    ],
-  ];
+  useEffect(() => {
+    if (attributeNumberOfPosts !== numberOfPosts && numberOfPosts !== 0) {
+      setAttributes({ numberOfPosts });
+    }
+  }, [numberOfPosts, attributeNumberOfPosts, setAttributes]);
 
   const displayTypes: Option[] = allowedPostTypes
     .map((type) => ({
@@ -242,6 +288,17 @@ export default function Edit({
       return supportsPostTypes.includes(type.value);
     });
 
+  const Content = hasInnerBlocks ? (
+    <InnerBlocks />
+  ) : (
+    <QueryPlaceholder
+      name="wp-curate/query"
+      clientId={clientId}
+      attributes={attributes}
+      openPatternSelectionModal={() => setIsPatternSelectionModalOpen(true)}
+    />
+  );
+
   return (
     <>
       <div {...useBlockProps({
@@ -250,25 +307,37 @@ export default function Edit({
         ),
       })}
       >
+        { isPatternSelectionModalOpen ? (
+          <PatternSelectionModal
+            clientId={clientId}
+            attributes={attributes}
+            setIsPatternSelectionModalOpen={setIsPatternSelectionModalOpen}
+          />
+        ) : null}
         {
           error ? (
             <p>{__('No results found.', 'wp-curate')}</p>
-          ) : <InnerBlocks template={TEMPLATE} />
+          ) : (
+            Content
+          )
         }
       </div>
       <QueryControls
-        allowedPostTypes={allowedPostTypes}
         allowedTaxonomies={allowedTaxonomies}
         deduplication={deduplication}
         displayTypes={displayTypes}
+        hasNonTemplatePostBlocks={postBlockCount > 0}
+        hasTemplateBlock={hasTemplateBlock}
         isPostDeduplicating={isPostDeduplicating}
         manualPosts={manualPosts}
         maxPosts={parseInt(maxPosts, 10)}
         maxNumberOfPosts={maxNumberOfPosts}
-        minNumberOfPosts={minNumberOfPosts}
+        minNumberOfPosts={Math.max(minNumberOfPosts, postBlockCount)}
         numberOfPosts={numberOfPosts}
         offset={offset}
+        order={order}
         orderby={orderby}
+        metaKey={metaKey}
         parselyAvailable={parselyAvailable}
         postTypeObject={postTypeObject}
         postTypes={postTypes}

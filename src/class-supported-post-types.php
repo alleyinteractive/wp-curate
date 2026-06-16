@@ -7,6 +7,8 @@
 
 namespace Alley\WP\WP_Curate;
 
+use function Mantle\Support\Helpers\register_meta_helper;
+
 /**
  * The post types that should allow the Curation blocks and related meta.
  */
@@ -31,7 +33,11 @@ final class Supported_Post_Types {
 	public function initialize_supported_post_types(): void {
 		// Get all post types.
 		$post_types                 = get_post_types( [], 'objects' );
-		$supported_post_types       = array_filter( $post_types, fn( $type ) => $type->public && use_block_editor_for_post_type( $type->name ) );
+		$supported_post_types       = array_filter(
+			$post_types,
+			// @phpstan-ignore-next-line property.notFound (WP_Post_Type::$public, WP_Post_Type::$name)
+			fn( $type ) => $type->public && is_string( $type->name ) && use_block_editor_for_post_type( $type->name ),
+		);
 		$this->supported_post_types = array_keys( wp_list_pluck( $supported_post_types, 'name' ) );
 		$this->register_post_meta();
 	}

@@ -1,6 +1,7 @@
-import { Fragment } from 'react';
-import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
+import { Fragment, useState } from 'react';
 import classnames from 'classnames';
+
+import { PostPicker, TermSelector, Checkboxes } from '@alleyinteractive/block-editor-tools';
 import {
   PanelBody,
   PanelRow,
@@ -13,6 +14,11 @@ import {
 import { InspectorControls } from '@wordpress/block-editor';
 import { createInterpolateElement } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
+import { useDispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
+
+import SearchFilters from '../SearchFilters';
+import { postTypeWithFuture } from '../../services/utils';
 
 import type {
   Option,
@@ -24,18 +30,29 @@ type PostTypeOrTerm = {
   slug: string;
 };
 
+interface Window {
+  wpCurateQueryBlock: {
+    rawOrderByOptions: Record<string, string>;
+    orderByMetaKeys: string[];
+    includeFuturePosts: boolean;
+  };
+}
+
 type QueryControlsProps = {
-  allowedPostTypes: PostTypeOrTerm[];
   allowedTaxonomies: PostTypeOrTerm[];
   deduplication: string;
   displayTypes: Option[];
+  hasNonTemplatePostBlocks?: boolean;
+  hasTemplateBlock?: boolean;
   isPostDeduplicating: boolean;
   manualPosts: Array<number | null>;
   maxPosts: number;
   maxNumberOfPosts: number;
+  metaKey: string;
   minNumberOfPosts: number;
   numberOfPosts: number;
   offset: number;
+  order: 'asc' | 'desc';
   orderby: string;
   parselyAvailable: string;
   postTypeObject: {
@@ -53,17 +70,20 @@ type QueryControlsProps = {
 };
 
 export default function QueryControls({
-  allowedPostTypes,
   allowedTaxonomies = [],
   deduplication,
   displayTypes,
+  hasNonTemplatePostBlocks = false,
+  hasTemplateBlock = true,
   isPostDeduplicating,
   manualPosts,
   maxPosts,
   maxNumberOfPosts: maxNumberOfPostsAttr,
+  metaKey,
   minNumberOfPosts,
   numberOfPosts,
   offset,
+  order,
   orderby,
   parselyAvailable,
   postTypeObject,
@@ -75,6 +95,36 @@ export default function QueryControls({
   termRelations,
   terms,
 }: QueryControlsProps) {
+  const [filtered, setFiltered] = useState(true);
+
+  const {
+    wpCurateQueryBlock: {
+      rawOrderByOptions = {
+        title: __('Title', 'wp-curate'),
+        date: __('Date', 'wp-curate'),
+      },
+      orderByMetaKeys = [],
+      includeFuturePosts,
+    } = {},
+  } = (window as any as Window);
+
+  const orderByOptions = [];
+  for (const [key, label] of Object.entries(rawOrderByOptions)) {
+    orderByOptions.push({ label, value: key });
+  }
+
+  const metaKeyOptions = [];
+  if (orderByMetaKeys.length > 0) {
+    metaKeyOptions.push(
+      { label: __('Select', 'wp-curate'), value: '' },
+    );
+    orderByMetaKeys.forEach((key) => {
+      metaKeyOptions.push(
+        { label: key, value: key },
+      );
+    });
+  }
+
   const andOrOptions = [
     {
       label: __('AND', 'wp-curate'),
@@ -85,6 +135,12 @@ export default function QueryControls({
       value: 'OR',
     },
   ];
+
+  if (metaKeyOptions.length > 0) {
+    orderByOptions.push(
+      { label: __('Meta Value', 'wp-curate'), value: 'meta_value' },
+    );
+  }
 
   const maxNumberOfPosts = !maxNumberOfPostsAttr || maxNumberOfPostsAttr > maxPosts ? maxPosts : maxNumberOfPostsAttr; // eslint-disable-line max-len
 
@@ -129,6 +185,31 @@ export default function QueryControls({
     setAttributes({ posts: newManualPosts });
   };
 
+  const maybeClearMetaKey = (orderBy: string) => {
+    if (orderBy !== 'meta_value' && metaKey) {
+      setAttributes({ metaKey: '' });
+    }
+  };
+
+  // Get an object of taxonomies and termIds for filtering the
+  // PostPicker as <Record<string, number[]>.
+  const params: Record<string, number[]> = {};
+  if (filtered) {
+    Object.entries(terms).forEach(([taxonomy, termList]) => {
+      if (termList.length) {
+        params[taxonomy] = termList.map((term) => term.id);
+      }
+    });
+  }
+  const helpText = hasNonTemplatePostBlocks
+    ? __('The maximum number of posts to show. Note: There are post blocks outside of a post template block that will also display posts, so the minimum number of posts cannot be below this number.', 'wp-curate') // eslint-disable-line max-len
+    : __('The maximum number of posts to show.', 'wp-curate');
+
+  const { createNotice } = useDispatch(noticesStore);
+
+  const shouldShowFilter = displayTypes.length !== postTypes.length
+    || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
+
   return (
     <>
       <InspectorControls>
@@ -136,16 +217,18 @@ export default function QueryControls({
           title={__('Setup', 'wp-curate')}
           initialOpen
         >
-          {minNumberOfPosts !== undefined && minNumberOfPosts !== maxNumberOfPosts ? (
-            <RangeControl
-              label={__('Number of Posts', 'wp-curate')}
-              help={__('The maximum number of posts to show.', 'wp-curate')}
-              value={numberOfPosts}
-              onChange={setNumberOfPosts}
-              min={minNumberOfPosts}
-              max={maxNumberOfPosts}
-            />
-          ) : null}
+          {hasTemplateBlock
+            && minNumberOfPosts !== undefined
+            && minNumberOfPosts !== maxNumberOfPosts ? (
+              <RangeControl
+                label={__('Number of Posts', 'wp-curate')}
+                help={helpText}
+                value={numberOfPosts}
+                onChange={setNumberOfPosts}
+                min={minNumberOfPosts}
+                max={maxNumberOfPosts}
+              />
+            ) : null}
           <RangeControl
             label={__('Offset', 'wp-curate')}
             help={__('The number of posts to pass over.', 'wp-curate')}
@@ -172,11 +255,24 @@ export default function QueryControls({
             >
               <span className="manual-posts__counter">{index + 1}</span>
               <PostPicker
-                allowedTypes={allowedPostTypes.map((type) => type.slug)}
+                allowedTypes={filtered ? postTypes : displayTypes.map((type) => type.value)}
                 onReset={() => setManualPost(0, index)}
                 onUpdate={(id: number) => { setManualPost(id, index); }}
                 value={manualPosts[index] || 0}
                 className="manual-posts__picker"
+                // @ts-ignore This function does work with this prop.
+                getPostType={includeFuturePosts ? postTypeWithFuture : null}
+                filters={(
+                  <SearchFilters
+                    shouldShowFilter={shouldShowFilter}
+                    filtered={filtered}
+                    setFiltered={setFiltered}
+                  />
+                )}
+                params={{
+                  ...params,
+                  wp_curate_include_future: Number(includeFuturePosts),
+                }}
               />
             </PanelRow>
           ))}
@@ -189,16 +285,34 @@ export default function QueryControls({
           <Checkboxes
             label={__('Post Types', 'wp-curate')}
             value={postTypes}
-            onChange={(next) => setAttributes({ postTypes: next, backfillPosts: [] })}
+            onChange={(next: string[]) => {
+              // Prevent unchecking the last post type.
+              if (next.length === 0) {
+                createNotice(
+                  'warning',
+                  __('At least one post type must be selected.', 'wp-curate'),
+                  {
+                    type: 'snackbar',
+                    isDismissible: true,
+                  },
+                );
+                // Don't update attributes/return early if user is trying to
+                // deselect the last option.
+                return;
+              }
+              setAttributes({ postTypes: next, backfillPosts: [] });
+            }}
             options={displayTypes}
           />
           {allowedTaxonomies.map((taxonomy) => (
             <Fragment key={taxonomy.slug}>
-              { /* @ts-ignore */ }
+              { /* TODO: Fix the @ts-ignore usage. */ }
               <TermSelector
                 label={taxonomy.name}
                 subTypes={[taxonomy.slug]}
+                // @ts-ignore
                 selected={terms[taxonomy.slug] ?? []}
+                // @ts-ignore
                 onSelect={(newCategories: Term[]) => setTerms(taxonomy.slug, newCategories)}
                 multiple
               />
@@ -230,6 +344,33 @@ export default function QueryControls({
             label={__('Search Term', 'wp-curate')}
             onChange={(next) => setAttributes({ searchTerm: next, backfillPosts: [] })}
             value={searchTerm}
+          />
+          <SelectControl
+            label={__('Order By', 'wp-curate')}
+            options={orderByOptions}
+            onChange={(next) => {
+              setAttributes({ orderby: next, backfillPosts: [] });
+              maybeClearMetaKey(next);
+            }}
+            value={orderby}
+          />
+          {(orderby === 'meta_value') && metaKeyOptions.length > 0 ? (
+            <SelectControl
+              label={__('Meta Key', 'wp-curate')}
+              options={metaKeyOptions}
+              onChange={(next) => setAttributes({ metaKey: next, backfillPosts: [] })}
+              value={metaKey}
+            />
+          ) : null}
+          <SelectControl
+            label={__('Order Direction', 'wp-curate')}
+            help={__('Ascending means A-Z or 0-9 or oldest to newest. Descending means Z-A or 9-0 or newest to oldest.', 'wp-curate')}
+            options={[
+              { label: __('Ascending', 'wp-curate'), value: 'asc' },
+              { label: __('Descending', 'wp-curate'), value: 'desc' },
+            ]}
+            onChange={(next) => setAttributes({ order: next, backfillPosts: [] })}
+            value={order}
           />
           { parselyAvailable === 'true' ? (
             <ToggleControl

@@ -2,6 +2,53 @@
 
 All notable changes to `WP Curate` will be documented in this file.
 
+## Unreleased
+
+Nothing yet.
+
+## 3.2.0 -- 2026-06-09
+
+- Enhancement: Add "edit" and "view" buttons to the Post block toolbar.
+- Enhancement: Support wp-type-extensions 5.
+- Changed: Query block retitled "Curatable Query" to avoid confusion with the core query block.
+- Bug fix: Fix issue where query blocks in synced patterns would not work and would not be considered when deduplicating.
+- Bug fix: Fix issue where the Post Title block would not receive the correct `postType` context.
+- Bug fix: Fix issue where subqueries would fail to render without ancestor `core/post-template` blocks.
+
+## 3.1.0 - 2025-11-24
+
+- Enhancement: Enable pinning scheduled posts via `wp_curate_include_future_posts` filter.
+- Bug fix: Fix issue where pinning a post would not update the preview in the editor when "Show template" was enabled.
+
+## 3.0.0 - 2025-10-31
+
+- Support for previews of Query block and Patterns.
+- Pattern/Variation picker when inserting a Query block.
+- Post blocks can now exist outside of Post Template blocks, allowing for more complex layouts
+  and individual inner blocks on the Post block.
+- Upgrade to PHPStan to 2.0.
+- Added unit tests for existing plugin functionality.
+
+## 2.7.2 - 2025-10-15
+
+- Enhancement: Post Picker results filtered to match Query block parameters by default.
+- Enhancement: Text alignment support in Post Title block.
+- Bug fix: Fix issue where reducing number of posts caused some posts to be hidden in the editor.
+- Bug fix: Fix PHP warnings.
+
+## 2.7.1 - 2025-10-01
+
+- Enhancement: Add option to "Pin This Post" so editors can pin the selected post.
+
+## 2.7.0 - 2025-09-05
+
+- Enhancement: Update wp-type-extensions to 4.0.0.
+
+## 2.6.4 - 2025-08-29
+
+- Enhancement: Add options to order by different post values and choose the sort direction.
+    addresses https://github.com/alleyinteractive/wp-curate/issues/169 and https://github.com/alleyinteractive/wp-curate/issues/158
+
 ## 2.6.3 - 2025-07-17
 
 - Bug Fix: Require Subquery block to have a parent Query block to prevent errors when used outside of a Query block.

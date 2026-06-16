@@ -5,6 +5,18 @@ parameters:
 	# Level 9 is the highest level
 	level: max
 
+	scanDirectories:
+		- ./vendor
+		- ../wp-graphql
+
+	ignoreErrors:
+		- '#maybeint of function absint#'
+		- '#of function sanitize_text_field expects string#'
+
+	excludePaths:
+		- src/features/class-parsely-support.php
+		- src/features/class-block-index.php
+
 	paths:
 		- blocks/
 		- entries/

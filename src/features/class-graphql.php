@@ -65,6 +65,11 @@ final class GraphQL implements Feature {
 	 * Set up.
 	 */
 	public function __construct() {
+		/**
+		 * Define the allowed post types.
+		 *
+		 * @param string[] $allowed_post_types Array of allowed post types.
+		 */
 		$this->allowed_post_types = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
 	}
 
@@ -87,14 +92,14 @@ final class GraphQL implements Feature {
 		 *
 		 * @see https://www.wpgraphql.com/functions/register_graphql_interface_type
 		 */
-		register_graphql_interface_type( // @phpstan-ignore-line
+		register_graphql_interface_type(
 			'WPCurateInterface',
 			[
 				'description' => __( 'Represents the interface type a WP Curate post', 'wp-curate' ),
 				'interfaces'  => [ 'ContentNode', 'NodeWithTitle', 'NodeWithFeaturedImage' ],
 				'fields'      => [],
-				'resolveType' => function ( $node ) {
-					return $this->get_graphql_type_by_post_type( $node->post_type );
+				'resolveType' => function ( object $node ) {
+					return isset( $node->post_type ) && is_string( $node->post_type ) ? $this->get_graphql_type_by_post_type( $node->post_type ) : '';
 				},
 			]
 		);
@@ -106,7 +111,7 @@ final class GraphQL implements Feature {
 		 *
 		 * @see https://www.wpgraphql.com/functions/register_graphql_interfaces_to_types
 		 */
-		register_graphql_interfaces_to_types( [ 'WPCurateInterface' ], $this->get_types_from_allowed_post_types() ); // @phpstan-ignore-line
+		register_graphql_interfaces_to_types( [ 'WPCurateInterface' ], $this->get_types_from_allowed_post_types() );
 
 		/**
 		 * Register a new connection field named 'wpCuratePosts' on `RootQuery`
@@ -115,7 +120,7 @@ final class GraphQL implements Feature {
 		 *
 		 * @see https://www.wpgraphql.com/functions/register_graphql_connection
 		 */
-		register_graphql_connection( // @phpstan-ignore-line
+		register_graphql_connection(
 			[
 				'fromType'       => 'RootQuery',
 				'toType'         => 'WPCurateInterface',
@@ -126,14 +131,16 @@ final class GraphQL implements Feature {
 						'description' => __( 'Array of IDs for the objects to retrieve', 'wp-curate' ),
 					],
 				],
-				// @phpstan-ignore-next-line
 				'resolve'        => function ( $source, $args, AppContext $context, ResolveInfo $info ) {
-					$resolver = new PostObjectConnectionResolver( $source, $args, $context, $info ); // @phpstan-ignore-line
+					$resolver = new PostObjectConnectionResolver( $source, $args, $context, $info ); // @phpstan-ignore-line argument.type
 
-					$resolver->set_query_arg( 'post__in', $args['where']['in'] ); // @phpstan-ignore-line
-					$resolver->set_query_arg( 'post_type', $this->allowed_post_types ); // @phpstan-ignore-line
+					if ( is_array( $args ) && isset( $args['where'] ) && is_array( $args['where'] ) && isset( $args['where']['in'] ) ) {
+						$resolver->set_query_arg( 'post__in', $args['where']['in'] );
+					}
 
-					return $resolver->get_connection(); // @phpstan-ignore-line
+					$resolver->set_query_arg( 'post_type', $this->allowed_post_types );
+
+					return $resolver->get_connection();
 				},
 			],
 		);

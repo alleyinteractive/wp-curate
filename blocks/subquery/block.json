@@ -14,11 +14,12 @@
         "file:style-index.css"
     ],
     "usesContext": [
+        "allPostIds",
         "query",
         "postId"
     ],
     "parent": [
-      "wp-curate/query"
+      "wp-curate/post"
     ],
     "providesContext": {
         "query": "query",

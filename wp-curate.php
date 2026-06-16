@@ -3,12 +3,12 @@
  * Plugin Name: WP Curate
  * Plugin URI: https://github.com/alleyinteractive/wp-curate
  * Description: Plugin to curate homepages and other landing pages
- * Version: 2.6.3
+ * Version: 3.2.0
  * Author: Alley Interactive
  * Author URI: https://github.com/alleyinteractive/wp-curate
  * Requires at least: 6.4
  * Requires PHP: 8.2
- * Tested up to: 6.7
+ * Tested up to: 6.8
  *
  * Text Domain: wp-curate
  *
@@ -56,7 +56,6 @@ if ( ! file_exists( __DIR__ . '/vendor/wordpress-autoload.php' ) ) {
 
 // Load the plugin's main files.
 require_once __DIR__ . '/src/assets.php';
-require_once __DIR__ . '/src/meta.php';
 require_once __DIR__ . '/src/main.php';
 
 // Make sure all dependency plugins are loaded before we instantiate the plugin.

@@ -10,6 +10,9 @@ namespace Alley\WP\WP_Curate;
 use Alley\WP\Types\Post_Queries;
 use WP_Block_Type;
 
+use function Mantle\Support\Helpers\data_get;
+use function Mantle\Support\Helpers\mixed;
+
 /**
  * The posts that match 'wp-curate/query' block attributes.
  */
@@ -41,12 +44,13 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 		$args = [
 			'fields'         => 'ids',
 			'no_found_rows'  => true,
-			'offset'         => $attributes['offset'] ?? $block_type->attributes['offset']['default'],
-			'order'          => 'DESC',
+			'offset'         => mixed( $attributes['offset'] ?? data_get( $block_type->attributes, 'offset.default', 0 ) )->int(),
+			'order'          => $attributes['order'] ?? 'DESC',
 			'orderby'        => $attributes['orderby'] ?? 'date',
-			'posts_per_page' => $attributes['numberOfPosts'] ?? $block_type->attributes['numberOfPosts']['default'],
+			'meta_key'       => $attributes['metaKey'] ?? '',
+			'posts_per_page' => mixed( $attributes['numberOfPosts'] ?? data_get( $block_type->attributes, 'numberOfPosts.default', 0 ) )->int(),
 			'post_status'    => 'publish',
-			'post_type'      => $attributes['postTypes'] ?? $block_type->attributes['postTypes']['default'],
+			'post_type'      => $attributes['postTypes'] ?? data_get( $block_type->attributes, 'postTypes.default', [] ),
 		];
 
 		if ( isset( $attributes['terms'] ) && is_array( $attributes['terms'] ) && count( $attributes['terms'] ) > 0 ) {
@@ -67,14 +71,17 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 			}
 		}
 
-		$search_term = $attributes['searchTerm'] ?? $block_type->attributes['searchTerm']['default'];
+		$search_term = $attributes['searchTerm'] ?? data_get( $block_type->attributes, 'searchTerm.default', '' );
 
 		if ( is_string( $search_term ) && strlen( $search_term ) > 0 ) {
 			$args['s'] = $search_term;
 		}
 
-		$pinned_posts = $attributes['posts'] ?? $block_type->attributes['posts']['default'];
-		$pinned_posts = array_map( fn ( $id ) => $id && 'publish' === get_post_status( $id ) ? $id : null, $pinned_posts );
+		$pinned_posts = $attributes['posts'] ?? data_get( $block_type->attributes, 'posts.default', [] );
+		$pinned_posts = array_map(
+			fn ( $id ) => is_numeric( $id ) && 'publish' === get_post_status( (int) $id ) ? (int) $id : null,
+			is_array( $pinned_posts ) ? $pinned_posts : [],
+		);
 
 		$queries = new Positioned_Post_Queries(
 			positioned: $pinned_posts,

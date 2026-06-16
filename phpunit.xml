@@ -1,18 +1,23 @@
 <?xml version="1.0"?>
 <phpunit
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
   bootstrap="tests/bootstrap.php"
   backupGlobals="false"
   colors="true"
-  xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.2/phpunit.xsd"
   cacheDirectory=".phpunit.cache"
+  failOnAllIssues="true"
 >
   <testsuites>
     <testsuite name="Feature">
-      <directory suffix="Test.php">tests/feature</directory>
+      <directory suffix="Test.php">tests/Feature</directory>
     </testsuite>
     <testsuite name="Unit">
-      <directory suffix="Test.php">tests/unit</directory>
+      <directory suffix="Test.php">tests/Unit</directory>
     </testsuite>
   </testsuites>
+  <php>
+    <ini name="error_reporting" value="-1" />
+    <ini name="display_errors" value="1" />
+  </php>
 </phpunit>

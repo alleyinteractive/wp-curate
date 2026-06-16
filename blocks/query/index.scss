@@ -2,6 +2,12 @@
  * Editor styles for the wp-curate/query block.
  */
 
+.wp-block-wp-curate-query {
+  border: 1px dashed #e0e0e0;
+  min-height: 50px;
+  padding: 2px;
+}
+
 .autocomplete__component .components-base-control__label {
   display: inline-block;
   font-size: 11px;
@@ -37,7 +43,7 @@
 
 .manual-posts__counter {
   font-weight: 500;
-  
+
   // Give counters a min-width if there are double digits.
   .manual-posts:has(.manual-posts__container:nth-last-child(10)) & {
     min-width: 18px;

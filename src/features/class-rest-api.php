@@ -25,6 +25,9 @@ final class Rest_Api implements Feature {
 	public function boot(): void {
 		add_action( 'rest_api_init', [ $this, 'register_endpoints' ] );
 		add_filter( 'rest_post_query', [ $this, 'add_type_param' ], 10, 2 );
+		add_filter( 'rest_post_query', [ $this, 'add_include_future_param' ], 10, 2 );
+		add_filter( 'rest_post_search_query', [ $this, 'add_term_support' ], 10, 2 );
+		add_filter( 'rest_post_search_query', [ $this, 'add_future_support' ], 10, 2 );
 	}
 
 	/**
@@ -57,13 +60,16 @@ final class Rest_Api implements Feature {
 	 * @param WP_REST_Request $request The request object.
 	 * @return array<int> The post IDs.
 	 */
-	public function get_posts( WP_REST_Request $request ): array { // phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.ContentAfterBrace @phpstan-ignore-line
+	public function get_posts( WP_REST_Request $request ): array { // phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.ContentAfterBrace
 		$search_term      = $request->get_param( 'search' ) ?? '';
 		$offset           = $request->get_param( 'offset' ) ?? 0;
 		$post_type_string = $request->get_param( 'post_type' ) ?? 'post';
 		$per_page         = $request->get_param( 'per_page' ) ?? 20;
+		$orderby          = $request->get_param( 'orderby' ) ?? 'date';
+		$order            = $request->get_param( 'order' ) ?? 'DESC';
 		$trending         = 'trending' === $request->get_param( 'orderby' );
 		$tax_relation     = $request->get_param( 'tax_relation' ) ?? 'OR';
+		$meta_key         = $request->get_param( 'meta_key' ) ?? '';
 
 		if ( ! is_string( $post_type_string ) ) {
 			$post_type_string = 'post';
@@ -92,9 +98,9 @@ final class Rest_Api implements Feature {
 			if ( empty( $terms ) ) {
 				continue;
 			}
-			$terms       = explode( ',', $terms );
+			$terms       = explode( ',', $terms ); // @phpstan-ignore-line argument.type
 			$terms       = array_map( 'intval', $terms );
-			$terms       = array_filter( $terms, 'term_exists' ); // @phpstan-ignore-line
+			$terms       = array_filter( $terms, 'term_exists' ); // @phpstan-ignore-line argument.type
 			$tax_query[] = [
 				'taxonomy' => $taxonomy->name,
 				'field'    => 'term_id',
@@ -127,6 +133,9 @@ final class Rest_Api implements Feature {
 			'offset'              => $offset,
 			'ignore_sticky_posts' => true,
 			'fields'              => 'ids',
+			'orderby'             => $orderby,
+			'order'               => $order,
+			'meta_key'            => $meta_key,
 		];
 		if ( ! empty( $search_term ) ) {
 			$args['s'] = $search_term;
@@ -163,12 +172,13 @@ final class Rest_Api implements Feature {
 	 * Add post_type to rest post query if the type param is set.
 	 *
 	 * NOTE: This is a temporary solution that will be replaced by a more robust solution in the future.
+	 *       However, the `add_future_param()` functionality also depends on the behavior that this
+	 *       method provides of using the endpoint for posts for multiple post types.
 	 *
 	 * @param array<array<int, string>|string> $query_args The existing query args.
 	 * @param WP_REST_Request                  $request The REST request.
 	 * @return array<array<int, string>|string>
 	 */
-	// @phpstan-ignore-next-line
 	public function add_type_param( $query_args, $request ): array { // phpcs:ignore Squiz.Commenting.FunctionComment.WrongStyle
 		// Check if the user is logged in.
 		if ( ! \is_user_logged_in() ) {
@@ -185,6 +195,151 @@ final class Rest_Api implements Feature {
 			$types                   = explode( ',', $type );
 			$types                   = array_filter( $types, 'post_type_exists' );
 			$query_args['post_type'] = $types;
+		}
+
+		return $query_args;
+	}
+
+	/**
+	 * Query for scheduled posts if requested via the existing use of the posts endpoint for multiple post types.
+	 *
+	 * @see Rest_Api::add_type_param()
+	 *
+	 * @param mixed[]         $query_args The existing query args.
+	 * @param WP_REST_Request $request    The REST request.
+	 * @return mixed[]
+	 */
+	public function add_include_future_param(
+		$query_args,
+		$request
+	) {
+		// Check if the user is logged in.
+		if ( ! \is_user_logged_in() ) {
+			return $query_args;
+		}
+
+		// Check the context.
+		if ( 'edit' !== $request['context'] ) {
+			return $query_args;
+		}
+
+		if ( $request->get_param( 'wp_curate_include_future' ) === '1' ) {
+			// Allow when post types are requested and the user can edit published posts in any of them.
+			if ( isset( $query_args['post_type'] ) && ( is_string( $query_args['post_type'] ) || is_array( $query_args['post_type'] ) ) ) {
+				foreach ( (array) $query_args['post_type'] as $post_type ) {
+					if ( is_string( $post_type ) ) {
+						$pt_object = get_post_type_object( $post_type );
+
+						if (
+							$pt_object
+							&& isset( $pt_object->cap->edit_published_posts )
+							&& is_string( $pt_object->cap->edit_published_posts )
+							&& current_user_can( $pt_object->cap->edit_published_posts )
+						) {
+							if ( ! isset( $query_args['post_status'] ) || ( ! is_string( $query_args['post_status'] ) && ! is_array( $query_args['post_status'] ) ) ) {
+								$query_args['post_status'] = 'publish';
+							}
+
+							$query_args['post_status'] = (array) $query_args['post_status'];
+
+							if ( ! in_array( 'future', $query_args['post_status'], true ) ) {
+								$query_args['post_status'][] = 'future';
+							}
+
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		return $query_args;
+	}
+
+	/**
+	 * Add taxonomy term support to rest post search query if the term param is set.
+	 *
+	 * @param array<array<int, string>|string>      $query_args The existing query args.
+	 * @param WP_REST_Request<array<string, mixed>> $request The REST request.
+	 * @return array<array<int, array<int, array<string, mixed>>|string>|string>
+	 */
+	public function add_term_support( $query_args, $request ): array {
+		/**
+		 * Filter the taxonomies allowed.
+		 *
+		 * @param string[] $taxonomies
+		 */
+		$allowed_taxonomies = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
+		$taxonomies         = array_map( 'get_taxonomy', $allowed_taxonomies );
+		$taxonomies         = array_filter( $taxonomies, 'is_object' );
+		$tax_query          = [];
+		foreach ( $taxonomies as $taxonomy ) {
+			$name = $taxonomy->name;
+			if ( empty( $name ) ) {
+				continue;
+			}
+			if ( ! $request->get_param( $name ) ) {
+				continue;
+			}
+			$tax_query[] = [
+				'taxonomy' => $name,
+				'field'    => 'term_id',
+				'terms'    => $request->get_param( $name ),
+			];
+		}
+		if ( empty( $tax_query ) ) {
+			return $query_args;
+		}
+		$query_args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+			$tax_query,
+		];
+		return $query_args;
+	}
+
+	/**
+	 * Add scheduled posts support to REST post search query.
+	 *
+	 * @param mixed[]         $query_args Key-value array of query var to query value.
+	 * @param WP_REST_Request $request    The request used.
+	 * @return mixed[] Filtered query arguments.
+	 */
+	public function add_future_support(
+		$query_args,
+		$request
+	) {
+		// Check if the user is logged in.
+		if ( ! \is_user_logged_in() ) {
+			return $query_args;
+		}
+
+		if ( $request->get_param( 'wp_curate_include_future' ) === '1' ) {
+			// Allow when post types are requested and the user can edit published posts in any of them.
+			if ( isset( $query_args['post_type'] ) && ( is_string( $query_args['post_type'] ) || is_array( $query_args['post_type'] ) ) ) {
+				foreach ( (array) $query_args['post_type'] as $post_type ) {
+					if ( is_string( $post_type ) ) {
+						$pt_object = get_post_type_object( $post_type );
+
+						if (
+							$pt_object
+							&& isset( $pt_object->cap->edit_published_posts )
+							&& is_string( $pt_object->cap->edit_published_posts )
+							&& current_user_can( $pt_object->cap->edit_published_posts )
+						) {
+							if ( ! isset( $query_args['post_status'] ) || ( ! is_string( $query_args['post_status'] ) && ! is_array( $query_args['post_status'] ) ) ) {
+								$query_args['post_status'] = 'publish';
+							}
+
+							$query_args['post_status'] = (array) $query_args['post_status'];
+
+							if ( ! in_array( 'future', $query_args['post_status'], true ) ) {
+								$query_args['post_status'][] = 'future';
+							}
+
+							break;
+						}
+					}
+				}
+			}
 		}
 
 		return $query_args;
