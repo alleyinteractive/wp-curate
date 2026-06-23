@@ -30,7 +30,7 @@ final class Block_Index implements Feature {
 	 * @param array $block The block.
 	 * @return array The modified block data.
 	 */
-	public function assign_post_index( array $block_data, array $block ): array {
+	public function assign_post_index( $block_data, $block ): array {
 		if ( 'wp-curate/query' === $block_data['blockName'] ) {
 			// Find the wp-curate/post blocks inside the query block.
 			$inner_blocks = $block_data['innerBlocks'];
@@ -118,7 +118,7 @@ final class Block_Index implements Feature {
 	 * @param array $block The block.
 	 * @return array The modified block context.
 	 */
-	public function set_post_in_context( array $block_context, array $block ): array {
+	public function set_post_in_context( $block_context, $block ): array {
 		if ( 'wp-curate/post' === $block['blockName'] ) {
 			$index                   = $block['attrs']['index'] ?? null;
 			$post_id                 = $block_context['allPostIds'][ $index ] ?? null;
@@ -134,7 +134,7 @@ final class Block_Index implements Feature {
 	 * @param array $block The block.
 	 * @return array The modified block context.
 	 */
-	public function adjust_query_block_context( array $block_context, array $block ): array {
+	public function adjust_query_block_context( $block_context, $block ): array {
 		if ( 'wp-curate/query' === $block['blockName'] ) {
 			$inner_blocks            = $block['innerBlocks'];
 			$post_or_template_blocks = [];
