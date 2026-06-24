@@ -6,6 +6,10 @@ All notable changes to `WP Curate` will be documented in this file.
 
 Nothing yet.
 
+## 3.2.2 - 2026-06-24
+
+- Update @alleyinteractive/block-editor-tools from 0.14.0 to 0.17.0 for an updated term selector component that replaces exhaustive pagination with debounced search-as-you-type.
+
 ## 3.2.1 - 2026-06-24
 
 - Bug fix: Fix issue preventing pagination from working in core query blocks.
