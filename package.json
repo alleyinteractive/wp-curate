@@ -39,7 +39,7 @@
     "test": "npm run check-types && npm run eslint && npm run stylelint && npm run jest"
   },
   "dependencies": {
-    "@alleyinteractive/block-editor-tools": "^0.14.0",
+    "@alleyinteractive/block-editor-tools": "^0.17.0",
     "@types/jest": "^30.0.0",
     "@uidotdev/usehooks": "^2.4.1",
     "@wordpress/api-fetch": "^7.32.0",
@@ -77,8 +77,8 @@
     "@babel/preset-env": "^7.28.5",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
-    "@types/wordpress__edit-post": "^8.4.2",
     "@types/wordpress__block-editor": "^11.5.17",
+    "@types/wordpress__edit-post": "^8.4.2",
     "@wordpress/babel-preset-default": "^8.32.0",
     "babel-jest": "^30.2.0",
     "check-node-version": "^4.2.1",
