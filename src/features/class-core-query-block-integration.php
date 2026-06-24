@@ -47,8 +47,9 @@ final class Core_Query_Block_Integration implements Feature {
 			],
 		);
 
-		// Make all query blocks 'no_found_rows => true' unless attributes include '"foundRows": true'.
-		if ( true !== $found_rows ) {
+		// Make all query blocks 'no_found_rows => true' unless attributes include '"foundRows": true'
+		// or this is a pagination block that needs found rows to calculate page count.
+		if ( true !== $found_rows && ! ( str_starts_with( $block->name ?? '', 'core/query-pagination' ) || 'core/query-total' === $block->name ) ) {
 			$query['no_found_rows'] = true;
 		}
 

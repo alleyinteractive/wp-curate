@@ -44,7 +44,7 @@ final class Parsely_Support implements Feature {
 	 * @param array<string, mixed> $args The WP_Query args.
 	 * @return array<number> Array of post IDs.
 	 */
-	public function add_parsely_trending_posts_query( array $posts, array $args ): array {
+	public function add_parsely_trending_posts_query( $posts, $args ): array {
 		global $parsely;
 
 		if ( ! class_exists( '\Parsely\Parsely' ) || empty( $parsely ) || ! $parsely instanceof Parsely || ! $parsely->api_secret_is_set() ) {

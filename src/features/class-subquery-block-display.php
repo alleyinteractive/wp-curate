@@ -47,7 +47,7 @@ final class Subquery_Block_Display implements Feature {
 	 *     },
 	 * } $parsed_block The parsed block.
 	 */
-	public function filter_pre_render_block( string|null $block_content, array $parsed_block, \WP_Block|null $parent_block ): string|null {
+	public function filter_pre_render_block( $block_content, $parsed_block, $parent_block ): string|null {
 		if ( 'wp-curate/subquery' !== $parsed_block['blockName'] ) {
 			return $block_content;
 		}
