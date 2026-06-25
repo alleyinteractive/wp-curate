@@ -1,0 +1,167 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "wp-curate/query",
+  "version": "0.1.0",
+  "title": "Curatable Query",
+  "category": "theme",
+  "icon": "filter",
+  "description": "Custom queries for WP Curate",
+  "textdomain": "wp-curate",
+  "editorScript": "file:index.js",
+  "editorStyle": "file:index.css",
+  "style": [
+    "file:style-index.css"
+  ],
+  "providesContext": {
+    "query": "query",
+    "allPostIds": "allPostIds",
+    "displayLayout": "displayLayout",
+    "heading": "heading",
+    "curation": "curation",
+    "pinnedPosts": "posts",
+    "moveData": "moveData",
+    "customPostTitles": "customPostTitles"
+  },
+  "attributes": {
+    "deduplication": {
+      "default": "inherit",
+      "enum": [
+        "inherit",
+        "never"
+      ],
+      "type": "string"
+    },
+    "maxNumberOfPosts": {
+      "type": "number",
+      "default": 10
+    },
+    "minNumberOfPosts": {
+      "default": 1,
+      "type": "number"
+    },
+    "numberOfPosts": {
+      "default": 5,
+      "type": "number"
+    },
+    "offset": {
+      "default": 0,
+      "type": "number"
+    },
+    "postTypes": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "posts": {
+      "default": [],
+      "items": {
+        "type": "number"
+      },
+      "type": "array"
+    },
+    "searchTerm": {
+      "default": "",
+      "type": "string"
+    },
+    "terms": {
+      "default": {},
+      "items": {
+        "default": [],
+        "items": {
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "type": "object"
+    },
+    "termRelations": {
+      "default": {},
+      "items": {
+        "default": "AND",
+        "enum": [
+          "AND",
+          "OR"
+        ],
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "taxRelation": {
+      "default": "AND",
+      "enum": [
+        "AND",
+        "OR"
+      ],
+      "type": "string"
+    },
+    "orderby": {
+      "default": "date",
+      "type": "string"
+    },
+    "order": {
+      "default": "desc",
+      "enum": [
+        "asc",
+        "desc"
+      ],
+      "type": "string"
+    },
+    "metaKey": {
+      "default": "",
+      "type": "string"
+    },
+    "customPostTitles": {
+      "default": [],
+      "items": {
+        "default": {},
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "supportsPostTypes": {
+      "default": [],
+      "items": {
+        "default": "",
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "example": {
+    "attributes": {
+      "numberOfPosts": 3,
+      "postTypes": [
+        "post"
+      ],
+      "deduplication": "inherit"
+    },
+    "innerBlocks": [
+      {
+        "name": "core/post-template",
+        "innerBlocks": [
+          {
+            "name": "wp-curate/post",
+            "attributes": {},
+            "innerBlocks": [
+              {
+                "name": "core/post-featured-image",
+                "attributes": {}
+              },
+              {
+                "name": "core/post-title",
+                "attributes": {}
+              },
+              {
+                "name": "core/post-date",
+                "attributes": {}
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
