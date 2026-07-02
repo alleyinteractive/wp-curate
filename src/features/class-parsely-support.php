@@ -118,15 +118,9 @@ final class Parsely_Support implements Feature {
 			}
 			$ids = array_map(
 				function ( $post ) {
-					// Check if the metadata contains post_id, if not, use the URL to get the post ID.
-					$metadata = json_decode( $post['metadata'] ?? '', true );
-					if ( is_array( $metadata ) && isset( $metadata['post_id'] ) ) {
-						$post_id = (int) $metadata['post_id'];
-					} elseif ( function_exists( 'wpcom_vip_url_to_postid' ) ) {
-						$post_id = wpcom_vip_url_to_postid( $post['url'] );
-					} else {
-						$post_id = url_to_postid( $post['url'] ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.url_to_postid_url_to_postid
-					}
+					$post_id = function_exists( 'wpcom_vip_url_to_postid' )
+						? wpcom_vip_url_to_postid( $post['url'] )
+						: url_to_postid( $post['url'] ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.url_to_postid_url_to_postid
 					/**
 					 * Filters the post ID derived from Parsely post object.
 					 *
