@@ -6,6 +6,10 @@ All notable changes to `WP Curate` will be documented in this file.
 
 Nothing yet.
 
+## 3.2.3 - 2026-07-02
+
+- Changed: Don't attempt to read `post_id` from custom Parse.ly metadata. This value is unlikely to be set on most installations.
+
 ## 3.2.2 - 2026-06-24
 
 - Update @alleyinteractive/block-editor-tools from 0.14.0 to 0.17.0 for an updated term selector component that replaces exhaustive pagination with debounced search-as-you-type.

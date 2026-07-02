@@ -31,6 +31,7 @@
     "prestylelint": "check-node-version --package",
     "pretest:watch": "check-node-version --package",
     "pretest": "check-node-version --package",
+    "release": "npx @alleyinteractive/create-release@latest",
     "start:hot": "alley-build start --hot",
     "start": "alley-build start",
     "stylelint:fix": "stylelint --fix \"**/*.scss\"",
