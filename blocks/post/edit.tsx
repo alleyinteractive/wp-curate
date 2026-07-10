@@ -313,9 +313,9 @@ export default function Edit({
 
   return (
     <div
-      ref={blockRef}
       {...useBlockProps(
         {
+          ref: blockRef,
           className: classnames(
             'wp-curate-post-block',
             { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
