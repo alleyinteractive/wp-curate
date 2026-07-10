@@ -1,27 +1,15 @@
 import { registerBlockType } from '@wordpress/blocks';
 import { addFilter } from '@wordpress/hooks';
 import { useBlockProps, InnerBlocks } from '@wordpress/block-editor';
-import {
-  postDate,
-  postExcerpt,
-  postFeaturedImage,
-  list as listIcon,
-} from '@wordpress/icons';
+import { listView } from '@wordpress/icons';
 
 import edit from './edit';
 import metadata from './block.json';
 
 import './style.scss';
 
-// PHP-registered block variations use dashicon strings which don't load inside the
-// apiVersion 3 iframe. Override them here with inline SVGs from @wordpress/icons.
-const VARIATION_ICONS: Record<string, JSX.Element> = {
-  'wp-curate/title-date': postDate,
-  'wp-curate/title-excerpt': postExcerpt,
-  'wp-curate/title-date-excerpt': listIcon,
-  'wp-curate/image-date-title': postFeaturedImage,
-};
-
+// PHP-registered block variations use the 'list-view' dashicon string which doesn't
+// load inside the apiVersion 3 iframe. Override with the equivalent SVG from @wordpress/icons.
 addFilter(
   'blocks.registerBlockType',
   'wp-curate/query-variation-icons',
@@ -33,7 +21,7 @@ addFilter(
       ...settings,
       variations: settings.variations.map((variation) => ({
         ...variation,
-        icon: VARIATION_ICONS[variation.name] ?? variation.icon,
+        icon: listView,
       })),
     };
   }
