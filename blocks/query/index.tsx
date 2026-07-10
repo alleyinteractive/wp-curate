@@ -24,7 +24,7 @@ addFilter(
         icon: listView,
       })),
     };
-  }
+  },
 );
 
 /* @ts-expect-error Provided types are inaccurate to the actual plugin API. */
