@@ -142,7 +142,7 @@ export default function Edit({
     }
   }
 
-  const blockRef = useRef<HTMLDivElement>(null);
+  const blockRef = useRef<HTMLElement>(null);
 
   const [filtered, setFiltered] = useState(true);
 
