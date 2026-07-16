@@ -18,6 +18,40 @@ use function Mantle\Support\Helpers\mixed;
  */
 final class Plugin_Curated_Posts implements Curated_Posts {
 	/**
+	 * Default number of days to limit backfill posts. Mirrored in block.json and edit.tsx.
+	 */
+	const DEFAULT_BACKFILL_DAYS = 30;
+
+	/**
+	 * Build a date_query fragment for a given backfill days value.
+	 *
+	 * Applies the `wp_curate_backfill_days` filter. Returns an empty array when
+	 * the filtered value is 0 (no date limit).
+	 *
+	 * @param int $backfill_days Raw days value before filtering.
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function date_query_for_backfill( int $backfill_days ): array {
+		/**
+		 * Filters the number of days to limit backfill posts to.
+		 * Return 0 to disable the date limit. The filter receives the per-block value
+		 * so site-wide overrides can ignore it.
+		 *
+		 * @param int $backfill_days Days to limit backfill posts. 0 means no limit.
+		 */
+		$backfill_days = (int) apply_filters( 'wp_curate_backfill_days', $backfill_days );
+		if ( $backfill_days <= 0 ) {
+			return [];
+		}
+		return [
+			[
+				'after'     => gmdate( 'Y-m-d', (int) strtotime( "-{$backfill_days} days" ) ),
+				'inclusive' => true,
+			],
+		];
+	}
+
+	/**
 	 * Set up.
 	 *
 	 * @param Post_Queries $queries Available queries.
@@ -75,6 +109,12 @@ final class Plugin_Curated_Posts implements Curated_Posts {
 
 		if ( is_string( $search_term ) && strlen( $search_term ) > 0 ) {
 			$args['s'] = $search_term;
+		}
+
+		$backfill_days_raw = $attributes['backfillDays'] ?? self::DEFAULT_BACKFILL_DAYS;
+		$date_query        = self::date_query_for_backfill( is_numeric( $backfill_days_raw ) ? (int) $backfill_days_raw : self::DEFAULT_BACKFILL_DAYS );
+		if ( ! empty( $date_query ) ) {
+			$args['date_query'] = $date_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_date_query
 		}
 
 		$pinned_posts = $attributes['posts'] ?? data_get( $block_type->attributes, 'posts.default', [] );
