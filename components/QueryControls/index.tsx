@@ -240,45 +240,6 @@ export default function QueryControls({
         </PanelBody>
 
         <PanelBody
-          title={__('Select Posts', 'wp-curate')}
-          initialOpen={false}
-          className="manual-posts"
-        >
-          {manualPosts.map((_post, index) => (
-            <PanelRow
-              // eslint-disable-next-line react/no-array-index-key
-              key={index}
-              className={classnames(
-                'manual-posts__container',
-                { 'manual-posts__container--selected': manualPosts[index] },
-              )}
-            >
-              <span className="manual-posts__counter">{index + 1}</span>
-              <PostPicker
-                allowedTypes={filtered ? postTypes : displayTypes.map((type) => type.value)}
-                onReset={() => setManualPost(0, index)}
-                onUpdate={(id: number) => { setManualPost(id, index); }}
-                value={manualPosts[index] || 0}
-                className="manual-posts__picker"
-                // @ts-ignore This function does work with this prop.
-                getPostType={includeFuturePosts ? postTypeWithFuture : null}
-                filters={(
-                  <SearchFilters
-                    shouldShowFilter={shouldShowFilter}
-                    filtered={filtered}
-                    setFiltered={setFiltered}
-                  />
-                )}
-                params={{
-                  ...params,
-                  wp_curate_include_future: Number(includeFuturePosts),
-                }}
-              />
-            </PanelRow>
-          ))}
-        </PanelBody>
-
-        <PanelBody
           title={__('Query Parameters', 'wp-curate')}
           initialOpen={false}
         >
@@ -380,6 +341,45 @@ export default function QueryControls({
               onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date', backfillPosts: [] })}
             />
           ) : null }
+        </PanelBody>
+
+        <PanelBody
+          title={__('Select Posts', 'wp-curate')}
+          initialOpen={false}
+          className="manual-posts"
+        >
+          {manualPosts.map((_post, index) => (
+            <PanelRow
+              // eslint-disable-next-line react/no-array-index-key
+              key={index}
+              className={classnames(
+                'manual-posts__container',
+                { 'manual-posts__container--selected': manualPosts[index] },
+              )}
+            >
+              <span className="manual-posts__counter">{index + 1}</span>
+              <PostPicker
+                allowedTypes={filtered ? postTypes : displayTypes.map((type) => type.value)}
+                onReset={() => setManualPost(0, index)}
+                onUpdate={(id: number) => { setManualPost(id, index); }}
+                value={manualPosts[index] || 0}
+                className="manual-posts__picker"
+                // @ts-ignore This function does work with this prop.
+                getPostType={includeFuturePosts ? postTypeWithFuture : null}
+                filters={(
+                  <SearchFilters
+                    shouldShowFilter={shouldShowFilter}
+                    filtered={filtered}
+                    setFiltered={setFiltered}
+                  />
+                )}
+                params={{
+                  ...params,
+                  wp_curate_include_future: Number(includeFuturePosts),
+                }}
+              />
+            </PanelRow>
+          ))}
         </PanelBody>
       </InspectorControls>
 
