@@ -21,6 +21,13 @@ function main(): void {
 	$stop_queries_var = 'wp_curate_stop_queries';
 	$main_query       = new Global_Post_Query( 'wp_query' );
 
+	/**
+	 * Filter the Seed object for the history of post IDs.
+	 *
+	 * @param Pinned_In_Post_Content $seed The seed for the history of post IDs.
+	 */
+	$seed = apply_filters( 'wp_curate_history_seed', new Pinned_In_Post_Content( $main_query ) );
+
 	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore
 	$plugin = new Group(
 		/*
@@ -37,7 +44,7 @@ function main(): void {
 		new Features\Query_Block_Context(
 			post_queries: new Default_Post_Queries(),
 			history: new History(
-				seed: new Pinned_In_Post_Content( $main_query ),
+				seed: $seed,
 			),
 			main_query: $main_query,
 			default_per_page: (int) get_option( 'posts_per_page', 10 ), // @phpstan-ignore-line

@@ -64,6 +64,28 @@ final class Query_Block_Context implements Feature {
 	}
 
 	/**
+	 * Checks if post level deduplication is enabled.
+	 *
+	 * @return bool
+	 */
+	function get_post_level_deduplication(): bool {
+		$post_id = null;
+		$post_level_deduplication = false;
+		$main_query = $this->main_query->query_object();
+		if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
+			$post_id                  = $main_query->get_queried_object_id();
+			$post_level_deduplication = (bool) get_post_meta( $post_id, 'wp_curate_deduplication', true );
+		}
+		/**
+		 * Filter to determine if post level deduplication is enabled.
+		 *
+		 * @param bool      $post_level_deduplication Whether post level deduplication is enabled.
+		 * @param int|null  $post_id                  The ID of the post being checked.
+		 */
+		return (bool) apply_filters( 'wp_curate_post_level_deduplication', $post_level_deduplication, $post_id );
+	}
+
+	/**
 	 * Filters the context provided to a query block to determine the definitive list of backfilled posts.
 	 *
 	 * @param array<string, mixed>                 $context Default context.
@@ -85,21 +107,10 @@ final class Query_Block_Context implements Feature {
 			// Handles the decision to exclude (deduplicate) posts or not, based on a given input.
 			$variable_post_queries = new Variable_Post_Queries(
 				input: function () use ( $parsed_block ) {
-					$main_query = $this->main_query->query_object();
-
 					if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
 						return false;
 					}
-
-					if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
-						$post_level_deduplication = get_post_meta( $main_query->get_queried_object_id(), 'wp_curate_deduplication', true );
-
-						if ( true === (bool) $post_level_deduplication ) {
-							return true;
-						}
-					}
-
-					return false;
+					return $this->get_post_level_deduplication();
 				},
 				// Exclude posts that have already been used in this request.
 				test: new Comparison( [ 'compared' => true ] ),
