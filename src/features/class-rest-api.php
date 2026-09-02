@@ -160,7 +160,7 @@ final class Rest_Api implements Feature {
 
 		// Reuse the same date-limiting (and graceful fallback) behavior as the frontend render
 		// path, so the editor's backfill preview stays in parity with what actually renders.
-		$post_queries = Backfill_Date_Limit::wrap( $backfill_date_limit, $this->post_queries, (int) $per_page );
+		$post_queries = Backfill_Date_Limit::wrap( $backfill_date_limit, $this->post_queries, absint( $per_page ) );
 
 		/**
 		 * Filters the REST post query arguments.
