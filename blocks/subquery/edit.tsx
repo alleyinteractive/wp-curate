@@ -69,6 +69,7 @@ export default function Edit({
     metaKey = '',
     uniqueId = '',
     validPosts = [],
+    backfillDateLimit = 'default',
   },
   setAttributes,
   context: {
@@ -148,6 +149,7 @@ export default function Edit({
     orderBy: orderby,
     metaKey: '',
     currentPostId,
+    backfillDateLimit,
   })}&${termQueryArgs}`;
 
   useEffect(() => {
@@ -326,6 +328,7 @@ export default function Edit({
         </div>
         <QueryControls
           allowedTaxonomies={allowedTaxonomies}
+          backfillDateLimit={backfillDateLimit}
           deduplication={deduplication}
           displayTypes={displayTypes}
           isPostDeduplicating={isPostDeduplicating}

@@ -119,6 +119,19 @@
                 "type": "object"
             },
             "type": "array"
+        },
+        "backfillDateLimit": {
+            "default": "default",
+            "enum": [
+                "default",
+                "30",
+                "60",
+                "90",
+                "180",
+                "365",
+                "unlimited"
+            ],
+            "type": "string"
         }
     }
 }

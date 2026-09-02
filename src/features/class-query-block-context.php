@@ -15,6 +15,7 @@ use Alley\WP\Post_Queries\Variable_Post_Queries;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_Queries;
 use Alley\WP\Types\Post_Query;
+use Alley\WP\WP_Curate\Backfill_Date_Limit;
 use Alley\WP\WP_Curate\Must_Include_Curated_Posts;
 use Alley\WP\WP_Curate\Plugin_Curated_Posts;
 use Alley\WP\WP_Curate\Post_IDs\History;
@@ -23,6 +24,8 @@ use Alley\WP\WP_Curate\Trending_Post_Queries;
 use WP_Block;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
+
+use function Mantle\Support\Helpers\mixed;
 
 /**
  * Provides context to query blocks
@@ -125,10 +128,17 @@ final class Query_Block_Context implements Feature {
 				is_false: $variable_post_queries,
 			);
 
+			// Limit backfill (dynamically-filled slot) queries to recently published posts.
+			$backfill_date_limited_queries = Backfill_Date_Limit::wrap(
+				mixed( $parsed_block['attrs']['backfillDateLimit'] ?? Backfill_Date_Limit::ATTRIBUTE_DEFAULT )->string(),
+				$exclude_current_post_queries,
+				$this->default_per_page,
+			);
+
 			// Pull trending posts from Parsely and merge with existing queries.
 			$plugin_curated_posts = new Plugin_Curated_Posts(
 				queries: new Trending_Post_Queries(
-					origin: $exclude_current_post_queries,
+					origin: $backfill_date_limited_queries,
 					parsely: new Parsely_Support(),
 				),
 			);

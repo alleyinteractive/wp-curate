@@ -45,7 +45,9 @@ function main(): void {
 			block_type_registry: WP_Block_Type_Registry::get_instance(),
 		),
 		new Features\Parsely_Support(),
-		new Features\Rest_Api(),
+		new Features\Rest_Api(
+			post_queries: new Default_Post_Queries(),
+		),
 		new Features\GraphQL(),
 		new Features\Block_Variations(),
 		new Features\Block_Patterns(),
