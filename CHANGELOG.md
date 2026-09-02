@@ -5,6 +5,7 @@ All notable changes to `WP Curate` will be documented in this file.
 ## Unreleased
 
 - Enhancement: Limit backfilled (dynamically-filled) query and subquery block slots to posts published within the last 30 days by default, improving performance on large sites. Configurable per block via the new "Backfill Date Limit" control (30/60/90 days, 6 months, 1 year, or unlimited); the sitewide default is filterable via `wp_curate_backfill_date_limit`, which never overrides an explicit per-block choice.
+- Chore: Update npm dependencies to resolve `npm audit` findings (DOMPurify, fast-uri, nanoid, PostCSS, showdown).
 
 ## 3.2.3 - 2026-07-02
 
