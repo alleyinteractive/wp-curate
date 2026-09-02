@@ -9,7 +9,8 @@ interface PostsApiPathProps {
   order: 'asc' | 'desc',
   orderBy: string,
   metaKey: string,
-  currentPostId: number
+  currentPostId: number,
+  backfillDateLimit?: string,
 }
 
 export default function buildPostsApiPath(pathProps: PostsApiPathProps) {
@@ -23,5 +24,6 @@ export default function buildPostsApiPath(pathProps: PostsApiPathProps) {
     orderby: pathProps.orderBy,
     meta_key: pathProps.metaKey,
     current_post_id: pathProps.currentPostId,
+    backfill_date_limit: pathProps.backfillDateLimit,
   });
 }

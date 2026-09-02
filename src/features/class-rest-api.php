@@ -8,7 +8,11 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
+use Alley\WP\Types\Post_Queries;
+use Alley\WP\WP_Curate\Backfill_Date_Limit;
 use WP_REST_Request;
+
+use function Mantle\Support\Helpers\mixed;
 
 /**
  * Look for a special query var that indicates a query should not run.
@@ -16,8 +20,12 @@ use WP_REST_Request;
 final class Rest_Api implements Feature {
 	/**
 	 * Set up.
+	 *
+	 * @param Post_Queries $post_queries The post queries available to this endpoint.
 	 */
-	public function __construct() {}
+	public function __construct(
+		private readonly Post_Queries $post_queries,
+	) {}
 
 	/**
 	 * Boot the feature.
@@ -44,10 +52,15 @@ final class Rest_Api implements Feature {
 				'callback'            => [ $this, 'get_posts' ],
 				'permission_callback' => 'is_user_logged_in',
 				'args'                => [
-					'current_post_id' => [
+					'current_post_id'     => [
 						'type'        => 'integer',
 						'description' => __( 'The ID of the post being edited, if any.', 'wp-curate' ),
 						'default'     => 0,
+					],
+					'backfill_date_limit' => [
+						'type'        => 'string',
+						'description' => __( 'Limits results to posts published within this many days, or "unlimited".', 'wp-curate' ),
+						'default'     => Backfill_Date_Limit::ATTRIBUTE_DEFAULT,
 					],
 				],
 			]
@@ -61,15 +74,16 @@ final class Rest_Api implements Feature {
 	 * @return array<int> The post IDs.
 	 */
 	public function get_posts( WP_REST_Request $request ): array { // phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.ContentAfterBrace
-		$search_term      = $request->get_param( 'search' ) ?? '';
-		$offset           = $request->get_param( 'offset' ) ?? 0;
-		$post_type_string = $request->get_param( 'post_type' ) ?? 'post';
-		$per_page         = $request->get_param( 'per_page' ) ?? 20;
-		$orderby          = $request->get_param( 'orderby' ) ?? 'date';
-		$order            = $request->get_param( 'order' ) ?? 'DESC';
-		$trending         = 'trending' === $request->get_param( 'orderby' );
-		$tax_relation     = $request->get_param( 'tax_relation' ) ?? 'OR';
-		$meta_key         = $request->get_param( 'meta_key' ) ?? '';
+		$search_term         = $request->get_param( 'search' ) ?? '';
+		$offset              = $request->get_param( 'offset' ) ?? 0;
+		$post_type_string    = $request->get_param( 'post_type' ) ?? 'post';
+		$per_page            = $request->get_param( 'per_page' ) ?? 20;
+		$orderby             = $request->get_param( 'orderby' ) ?? 'date';
+		$order               = $request->get_param( 'order' ) ?? 'DESC';
+		$trending            = 'trending' === $request->get_param( 'orderby' );
+		$tax_relation        = $request->get_param( 'tax_relation' ) ?? 'OR';
+		$meta_key            = $request->get_param( 'meta_key' ) ?? '';
+		$backfill_date_limit = mixed( $request->get_param( 'backfill_date_limit' ) ?? Backfill_Date_Limit::ATTRIBUTE_DEFAULT )->string();
 
 		if ( ! is_string( $post_type_string ) ) {
 			$post_type_string = 'post';
@@ -144,6 +158,10 @@ final class Rest_Api implements Feature {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 		}
 
+		// Reuse the same date-limiting (and graceful fallback) behavior as the frontend render
+		// path, so the editor's backfill preview stays in parity with what actually renders.
+		$post_queries = Backfill_Date_Limit::wrap( $backfill_date_limit, $this->post_queries, absint( $per_page ) );
+
 		/**
 		 * Filters the REST post query arguments.
 		 *
@@ -162,8 +180,7 @@ final class Rest_Api implements Feature {
 			$posts = apply_filters( 'wp_curate_trending_posts_query', [], $args );
 		}
 		if ( empty( $posts ) ) {
-			$query = new \WP_Query( $args );
-			$posts = $query->posts;
+			$posts = $post_queries->query( $args )->post_ids();
 		}
 		return array_map( 'intval', $posts ); // @phpstan-ignore-line
 	}

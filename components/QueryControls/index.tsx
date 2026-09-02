@@ -35,11 +35,13 @@ interface Window {
     rawOrderByOptions: Record<string, string>;
     orderByMetaKeys: string[];
     includeFuturePosts: boolean;
+    defaultBackfillDateLimit: string;
   };
 }
 
 type QueryControlsProps = {
   allowedTaxonomies: PostTypeOrTerm[];
+  backfillDateLimit: string;
   deduplication: string;
   displayTypes: Option[];
   hasNonTemplatePostBlocks?: boolean;
@@ -69,8 +71,17 @@ type QueryControlsProps = {
   terms: Record<string, Term[]>;
 };
 
+function formatBackfillDateLimitLabel(days: string): string {
+  if (days === 'unlimited') {
+    return __('Unlimited', 'wp-curate');
+  }
+
+  return sprintf(__('%s days', 'wp-curate'), days);
+}
+
 export default function QueryControls({
   allowedTaxonomies = [],
+  backfillDateLimit,
   deduplication,
   displayTypes,
   hasNonTemplatePostBlocks = false,
@@ -105,6 +116,7 @@ export default function QueryControls({
       },
       orderByMetaKeys = [],
       includeFuturePosts,
+      defaultBackfillDateLimit = '30',
     } = {},
   } = (window as any as Window);
 
@@ -134,6 +146,22 @@ export default function QueryControls({
       label: __('OR', 'wp-curate'),
       value: 'OR',
     },
+  ];
+
+  const backfillDateLimitOptions = [
+    {
+      label: sprintf(
+        __('Site Default (%s)', 'wp-curate'),
+        formatBackfillDateLimitLabel(defaultBackfillDateLimit),
+      ),
+      value: 'default',
+    },
+    { label: __('Last 30 days', 'wp-curate'), value: '30' },
+    { label: __('Last 60 days', 'wp-curate'), value: '60' },
+    { label: __('Last 90 days', 'wp-curate'), value: '90' },
+    { label: __('Last 6 months', 'wp-curate'), value: '180' },
+    { label: __('Last year', 'wp-curate'), value: '365' },
+    { label: __('Unlimited', 'wp-curate'), value: 'unlimited' },
   ];
 
   if (metaKeyOptions.length > 0) {
@@ -380,6 +408,13 @@ export default function QueryControls({
               onChange={(next) => setAttributes({ orderby: next ? 'trending' : 'date', backfillPosts: [] })}
             />
           ) : null }
+          <SelectControl
+            label={__('Backfill Date Limit', 'wp-curate')}
+            help={__('Limits dynamically-filled slots to recently published posts, improving performance on large sites. Manually pinned posts are never affected.', 'wp-curate')}
+            options={backfillDateLimitOptions}
+            onChange={(next) => setAttributes({ backfillDateLimit: next, backfillPosts: [] })}
+            value={backfillDateLimit}
+          />
         </PanelBody>
       </InspectorControls>
 

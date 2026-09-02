@@ -72,6 +72,7 @@ export default function Edit({
     metaKey = '',
     moveData = {},
     supportsPostTypes = [],
+    backfillDateLimit = 'default',
   },
   clientId,
   setAttributes,
@@ -165,6 +166,7 @@ export default function Edit({
     order,
     metaKey,
     currentPostId,
+    backfillDateLimit,
   })}&${termQueryArgs}`;
 
   // Use SWR to fetch data.
@@ -324,6 +326,7 @@ export default function Edit({
       </div>
       <QueryControls
         allowedTaxonomies={allowedTaxonomies}
+        backfillDateLimit={backfillDateLimit}
         deduplication={deduplication}
         displayTypes={displayTypes}
         hasNonTemplatePostBlocks={postBlockCount > 0}
