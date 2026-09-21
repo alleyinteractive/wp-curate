@@ -28,6 +28,7 @@ final class Rest_Api implements Feature {
 		add_filter( 'rest_post_query', [ $this, 'add_include_future_param' ], 10, 2 );
 		add_filter( 'rest_post_search_query', [ $this, 'add_term_support' ], 10, 2 );
 		add_filter( 'rest_post_search_query', [ $this, 'add_future_support' ], 10, 2 );
+		add_filter( 'rest_post_search_query', [ $this, 'add_url_search_support' ], 10, 2 );
 	}
 
 	/**
@@ -341,6 +342,62 @@ final class Rest_Api implements Feature {
 				}
 			}
 		}
+
+		return $query_args;
+	}
+
+	/**
+	 * Allow the REST post search query to accept a post's URL in place of a search term.
+	 *
+	 * The resolved post ID is passed through `post__in`, so the handler's own
+	 * `post_status => 'publish'` default (set before `rest_post_search_query`
+	 * runs) still applies. A URL for a draft or private post therefore
+	 * resolves to an ID but returns no results. Scheduled posts also do not
+	 * currently resolve via their permalink or preview URL.
+	 *
+	 * @param mixed[]         $query_args Key-value array of query var to query value.
+	 * @param WP_REST_Request $request    The request used.
+	 * @return mixed[] Filtered query arguments.
+	 */
+	public function add_url_search_support( $query_args, $request ) {
+		$search = $request->get_param( 'search' );
+
+		if ( empty( $search ) || ! is_string( $search ) ) {
+			return $query_args;
+		}
+
+		// Confirm this looks like an absolute URL without resolving its host.
+		$parsed_url = wp_parse_url( $search );
+
+		if (
+			! is_array( $parsed_url )
+			|| empty( $parsed_url['host'] )
+			|| empty( $parsed_url['scheme'] )
+			|| ! in_array( $parsed_url['scheme'], [ 'http', 'https' ], true )
+		) {
+			return $query_args;
+		}
+
+		$resolved = function_exists( 'wpcom_vip_url_to_postid' )
+			? wpcom_vip_url_to_postid( $search )
+			: url_to_postid( $search ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.url_to_postid_url_to_postid
+
+		$post_id = is_numeric( $resolved ) ? (int) $resolved : 0;
+
+		/**
+		 * Filters the post ID resolved from a URL pasted into the post search box.
+		 *
+		 * @param int    $post_id The resolved post ID, or 0 if none was found.
+		 * @param string $search  The searched URL.
+		 */
+		$post_id = (int) apply_filters( 'wp_curate_search_url_to_post_id', $post_id, $search );
+
+		if ( empty( $post_id ) ) {
+			return $query_args;
+		}
+
+		unset( $query_args['s'] );
+		$query_args['post__in'] = [ $post_id ];
 
 		return $query_args;
 	}
