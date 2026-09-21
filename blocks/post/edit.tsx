@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import classnames from 'classnames';
 import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
 
@@ -142,6 +142,8 @@ export default function Edit({
     }
   }
 
+  const blockRef = useRef<HTMLElement>(null);
+
   const [filtered, setFiltered] = useState(true);
 
   let selected = null;
@@ -187,6 +189,9 @@ export default function Edit({
   ), [clientId]);
 
   const toggleMove = () => {
+    const canvasDoc = blockRef.current?.ownerDocument ?? document;
+    const canvasWindow = canvasDoc.defaultView ?? window;
+
     const newData = moveData.postId ? {} : { postId, clientId };
 
     queryBlocks.forEach((blockId: string) => {
@@ -218,7 +223,7 @@ export default function Edit({
       if (!targetElement.classList.contains('wp-curate-post-block')
         && !targetElement.classList.contains('components-button')
       ) {
-        window.removeEventListener('click', clickHandler);
+        canvasWindow.removeEventListener('click', clickHandler);
         cancelMove();
       } else if (targetElement.classList.contains('wp-block-wp-curate-post')) {
         e.preventDefault();
@@ -256,18 +261,18 @@ export default function Edit({
           });
         }
         cancelMove();
-        window.removeEventListener('click', clickHandler);
+        canvasWindow.removeEventListener('click', clickHandler);
         setTimeout(() => {
           // @ts-ignore - scrollIntoViewIfNeeded has ok browser support
           // and works better than scrollIntoView.
-          document.querySelectorAll(`.post-${newData.postId}`)[0]?.scrollIntoViewIfNeeded({ behavior: 'smooth', block: 'start' });
+          canvasDoc.querySelectorAll(`.post-${newData.postId}`)[0]?.scrollIntoViewIfNeeded({ behavior: 'smooth', block: 'start' });
         }, 500);
       }
     };
 
     if (newData.postId) {
       // @ts-ignore
-      window.addEventListener('click', clickHandler);
+      canvasWindow.addEventListener('click', clickHandler);
     }
   };
 
@@ -310,6 +315,7 @@ export default function Edit({
     <div
       {...useBlockProps(
         {
+          ref: blockRef,
           className: classnames(
             'wp-curate-post-block',
             { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
