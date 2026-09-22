@@ -1,4 +1,5 @@
 import { select, dispatch, subscribe } from '@wordpress/data';
+import { addAction } from '@wordpress/hooks';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import type { Block } from '../../types/block';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
@@ -294,4 +295,21 @@ export function mainDedupe() {
       }
     }, blockEditorStore);
   }
+}
+
+/*
+* Expose `mainDedupe` to code outside wp-curate's own bundles.
+*
+* The dedupe module is bundled into both Curatable Query and Subquery, and without
+* this flag, one `doAction` would run two independent uncoordinated copies.
+*/
+const dedupeGlobal = window as unknown as { wpCurateDedupeActionRegistered?: boolean };
+
+if (!dedupeGlobal.wpCurateDedupeActionRegistered) {
+  dedupeGlobal.wpCurateDedupeActionRegistered = true;
+
+  /**
+   * Action consumers fire to request a page-wide deduplication pass.
+   */
+  addAction('wp-curate.dedupe', 'wp-curate/main-dedupe', mainDedupe);
 }
