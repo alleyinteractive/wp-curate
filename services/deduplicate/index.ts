@@ -74,8 +74,9 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]): st
     }
     // For reusable blocks, resolve their inner blocks from the store.
     if (block.name === 'core/block') {
-      // @ts-expect-error Methods not fully typed.
-      const reusableInnerBlocks: Block[] = select(blockEditorStore).getBlocks(block.clientId);
+      const reusableInnerBlocks = (
+        select(blockEditorStore).getBlocks(block.clientId) as unknown as Block[]
+      );
       if (reusableInnerBlocks?.length) {
         unresolvedIds.push(...getQueryBlocks(reusableInnerBlocks, blockNames, out));
       } else {
@@ -124,15 +125,16 @@ export function mainDedupe() {
   redo = false;
   resetUsedIds();
 
-  // @ts-expect-error Methods not fully typed.
   const { getBlocksByName, getBlocks } = select(blockEditorStore);
 
   /**
    * There isn't support yet for deduplicating posts throughout an entire template.
    * If we're in template mode, narrow the scope to just the blocks in post content.
    */
-  const root: Block[] = getBlocksByName('core/post-content');
-  const blocks: Block[] = root.length === 1 ? getBlocks(root) : getBlocks();
+  const root = getBlocksByName('core/post-content');
+  const blocks = (
+    root.length === 1 ? getBlocks(root[0]) : getBlocks()
+  ) as unknown as Block[];
 
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
@@ -178,7 +180,8 @@ export function mainDedupe() {
 
     // New array to hold the pinned posts in the order they should be.
     const manualPostIdArray: Array<number | null> = posts.map(
-      (post) => validPosts.includes(post) ? post : null, // eslint-disable-line no-confusing-arrow
+      // eslint-disable-next-line no-confusing-arrow
+      (post) => (post !== null && validPosts.includes(post) ? post : null),
     );
 
     // Remove any pinned posts from the backfilled posts list.
@@ -284,7 +287,6 @@ export function mainDedupe() {
     patternSubscribeActive = true;
     const unsubscribe = subscribe(() => {
       const allResolved = unresolvedPatternIds.every(
-        // @ts-expect-error Methods not fully typed.
         (id) => (select(blockEditorStore).getBlocks(id) ?? []).length > 0,
       );
       if (allResolved) {

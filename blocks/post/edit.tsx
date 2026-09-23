@@ -3,7 +3,6 @@ import classnames from 'classnames';
 import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
 
 import {
-  // @ts-expect-error BlockContextProvider not available in types yet.
   BlockContextProvider,
   BlockControls,
   InnerBlocks,
@@ -100,14 +99,15 @@ export default function Edit({
   const templateBlockParents = select('core/block-editor').getBlockParentsByBlockName(clientId, 'core/post-template');
   const hasPostTemplateBlock = templateBlockParents.length > 0;
 
-  // @ts-ignore
-  const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {
+  const queryParent = (select('core/block-editor').getBlock(queryParentId) as unknown as Block | null) ?? {
     attributes: {
       posts: [],
       postTypes: [],
       terms: {} as Record<string, Term[]>,
       supportsPostTypes: [],
     },
+    clientId: '',
+    name: '',
   };
 
   const queryBlocks = select('core/block-editor').getBlocksByName('wp-curate/query');
@@ -249,7 +249,7 @@ export default function Edit({
           posts: newPosts,
         });
         // Remove the post from the source query block if it's not the same as the target block.
-        const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId, 'wp-curate/query')[0];
+        const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId ?? '', 'wp-curate/query')[0];
         if (parentId !== sourceParent) {
           const sourceOldPosts = select('core/block-editor').getBlockAttributes(sourceParent)?.posts;
           const sourceNewPosts = sourceOldPosts.map(
