@@ -1,5 +1,6 @@
 import { select, dispatch, subscribe } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
+import isShallowEqual from '@wordpress/is-shallow-equal';
 import type { Block } from '../../types/block';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
 
@@ -226,10 +227,21 @@ export function mainDedupe() {
     // Track all resolved post IDs to set as allPostIds context on the query block.
     const resolvedPostIds: Array<number | undefined> = [];
 
+    /*
+     * Each write below is skipped when its value is unchanged. The block editor compares
+     * attributes by identity, so rewriting an equal array or object still notifies
+     * subscribers and gives descendants a new context object, which re-runs any effect
+     * that depends on context or on the `setAttributes` derived from it.
+     */
     curateableBlocks.forEach((curateableBlock) => {
       if (curateableBlock.name === 'wp-curate/post') {
         const postId = allPostIds.shift() || 0;
         resolvedPostIds.push(postId);
+
+        if (curateableBlock.attributes?.postId === postId) {
+          return;
+        }
+
         // Update each post block with the correct post id.
         // @ts-ignore
         dispatch(blockEditorStore).updateBlockAttributes(
@@ -242,19 +254,26 @@ export function mainDedupe() {
         // Update the query block with the new query.
         const templateIds = allPostIds.splice(0, numberOfPosts - postBlockCount);
         resolvedPostIds.push(...templateIds);
+
+        const query = {
+          perPage: templateIds.length,
+          postType: postTypeString,
+          type: postTypeString,
+          include: templateIds.join(','),
+          orderby: 'include',
+          wp_curate_include_future: includeFuturePosts,
+        };
+
+        if (attributes.queryId === 0 && isShallowEqual(attributes.query, query)) {
+          return;
+        }
+
         // @ts-ignore
         dispatch(blockEditorStore).updateBlockAttributes(
           queryBlock.clientId,
           {
             // Set the query attribute to pass to the child blocks.
-            query: {
-              perPage: templateIds.length,
-              postType: postTypeString,
-              type: postTypeString,
-              include: templateIds.join(','),
-              orderby: 'include',
-              wp_curate_include_future: includeFuturePosts,
-            },
+            query,
             queryId: 0,
           },
         );
@@ -263,13 +282,18 @@ export function mainDedupe() {
 
     // Set allPostIds on the query block so descendants (e.g., wp-curate/subquery)
     // can determine post position via context without relying on query.include.
-    // @ts-ignore
-    dispatch(blockEditorStore).updateBlockAttributes(
-      queryBlock.clientId,
-      {
-        allPostIds: resolvedPostIds.filter(Boolean), // Filter out falsy values (0, undefined).
-      },
-    );
+    // Filter out falsy values (0, undefined).
+    const nextAllPostIds = resolvedPostIds.filter(Boolean);
+
+    if (!isShallowEqual(attributes.allPostIds, nextAllPostIds)) {
+      // @ts-ignore
+      dispatch(blockEditorStore).updateBlockAttributes(
+        queryBlock.clientId,
+        {
+          allPostIds: nextAllPostIds,
+        },
+      );
+    }
   });
 
   running = false;
