@@ -92,11 +92,10 @@ export default function Edit({
   }
 
   const thisBlock = useSelect(
-    // @ts-expect-error
     (innerSelect) => innerSelect(blockEditorStore).getBlocksByClientId(clientId)[0],
     [clientId],
-  );
-  const hasInnerBlocks = thisBlock ? thisBlock.innerBlocks.length > 0 : false;
+  ) as unknown as Block;
+  const hasInnerBlocks = thisBlock ? (thisBlock.innerBlocks?.length ?? 0) > 0 : false;
 
   const postBlocks: Block[] = [];
   recursivelyFindBlocksByName(thisBlock, ['wp-curate/post', 'core/post-template'], postBlocks);

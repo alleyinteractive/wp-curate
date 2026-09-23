@@ -4,7 +4,7 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
-Nothing yet.
+- Update `@wordpress/*` packages to the versions shipped with WordPress 6.9 and update `@types/wordpress__block-editor` to the latest version, fixing resulting type errors.
 
 ## 3.2.3 - 2026-07-02
 
