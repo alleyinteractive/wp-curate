@@ -349,11 +349,11 @@ final class Rest_Api implements Feature {
 	/**
 	 * Allow the REST post search query to accept a post's URL in place of a search term.
 	 *
-	 * The resolved post ID is passed through `post__in`, so the handler's own
-	 * `post_status => 'publish'` default (set before `rest_post_search_query`
-	 * runs) still applies. A URL for a draft or private post therefore
-	 * resolves to an ID but returns no results. Scheduled posts also do not
-	 * currently resolve via their permalink or preview URL.
+	 * The resolved post ID is passed through `post__in`, and `post_status` is
+	 * forced back to `publish` so a URL for a draft, private, or scheduled
+	 * post never leaks that post through search, even if `add_future_support()`
+	 * has already widened `post_status` for a logged-in user requesting
+	 * future posts. That flag is only meant to affect plain-text search.
 	 *
 	 * @param mixed[]         $query_args Key-value array of query var to query value.
 	 * @param WP_REST_Request $request    The request used.
@@ -397,7 +397,8 @@ final class Rest_Api implements Feature {
 		}
 
 		unset( $query_args['s'] );
-		$query_args['post__in'] = [ $post_id ];
+		$query_args['post__in']    = [ $post_id ];
+		$query_args['post_status'] = 'publish';
 
 		return $query_args;
 	}

@@ -58,9 +58,10 @@ class SearchByUrlTest extends TestCase {
 	}
 
 	/**
-	 * Test that a scheduled post's permalink does not currently resolve, even
-	 * for a logged-in user requesting future posts, since url_to_postid()'s
-	 * own internal query excludes the 'future' status outside wp-admin.
+	 * Test that a scheduled post's permalink does not leak that post through
+	 * search, even for a logged-in user requesting future posts. URL-based
+	 * search always forces `post_status` back to `publish`, regardless of
+	 * whether `add_future_support()` has already widened it.
 	 *
 	 * @see \Alley\WP\WP_Curate\Features\Rest_Api::add_url_search_support()
 	 */
