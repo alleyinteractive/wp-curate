@@ -8,6 +8,7 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
+use Alley\WP\WP_Curate\Plugin_Curated_Posts;
 use WP_REST_Request;
 
 /**
@@ -48,6 +49,11 @@ final class Rest_Api implements Feature {
 						'type'        => 'integer',
 						'description' => __( 'The ID of the post being edited, if any.', 'wp-curate' ),
 						'default'     => 0,
+					],
+					'backfill_days'   => [
+						'type'        => 'integer',
+						'description' => __( 'Limit backfill posts to those published within this many days. 0 means no limit.', 'wp-curate' ),
+						'default'     => Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS,
 					],
 				],
 			]
@@ -142,6 +148,12 @@ final class Rest_Api implements Feature {
 		}
 		if ( ! empty( $tax_query ) ) {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+		}
+
+		$backfill_days_raw = $request->get_param( 'backfill_days' ) ?? Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS;
+		$date_query        = Plugin_Curated_Posts::date_query_for_backfill( is_numeric( $backfill_days_raw ) ? (int) $backfill_days_raw : Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS );
+		if ( ! empty( $date_query ) ) {
+			$args['date_query'] = $date_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_date_query
 		}
 
 		/**

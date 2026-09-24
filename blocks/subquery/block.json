@@ -119,6 +119,10 @@
                 "type": "object"
             },
             "type": "array"
+        },
+        "backfillDays": {
+            "type": "integer",
+            "default": 30
         }
     }
 }
