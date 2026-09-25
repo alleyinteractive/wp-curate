@@ -138,7 +138,6 @@ export function mainDedupe() {
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
     wp_curate_unique_pinned_posts: wpCurateUniquePinnedPosts = false,
-    // @ts-ignore
   } = select('core/editor').getEditedPostAttribute('meta') || {};
 
   const queryBlocks: Block[] = [];
@@ -201,7 +200,6 @@ export function mainDedupe() {
       // If there is a pinned post, use it. Otherwise, use the next unused backfilled post.
       if (manualPostIdArray[index] !== null) {
         manualPost = manualPostIdArray[index];
-        // @ts-ignore
         markUsed(manualPost);
       } else {
         do {
@@ -243,7 +241,6 @@ export function mainDedupe() {
         }
 
         // Update each post block with the correct post id.
-        // @ts-ignore
         dispatch(blockEditorStore).updateBlockAttributes(
           curateableBlock.clientId,
           {
@@ -268,7 +265,6 @@ export function mainDedupe() {
           return;
         }
 
-        // @ts-ignore
         dispatch(blockEditorStore).updateBlockAttributes(
           queryBlock.clientId,
           {
@@ -286,7 +282,6 @@ export function mainDedupe() {
     const nextAllPostIds = resolvedPostIds.filter(Boolean);
 
     if (!isShallowEqual(attributes.allPostIds, nextAllPostIds)) {
-      // @ts-ignore
       dispatch(blockEditorStore).updateBlockAttributes(
         queryBlock.clientId,
         {
