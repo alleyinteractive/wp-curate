@@ -1,0 +1,43 @@
+{
+  "name": "alleyinteractive/traverse-reshape",
+  "description": "Safely break down arrays or objects, and put them back together in new shapes.",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Alley",
+      "email": "info@alley.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Alley\\": "src/Alley/"
+    },
+    "files": [
+      "src/Alley/reshape.php",
+      "src/Alley/traverse.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Alley\\": "tests/Alley/"
+    }
+  },
+  "config": {
+    "lock": false
+  },
+  "require": {
+    "php": "^8.0"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.8",
+    "phpunit/phpunit": "^9.5",
+    "squizlabs/php_codesniffer": "^3.6"
+  },
+  "scripts": {
+    "fixer": "php-cs-fixer -v fix --allow-risky=yes",
+    "phpcbf": "phpcbf",
+    "phpcs": "phpcs",
+    "phpunit": "phpunit"
+  }
+}
