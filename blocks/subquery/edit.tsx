@@ -220,6 +220,14 @@ export default function Edit({
       const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
 
       if (!postsToInclude) {
+        /*
+         * Nothing to validate, so return before deduplicating.
+         * `validPosts` has to be cleared or it keeps IDs that are no longer pinned.
+         */
+        if (validPosts.length > 0) {
+          setAttributes({ validPosts: [] });
+        }
+
         return;
       }
 
@@ -252,24 +260,33 @@ export default function Edit({
           })
           .filter((id) => id !== 0)
         : [];
+
       setAttributes({ validPosts: resultIds });
+
+      /*
+       * Re-run deduplication now that validation has resolved.
+       *
+       * `mainDedupe` drops any pin missing from `validPosts`, so the pass
+       * triggered by the pin itself always runs against stale data and fills
+       * the slot from backfill instead. This is the pass that applies the pin.
+       */
+      mainDedupe();
     };
 
     updateValidPosts();
-  }, [includeFuturePosts, isFirstPost, manualPosts, postTypeString, setAttributes]);
 
-  /**
-   * Check if deduplication is needed when validPosts are available.
-   */
-  useEffect(() => {
-    if (!isFirstPost) {
-      return;
-    }
-
-    if (validPosts.length > 0) {
-      mainDedupe();
-    }
-  }, [isFirstPost, validPosts.length]);
+    /*
+     * `validPosts` is deliberately not a dependency: it is only read to decide
+     * whether the clear above is needed, and including it would re-run this
+     * effect — and refetch — on every write.
+     */
+  }, [ // eslint-disable-line react-hooks/exhaustive-deps
+    includeFuturePosts,
+    isFirstPost,
+    manualPosts,
+    postTypeString,
+    setAttributes,
+  ]);
 
   /**
    * Normalize manualPosts to ensure it has the correct length and no undefined values.
