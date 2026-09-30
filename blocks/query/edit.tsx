@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
-import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
+import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
 import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
@@ -18,6 +18,7 @@ import type {
 import type { Block } from '../../types/block';
 
 import { mainDedupe } from '../../services/deduplicate';
+import { getBlockByClientId } from '../../services/blockEditorSelectors';
 import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
@@ -92,13 +93,15 @@ export default function Edit({
   }
 
   const thisBlock = useSelect(
-    (innerSelect) => innerSelect(blockEditorStore).getBlocksByClientId(clientId)[0],
+    (innerSelect) => getBlockByClientId(innerSelect, clientId),
     [clientId],
-  ) as unknown as Block;
+  );
   const hasInnerBlocks = thisBlock ? (thisBlock.innerBlocks?.length ?? 0) > 0 : false;
 
   const postBlocks: Block[] = [];
-  recursivelyFindBlocksByName(thisBlock, ['wp-curate/post', 'core/post-template'], postBlocks);
+  if (thisBlock) {
+    recursivelyFindBlocksByName(thisBlock, ['wp-curate/post', 'core/post-template'], postBlocks);
+  }
   const hasTemplateBlock = postBlocks.some((block) => block.name === 'core/post-template');
   const postBlockCount = postBlocks.filter((block) => block.name === 'wp-curate/post').length;
 

@@ -26,6 +26,7 @@ import NoRender from './norender';
 import SearchFilters from '../../components/SearchFilters';
 import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
 import { postTypeWithFuture } from '../../services/utils';
+import { getBlock } from '../../services/blockEditorSelectors';
 
 import type {
   Term,
@@ -99,7 +100,7 @@ export default function Edit({
   const templateBlockParents = select('core/block-editor').getBlockParentsByBlockName(clientId, 'core/post-template');
   const hasPostTemplateBlock = templateBlockParents.length > 0;
 
-  const queryParent = (select('core/block-editor').getBlock(queryParentId) as unknown as Block | null) ?? {
+  const queryParent = getBlock(queryParentId) ?? {
     attributes: {
       posts: [],
       postTypes: [],
@@ -237,7 +238,7 @@ export default function Edit({
 
         const targetIndex = Array.prototype.indexOf.call(visibleChildren, targetElement);
         const parentId = parent.dataset.block;
-        if (!parentId) {
+        if (!parentId || !newData.clientId) {
           return;
         }
 
@@ -249,7 +250,7 @@ export default function Edit({
           posts: newPosts,
         });
         // Remove the post from the source query block if it's not the same as the target block.
-        const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId ?? '', 'wp-curate/query')[0];
+        const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId, 'wp-curate/query')[0];
         if (parentId !== sourceParent) {
           const sourceOldPosts = select('core/block-editor').getBlockAttributes(sourceParent)?.posts;
           const sourceNewPosts = sourceOldPosts.map(

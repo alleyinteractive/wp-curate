@@ -4,6 +4,7 @@ import { store as blockEditorStore } from '@wordpress/block-editor';
 import isShallowEqual from '@wordpress/is-shallow-equal';
 import type { Block } from '../../types/block';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
+import { getBlocks } from '../blockEditorSelectors';
 
 interface Window {
   wpCurateQueryBlock: {
@@ -76,10 +77,8 @@ const getQueryBlocks = (blocks: Block[], blockNames: string[], out: Block[]): st
     }
     // For reusable blocks, resolve their inner blocks from the store.
     if (block.name === 'core/block') {
-      const reusableInnerBlocks = (
-        select(blockEditorStore).getBlocks(block.clientId) as unknown as Block[]
-      );
-      if (reusableInnerBlocks?.length) {
+      const reusableInnerBlocks = getBlocks(block.clientId);
+      if (reusableInnerBlocks.length) {
         unresolvedIds.push(...getQueryBlocks(reusableInnerBlocks, blockNames, out));
       } else {
         // Inner blocks not yet loaded; will re-run mainDedupe once they are.
@@ -127,16 +126,14 @@ export function mainDedupe() {
   redo = false;
   resetUsedIds();
 
-  const { getBlocksByName, getBlocks } = select(blockEditorStore);
+  const { getBlocksByName } = select(blockEditorStore);
 
   /**
    * There isn't support yet for deduplicating posts throughout an entire template.
    * If we're in template mode, narrow the scope to just the blocks in post content.
    */
   const root = getBlocksByName('core/post-content');
-  const blocks = (
-    root.length === 1 ? getBlocks(root[0]) : getBlocks()
-  ) as unknown as Block[];
+  const blocks = root.length === 1 ? getBlocks(root[0]) : getBlocks();
 
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
