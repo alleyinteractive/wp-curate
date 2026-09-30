@@ -3,7 +3,6 @@ import classnames from 'classnames';
 import type { WP_REST_API_Post as WpRestApiPost } from 'wp-types'; // eslint-disable-line camelcase
 
 import {
-  // @ts-expect-error BlockContextProvider not available in types yet.
   BlockContextProvider,
   BlockControls,
   InnerBlocks,
@@ -27,6 +26,7 @@ import NoRender from './norender';
 import SearchFilters from '../../components/SearchFilters';
 import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
 import { postTypeWithFuture } from '../../services/utils';
+import { getBlock } from '../../services/blockEditorSelectors';
 
 import type {
   Term,
@@ -100,14 +100,15 @@ export default function Edit({
   const templateBlockParents = select('core/block-editor').getBlockParentsByBlockName(clientId, 'core/post-template');
   const hasPostTemplateBlock = templateBlockParents.length > 0;
 
-  // @ts-ignore
-  const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {
+  const queryParent = getBlock(queryParentId) ?? {
     attributes: {
       posts: [],
       postTypes: [],
       terms: {} as Record<string, Term[]>,
       supportsPostTypes: [],
     },
+    clientId: '',
+    name: '',
   };
 
   const queryBlocks = select('core/block-editor').getBlocksByName('wp-curate/query');
@@ -237,7 +238,7 @@ export default function Edit({
 
         const targetIndex = Array.prototype.indexOf.call(visibleChildren, targetElement);
         const parentId = parent.dataset.block;
-        if (!parentId) {
+        if (!parentId || !newData.clientId) {
           return;
         }
 

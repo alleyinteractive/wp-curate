@@ -11,7 +11,7 @@ import {
 } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
-import type { BlockInstance } from 'wordpress__blocks';
+import type { Block as BlockInstance } from '@wordpress/blocks';
 import type { BlockPattern } from '../../blocks/query/types';
 
 /**

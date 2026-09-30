@@ -1,3 +1,5 @@
+import type { Term } from '../blocks/query/types';
+
 export interface Block {
   attributes: {
     allPostIds?: number[];
@@ -5,12 +7,14 @@ export interface Block {
     deduplication?: string;
     numberOfPosts?: number;
     postId?: number;
-    posts?: number[];
+    posts?: Array<number | null>;
     postTypes?: string[];
     query?: {
       include?: number[];
     }
     queryId?: number;
+    supportsPostTypes?: string[];
+    terms?: Record<string, Term[]>;
     validPosts?: number[];
   },
   clientId: string;
