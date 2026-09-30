@@ -31,6 +31,43 @@ class SearchByUrlTest extends TestCase {
 	}
 
 	/**
+	 * Test that an uppercase URL scheme is still recognized as a URL.
+	 */
+	public function test_it_accepts_uppercase_url_scheme(): void {
+		$post = static::factory()->post->create_and_get();
+
+		$url = preg_replace( '/^https?/i', 'HTTPS', get_permalink( $post ) );
+
+		$this->get_json( '/wp-json/wp/v2/search?' . http_build_query( [ 'search' => $url ] ) )
+			->assertOk()
+			->assertJsonCount( 1 )
+			->assertJsonPath( '0.id', $post->ID );
+	}
+
+	/**
+	 * Test that the `include` parameter still constrains URL search results.
+	 */
+	public function test_url_search_respects_include_constraint(): void {
+		$post  = static::factory()->post->create_and_get();
+		$other = static::factory()->post->create_and_get();
+
+		$this->get_json( '/wp-json/wp/v2/search?' . http_build_query( [
+			'search'  => get_permalink( $post ),
+			'include' => [ $other->ID ],
+		] ) )
+			->assertOk()
+			->assertJsonCount( 0 );
+
+		$this->get_json( '/wp-json/wp/v2/search?' . http_build_query( [
+			'search'  => get_permalink( $post ),
+			'include' => [ $post->ID, $other->ID ],
+		] ) )
+			->assertOk()
+			->assertJsonCount( 1 )
+			->assertJsonPath( '0.id', $post->ID );
+	}
+
+	/**
 	 * Test that a URL that doesn't resolve to a post falls back to a normal (empty) search.
 	 */
 	public function test_unresolvable_url_returns_no_results(): void {

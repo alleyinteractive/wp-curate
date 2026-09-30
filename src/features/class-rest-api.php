@@ -373,7 +373,7 @@ final class Rest_Api implements Feature {
 			! is_array( $parsed_url )
 			|| empty( $parsed_url['host'] )
 			|| empty( $parsed_url['scheme'] )
-			|| ! in_array( $parsed_url['scheme'], [ 'http', 'https' ], true )
+			|| ! in_array( strtolower( $parsed_url['scheme'] ), [ 'http', 'https' ], true )
 		) {
 			return $query_args;
 		}
@@ -397,7 +397,17 @@ final class Rest_Api implements Feature {
 		}
 
 		unset( $query_args['s'] );
-		$query_args['post__in']    = [ $post_id ];
+
+		// Respect an existing `include` constraint: only keep the resolved post if it was already allowed.
+		if ( ! empty( $query_args['post__in'] ) && is_array( $query_args['post__in'] ) ) {
+			$allowed_ids = array_map( 'intval', $query_args['post__in'] );
+
+			// An empty `post__in` is ignored by WP_Query, so use 0 to force no results.
+			$query_args['post__in'] = in_array( $post_id, $allowed_ids, true ) ? [ $post_id ] : [ 0 ];
+		} else {
+			$query_args['post__in'] = [ $post_id ];
+		}
+
 		$query_args['post_status'] = 'publish';
 
 		return $query_args;
