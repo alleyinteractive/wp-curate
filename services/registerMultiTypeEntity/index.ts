@@ -1,3 +1,4 @@
+import { store as coreStore } from '@wordpress/core-data';
 import { dispatch, select } from '@wordpress/data';
 
 /**
@@ -10,6 +11,11 @@ import { dispatch, select } from '@wordpress/data';
  * entity backed by `/wp/v2/posts`. Records keep their own `type`, so each item still
  * renders with the correct post type.
  *
+ * That filter only checks `post_type_exists()`, so it doesn't matter whether a type has
+ * `show_in_rest` or a custom `rest_base`. It does require a logged-in user and
+ * `context=edit`, which is why the entity sets `context: 'edit'`, and unknown slugs are
+ * silently dropped.
+ *
  * @param postTypeString Comma-joined post type slugs.
  */
 const registerMultiTypeEntity = (postTypeString: string): void => {
@@ -17,12 +23,13 @@ const registerMultiTypeEntity = (postTypeString: string): void => {
     return;
   }
 
-  if (select('core').getEntityConfig('postType', postTypeString)) {
+  if (select(coreStore).getEntityConfig('postType', postTypeString)) {
     return;
   }
 
-  // @ts-expect-error The core store actions aren't fully typed.
-  dispatch('core').addEntities([
+  const coreDispatch = dispatch(coreStore);
+
+  coreDispatch.addEntities([
     {
       kind: 'postType',
       name: postTypeString,
@@ -32,6 +39,10 @@ const registerMultiTypeEntity = (postTypeString: string): void => {
       supportsPagination: true,
     },
   ]);
+
+  // If `core/post-template` asked for this entity before it existed, core-data resolved that
+  // request as a no-op and won't retry it on its own. Invalidating makes it run again.
+  coreDispatch.invalidateResolutionForStoreSelector('getEntityRecords');
 };
 
 export default registerMultiTypeEntity;
