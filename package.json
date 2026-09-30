@@ -57,6 +57,7 @@
     "@wordpress/i18n": "^6.6.1",
     "@wordpress/hooks": "^4.33.1",
     "@wordpress/icons": "^11.0.1",
+    "@wordpress/is-shallow-equal": "^5.56.0",
     "@wordpress/notices": "^5.33.1",
     "@wordpress/plugins": "^7.33.5",
     "@wordpress/url": "^4.33.1",

@@ -30,6 +30,16 @@ WP Curate Query blocks can be set to deduplicate posts across multiple blocks on
 
 WP Curate Query blocks use the same Post Template block that the main Query Loop block uses, allowing for a wide range of layout options. This includes the ability to show or hide featured images, authors, excerpts, dates, and more.
 
+#### The `wp-curate.dedupe` hook
+
+Requests a page-wide deduplication pass over every Query and Subquery block in the post.
+
+```js
+import { doAction } from '@wordpress/hooks';
+
+doAction( 'wp-curate.dedupe' );
+```
+
 ### Parse.ly Support
 
 WP Curate supports integration with Parse.ly for showing posts based on a Parse.ly popular posts query. This allows you to show popular posts on your homepage or landing page without having to manually curate them. As data is updated in Parse.ly, the posts displayed in the WP Curate Query block will automatically update.
