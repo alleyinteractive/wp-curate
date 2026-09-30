@@ -400,7 +400,12 @@ final class Rest_Api implements Feature {
 
 		// Respect an existing `include` constraint: only keep the resolved post if it was already allowed.
 		if ( ! empty( $query_args['post__in'] ) && is_array( $query_args['post__in'] ) ) {
-			$allowed_ids = array_map( 'intval', $query_args['post__in'] );
+			$allowed_ids = [];
+			foreach ( $query_args['post__in'] as $allowed_id ) {
+				if ( is_numeric( $allowed_id ) ) {
+					$allowed_ids[] = (int) $allowed_id;
+				}
+			}
 
 			// An empty `post__in` is ignored by WP_Query, so use 0 to force no results.
 			$query_args['post__in'] = in_array( $post_id, $allowed_ids, true ) ? [ $post_id ] : [ 0 ];
