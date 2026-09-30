@@ -22,6 +22,7 @@ import buildPostsApiPath from '../../services/buildPostsApiPath';
 import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
+import registerMultiTypeEntity from '../../services/registerMultiTypeEntity';
 
 import QueryControls from '../../components/QueryControls';
 import QueryPlaceholder from '../../components/QueryPlaceholder';
@@ -175,6 +176,8 @@ export default function Edit({
 
   // Set a default query attribute. This allows previews to work.
   useEffect(() => {
+    registerMultiTypeEntity(postTypeString);
+
     if (!attributes.query) {
       setAttributes({
         query: {
