@@ -213,8 +213,10 @@ export default function Edit({
    */
   useEffect(() => {
     if (!isFirstPost) {
-      return;
+      return undefined;
     }
+
+    let superseded = false;
 
     const updateValidPosts = async () => {
       const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
@@ -247,15 +249,27 @@ export default function Edit({
         ),
       });
 
+      /*
+       * A newer run of this effect started while this request was in flight, so
+       * its response describes pins that are no longer set. Writing it would
+       * revert `validPosts` and make `mainDedupe` drop the current pin.
+       */
+      if (superseded) {
+        return;
+      }
+
       const resultIds = Array.isArray(result)
         ? result
           .map((post: unknown) => {
-            if (post
+            if (
+              post
               && typeof post === 'object'
               && 'id' in post
-              && typeof post.id === 'number') {
+              && typeof post.id === 'number'
+            ) {
               return post.id;
             }
+
             return 0;
           })
           .filter((id) => id !== 0)
@@ -274,6 +288,10 @@ export default function Edit({
     };
 
     updateValidPosts();
+
+    return () => {
+      superseded = true;
+    };
 
     /*
      * `validPosts` is deliberately not a dependency: it is only read to decide
