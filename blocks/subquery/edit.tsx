@@ -7,6 +7,7 @@ import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
+import isShallowEqual from '@wordpress/is-shallow-equal';
 
 import { v4 as uuid } from 'uuid'; // eslint-disable-line import/no-unresolved
 
@@ -275,6 +276,16 @@ export default function Edit({
           .filter((id) => id !== 0)
         : [];
 
+      /*
+       * Skip the write, and the dedupe pass it exists to feed, when validation
+       * returns what is already stored. `resultIds` is a fresh array every time
+       * and the block editor compares attributes by identity, so an unguarded
+       * write re-enters this effect on every pass and never settles.
+       */
+      if (isShallowEqual(validPosts, resultIds)) {
+        return;
+      }
+
       setAttributes({ validPosts: resultIds });
 
       /*
@@ -294,9 +305,10 @@ export default function Edit({
     };
 
     /*
-     * `validPosts` is deliberately not a dependency: it is only read to decide
-     * whether the clear above is needed, and including it would re-run this
-     * effect — and refetch — on every write.
+     * `validPosts` is deliberately not a dependency: it is only read to compare
+     * against the validation result, and including it would re-run this effect
+     * — and refetch — on every write. The closure can only lag the store, so
+     * the comparison errs toward writing rather than skipping.
      */
   }, [ // eslint-disable-line react-hooks/exhaustive-deps
     includeFuturePosts,
