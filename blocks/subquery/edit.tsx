@@ -251,9 +251,8 @@ export default function Edit({
       });
 
       /*
-       * A newer run of this effect started while this request was in flight, so
-       * its response describes pins that are no longer set. Writing it would
-       * revert `validPosts` and make `mainDedupe` drop the current pin.
+       * A newer run started while this request was in flight; its response is stale.
+       * Writing it would drop the current pin.
        */
       if (superseded) {
         return;
@@ -277,10 +276,9 @@ export default function Edit({
         : [];
 
       /*
-       * Skip the write, and the dedupe pass it exists to feed, when validation
-       * returns what is already stored. `resultIds` is a fresh array every time
-       * and the block editor compares attributes by identity, so an unguarded
-       * write re-enters this effect on every pass and never settles.
+       * Skip setting attributes and the dedupe pass when nothing changed.
+       * `resultIds` is always a fresh array, so an unguarded write counts as a
+       * change and causes redundant writes and re-fetches.
        */
       if (isShallowEqual(validPosts, resultIds)) {
         return;
