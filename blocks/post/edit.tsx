@@ -110,7 +110,7 @@ export default function Edit({
     },
   };
 
-  const queryBlocks = select('core/block-editor').getBlocksByName('wp-curate/query');
+  const queryBlocks = select('core/block-editor').getBlocksByName('wp-curate/query', 'wp-curate/subquery');
   const {
     attributes: {
       posts = [],
@@ -228,12 +228,18 @@ export default function Edit({
       } else if (targetElement.classList.contains('wp-block-wp-curate-post')) {
         e.preventDefault();
         // Get the parent wp-query block.
-        const parent = targetElement.closest('[data-type="wp-curate/query"]') as HTMLElement;
+        const parent = targetElement.closest('[data-type="wp-curate/query"], [data-type="wp-curate/subquery"]') as HTMLElement;
         if (!parent) {
           return;
         }
+        // find all visible wp-curate-post-block children of the parent that are not inside a .wp-block-wp-curate-subquery block
         const parentChildren = parent.querySelectorAll('.wp-curate-post-block');
-        const visibleChildren = [...parentChildren].filter((el) => el.parentElement?.style?.display !== 'none');
+        const visibleChildren = [...parentChildren].filter((el) => {
+          if (el.closest('.wp-block-wp-curate-subquery')) {
+            return false;
+          }
+          return el.parentElement?.style?.display !== 'none';
+        });
 
         const targetIndex = Array.prototype.indexOf.call(visibleChildren, targetElement);
         const parentId = parent.dataset.block;
@@ -249,7 +255,7 @@ export default function Edit({
           posts: newPosts,
         });
         // Remove the post from the source query block if it's not the same as the target block.
-        const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId, 'wp-curate/query')[0];
+        const sourceParent = select('core/block-editor').getBlockParentsByBlockName(newData.clientId, ['wp-curate/query', 'wp-curate/subquery']).pop();
         if (parentId !== sourceParent) {
           const sourceOldPosts = select('core/block-editor').getBlockAttributes(sourceParent)?.posts;
           const sourceNewPosts = sourceOldPosts.map(
@@ -320,7 +326,7 @@ export default function Edit({
             'wp-curate-post-block',
             { 'wp-curate-post-block--selected': isParentOfSelectedBlock },
             { 'wp-curate-post-block--backfill': !selected || postDeleted },
-            { 'curate-droppable': parentName === 'wp-curate/query' && moveData.postId && moveData.postId !== postId },
+            { 'curate-droppable': (parentName === 'wp-curate/query' || parentName === 'wp-curate/subquery') && moveData.postId && moveData.postId !== postId },
             { 'wp-curate-error': postDeleted },
           ),
         },
