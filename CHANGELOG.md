@@ -4,7 +4,7 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
-Nothing yet.
+- Bug Fix: Restore trending content queries with Parse.ly 3.17 and later while retaining support for older plugin versions.
 
 ## 3.2.3 - 2026-07-02
 

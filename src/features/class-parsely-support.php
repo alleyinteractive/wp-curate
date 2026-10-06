@@ -68,11 +68,11 @@ final class Parsely_Support implements Feature {
 		if ( ! $parsely->api_secret_is_set() ) {
 			return [];
 		}
-		if ( ! class_exists( '\Parsely\RemoteAPI\Analytics_Posts_API' ) ) {
+		if ( ! method_exists( $parsely, 'get_content_api' ) && ! class_exists( '\Parsely\RemoteAPI\Analytics_Posts_API' ) ) {
 			return [];
 		}
 
-		$parsely_options = $GLOBALS['parsely']->get_options();
+		$parsely_options = $parsely->get_options();
 		/**
 		 * Filter the period start for the Parsely API.
 		 *
@@ -111,8 +111,15 @@ final class Parsely_Support implements Feature {
 		$cache_key = 'parsely_trending_posts_' . md5( wp_json_encode( $parsely_args ) ); // @phpstan-ignore-line - wp_Json_encode not likely to return false.
 		$ids       = wp_cache_get( $cache_key );
 		if ( false === $ids || ! is_array( $ids ) ) {
-			$api   = new Analytics_Posts_API( $GLOBALS['parsely'] );
-			$posts = $api->get_posts_analytics( $parsely_args );
+			if ( method_exists( $parsely, 'get_content_api' ) ) {
+				$parsely_version  = defined( 'Parsely\PARSELY_VERSION' ) ? (string) constant( 'Parsely\PARSELY_VERSION' ) : '3.17.0';
+				$content_api_args = $this->get_content_api_args( $parsely_args, $parsely_version );
+				$posts            = $parsely->get_content_api()->get_posts( $content_api_args );
+			} else {
+				$api   = new Analytics_Posts_API( $parsely );
+				$posts = $api->get_posts_analytics( $parsely_args );
+			}
+
 			if ( \is_wp_error( $posts ) || ! \is_array( $posts ) ) {
 				return [];
 			}
@@ -154,6 +161,42 @@ final class Parsely_Support implements Feature {
 		$ids = apply_filters( 'wp_curate_parsely_trending_posts', $ids, $parsely_args, $args );
 
 		return $ids;
+	}
+
+	/**
+	 * Convert legacy Analytics API arguments for the Content API service.
+	 *
+	 * Parse.ly 3.17 replaced Analytics_Posts_API with the Content API service.
+	 * Versions 3.17 through 3.20.3 require tag and section filters to be arrays,
+	 * while version 3.20.4 changed section back to a scalar value.
+	 *
+	 * @param array<string, mixed> $args The legacy API arguments.
+	 * @param string               $parsely_version The installed Parse.ly version.
+	 * @return array<string, mixed> The Content API arguments.
+	 */
+	private function get_content_api_args( array $args, string $parsely_version ): array {
+		if ( isset( $args['tag'] ) ) {
+			$args['tag'] = $this->get_api_argument_values( $args['tag'] );
+		}
+
+		if ( isset( $args['section'] ) && version_compare( $parsely_version, '3.20.4', '<' ) ) {
+			$args['section'] = $this->get_api_argument_values( $args['section'] );
+		}
+
+		return $args;
+	}
+
+	/**
+	 * Convert a comma-separated API argument into individual values.
+	 *
+	 * @param mixed $value The API argument value.
+	 * @return array<string> The individual non-empty values.
+	 */
+	private function get_api_argument_values( mixed $value ): array {
+		$values = is_array( $value ) ? $value : explode( ',', (string) $value );
+		$values = array_map( static fn ( mixed $item ): string => trim( (string) $item ), $values );
+
+		return array_values( array_filter( $values, static fn ( string $item ): bool => '' !== $item ) );
 	}
 
 	/**
