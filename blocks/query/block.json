@@ -128,6 +128,10 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "backfillDays": {
+      "type": "integer",
+      "default": 30
     }
   },
   "example": {

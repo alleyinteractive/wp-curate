@@ -5,6 +5,7 @@
  * @package wp-curate
  */
 
+use Alley\WP\WP_Curate\Plugin_Curated_Posts;
 use Alley\WP\WP_Curate\Supported_Post_Types;
 
 /**
@@ -55,12 +56,14 @@ function wp_curate_query_block_init(): void {
 	 *
 	 * @param bool $use_parsely Whether to use Parsely.
 	 */
-	$parsely_available = apply_filters( 'wp_curate_use_parsely', false );
+	$parsely_available       = apply_filters( 'wp_curate_use_parsely', false );
+	$default_backfill_filter = apply_filters( 'wp_curate_backfill_days', Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS );
+	$default_backfill_days   = is_numeric( $default_backfill_filter ) ? (int) $default_backfill_filter : Plugin_Curated_Posts::DEFAULT_BACKFILL_DAYS;
 	wp_localize_script(
 		'wp-curate-query-editor-script',
 		'wpCurateQueryBlock',
 		[
-			'allowedPostTypes'   => array_filter(
+			'allowedPostTypes'    => array_filter(
 				array_map(
 					function ( $slug ) {
 						$post_type_object = get_post_type_object( $slug );
@@ -77,7 +80,7 @@ function wp_curate_query_block_init(): void {
 					$allowed_post_types
 				)
 			),
-			'allowedTaxonomies'  => array_filter(
+			'allowedTaxonomies'   => array_filter(
 				array_map(
 					function ( $slug ) {
 						$taxonomy = get_taxonomy( $slug );
@@ -95,8 +98,8 @@ function wp_curate_query_block_init(): void {
 					$allowed_taxonomies,
 				),
 			),
-			'parselyAvailable'   => $parsely_available ? 'true' : 'false',
-			'maxPosts'           => $max_posts,
+			'parselyAvailable'    => $parsely_available ? 'true' : 'false',
+			'maxPosts'            => $max_posts,
 			/**
 			 * Filters the order by options shown in the sidebar of the query block.
 			 *
@@ -104,7 +107,7 @@ function wp_curate_query_block_init(): void {
 			 *
 			 * @since 2.6.4
 			 */
-			'rawOrderByOptions'  => apply_filters( 'wp_curate_order_by_options', [
+			'rawOrderByOptions'   => apply_filters( 'wp_curate_order_by_options', [
 				'date'  => __( 'Date', 'wp-curate' ),
 				'title' => __( 'Title', 'wp-curate' ),
 			] ),
@@ -115,7 +118,7 @@ function wp_curate_query_block_init(): void {
 			 *
 			 * @since 2.6.4
 			 */
-			'orderByMetaKeys'    => apply_filters( 'wp_curate_order_by_meta_keys', [] ),
+			'orderByMetaKeys'     => apply_filters( 'wp_curate_order_by_meta_keys', [] ),
 			/**
 			 * Filters whether to allow scheduled posts to be selected in the post picker.
 			 *
@@ -123,7 +126,13 @@ function wp_curate_query_block_init(): void {
 			 *
 			 * @param bool $include_future_posts Whether to include scheduled posts.
 			 */
-			'includeFuturePosts' => apply_filters( 'wp_curate_include_future_posts', false ),
+			'includeFuturePosts'  => apply_filters( 'wp_curate_include_future_posts', false ),
+			/**
+			 * The site-wide default for the backfill date limit, in days. 0 means no limit.
+			 * Derived from the wp_curate_backfill_days filter so the editor reflects any
+			 * server-side override.
+			 */
+			'defaultBackfillDays' => $default_backfill_days,
 		],
 	);
 }
