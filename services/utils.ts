@@ -15,8 +15,23 @@ import {
 } from '@wordpress/blocks';
 import { addQueryArgs } from '@wordpress/url';
 
-import type { Block, BlockVariation } from '@wordpress/blocks';
+import type { Block, BlockInstance, BlockVariation } from '@wordpress/blocks';
 import type { BlockPattern } from '../blocks/query/types';
+
+/**
+ * Block store selectors missing from @types/wordpress__blocks.
+ */
+export interface BlocksStoreSelectors {
+  getBlockType: (blockName: string) => Block | undefined;
+  getActiveBlockVariation: (
+    blockName: string,
+    attributes: Record<string, any>,
+  ) => BlockVariation | undefined;
+  getBlockVariations: (
+    blockName: string,
+    scope?: string,
+  ) => BlockVariation[] | undefined;
+}
 
 /**
  * Clones a pattern's blocks.
@@ -32,13 +47,13 @@ import type { BlockPattern } from '../blocks/query/types';
  *                                                the Query clients from these blocks.
  */
 export const getTransformedBlocksFromPattern = (
-  blocks: Block[],
+  blocks: BlockInstance[],
   queryBlockAttributes: Record<string, any>,
 ) => {
   const {
     namespace,
   } = queryBlockAttributes;
-  const clonedBlocks = blocks.map((block: Block) => cloneBlock(block));
+  const clonedBlocks = blocks.map((block: BlockInstance) => cloneBlock(block));
   const queryClientIds = [];
   const blocksQueue = [...clonedBlocks];
   while (blocksQueue.length > 0) {
@@ -49,7 +64,7 @@ export const getTransformedBlocksFromPattern = (
       }
       queryClientIds.push(block.clientId);
     }
-    block?.innerBlocks?.forEach((innerBlock: Block) => {
+    block?.innerBlocks?.forEach((innerBlock: BlockInstance) => {
       blocksQueue.push(innerBlock);
     });
   }
@@ -73,8 +88,8 @@ export const getTransformedBlocksFromPattern = (
 export function useBlockNameForPatterns(clientId: string, attributes: Record<string, any>) {
   return useSelect(
     (select) => {
-      const activeVariationName = select(
-        blocksStore,
+      const activeVariationName = (
+        select(blocksStore) as unknown as BlocksStoreSelectors
       ).getActiveBlockVariation('wp-curate/query', attributes)?.name;
 
       if (!activeVariationName) {
@@ -125,7 +140,10 @@ export function useBlockNameForPatterns(clientId: string, attributes: Record<str
 export function useScopedBlockVariations(attributes: Record<string, any>) {
   const { activeVariationName, blockVariations } = useSelect(
     (select) => {
-      const { getActiveBlockVariation, getBlockVariations } = select(blocksStore);
+      const {
+        getActiveBlockVariation,
+        getBlockVariations,
+      } = select(blocksStore) as unknown as BlocksStoreSelectors;
       return {
         activeVariationName: getActiveBlockVariation(
           'wp-curate/query',
