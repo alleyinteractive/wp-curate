@@ -50,7 +50,7 @@ For an up-to-date gallery of screenshots of the plugin in action, see [the scree
 
 ## Requirements
 
-WP Curate requires PHP 8.1+. It is developed for use on WordPress 6.4+.
+WP Curate requires PHP 8.2+. It is developed for use on WordPress 6.9+.
 
 ## Changelog
 

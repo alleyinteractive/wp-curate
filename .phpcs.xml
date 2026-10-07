@@ -26,7 +26,7 @@
   <arg name="severity" value="1" />
 
   <!-- The version set here matches the minimum version tested in CI. -->
-  <config name="minimum_supported_wp_version" value="6.3" />
+  <config name="minimum_supported_wp_version" value="6.9" />
 
   <!-- Check for cross-version support for PHP 8.1 and higher. -->
 	<config name="testVersion" value="8.1-"/>
