@@ -93,7 +93,22 @@
     "wp-types": "^4.68.3"
   },
   "overrides": {
+    "@wordpress/block-library": {
+      "uuid": "$uuid"
+    },
+    "@wordpress/blocks": {
+      "uuid": "$uuid"
+    },
     "@wordpress/components": {
+      "uuid": "$uuid"
+    },
+    "@wordpress/core-data": {
+      "uuid": "$uuid"
+    },
+    "@wordpress/editor": {
+      "uuid": "$uuid"
+    },
+    "@wordpress/upload-media": {
       "uuid": "$uuid"
     }
   }
