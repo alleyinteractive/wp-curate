@@ -4,7 +4,7 @@ import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
-import { useSelect, select } from '@wordpress/data';
+import { useDispatch, useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -90,6 +90,30 @@ export default function Edit({
   if (!postTypes.length) {
     setAttributes({ postTypes: allowedPostTypes.map((type) => type.slug) });
   }
+
+  const {
+    __unstableMarkNextChangeAsNotPersistent: markNextChangeAsNotPersistent,
+  } = useDispatch(blockEditorStore);
+  const patternName = attributes.metadata?.patternName;
+
+  /*
+   * Since WordPress 7.0, a block with `metadata.patternName` is treated as a
+   * content-only section: non-content inner blocks (wp-curate/post,
+   * core/post-template) become disabled and can't be clicked. Curated layouts
+   * need to stay fully editable, so drop the pattern name. The change is
+   * marked non-persistent so loading a post doesn't flag it as dirty.
+   */
+  useEffect(() => {
+    if (!patternName) {
+      return;
+    }
+
+    const metadata = { ...attributes.metadata };
+    delete metadata.patternName;
+
+    markNextChangeAsNotPersistent();
+    setAttributes({ metadata: Object.keys(metadata).length ? metadata : undefined });
+  }, [patternName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const thisBlock = useSelect(
     // @ts-expect-error
