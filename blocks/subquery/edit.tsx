@@ -7,7 +7,6 @@ import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
-import isShallowEqual from '@wordpress/is-shallow-equal';
 
 import { v4 as uuid } from 'uuid'; // eslint-disable-line import/no-unresolved
 
@@ -214,10 +213,8 @@ export default function Edit({
    */
   useEffect(() => {
     if (!isFirstPost) {
-      return undefined;
+      return;
     }
-
-    let superseded = false;
 
     const updateValidPosts = async () => {
       const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
@@ -250,39 +247,19 @@ export default function Edit({
         ),
       });
 
-      /*
-       * A newer run started while this request was in flight; its response is stale.
-       * Writing it would drop the current pin.
-       */
-      if (superseded) {
-        return;
-      }
-
       const resultIds = Array.isArray(result)
         ? result
           .map((post: unknown) => {
-            if (
-              post
+            if (post
               && typeof post === 'object'
               && 'id' in post
-              && typeof post.id === 'number'
-            ) {
+              && typeof post.id === 'number') {
               return post.id;
             }
-
             return 0;
           })
           .filter((id) => id !== 0)
         : [];
-
-      /*
-       * Skip setting attributes and the dedupe pass when nothing changed.
-       * `resultIds` is always a fresh array, so an unguarded write counts as a
-       * change and causes redundant writes and re-fetches.
-       */
-      if (isShallowEqual(validPosts, resultIds)) {
-        return;
-      }
 
       setAttributes({ validPosts: resultIds });
 
@@ -298,15 +275,10 @@ export default function Edit({
 
     updateValidPosts();
 
-    return () => {
-      superseded = true;
-    };
-
     /*
-     * `validPosts` is deliberately not a dependency: it is only read to compare
-     * against the validation result, and including it would re-run this effect
-     * — and refetch — on every write. The closure can only lag the store, so
-     * the comparison errs toward writing rather than skipping.
+     * `validPosts` is deliberately not a dependency: it is only read to decide
+     * whether the clear above is needed, and including it would re-run this
+     * effect — and refetch — on every write.
      */
   }, [ // eslint-disable-line react-hooks/exhaustive-deps
     includeFuturePosts,
