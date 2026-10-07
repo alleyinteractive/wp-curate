@@ -38,7 +38,6 @@
   },
   "dependencies": {
     "@alleyinteractive/block-editor-tools": "^0.17.0",
-    "@types/jest": "^30.0.0",
     "@uidotdev/usehooks": "^2.4.1",
     "@wordpress/api-fetch": "^7.33.1",
     "@wordpress/block-editor": "^15.6.9",
@@ -65,7 +64,6 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "remove-accents": "^0.5.0",
-    "save-dev": "^0.0.1-security",
     "swr": "^2.3.7",
     "uuid": "^13.0.0"
   },
@@ -75,6 +73,7 @@
     "@alleyinteractive/stylelint-config": "^0.1.0",
     "@alleyinteractive/tsconfig": "^0.3.0",
     "@babel/preset-env": "^7.28.5",
+    "@types/jest": "^30.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@types/wordpress__block-editor": "^11.5.17",
