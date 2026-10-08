@@ -1,9 +1,37 @@
 import { __ } from '@wordpress/i18n';
-import { InspectorControls, PlainText, useBlockProps } from '@wordpress/block-editor';
+import {
+  InspectorControls,
+  PlainText,
+  store as blockEditorStore,
+  useBlockProps,
+} from '@wordpress/block-editor';
 import { useEntityProp } from '@wordpress/core-data';
-import { useEffect } from 'react';
+import {
+  useEffect,
+  type ComponentProps,
+  type ComponentType,
+} from 'react';
 import { PanelBody, SelectControl } from '@wordpress/components';
 import { dispatch, select } from '@wordpress/data';
+
+type HeadingTag = 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+
+// PlainText passes `tagName` and `__experimentalVersion` through, but the types omit them.
+const PlainTextField = PlainText as ComponentType<ComponentProps<typeof PlainText> & {
+  tagName?: HeadingTag;
+  __experimentalVersion?: number;
+}>;
+
+// Options for SelectControl.
+const headingLevelOptions = [
+  { label: 'p', value: '0' },
+  { label: 'h1', value: '1' },
+  { label: 'h2', value: '2' },
+  { label: 'h3', value: '3' },
+  { label: 'h4', value: '4' },
+  { label: 'h5', value: '5' },
+  { label: 'h6', value: '6' },
+];
 
 interface PostTitleEditProps {
   clientId?: string;
@@ -42,7 +70,6 @@ export default function Edit({
   context,
   setAttributes,
 }: PostTitleEditProps) {
-  // @ts-ignore
   const queryParentIds = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
   const queryParentId = queryParentIds.length ? queryParentIds[queryParentIds.length - 1] : null;
 
@@ -58,7 +85,7 @@ export default function Edit({
   const [rawTitle = '', , fullTitle] = useEntityProp('postType', postType, 'title', postId?.toString());
   const isPinned = pinnedPosts.includes(postId);
   const currentCustomPostTitle = customPostTitles.find((item) => item?.postId === postId);
-  const TagName = !supportsLevel || level === 0 ? 'p' : `h${level}`;
+  const TagName = (!supportsLevel || level === 0 ? 'p' : `h${level}`) as HeadingTag;
   const blockProps = useBlockProps();
 
   useEffect(() => {
@@ -69,8 +96,7 @@ export default function Edit({
       customPostTitles.length
       && (currentCustomPostTitle && !isPinned)
     ) {
-      // @ts-ignore
-      dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+      dispatch(blockEditorStore).updateBlockAttributes(queryParentId, {
         customPostTitles: customPostTitles.filter((item) => item?.postId !== postId),
       });
     }
@@ -88,8 +114,7 @@ export default function Edit({
     if (
       (currentCustomPostTitle?.postId && currentCustomPostTitle?.title.length === 0)
       && title === rawTitle) {
-      // @ts-ignore
-      dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+      dispatch(blockEditorStore).updateBlockAttributes(queryParentId, {
         customPostTitles: customPostTitles.filter((item) => item?.postId !== postId),
       });
       return;
@@ -122,8 +147,7 @@ export default function Edit({
       newCustomPostTitles = newCustomPostTitles.filter((item) => item?.postId !== postId);
     }
 
-    // @ts-ignore
-    dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+    dispatch(blockEditorStore).updateBlockAttributes(queryParentId, {
       customPostTitles: newCustomPostTitles,
     });
   };
@@ -132,7 +156,6 @@ export default function Edit({
     <TagName
       {...blockProps}
       // eslint-disable-next-line react/no-danger
-      // @ts-ignore
       dangerouslySetInnerHTML={{
         __html: fullTitle?.rendered,
       }}
@@ -141,8 +164,7 @@ export default function Edit({
 
   if (isPinned) {
     titleElement = (
-      <PlainText
-        // @ts-ignore
+      <PlainTextField
         tagName={TagName}
         placeholder={__('Enter a custom title')}
         value={currentCustomPostTitle?.title ?? rawTitle}
@@ -165,17 +187,8 @@ export default function Edit({
           >
             <SelectControl
               label={__('Heading Level')}
-              // @ts-ignore
               value={level.toString()}
-              options={[
-                { label: 'p', value: '0' },
-                { label: 'h1', value: '1' },
-                { label: 'h2', value: '2' },
-                { label: 'h3', value: '3' },
-                { label: 'h4', value: '4' },
-                { label: 'h5', value: '5' },
-                { label: 'h6', value: '6' },
-              ]}
+              options={headingLevelOptions}
               onChange={(newLevel) => {
                 setAttributes({ level: parseInt(newLevel, 10) });
               }}

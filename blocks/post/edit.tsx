@@ -7,6 +7,7 @@ import {
   BlockContextProvider,
   BlockControls,
   InnerBlocks,
+  store as blockEditorStore,
   useBlockProps,
 } from '@wordpress/block-editor';
 import { PostPicker, usePostById } from '@alleyinteractive/block-editor-tools';
@@ -26,7 +27,10 @@ import type { Block } from '../../types/block';
 import NoRender from './norender';
 import SearchFilters from '../../components/SearchFilters';
 import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
-import { postTypeWithFuture } from '../../services/utils';
+import {
+  postTypeWithFuture,
+  type BlockEditorStoreSelectors,
+} from '../../services/utils';
 
 import type {
   Term,
@@ -93,14 +97,12 @@ export default function Edit({
     } = {},
   } = (window as any as Window);
 
-  // @ts-ignore
   const queryParents = select('core/block-editor').getBlockParentsByBlockName(clientId, ['wp-curate/query', 'wp-curate/subquery']);
   const queryParentId = queryParents[queryParents.length - 1];
 
   const templateBlockParents = select('core/block-editor').getBlockParentsByBlockName(clientId, 'core/post-template');
   const hasPostTemplateBlock = templateBlockParents.length > 0;
 
-  // @ts-ignore
   const queryParent = select('core/block-editor').getBlock(queryParentId) ?? {
     attributes: {
       posts: [],
@@ -172,8 +174,7 @@ export default function Edit({
       newPosts.splice(newPosts.indexOf(post), 1, null);
     }
     newPosts[index] = post;
-    // @ts-ignore
-    dispatch('core/block-editor').updateBlockAttributes(queryParentId, {
+    dispatch(blockEditorStore).updateBlockAttributes(queryParentId, {
       posts: newPosts,
     });
   }, [index, posts, queryParentId]);
@@ -184,8 +185,9 @@ export default function Edit({
 
   // Whether this block has any selected children.
   const isParentOfSelectedBlock = useSelect((innerSelect) => (
-    // @ts-ignore
-    innerSelect('core/block-editor').hasSelectedInnerBlock(clientId, true)
+    (
+      innerSelect('core/block-editor') as unknown as BlockEditorStoreSelectors
+    ).hasSelectedInnerBlock(clientId, true)
   ), [clientId]);
 
   const toggleMove = () => {
@@ -195,16 +197,14 @@ export default function Edit({
     const newData = moveData.postId ? {} : { postId, clientId };
 
     queryBlocks.forEach((blockId: string) => {
-      // @ts-ignore
-      dispatch('core/block-editor').updateBlockAttributes(blockId, {
+      dispatch(blockEditorStore).updateBlockAttributes(blockId, {
         moveData: newData,
       });
     });
 
     const cancelMove = () => {
       queryBlocks.forEach((blockId: string) => {
-        // @ts-ignore
-        dispatch('core/block-editor').updateBlockAttributes(blockId, {
+        dispatch(blockEditorStore).updateBlockAttributes(blockId, {
           moveData: {},
         });
       });
@@ -244,8 +244,7 @@ export default function Edit({
         const oldPosts = select('core/block-editor').getBlockAttributes(parentId)?.posts ?? [];
         const newPosts = oldPosts.map((post: number) => (post === newData.postId ? null : post));
         newPosts[targetIndex] = newData.postId;
-        // @ts-ignore
-        dispatch('core/block-editor').updateBlockAttributes(parentId, {
+        dispatch(blockEditorStore).updateBlockAttributes(parentId, {
           posts: newPosts,
         });
         // Remove the post from the source query block if it's not the same as the target block.
@@ -255,15 +254,14 @@ export default function Edit({
           const sourceNewPosts = sourceOldPosts.map(
             (post: number) => (post === newData.postId ? null : post),
           );
-          // @ts-ignore
-          dispatch('core/block-editor').updateBlockAttributes(sourceParent, {
+          dispatch(blockEditorStore).updateBlockAttributes(sourceParent, {
             posts: sourceNewPosts,
           });
         }
         cancelMove();
         canvasWindow.removeEventListener('click', clickHandler);
         setTimeout(() => {
-          // @ts-ignore - scrollIntoViewIfNeeded has ok browser support
+          // scrollIntoViewIfNeeded has ok browser support
           // and works better than scrollIntoView.
           canvasDoc.querySelectorAll(`.post-${newData.postId}`)[0]?.scrollIntoViewIfNeeded({ behavior: 'smooth', block: 'start' });
         }, 500);
@@ -271,7 +269,6 @@ export default function Edit({
     };
 
     if (newData.postId) {
-      // @ts-ignore
       canvasWindow.addEventListener('click', clickHandler);
     }
   };
@@ -305,11 +302,8 @@ export default function Edit({
   const shouldShowFilter = displayTypes.length !== postTypes.length
     || Object.values(terms).some((termList) => Array.isArray(termList) && termList.length > 0);
 
-  const postObj = usePostById(
-    postId,
-    // @ts-ignore This function does work with this argument.
-    includeFuturePosts ? postTypeWithFuture : null,
-  ) as WpRestApiPost | null;
+  const getPostType = includeFuturePosts ? postTypeWithFuture : undefined;
+  const postObj = usePostById(postId, getPostType) as WpRestApiPost | null;
 
   return (
     <div
@@ -379,8 +373,8 @@ export default function Edit({
             onUpdate={updatePost}
             onReset={resetPost}
             value={selected ?? 0}
-            // @ts-ignore This function does work with this prop.
-            getPostType={includeFuturePosts ? postTypeWithFuture : null}
+            // PostPicker's types say this returns a string, but it awaits the result.
+            getPostType={getPostType as unknown as ((id: number) => string) | undefined}
             previewRender={(NoRender)}
             className="wp-curate-post-block__post-picker"
             selectText={__('Pin a Post', 'wp-curate')}

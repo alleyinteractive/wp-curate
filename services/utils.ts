@@ -34,6 +34,13 @@ export interface BlocksStoreSelectors {
 }
 
 /**
+ * Block editor store selectors that `useSelect` can't infer from its string key.
+ */
+export interface BlockEditorStoreSelectors {
+  hasSelectedInnerBlock: (clientId: string, deep?: boolean) => boolean;
+}
+
+/**
  * Clones a pattern's blocks.
  *
  * Returns the cloned blocks and array of existing Query

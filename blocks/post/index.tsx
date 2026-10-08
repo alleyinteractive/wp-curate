@@ -13,7 +13,6 @@ registerBlockType(
       const blockProps = useBlockProps.save();
       return (
         <div {...blockProps}>
-          {/* @ts-ignore */}
           <InnerBlocks.Content />
         </div>
       );
