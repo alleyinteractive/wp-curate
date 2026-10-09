@@ -4,7 +4,12 @@ import useSWRImmutable from 'swr/immutable';
 import classnames from 'classnames';
 import { useDebounce } from '@uidotdev/usehooks';
 import { InnerBlocks, useBlockProps, store as blockEditorStore } from '@wordpress/block-editor';
-import { useDispatch, useSelect, select } from '@wordpress/data';
+import {
+  useDispatch,
+  useRegistry,
+  useSelect,
+  select,
+} from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
@@ -114,6 +119,52 @@ export default function Edit({
     markNextChangeAsNotPersistent();
     setAttributes({ metadata: Object.keys(metadata).length ? metadata : undefined });
   }, [patternName]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const registry = useRegistry();
+  const { setBlockEditingMode, unsetBlockEditingMode } = useDispatch(blockEditorStore);
+
+  /*
+   * The query block can also sit inside another block's pattern, or a
+   * contentOnly-locked container, which disables it and its inner blocks the
+   * same way. Explicit editing modes take precedence over those derived from a
+   * section, so mark this block and its descendants as editable. Joined into a
+   * string so the selector returns a stable value.
+   *
+   * Synced patterns and template parts are left alone, since editing them in
+   * place changes them everywhere. A nested query block defers to the outer one.
+   */
+  const editableClientIds = useSelect((innerSelect) => {
+    const {
+      // @ts-expect-error Not in the store's types.
+      getBlockParentsByBlockName,
+      // @ts-expect-error Not in the store's types.
+      getClientIdsOfDescendants,
+    } = innerSelect(blockEditorStore);
+
+    if (getBlockParentsByBlockName(clientId, ['core/block', 'core/template-part', 'wp-curate/query']).length) {
+      return '';
+    }
+
+    return [clientId, ...getClientIdsOfDescendants(clientId)].join(',');
+  }, [clientId]);
+
+  useEffect(() => {
+    if (!editableClientIds) {
+      return undefined;
+    }
+
+    const ids = editableClientIds.split(',');
+
+    registry.batch(() => {
+      ids.forEach((id) => setBlockEditingMode(id, 'default'));
+    });
+
+    return () => {
+      registry.batch(() => {
+        ids.forEach((id) => unsetBlockEditingMode(id));
+      });
+    };
+  }, [editableClientIds, registry, setBlockEditingMode, unsetBlockEditingMode]);
 
   const thisBlock = useSelect(
     // @ts-expect-error
