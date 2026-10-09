@@ -6,6 +6,16 @@ All notable changes to `WP Curate` will be documented in this file.
 
 Nothing yet.
 
+## 3.3.0 - 2026-10-09
+
+- Changed: Require WordPress 6.9 or higher. Tested up to WordPress 7.0.
+- Changed: Update the Post and Query blocks to block API version 3, and render variation icons as SVGs so they display in the iframed editor.
+- Enhancement: Add a `'wp-curate.dedupe'` action to run page-wide deduplication.
+- Bug fix: Fix issue where pinned posts in subqueries could be dropped because deduplication ran before pin validation resolved.
+- Bug fix: Fix a subquery render loop.
+- Bug fix: Fall back to `scrollIntoView` after moving a post in browsers without `scrollIntoViewIfNeeded`, such as Firefox.
+- Changed: Build with Node 24, align `@wordpress/*` dependencies with WordPress 6.9, and apply `npm audit` security fixes.
+
 ## 3.2.3 - 2026-07-02
 
 - Changed: Don't attempt to read `post_id` from custom Parse.ly metadata. This value is unlikely to be set on most installations.
