@@ -63,10 +63,11 @@ interface PostTypeOrTerm {
   rest_base?: string;
 }
 
-// `scrollIntoViewIfNeeded` is non-standard, so it's missing from the DOM types.
-// It only accepts a boolean, unlike `scrollIntoView`, which accepts an options object.
+// `scrollIntoViewIfNeeded` is non-standard, so it's missing from the DOM types,
+// and Firefox doesn't implement it. It only accepts a boolean, unlike
+// `scrollIntoView`, which accepts an options object.
 type ScrollableElement = Element & {
-  scrollIntoViewIfNeeded: (centerIfNeeded?: boolean) => void;
+  scrollIntoViewIfNeeded?: (centerIfNeeded?: boolean) => void;
 };
 
 interface Window {
@@ -267,11 +268,16 @@ export default function Edit({
         cancelMove();
         canvasWindow.removeEventListener('click', clickHandler);
         setTimeout(() => {
-          // scrollIntoViewIfNeeded has ok browser support
-          // and works better than scrollIntoView.
-          (
-            canvasDoc.querySelectorAll(`.post-${newData.postId}`)[0] as ScrollableElement | undefined
-          )?.scrollIntoViewIfNeeded(true);
+          const movedPost = canvasDoc.querySelectorAll(`.post-${newData.postId}`)[0] as
+            ScrollableElement | undefined;
+
+          // scrollIntoViewIfNeeded works better than scrollIntoView,
+          // but fall back where it isn't supported.
+          if (movedPost?.scrollIntoViewIfNeeded) {
+            movedPost.scrollIntoViewIfNeeded(true);
+          } else {
+            movedPost?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
         }, 500);
       }
     };
