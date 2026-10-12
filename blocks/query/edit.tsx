@@ -120,7 +120,8 @@ export default function Edit({
     setAttributes({ metadata: Object.keys(metadata).length ? metadata : undefined });
   }, [patternName]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const registry = useRegistry();
+  // `useRegistry` is typed as returning `Function`.
+  const registry = useRegistry() as unknown as { batch: (callback: () => void) => void };
   const { setBlockEditingMode, unsetBlockEditingMode } = useDispatch(blockEditorStore);
 
   /*
