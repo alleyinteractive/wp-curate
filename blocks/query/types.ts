@@ -31,6 +31,10 @@ interface EditProps {
     uniqueId?: string;
     supportsPostTypes?: string[];
     validPosts?: number[];
+    metadata?: {
+      patternName?: string;
+      [key: string]: unknown;
+    };
   };
   clientId: string;
   setAttributes: (attributes: any) => void;
