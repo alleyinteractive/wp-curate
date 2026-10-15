@@ -8,13 +8,17 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
-use Parsely\RemoteAPI\Analytics_Posts_API;
 use Parsely\Parsely;
 
 /**
  * Add support for Parsely, if the plugin is installed.
  */
 final class Parsely_Support implements Feature {
+	/**
+	 * The minimum supported Parse.ly version.
+	 */
+	private const MINIMUM_PARSELY_VERSION = '3.20.4';
+
 	/**
 	 * Set up.
 	 */
@@ -24,7 +28,11 @@ final class Parsely_Support implements Feature {
 	 * Boot the feature.
 	 */
 	public function boot(): void {
-		if ( ! class_exists( 'Parsely\Parsely' ) ) {
+		if (
+			! class_exists( 'Parsely\Parsely' ) ||
+			! defined( 'Parsely\PARSELY_VERSION' ) ||
+			! self::is_supported_version( (string) constant( 'Parsely\PARSELY_VERSION' ) )
+		) {
 			return;
 		}
 		// Elsewhere in the plugin, we'll use $GLOBALS['parsely'], but it is not available here.
@@ -68,11 +76,15 @@ final class Parsely_Support implements Feature {
 		if ( ! $parsely->api_secret_is_set() ) {
 			return [];
 		}
-		if ( ! class_exists( '\Parsely\RemoteAPI\Analytics_Posts_API' ) ) {
+		if (
+			! defined( 'Parsely\PARSELY_VERSION' ) ||
+			! self::is_supported_version( (string) constant( 'Parsely\PARSELY_VERSION' ) ) ||
+			! method_exists( $parsely, 'get_content_api' )
+		) {
 			return [];
 		}
 
-		$parsely_options = $GLOBALS['parsely']->get_options();
+		$parsely_options = $parsely->get_options();
 		/**
 		 * Filter the period start for the Parsely API.
 		 *
@@ -111,8 +123,8 @@ final class Parsely_Support implements Feature {
 		$cache_key = 'parsely_trending_posts_' . md5( wp_json_encode( $parsely_args ) ); // @phpstan-ignore-line - wp_Json_encode not likely to return false.
 		$ids       = wp_cache_get( $cache_key );
 		if ( false === $ids || ! is_array( $ids ) ) {
-			$api   = new Analytics_Posts_API( $GLOBALS['parsely'] );
-			$posts = $api->get_posts_analytics( $parsely_args );
+			$posts = $parsely->get_content_api()->get_posts( $this->get_content_api_args( $parsely_args ) );
+
 			if ( \is_wp_error( $posts ) || ! \is_array( $posts ) ) {
 				return [];
 			}
@@ -154,6 +166,45 @@ final class Parsely_Support implements Feature {
 		$ids = apply_filters( 'wp_curate_parsely_trending_posts', $ids, $parsely_args, $args );
 
 		return $ids;
+	}
+
+	/**
+	 * Check whether a Parse.ly version is supported.
+	 *
+	 * @param string $version The Parse.ly version.
+	 * @return bool Whether the version is supported.
+	 */
+	private static function is_supported_version( string $version ): bool {
+		return version_compare( $version, self::MINIMUM_PARSELY_VERSION, '>=' );
+	}
+
+	/**
+	 * Convert legacy Analytics API arguments for the Content API service.
+	 *
+	 * Parse.ly 3.20.4 and later requires tag filters to be arrays.
+	 *
+	 * @param array<string, mixed> $args The legacy API arguments.
+	 * @return array<string, mixed> The Content API arguments.
+	 */
+	private function get_content_api_args( array $args ): array {
+		if ( isset( $args['tag'] ) ) {
+			$args['tag'] = $this->get_api_argument_values( $args['tag'] );
+		}
+
+		return $args;
+	}
+
+	/**
+	 * Convert a comma-separated API argument into individual values.
+	 *
+	 * @param mixed $value The API argument value.
+	 * @return array<string> The individual non-empty values.
+	 */
+	private function get_api_argument_values( mixed $value ): array {
+		$values = is_array( $value ) ? $value : explode( ',', (string) $value );
+		$values = array_map( static fn ( mixed $item ): string => trim( (string) $item ), $values );
+
+		return array_values( array_filter( $values, static fn ( string $item ): bool => '' !== $item ) );
 	}
 
 	/**
