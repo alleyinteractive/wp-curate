@@ -5,9 +5,9 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import {
   createBlocksFromInnerBlocksTemplate,
   store as blocksStore,
-  Block,
-  BlockVariation,
-  BlockTypeIconDescriptor,
+  type BlockIconNormalized,
+  type BlockVariation,
+  type InnerBlockTemplate,
 } from '@wordpress/blocks';
 import { useState } from '@wordpress/element';
 import {
@@ -22,7 +22,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { useScopedBlockVariations } from '../../services/utils';
+import { useScopedBlockVariations, type BlocksStoreSelectors } from '../../services/utils';
 import { useBlockPatterns } from '../PatternSelectionModal';
 
 interface QueryVariationPickerProps {
@@ -52,9 +52,7 @@ function QueryVariationPicker({
             replaceInnerBlocks(
               clientId,
               createBlocksFromInnerBlocksTemplate(
-                variation.innerBlocks as Array<
-                Block | [string, Record<string, unknown>?, Array<unknown>?]
-                >,
+                variation.innerBlocks as InnerBlockTemplate[],
               ),
               false,
             );
@@ -82,7 +80,10 @@ export default function QueryPlaceholder({
 
   const { blockType, activeBlockVariation } = useSelect(
     (select) => {
-      const { getActiveBlockVariation, getBlockType } = select(blocksStore);
+      const {
+        getActiveBlockVariation,
+        getBlockType,
+      } = select(blocksStore) as unknown as BlocksStoreSelectors;
       return {
         blockType: getBlockType(name),
         activeBlockVariation: getActiveBlockVariation(
@@ -95,7 +96,7 @@ export default function QueryPlaceholder({
   );
   const hasPatterns = !!useBlockPatterns(clientId, attributes).length;
   const icon = (
-    (activeBlockVariation?.icon as BlockTypeIconDescriptor | undefined)?.src
+    (activeBlockVariation?.icon as BlockIconNormalized | undefined)?.src
     || activeBlockVariation?.icon
     || blockType?.icon?.src
   ) as IconType | undefined;
