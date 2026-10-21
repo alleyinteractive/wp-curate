@@ -4,6 +4,8 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
+- Bug fix: Fix Query block previews, deduplication, and pinned posts not updating in the editor when Show template is on.
+
 ## 3.4.0 - 2026-10-20
 
 - Bug Fix: Restore trending content queries with Parse.ly 3.20.4 and later.
