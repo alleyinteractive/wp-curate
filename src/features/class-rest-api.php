@@ -70,6 +70,13 @@ final class Rest_Api implements Feature {
 		$trending         = 'trending' === $request->get_param( 'orderby' );
 		$tax_relation     = $request->get_param( 'tax_relation' ) ?? 'OR';
 		$meta_key         = $request->get_param( 'meta_key' ) ?? '';
+		$post_status      = $request->get_param( 'status' ) ?? 'publish';
+
+		// Only return posts the front end would also show. Without this, logged-in users who can
+		// read private posts get private posts back, which the post template then can't render.
+		if ( ! in_array( $post_status, [ 'publish' ], true ) ) {
+			$post_status = 'publish';
+		}
 
 		if ( ! is_string( $post_type_string ) ) {
 			$post_type_string = 'post';
@@ -129,6 +136,7 @@ final class Rest_Api implements Feature {
 
 		$args = [
 			'post_type'           => $post_types,
+			'post_status'         => $post_status,
 			'posts_per_page'      => $per_page,
 			'offset'              => $offset,
 			'ignore_sticky_posts' => true,
