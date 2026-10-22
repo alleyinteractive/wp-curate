@@ -4,6 +4,8 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
+- Bug fix: Fix issue where the Query block editor preview showed one post fewer than `numberOfPosts` when a recent post was private.
+
 ## 3.4.0 - 2026-10-20
 
 - Bug Fix: Restore trending content queries with Parse.ly 3.20.4 and later.
