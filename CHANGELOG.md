@@ -4,6 +4,7 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
+- Bug fix: Fix Query block previews, deduplication, and pinned posts not updating in the editor when Show template is on.
 - Bug fix: Fix issue where the Query block editor preview showed one post fewer than `numberOfPosts` when a recent post was private.
 
 ## 3.4.0 - 2026-10-20
