@@ -1,0 +1,115 @@
+<?php
+/**
+ * Channels_REST_Route class file
+ *
+ * @package wp-curate
+ */
+
+namespace Alley\WP\WP_Curate\Features\Channels;
+
+use Alley\WP\Types\Feature;
+use Alley\WP\WP_Curate\Channel;
+use WP_Error;
+use WP_REST_Request;
+use WP_REST_Response;
+use WP_REST_Server;
+
+/**
+ * Exposes the IDs in a channel to the editor.
+ *
+ * GET /wp-json/wp-curate/v1/channels/<name>?context[<key>]=<value>
+ *
+ * `context` is the block context that the channel uses.
+ */
+final readonly class Channels_REST_Route implements Feature {
+	/**
+	 * Constructor.
+	 *
+	 * @param Channel[] $channels Available channels.
+	 */
+	public function __construct(
+		private array $channels,
+	) {}
+
+	/**
+	 * Boot the feature.
+	 */
+	public function boot(): void {
+		add_action( 'rest_api_init', [ $this, 'on_rest_api_init' ] );
+	}
+
+	/**
+	 * Fires when preparing to serve a REST API request.
+	 */
+	public function on_rest_api_init(): void {
+		register_rest_route(
+			'wp-curate/v1',
+			'/channels/(?P<name>[a-z0-9_]+)',
+			[
+				'args'                => [
+					'context' => [
+						'default' => [],
+						'type'    => 'object',
+					],
+				],
+				'callback'            => [ $this, 'get_callback' ],
+				'methods'             => WP_REST_Server::READABLE,
+				'permission_callback' => fn () => current_user_can( 'edit_posts' ),
+			],
+		);
+	}
+
+	/**
+	 * Respond with the channel's IDs, the type of each post, its label, order, and the context that it uses.
+	 *
+	 * @param WP_REST_Request $request REST API request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function get_callback( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		$response = new WP_Error( 'rest_channel_invalid_name', __( 'Invalid channel name.', 'wp-curate' ), [ 'status' => 404 ] );
+
+		$available_context = $request->get_param( 'context' );
+
+		foreach ( $this->channels as $channel ) {
+			if ( $channel->name() === $request->get_param( 'name' ) ) {
+				$context = [];
+
+				if ( is_array( $available_context ) ) {
+					$context = array_intersect_key( $available_context, array_flip( $channel->uses_context() ) );
+				}
+
+				$ids        = iterator_to_array( $channel->ids( $context ), false );
+				$post_types = [];
+
+				// The editor needs each post's type to load it, since a channel can mix post types.
+				if ( 'postType' === $channel->entity_kind() ) {
+					_prime_post_caches( $ids, false, false );
+
+					foreach ( $ids as $id ) {
+						$post_type = get_post_type( $id );
+
+						if ( is_string( $post_type ) ) {
+							$post_types[ $id ] = $post_type;
+						}
+					}
+				}
+
+				$response = rest_ensure_response(
+					[
+						'entity_kind'  => $channel->entity_kind(),
+						'ids'          => $ids,
+						'label'        => $channel->label(),
+						'order'        => $channel->order_direction(),
+						'order_label'  => $channel->order_label(),
+						'post_types'   => (object) $post_types,
+						'uses_context' => $channel->uses_context(),
+					],
+				);
+
+				break;
+			}
+		}
+
+		return $response;
+	}
+}
