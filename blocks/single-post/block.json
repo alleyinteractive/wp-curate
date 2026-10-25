@@ -18,6 +18,10 @@
       "type": "string",
       "default": "latest_posts"
     },
+    "postType": {
+      "type": "string",
+      "default": ""
+    },
     "ref": {
       "type": "number",
       "default": 0
