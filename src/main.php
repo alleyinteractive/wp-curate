@@ -20,6 +20,11 @@ use WP_Block_Type_Registry;
 function main(): void {
 	$stop_queries_var = 'wp_curate_stop_queries';
 	$main_query       = new Global_Post_Query( 'wp_query' );
+	$channels         = [
+		new Channels\Latest_Posts(
+			limit: 100,
+		),
+	];
 
 	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore
 	$plugin = new Group(
@@ -49,6 +54,14 @@ function main(): void {
 		new Features\GraphQL(),
 		new Features\Block_Variations(),
 		new Features\Block_Patterns(),
+		new Features\Channels_REST_Route(
+			channels: $channels,
+		),
+		new Features\Channel_Queues_Block_Context(
+			queues: new Channels\Channel_Queues(
+				channels: $channels,
+			),
+		),
 	);
 	// phpcs:enable
 
