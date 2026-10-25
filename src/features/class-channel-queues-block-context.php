@@ -16,7 +16,6 @@ use Alley\WP\WP_Curate\Channels\Channel_Queues;
  * A block that declares `wp-curate/channelQueues` in `usesContext` can take IDs from the queues.
  */
 final readonly class Channel_Queues_Block_Context implements Feature {
-
 	/**
 	 * Constructor.
 	 *
@@ -36,7 +35,9 @@ final readonly class Channel_Queues_Block_Context implements Feature {
 	/**
 	 * Filters the default context provided to a rendered block.
 	 *
-	 * @param mixed $context Default context.
+	 * @phpstan-param mixed $context
+	 *
+	 * @param array $context Default context.
 	 * @return mixed
 	 */
 	public function filter_render_block_context( $context ) {

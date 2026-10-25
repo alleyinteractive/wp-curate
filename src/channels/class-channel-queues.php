@@ -66,8 +66,13 @@ final class Channel_Queues {
 	 */
 	public function take_rest( string $name, array $context ): array {
 		$queue = $this->queue( $name, $context );
+		$taken = [];
 
-		return $queue instanceof Queue ? $queue->take_rest() : [];
+		if ( $queue instanceof Queue ) {
+			$taken = $queue->take_rest();
+		}
+
+		return $taken;
 	}
 
 	/**

@@ -48,16 +48,17 @@ final class Queue {
 	 */
 	public function top(): ?int {
 		$ids = $this->ids();
-
-		// Skip removed IDs and IDs that are not positive integers.
-		while ( $ids->valid() && ( $this->current_id() <= 0 || isset( $this->removed[ $this->current_id() ] ) ) ) {
-			$ids->next();
-		}
-
 		$top = null;
 
-		if ( $ids->valid() ) {
-			$top = $this->current_id();
+		while ( null === $top && $ids->valid() ) {
+			$id = $this->current_id();
+
+			// Skip removed IDs and IDs that are not positive integers.
+			if ( $id > 0 && ! isset( $this->removed[ $id ] ) ) {
+				$top = $id;
+			} else {
+				$ids->next();
+			}
 		}
 
 		return $top;
