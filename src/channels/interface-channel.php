@@ -5,7 +5,7 @@
  * @package wp-curate
  */
 
-namespace Alley\WP\WP_Curate;
+namespace Alley\WP\WP_Curate\Channels;
 
 /**
  * An ordered set of posts or terms that individual blocks can take items from.

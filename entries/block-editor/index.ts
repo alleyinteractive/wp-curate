@@ -1,1 +1,2 @@
+import './channelStore';
 import './deduplication';
