@@ -5,10 +5,10 @@
  * @package wp-curate
  */
 
-namespace Alley\WP\WP_Curate\Features\Channels;
+namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
-use Alley\WP\WP_Curate\Channel;
+use Alley\WP\WP_Curate\Channels\Channel;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
