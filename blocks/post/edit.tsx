@@ -392,7 +392,7 @@ export default function Edit({
             previewRender={(NoRender)}
             className="wp-curate-post-block__post-picker"
             selectText={__('Pin a Post', 'wp-curate')}
-            resetText={__('Backfill Post', 'wp-curate')}
+            resetText={__('Unpin Post', 'wp-curate')}
             replaceText={__('Pin a Different Post', 'wp-curate')}
             filters={(
               <SearchFilters
