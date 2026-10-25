@@ -7,6 +7,7 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
+use Generator;
 use WP_Query;
 
 /**
@@ -85,28 +86,120 @@ final readonly class Latest_Posts implements Channel {
 	 * @return iterable Integer IDs.
 	 */
 	public function ids( array $context ): iterable {
+		return $this->post_ids( [] );
+	}
+
+	/**
+	 * IDs in the channel that match a search, in channel order.
+	 *
+	 * @phpstan-return iterable<int>
+	 *
+	 * @param string  $search  Search terms.
+	 * @param mixed[] $context The block context values in `uses_context()`.
+	 * @return iterable Integer IDs.
+	 */
+	public function ids_matching( string $search, array $context ): iterable {
+		return $this->post_ids( [ 's' => $search ] );
+	}
+
+	/**
+	 * Number of IDs in the channel.
+	 *
+	 * @param mixed[] $context The block context values in `uses_context()`.
+	 * @return int Number of IDs.
+	 */
+	public function total( array $context ): int {
+		return $this->post_total( [] );
+	}
+
+	/**
+	 * Number of IDs in the channel that match a search.
+	 *
+	 * @param string  $search  Search terms.
+	 * @param mixed[] $context The block context values in `uses_context()`.
+	 * @return int Number of IDs.
+	 */
+	public function total_matching( string $search, array $context ): int {
+		return $this->post_total( [ 's' => $search ] );
+	}
+
+	/**
+	 * Query arguments that select the channel's posts, in channel order.
+	 *
+	 * `post_ids()` and `post_total()` both use them, so that the total counts the same posts.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function channel_query_args(): array {
+		return [
+			'ignore_sticky_posts' => true,
+			'order'               => 'DESC',
+			'orderby'             => 'date',
+			'post_status'         => 'publish',
+			'post_type'           => 'post',
+		];
+	}
+
+	/**
+	 * Number of the channel's posts.
+	 *
+	 * @param mixed[] $query_args Query arguments to add to the channel's own.
+	 * @return int
+	 */
+	private function post_total( array $query_args ): int {
+		$query = new WP_Query(
+			array_merge(
+				$query_args,
+				$this->channel_query_args(),
+				[
+					'fields'         => 'ids',
+					'no_found_rows'  => false,
+					'posts_per_page' => 1,
+				],
+			),
+		);
+
+		return $query->found_posts;
+	}
+
+	/**
+	 * IDs of the channel's posts, in channel order, queried in batches.
+	 *
+	 * The query keeps its own `orderby`, so a search returns matches in channel order, not by relevance.
+	 *
+	 * @phpstan-return Generator<int, int>
+	 *
+	 * @param mixed[] $query_args Query arguments to add to the channel's own.
+	 * @return Generator
+	 */
+	private function post_ids( array $query_args ): Generator {
 		$page       = 1;
 		$batch_size = self::BATCH_SIZE;
 
 		// A batch that is smaller than the batch size is the last one.
 		while ( self::BATCH_SIZE === $batch_size ) {
 			$query = new WP_Query(
-				[
-					'fields'              => 'ids',
-					'ignore_sticky_posts' => true,
-					'no_found_rows'       => true,
-					'order'               => 'DESC',
-					'orderby'             => 'date',
-					'paged'               => $page,
-					'post_status'         => 'publish',
-					'post_type'           => 'post',
-					'posts_per_page'      => self::BATCH_SIZE,
-				],
+				array_merge(
+					$query_args,
+					$this->channel_query_args(),
+					[
+						'fields'         => 'ids',
+						'no_found_rows'  => true,
+						'paged'          => $page,
+						'posts_per_page' => self::BATCH_SIZE,
+					],
+				),
 			);
 
-			$batch_size = count( $query->posts );
+			$post_ids = [];
 
-			foreach ( $query->posts as $post_id ) {
+			if ( is_array( $query->posts ) ) {
+				$post_ids = $query->posts;
+			}
+
+			$batch_size = count( $post_ids );
+
+			foreach ( $post_ids as $post_id ) {
 				if ( is_int( $post_id ) ) {
 					yield $post_id;
 				}

@@ -10,7 +10,7 @@ import { useMemo, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
-import useChannelRecord, { CHANNEL_PAGE_SIZE } from '../../../hooks/useChannelRecord';
+import useChannelRecord, { CHANNEL_PAGE_SIZE, type ChannelPage } from '../../../hooks/useChannelRecord';
 
 interface PostPickerProps {
   channel: string;
@@ -43,8 +43,14 @@ const FIELDS = [
   },
 ];
 
-// Image sizes for the picker, smallest first.
-const PICKER_IMAGE_SIZES = ['thumbnail', 'medium'];
+/*
+ * The view sorts by this ID, which no field has, because the channel sets the order. DataViews
+ * disables the items per page control in a view without a sort field.
+ */
+const CHANNEL_ORDER = 'channelOrder';
+
+// Image sizes for the picker, in order of preference. A grid shows images larger than a thumbnail.
+const PICKER_IMAGE_SIZES = ['medium', 'thumbnail'];
 
 /**
  * Reads the featured image ID of a post record, or 0 if it has none.
@@ -162,8 +168,8 @@ function toPostTitle(post: unknown): string {
 /**
  * Modal for picking one post from a block's channel.
  *
- * The channel loads one page at a time, so the picker shows the posts in channel order, without
- * search, and offers one more page while the channel has more posts.
+ * The picker loads one page at a time, of the posts or of the posts that match a search, in
+ * channel order.
  */
 export default function PostPicker({
   channel,
@@ -179,50 +185,73 @@ export default function PostPicker({
     page: 1,
     perPage: CHANNEL_PAGE_SIZE,
     search: '',
+    sort: {
+      direction: 'desc',
+      field: CHANNEL_ORDER,
+    },
     titleField: 'title',
     type: 'pickerTable',
   });
 
   let page = 1;
+  let perPage = CHANNEL_PAGE_SIZE;
+  let search = '';
 
   if (Number.isInteger(view.page) && view.page > 0) {
     page = view.page;
   }
 
-  // The record so far, which stays available while the next page loads.
-  const loadedRecord = useChannelRecord(channel, {}, CHANNEL_PAGE_SIZE);
+  if (Number.isInteger(view.perPage) && view.perPage > 0) {
+    perPage = view.perPage;
+  }
 
-  // The record through the current page, or null while that page loads.
-  const pageRecord = useChannelRecord(channel, {}, page * CHANNEL_PAGE_SIZE);
+  if (typeof view.search === 'string') {
+    search = view.search.trim();
+  }
+
+  // The whole channel, for its label, which stays the same while a page loads.
+  const channelRecord = useChannelRecord(channel);
+
+  const {
+    getChannelPostType,
+  } = useSelect((select) => select('wp-curate/channels') as any, []);
+
+  // The current page, or null while it loads.
+  const pageRecord: ChannelPage | null = useSelect((select) => {
+    const {
+      getChannelPage,
+    } = select('wp-curate/channels') as any;
+
+    return getChannelPage(channel, {}, search, page, perPage);
+  }, [channel, page, perPage, search]);
+
+  // The totals of the last page that loaded, so that the pagination stays while the next one loads.
+  const [paginationInfo, setPaginationInfo] = useState({ totalItems: 0, totalPages: 0 });
+
+  if (
+    pageRecord !== null
+    && (
+      pageRecord.total !== paginationInfo.totalItems
+      || pageRecord.total_pages !== paginationInfo.totalPages
+    )
+  ) {
+    setPaginationInfo({
+      totalItems: pageRecord.total,
+      totalPages: pageRecord.total_pages,
+    });
+  }
 
   let title: string = __('Select a post', 'wp-curate');
-  let totalItems = 0;
-  let totalPages = 0;
 
-  if (loadedRecord !== null && loadedRecord.label !== '') {
-    title = loadedRecord.label;
+  if (channelRecord !== null && channelRecord.label !== '') {
+    title = channelRecord.label;
   }
 
-  // The channel has no total, so count the loaded posts, plus one page while there are more.
-  if (loadedRecord !== null) {
-    totalItems = loadedRecord.ids.length;
-    totalPages = Math.ceil(loadedRecord.ids.length / CHANNEL_PAGE_SIZE);
+  let pageIds = NO_IDS;
+
+  if (pageRecord !== null) {
+    pageIds = pageRecord.ids;
   }
-
-  if (loadedRecord !== null && loadedRecord.has_more) {
-    totalItems += 1;
-    totalPages += 1;
-  }
-
-  const pageIds = useMemo(() => {
-    let ids = NO_IDS;
-
-    if (pageRecord !== null) {
-      ids = pageRecord.ids.slice((page - 1) * CHANNEL_PAGE_SIZE, page * CHANNEL_PAGE_SIZE);
-    }
-
-    return ids;
-  }, [page, pageRecord]);
 
   // A channel can mix post types, so make one query for the posts of each type on the page.
   const queries = useMemo(() => {
@@ -369,14 +398,10 @@ export default function PostPicker({
             // Use the selection. The callback only gets the selected items on the current page.
             callback: () => {
               const id = Number(selection[0]);
-              let postType = '';
 
-              if (loadedRecord !== null && id in loadedRecord.post_types) {
-                postType = loadedRecord.post_types[id];
-              }
-
+              // The selected post can be on a page that the picker showed before.
               if (Number.isInteger(id) && id > 0) {
-                onSelect(id, postType);
+                onSelect(id, getChannelPostType(id));
               }
             },
             id: 'select',
@@ -385,17 +410,16 @@ export default function PostPicker({
             supportsBulk: false,
           },
         ]}
-        config={{ perPageSizes: [CHANNEL_PAGE_SIZE] }}
         data={data}
-        defaultLayouts={{ pickerTable: {} }}
+        defaultLayouts={{ pickerGrid: {}, pickerTable: {} }}
         fields={FIELDS}
         getItemId={(item: PickerItem) => String(item.id)}
         isLoading={isLoading}
         itemListLabel={__('Posts', 'wp-curate')}
         onChangeSelection={setSelection}
         onChangeView={setView}
-        paginationInfo={{ totalItems, totalPages }}
-        search={false}
+        paginationInfo={paginationInfo}
+        searchLabel={__('Search posts', 'wp-curate')}
         selection={selection}
         view={view}
       />

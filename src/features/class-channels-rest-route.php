@@ -17,10 +17,14 @@ use WP_REST_Server;
 /**
  * Exposes the IDs in a channel to the editor.
  *
- * GET /wp-json/wp-curate/v1/channels/<name>?context[<key>]=<value>&page=<page>&per_page=<per_page>
+ * GET /wp-json/wp-curate/v1/channels/<name>?context[<key>]=<value>&page=<page>&per_page=<per_page>&search=<search>
  *
  * `context` is the block context that the channel uses. `page` and `per_page` select a page of IDs,
- * so that the editor reads only as many IDs as its blocks need.
+ * so that the editor reads only as many IDs as its blocks need. `search` limits the IDs to the
+ * channel's matches.
+ *
+ * Like core endpoints, the `X-WP-Total` and `X-WP-TotalPages` headers give the number of IDs and
+ * pages.
  */
 final readonly class Channels_REST_Route implements Feature {
 	/**
@@ -63,6 +67,10 @@ final readonly class Channels_REST_Route implements Feature {
 						'minimum' => 1,
 						'type'    => 'integer',
 					],
+					'search'   => [
+						'default' => '',
+						'type'    => 'string',
+					],
 				],
 				'callback'            => [ $this, 'get_callback' ],
 				'methods'             => WP_REST_Server::READABLE,
@@ -73,7 +81,8 @@ final readonly class Channels_REST_Route implements Feature {
 
 	/**
 	 * Respond with a page of the channel's IDs, whether more IDs remain, the type of each post, and the
-	 * channel's label, order, and the context that it uses.
+	 * channel's label, order, and the context that it uses. With `search`, the IDs are the channel's
+	 * matches.
 	 *
 	 * @param WP_REST_Request $request REST API request.
 	 * @return WP_REST_Response|WP_Error
@@ -84,9 +93,11 @@ final readonly class Channels_REST_Route implements Feature {
 		$available_context  = $request->get_param( 'context' );
 		$requested_page     = $request->get_param( 'page' );
 		$requested_per_page = $request->get_param( 'per_page' );
+		$requested_search   = $request->get_param( 'search' );
 
 		$page     = 1;
 		$per_page = 10;
+		$search   = '';
 
 		if ( is_int( $requested_page ) ) {
 			$page = $requested_page;
@@ -94,6 +105,10 @@ final readonly class Channels_REST_Route implements Feature {
 
 		if ( is_int( $requested_per_page ) ) {
 			$per_page = $requested_per_page;
+		}
+
+		if ( is_string( $requested_search ) ) {
+			$search = trim( $requested_search );
 		}
 
 		foreach ( $this->channels as $channel ) {
@@ -104,6 +119,14 @@ final readonly class Channels_REST_Route implements Feature {
 					$context = array_intersect_key( $available_context, array_flip( $channel->uses_context() ) );
 				}
 
+				$channel_ids = $channel->ids( $context );
+				$total       = $channel->total( $context );
+
+				if ( '' !== $search ) {
+					$channel_ids = $channel->ids_matching( $search, $context );
+					$total       = $channel->total_matching( $search, $context );
+				}
+
 				$offset     = ( $page - 1 ) * $per_page;
 				$position   = 0;
 				$ids        = [];
@@ -111,7 +134,7 @@ final readonly class Channels_REST_Route implements Feature {
 				$post_types = [];
 
 				// Read the channel only through this page, plus one ID to tell whether more remain.
-				foreach ( $channel->ids( $context ) as $id ) {
+				foreach ( $channel_ids as $id ) {
 					// Skip the IDs that `Queue` skips, so that the editor and the page agree.
 					if ( $id <= 0 ) {
 						continue;
@@ -154,6 +177,9 @@ final readonly class Channels_REST_Route implements Feature {
 						'uses_context' => $channel->uses_context(),
 					],
 				);
+
+				$response->header( 'X-WP-Total', (string) $total );
+				$response->header( 'X-WP-TotalPages', (string) ceil( $total / $per_page ) );
 
 				break;
 			}
