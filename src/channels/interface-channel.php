@@ -68,4 +68,38 @@ interface Channel {
 	 * @return iterable Integer IDs. Empty if the context does not make a channel.
 	 */
 	public function ids( array $context ): iterable;
+
+	/**
+	 * IDs in the channel that match a search, in channel order.
+	 *
+	 * Like `ids()`, an implementation can return an array or yield IDs from a generator.
+	 *
+	 * @phpstan-return iterable<int>
+	 *
+	 * @param string  $search  Search terms.
+	 * @param mixed[] $context The block context values in `uses_context()`.
+	 * @return iterable Integer IDs. Empty if nothing matches.
+	 */
+	public function ids_matching( string $search, array $context ): iterable;
+
+	/**
+	 * Number of IDs in the channel.
+	 *
+	 * It counts the same IDs that `ids()` returns.
+	 *
+	 * @param mixed[] $context The block context values in `uses_context()`.
+	 * @return int Number of IDs. 0 if the context does not make a channel.
+	 */
+	public function total( array $context ): int;
+
+	/**
+	 * Number of IDs in the channel that match a search.
+	 *
+	 * It counts the same IDs that `ids_matching()` returns.
+	 *
+	 * @param string  $search  Search terms.
+	 * @param mixed[] $context The block context values in `uses_context()`.
+	 * @return int Number of IDs. 0 if nothing matches.
+	 */
+	public function total_matching( string $search, array $context ): int;
 }

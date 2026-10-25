@@ -24,6 +24,17 @@ export interface ChannelRecord {
 }
 
 /**
+ * A page of a channel from the `wp-curate/channels` store.
+ *
+ * `total` and `total_pages` count the IDs and pages in the whole channel, or in its matches for a
+ * search.
+ */
+export interface ChannelPage extends ChannelRecord {
+  total: number;
+  total_pages: number;
+}
+
+/**
  * Get the record of a block's channel.
  *
  * @param name    The block's `channel` attribute.
@@ -44,6 +55,6 @@ export default function useChannelRecord(
       getChannel,
     } = select('wp-curate/channels') as any;
 
-    return getChannel(name, JSON.parse(contextKey), count) as ChannelRecord | null;
+    return getChannel(name, JSON.parse(contextKey), count);
   }, [count, name, contextKey]);
 }
