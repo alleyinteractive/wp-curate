@@ -4,7 +4,7 @@ import { createReduxStore, register } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 // Plugin dependencies.
-import { CHANNEL_PAGE_SIZE, type ChannelRecord } from '../../../hooks/useChannelRecord';
+import type { ChannelRecord } from '../../../hooks/useChannelRecord';
 
 /*
  * The available channels by name and context. Blocks read it by the store name,
@@ -136,14 +136,19 @@ function toChannelRecord(value: unknown): ChannelRecord {
  */
 const getChannelResolver = (
   name: string,
-  context: object = {},
-  count: number = CHANNEL_PAGE_SIZE,
+  context: object,
+  count: number,
 ) => async ({
   dispatch,
 }: any) => {
   const {
     receiveChannel,
   } = dispatch;
+
+  // Without a count, no pages would load, and the empty record would look like a complete channel.
+  if (!Number.isInteger(count) || count < 1) {
+    return;
+  }
 
   const perPage = Math.min(count, MAX_PER_PAGE);
   const pages = Array.from({ length: Math.ceil(count / perPage) }, (_, index) => index + 1);
@@ -187,12 +192,32 @@ const getChannelResolver = (
   receiveChannel(channelKey(name, context), record);
 };
 
+/**
+ * Get the record of a channel.
+ *
+ * The arguments have no defaults, so that callers pass all of them. The data registry keys each
+ * resolution by its exact arguments, so a call that left one out would send a second request
+ * for the same IDs.
+ *
+ * @param state   Store state.
+ * @param name    Channel name.
+ * @param context Block context sent to the channel.
+ * @param count   Number of IDs, as a multiple of `CHANNEL_PAGE_SIZE`.
+ * @return The record, or null until it has the number of IDs.
+ */
+const getChannel = (
+  state: Record<string, ChannelRecord>,
+  name: string,
+  context: object,
+  count: number,
+) => toLoadedChannel(state, name, context, count);
+
 // Skip the request when the store already has enough IDs.
 getChannelResolver.isFulfilled = (
   state: Record<string, ChannelRecord>,
   name: string,
-  context: object = {},
-  count: number = CHANNEL_PAGE_SIZE,
+  context: object,
+  count: number,
 ) => toLoadedChannel(state, name, context, count) !== null;
 
 const store = createReduxStore('wp-curate/channels', {
@@ -222,14 +247,7 @@ const store = createReduxStore('wp-curate/channels', {
     },
   },
   selectors: {
-    getChannel(
-      state: Record<string, ChannelRecord>,
-      name: string,
-      context: object = {},
-      count: number = CHANNEL_PAGE_SIZE,
-    ) {
-      return toLoadedChannel(state, name, context, count);
-    },
+    getChannel,
   },
   resolvers: {
     getChannel: getChannelResolver,

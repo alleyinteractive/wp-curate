@@ -94,7 +94,7 @@ export function channelQueueIds(
 
     // The first page of the channel tells which context the channel uses.
     if (name !== null && name !== '') {
-      record = getChannel(name, context);
+      record = getChannel(name, context, CHANNEL_PAGE_SIZE);
 
       if (record === null) {
         isLoading = true;
