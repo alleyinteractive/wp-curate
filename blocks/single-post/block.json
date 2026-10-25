@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "wp-curate/single-post",
+  "version": "0.1.0",
+  "title": "Single Post",
+  "category": "theme",
+  "icon": "admin-post",
+  "description": "Promotes a single post. Displays the selected post, or else the next remaining post.",
+  "textdomain": "wp-curate",
+  "editorScript": "file:index.ts",
+  "render": "file:render.php",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "channel": {
+      "type": "string",
+      "default": "latest_posts"
+    },
+    "ref": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "usesContext": [
+    "wp-curate/channelQueues"
+  ]
+}
