@@ -21,9 +21,7 @@ function main(): void {
 	$stop_queries_var = 'wp_curate_stop_queries';
 	$main_query       = new Global_Post_Query( 'wp_query' );
 	$channels         = [
-		new Channels\Latest_Posts(
-			limit: 100,
-		),
+		new Channels\Latest_Posts(),
 	];
 
 	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore

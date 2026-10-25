@@ -3,7 +3,7 @@ import { store as blockEditorStore } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 
 // Plugin dependencies.
-import type { ChannelRecord } from '../useChannelRecord';
+import { CHANNEL_PAGE_SIZE, type ChannelRecord } from '../useChannelRecord';
 
 const NO_IDS: number[] = [];
 
@@ -69,22 +69,33 @@ export function channelQueueIds(
     getChannel,
   } = select('wp-curate/channels') as any;
 
-  const queues = new Map<string, number[]>();
+  // The IDs taken so far from each queue, keyed by the channel and the context that it uses.
+  const takenFromQueues = new Map<string, number[]>();
 
   let isLoading = false;
   let out = NO_IDS;
 
-  // The key of a block's channel queue, or null if there is none.
-  const queueKey = (block: any, context: Record<string, unknown>) => {
+  // Take the IDs that a block renders from its queue.
+  const take = (block: any, context: Record<string, unknown>) => {
     const name = blockChannel(block);
 
+    let ref = 0;
     let record: ChannelRecord | null = null;
-    let key: string | null = null;
+    let taken = NO_IDS;
 
+    if (Number.isInteger(block.attributes.ref)) {
+      ref = block.attributes.ref;
+    }
+
+    // A single-item block takes its ref, if it has one.
+    if (ref > 0) {
+      taken = [ref];
+    }
+
+    // The first page of the channel tells which context the channel uses.
     if (name !== null && name !== '') {
       record = getChannel(name, context);
 
-      // The store holds no record for the channel until the channel loads from the server.
       if (record === null) {
         isLoading = true;
       }
@@ -96,41 +107,36 @@ export function channelQueueIds(
         record.uses_context.map((usedKey: string) => [usedKey, context[usedKey]]),
       );
 
-      key = JSON.stringify([name, used]);
+      const key = JSON.stringify([name, used]);
 
-      if (!queues.has(key)) {
-        queues.set(key, record.ids);
+      let previous = NO_IDS;
+
+      if (takenFromQueues.has(key)) {
+        previous = takenFromQueues.get(key) as number[];
       }
-    }
 
-    return key;
-  };
+      /*
+       * Without a ref, the block takes the top of the queue. Every ID taken before can be in the
+       * queue, so load that many IDs plus one, in whole pages.
+       */
+      if (ref === 0) {
+        const count = Math.ceil((previous.length + 1) / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
+        const loaded: ChannelRecord | null = getChannel(name, context, count);
 
-  // Take the IDs that a block renders from its queue.
-  const take = (block: any, context: Record<string, unknown>) => {
-    const key = queueKey(block, context);
+        if (loaded === null) {
+          isLoading = true;
+        }
 
-    let queue = NO_IDS;
-    let ref = 0;
-    let taken = NO_IDS;
+        if (loaded !== null) {
+          const top = loaded.ids.find((id) => !previous.includes(id));
 
-    if (key !== null && queues.has(key)) {
-      queue = queues.get(key) as number[];
-    }
+          if (top !== undefined) {
+            taken = [top];
+          }
+        }
+      }
 
-    if (Number.isInteger(block.attributes.ref)) {
-      ref = block.attributes.ref;
-    }
-
-    // A single-item block takes its ref, or else the top of the queue.
-    if (ref > 0) {
-      taken = [ref];
-    } else if (queue.length > 0) {
-      taken = [queue[0]];
-    }
-
-    if (key !== null) {
-      queues.set(key, queue.filter((queued) => !taken.includes(queued)));
+      takenFromQueues.set(key, [...previous, ...taken]);
     }
 
     return taken;
