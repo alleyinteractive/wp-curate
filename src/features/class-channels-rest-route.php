@@ -66,7 +66,7 @@ final readonly class Channels_REST_Route implements Feature {
 
 		register_rest_route(
 			'wp-curate/v1',
-			'/channels/(?P<name>[a-z0-9_]+)',
+			'/channels/(?P<name>[a-z0-9_-]+)',
 			[
 				'args'                => [
 					'context'  => [
