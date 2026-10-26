@@ -8,14 +8,19 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
-use Alley\WP\WP_Curate\Channels\Channel;
+use Alley\WP\WP_Curate\Channels\Default_Channel;
+use Alley\WP\WP_Curate\Channels\Registered_Channels;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
 /**
- * Exposes the IDs in a channel to the editor.
+ * Exposes the channels and the IDs in a channel to the editor.
+ *
+ * GET /wp-json/wp-curate/v1/channels
+ *
+ * Lists the name and label of each channel, and whether it is the global default.
  *
  * GET /wp-json/wp-curate/v1/channels/<name>?context[<key>]=<value>&page=<page>&per_page=<per_page>&search=<search>
  *
@@ -30,10 +35,12 @@ final readonly class Channels_REST_Route implements Feature {
 	/**
 	 * Constructor.
 	 *
-	 * @param Channel[] $channels Available channels.
+	 * @param Registered_Channels $channels        Available channels.
+	 * @param Default_Channel     $default_channel The global default channel.
 	 */
 	public function __construct(
-		private array $channels,
+		private Registered_Channels $channels,
+		private Default_Channel $default_channel,
 	) {}
 
 	/**
@@ -47,6 +54,16 @@ final readonly class Channels_REST_Route implements Feature {
 	 * Fires when preparing to serve a REST API request.
 	 */
 	public function on_rest_api_init(): void {
+		register_rest_route(
+			'wp-curate/v1',
+			'/channels',
+			[
+				'callback'            => [ $this, 'get_list_callback' ],
+				'methods'             => WP_REST_Server::READABLE,
+				'permission_callback' => fn () => current_user_can( 'edit_posts' ),
+			],
+		);
+
 		register_rest_route(
 			'wp-curate/v1',
 			'/channels/(?P<name>[a-z0-9_]+)',
@@ -77,6 +94,25 @@ final readonly class Channels_REST_Route implements Feature {
 				'permission_callback' => fn () => current_user_can( 'edit_posts' ),
 			],
 		);
+	}
+
+	/**
+	 * Respond with the name and label of each channel, and whether it is the global default.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_list_callback(): WP_REST_Response {
+		$list = [];
+
+		foreach ( $this->channels->all() as $channel ) {
+			$list[] = [
+				'is_default' => $channel->name() === $this->default_channel->name(),
+				'label'      => $channel->label(),
+				'name'       => $channel->name(),
+			];
+		}
+
+		return rest_ensure_response( $list );
 	}
 
 	/**
@@ -111,7 +147,7 @@ final readonly class Channels_REST_Route implements Feature {
 			$search = trim( $requested_search );
 		}
 
-		foreach ( $this->channels as $channel ) {
+		foreach ( $this->channels->all() as $channel ) {
 			if ( $channel->name() === $request->get_param( 'name' ) ) {
 				$context = [];
 
