@@ -4,6 +4,7 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
+- Changed: Relabel the Post block's "Backfill Post" button to "Unpin Post", the inverse of "Pin a Post".
 - Bug fix: Fix Query block previews, deduplication, and pinned posts not updating in the editor when Show template is on.
 - Bug fix: Fix issue where the Query block editor preview showed one post fewer than `numberOfPosts` when a recent post was private.
 
