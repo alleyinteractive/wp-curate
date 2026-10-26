@@ -5,9 +5,8 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import {
   createBlocksFromInnerBlocksTemplate,
   store as blocksStore,
-  type BlockIconNormalized,
+  type BlockTypeIconDescriptor,
   type BlockVariation,
-  type InnerBlockTemplate,
 } from '@wordpress/blocks';
 import { useState } from '@wordpress/element';
 import {
@@ -52,7 +51,9 @@ function QueryVariationPicker({
             replaceInnerBlocks(
               clientId,
               createBlocksFromInnerBlocksTemplate(
-                variation.innerBlocks as InnerBlockTemplate[],
+                variation.innerBlocks as Parameters<
+                  typeof createBlocksFromInnerBlocksTemplate
+                >[0],
               ),
               false,
             );
@@ -96,7 +97,7 @@ export default function QueryPlaceholder({
   );
   const hasPatterns = !!useBlockPatterns(clientId, attributes).length;
   const icon = (
-    (activeBlockVariation?.icon as BlockIconNormalized | undefined)?.src
+    (activeBlockVariation?.icon as BlockTypeIconDescriptor | undefined)?.src
     || activeBlockVariation?.icon
     || blockType?.icon?.src
   ) as IconType | undefined;

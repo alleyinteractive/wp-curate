@@ -15,14 +15,14 @@ import {
 } from '@wordpress/blocks';
 import { addQueryArgs } from '@wordpress/url';
 
-import type { Block, BlockInstance, BlockVariation } from '@wordpress/blocks';
+import type { Block, BlockType, BlockVariation } from '@wordpress/blocks';
 import type { BlockPattern } from '../blocks/query/types';
 
 /**
- * Block store selectors missing from @types/wordpress__blocks.
+ * Block store selectors missing from @wordpress/blocks types.
  */
 export interface BlocksStoreSelectors {
-  getBlockType: (blockName: string) => Block | undefined;
+  getBlockType: (blockName: string) => BlockType | undefined;
   getActiveBlockVariation: (
     blockName: string,
     attributes: Record<string, any>,
@@ -54,13 +54,13 @@ export interface BlockEditorStoreSelectors {
  *                                                the Query clients from these blocks.
  */
 export const getTransformedBlocksFromPattern = (
-  blocks: BlockInstance[],
+  blocks: Block[],
   queryBlockAttributes: Record<string, any>,
 ) => {
   const {
     namespace,
   } = queryBlockAttributes;
-  const clonedBlocks = blocks.map((block: BlockInstance) => cloneBlock(block));
+  const clonedBlocks = blocks.map((block: Block) => cloneBlock(block));
   const queryClientIds = [];
   const blocksQueue = [...clonedBlocks];
   while (blocksQueue.length > 0) {
@@ -71,7 +71,7 @@ export const getTransformedBlocksFromPattern = (
       }
       queryClientIds.push(block.clientId);
     }
-    block?.innerBlocks?.forEach((innerBlock: BlockInstance) => {
+    block?.innerBlocks?.forEach((innerBlock: Block) => {
       blocksQueue.push(innerBlock);
     });
   }
