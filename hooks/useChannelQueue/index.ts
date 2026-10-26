@@ -1,18 +1,20 @@
 // WordPress dependencies.
 import { store as blockEditorStore } from '@wordpress/block-editor';
+import { store as blocksStore } from '@wordpress/blocks';
 import { useSelect } from '@wordpress/data';
 
 // Plugin dependencies.
+import { isChannelProvider, postDefaultChannel } from '../useBlockChannel';
 import { CHANNEL_PAGE_SIZE, type ChannelRecord } from '../useChannelRecord';
 
 const NO_IDS: number[] = [];
 
 /**
- * The channel of a block that takes from queues, or null for any other block.
+ * The `channel` attribute of a block that has one, or null for any other block.
  *
  * @param block Block.
  */
-function blockChannel(block: unknown): string | null {
+function channelAttribute(block: unknown): string | null {
   let name: string | null = null;
 
   if (typeof block !== 'object' || block === null) {
@@ -49,6 +51,12 @@ function blockChannel(block: unknown): string | null {
  * - A single-item block shows its ref, or else the top of its channel's queue. That ID is then
  *   removed from the queue.
  * - A list block takes every ID that is left in its channel's queue.
+ * - A block that supports `wp-curate/channel`, like Many Posts, takes nothing.
+ *
+ * A block without a channel of its own uses the channel that `toBlockChannel()` describes.
+ *
+ * A block waits only for its own channel and for the block that gives it its context, so a block
+ * that changes its channel does not make the other blocks wait.
  *
  * @param select         The data registry's `select`.
  * @param clientId       Client ID of the block.
@@ -66,22 +74,44 @@ export function channelQueueIds(
   } = select(blockEditorStore);
 
   const {
+    getBlockType,
+  } = select(blocksStore);
+
+  const {
     getChannel,
   } = select('wp-curate/channels') as any;
 
   // The IDs taken so far from each queue, keyed by the channel and the context that it uses.
   const takenFromQueues = new Map<string, number[]>();
 
-  let isLoading = false;
+  /*
+   * The channels that are loading for a block. The blocks after it in the same channel cannot know
+   * their IDs until it loads, but the blocks in other channels can.
+   */
+  const loadingChannels = new Set<string>();
+
+  let isOutLoading = false;
   let out = NO_IDS;
 
-  // Take the IDs that a block renders from its queue.
-  const take = (block: any, context: Record<string, unknown>) => {
-    const name = blockChannel(block);
-
+  /*
+   * Take the IDs that a block renders from its queue. The block is loading if its channel is
+   * loading, or if the block above it that gives it its context is loading.
+   */
+  const take = (
+    block: any,
+    context: Record<string, unknown>,
+    inheritedChannel: string,
+    isContextLoading: boolean,
+  ) => {
+    let isLoading = false;
+    let name = channelAttribute(block);
     let ref = 0;
     let record: ChannelRecord | null = null;
     let taken = NO_IDS;
+
+    if (name === '') {
+      name = inheritedChannel;
+    }
 
     if (Number.isInteger(block.attributes.ref)) {
       ref = block.attributes.ref;
@@ -90,6 +120,16 @@ export function channelQueueIds(
     // A single-item block takes its ref, if it has one.
     if (ref > 0) {
       taken = [ref];
+    }
+
+    // Do not request a channel with context that is not known yet.
+    if (name !== null && name !== '' && (isContextLoading || loadingChannels.has(name))) {
+      loadingChannels.add(name);
+
+      return {
+        isLoading: true,
+        taken,
+      };
     }
 
     // The first page of the channel tells which context the channel uses.
@@ -139,7 +179,14 @@ export function channelQueueIds(
       takenFromQueues.set(key, [...previous, ...taken]);
     }
 
-    return taken;
+    if (isLoading && name !== null && name !== '') {
+      loadingChannels.add(name);
+    }
+
+    return {
+      isLoading,
+      taken,
+    };
   };
 
   /*
@@ -147,21 +194,45 @@ export function channelQueueIds(
    * channel queue. The walk "reaches" the clientId that was passed to this function and
    * records what IDs it took from its channel.
    */
-  const walk = (blocks: any[], context: Record<string, unknown>) => {
+  const walk = (
+    blocks: any[],
+    context: Record<string, unknown>,
+    inheritedChannel: string,
+    isContextLoading: boolean,
+  ) => {
     blocks.forEach((block) => {
-      let childContext = context;
+      const isProvider = isChannelProvider(getBlockType(block.name));
+      const name = channelAttribute(block);
 
-      if (blockChannel(block) !== null) {
-        const taken = take(block, context);
+      let childContext = context;
+      let childChannel = inheritedChannel;
+      let isChildContextLoading = isContextLoading;
+
+      /*
+       * Keep the inherited channel apart from `context`, which goes to the channel and is part of
+       * the key of its requests.
+       */
+      if (isProvider && name !== null && name !== '') {
+        childChannel = name;
+      }
+
+      if (!isProvider && name !== null) {
+        const {
+          isLoading,
+          taken,
+        } = take(block, context, inheritedChannel, isContextLoading);
 
         if (block.clientId === clientId) {
+          isOutLoading = isLoading;
           out = taken;
         }
 
-        /*
-         * A Single Post gives its post to the blocks inside it. A Many Posts block's inner blocks
-         * are the editable copy for its first post; the other posts are previews.
-         */
+        // Until the block's post is known, the blocks inside it do not know their context.
+        if (isLoading) {
+          isChildContextLoading = true;
+        }
+
+        // A Single Post gives its post to the blocks inside it.
         if (taken.length > 0) {
           childContext = {
             postId: taken[0],
@@ -170,7 +241,7 @@ export function channelQueueIds(
         }
       }
 
-      walk(block.innerBlocks, childContext);
+      walk(block.innerBlocks, childContext, childChannel, isChildContextLoading);
     });
   };
 
@@ -188,11 +259,18 @@ export function channelQueueIds(
     startContext = previewContext;
   }
 
-  walk(getBlocks(), startContext);
+  const postChannel = postDefaultChannel(select);
+
+  // Every block can inherit the post's default channel, so all of them wait for it.
+  if (postChannel === null) {
+    return null;
+  }
+
+  walk(getBlocks(), startContext, postChannel, false);
 
   let ids: number[] | null = out;
 
-  if (isLoading) {
+  if (isOutLoading) {
     ids = null;
   }
 

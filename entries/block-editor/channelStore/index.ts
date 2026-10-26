@@ -7,8 +7,8 @@ import { addQueryArgs } from '@wordpress/url';
 import type { ChannelPage, ChannelRecord } from '../../../hooks/useChannelRecord';
 
 /*
- * The available channels by name and context, and the pages of them that pickers show. Blocks read
- * it by the store name, `wp-curate/channels`, so that it is registered only once, here.
+ * The list of channels, the channels by name and context, and the pages of them that pickers show.
+ * Blocks read it by the store name, `wp-curate/channels`, so that it is registered only once, here.
  *
  * core-data is not used because it stores an entity record by its key alone, so the same channel
  * name with different context would overwrite itself.
@@ -21,8 +21,18 @@ import type { ChannelPage, ChannelRecord } from '../../../hooks/useChannelRecord
 // The most IDs that the REST API returns in one page.
 const MAX_PER_PAGE = 100;
 
+/**
+ * A channel in the list of channels. `is_default` is true for the global default channel.
+ */
+export interface ChannelOption {
+  is_default: boolean;
+  label: string;
+  name: string;
+}
+
 interface ChannelState {
   channels: Record<string, ChannelRecord>;
+  list: ChannelOption[] | null;
   pages: Record<string, ChannelPage>;
 }
 
@@ -153,6 +163,42 @@ function toChannelRecord(value: unknown): ChannelRecord {
   }
 
   return record;
+}
+
+/**
+ * Reads the list of channels from a REST API response, which can be another type when the
+ * request fails.
+ *
+ * @param value The response.
+ */
+function toChannelOptions(value: unknown): ChannelOption[] {
+  const options: ChannelOption[] = [];
+
+  if (!Array.isArray(value)) {
+    return options;
+  }
+
+  value.forEach((item: unknown) => {
+    if (typeof item !== 'object' || item === null) {
+      return;
+    }
+
+    const {
+      is_default: isDefault,
+      label,
+      name,
+    } = item as Record<string, unknown>;
+
+    if (typeof label === 'string' && typeof name === 'string') {
+      options.push({
+        is_default: isDefault === true,
+        label,
+        name,
+      });
+    }
+  });
+
+  return options;
 }
 
 /**
@@ -327,6 +373,27 @@ const loadChannelPage = (
 };
 
 /**
+ * Loads the list of channels.
+ */
+const loadChannels = () => async ({
+  dispatch,
+}: any) => {
+  const {
+    receiveChannels,
+  } = dispatch;
+
+  let response: unknown = null;
+
+  try {
+    response = await apiFetch({ path: '/wp-curate/v1/channels' });
+  } catch {
+    // A list that fails to load counts as empty.
+  }
+
+  receiveChannels(toChannelOptions(response));
+};
+
+/**
  * Get the record of a channel.
  *
  * The arguments have no defaults, so that callers pass all of them. The data registry keys each
@@ -403,6 +470,14 @@ const getChannelPostType = (
   return postType;
 };
 
+/**
+ * Get the name and label of each channel.
+ *
+ * @param state Store state.
+ * @return The channels, or null until they load.
+ */
+const getChannels = (state: ChannelState) => state.list;
+
 const getChannelResolver = (
   name: string,
   context: object,
@@ -438,6 +513,7 @@ const store = createReduxStore('wp-curate/channels', {
   reducer(state: ChannelState | undefined, action: any) {
     let out: ChannelState = {
       channels: {},
+      list: null,
       pages: {},
     };
 
@@ -459,6 +535,13 @@ const store = createReduxStore('wp-curate/channels', {
       };
     }
 
+    if (action.type === 'RECEIVE_CHANNELS') {
+      out = {
+        ...out,
+        list: action.list,
+      };
+    }
+
     if (action.type === 'RECEIVE_CHANNEL_PAGE') {
       out = {
         ...out,
@@ -475,15 +558,20 @@ const store = createReduxStore('wp-curate/channels', {
     receiveChannelPage(key: string, page: ChannelPage) {
       return { key, page, type: 'RECEIVE_CHANNEL_PAGE' };
     },
+    receiveChannels(list: ChannelOption[]) {
+      return { list, type: 'RECEIVE_CHANNELS' };
+    },
   },
   selectors: {
     getChannel,
     getChannelPage,
     getChannelPostType,
+    getChannels,
   },
   resolvers: {
     getChannel: getChannelResolver,
     getChannelPage: getChannelPageResolver,
+    getChannels: loadChannels,
   },
 });
 
