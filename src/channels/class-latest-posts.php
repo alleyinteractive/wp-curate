@@ -8,10 +8,11 @@
 namespace Alley\WP\WP_Curate\Channels;
 
 use Generator;
+use WP_Post_Type;
 use WP_Query;
 
 /**
- * The latest published posts of the `post` post type, most recent first.
+ * The latest published posts of one post type, most recent first.
  */
 final readonly class Latest_Posts implements Channel {
 	/**
@@ -22,21 +23,38 @@ final readonly class Latest_Posts implements Channel {
 	private const BATCH_SIZE = 20;
 
 	/**
-	 * Machine name that blocks use to name the channel.
+	 * Constructor.
+	 *
+	 * @param string $post_type Post type slug.
+	 */
+	public function __construct(
+		private string $post_type,
+	) {}
+
+	/**
+	 * Machine name that blocks use to name the channel, such as `latest_post` for posts.
 	 *
 	 * @return string
 	 */
 	public function name(): string {
-		return 'latest_posts';
+		return 'latest_' . $this->post_type;
 	}
 
 	/**
-	 * Human-readable name of the channel.
+	 * Human-readable name of the channel, such as "Latest Posts".
 	 *
 	 * @return string
 	 */
 	public function label(): string {
-		return __( 'Latest Posts', 'wp-curate' );
+		$plural = $this->post_type;
+		$object = get_post_type_object( $this->post_type );
+
+		if ( $object instanceof WP_Post_Type && is_string( $object->labels->name ) ) {
+			$plural = $object->labels->name;
+		}
+
+		/* translators: %s: Plural post type name. */
+		return sprintf( __( 'Latest %s', 'wp-curate' ), $plural );
 	}
 
 	/**
@@ -136,7 +154,7 @@ final readonly class Latest_Posts implements Channel {
 			'order'               => 'DESC',
 			'orderby'             => 'date',
 			'post_status'         => 'publish',
-			'post_type'           => 'post',
+			'post_type'           => $this->post_type,
 		];
 	}
 
