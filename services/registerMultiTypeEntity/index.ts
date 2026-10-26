@@ -42,7 +42,10 @@ const registerMultiTypeEntity = (postTypeString: string): void => {
 
   // If `core/post-template` asked for this entity before it existed, core-data resolved that
   // request as a no-op and won't retry it on its own. Invalidating makes it run again.
-  coreDispatch.invalidateResolutionForStoreSelector('getEntityRecords');
+  // Every store has this metadata action, but core-data's types don't include it.
+  (coreDispatch as unknown as {
+    invalidateResolutionForStoreSelector: (selectorName: string) => void;
+  }).invalidateResolutionForStoreSelector('getEntityRecords');
 };
 
 export default registerMultiTypeEntity;
