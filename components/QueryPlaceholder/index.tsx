@@ -51,6 +51,8 @@ function QueryVariationPicker({
             replaceInnerBlocks(
               clientId,
               createBlocksFromInnerBlocksTemplate(
+                // BlockVariation types innerBlocks as Array<unknown[]>, and the
+                // template type this function accepts isn't exported.
                 variation.innerBlocks as Parameters<
                   typeof createBlocksFromInnerBlocksTemplate
                 >[0],
