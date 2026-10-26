@@ -5,6 +5,7 @@ import isShallowEqual from '@wordpress/is-shallow-equal';
 import type { Block } from '../../types/block';
 import getDedupeScopeBlocks from '../getDedupeScopeBlocks';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
+import registerMultiTypeEntity from '../registerMultiTypeEntity';
 
 interface Window {
   wpCurateQueryBlock: {
@@ -167,6 +168,7 @@ export function mainDedupe() {
       return;
     }
     const postTypeString = postTypes.join(',');
+    registerMultiTypeEntity(postTypeString);
     let postIndex = 0;
 
     // New array to hold our final list of posts.
