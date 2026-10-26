@@ -11,13 +11,10 @@
   "editorScript": "file:index.ts",
   "render": "file:render.php",
   "supports": {
-    "html": false
+    "html": false,
+    "wp-curate/channel": true
   },
   "attributes": {
-    "channel": {
-      "type": "string",
-      "default": "latest_posts"
-    },
     "postType": {
       "type": "string",
       "default": ""
@@ -28,6 +25,8 @@
     }
   },
   "usesContext": [
-    "wp-curate/channelQueues"
+    "postId",
+    "postType",
+    "wp-curate/postTemplate"
   ]
 }
