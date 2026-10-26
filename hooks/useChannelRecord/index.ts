@@ -37,10 +37,10 @@ export interface ChannelPage extends ChannelRecord {
 /**
  * Get the record of a block's channel.
  *
- * @param name    The block's `channel` attribute.
+ * @param name    The block's channel, or an empty string if it has none.
  * @param context Block context to send to the channel.
  * @param count   Number of IDs to load, as a multiple of `CHANNEL_PAGE_SIZE`.
- * @return The record, or null while the channel loads.
+ * @return The record, or null while the channel loads or if there is no channel.
  */
 export default function useChannelRecord(
   name: string,
@@ -55,6 +55,13 @@ export default function useChannelRecord(
       getChannel,
     } = select('wp-curate/channels') as any;
 
-    return getChannel(name, JSON.parse(contextKey), count);
+    let record: ChannelRecord | null = null;
+
+    // Without a channel, there is nothing to request.
+    if (name !== '') {
+      record = getChannel(name, JSON.parse(contextKey), count);
+    }
+
+    return record;
   }, [count, name, contextKey]);
 }
