@@ -4,7 +4,22 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
-Nothing yet.
+- Bug fix: Fix issue where the Query block editor preview showed one post fewer than `numberOfPosts` when a recent post was private.
+
+## 3.4.0 - 2026-10-20
+
+- Bug Fix: Restore trending content queries with Parse.ly 3.20.4 and later.
+
+## 3.3.0 - 2026-10-12
+
+- Changed: Require WordPress 6.9 or higher. Tested up to WordPress 7.1.
+- Changed: Update the Post and Query blocks to block API version 3, and render variation icons as SVGs so they display in the iframed editor.
+- Enhancement: Add a `'wp-curate.dedupe'` action to run page-wide deduplication.
+- Bug fix: Fix issue on WordPress 7.0+ where Post block buttons disappeared when clicked, and only the first post in a Post Template could be selected, when the Query block was inserted from a pattern or placed inside one.
+- Bug fix: Fix issue where pinned posts in subqueries could be dropped because deduplication ran before pin validation resolved.
+- Bug fix: Fix a subquery render loop.
+- Bug fix: Fall back to `scrollIntoView` after moving a post in browsers without `scrollIntoViewIfNeeded`, such as Firefox.
+- Changed: Build with Node 24, align `@wordpress/*` dependencies with WordPress 6.9, and apply `npm audit` security fixes.
 
 ## 3.2.3 - 2026-07-02
 
