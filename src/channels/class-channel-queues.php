@@ -24,10 +24,10 @@ final class Channel_Queues {
 	/**
 	 * Constructor.
 	 *
-	 * @param Channel[] $channels Available channels.
+	 * @param Registered_Channels $channels Available channels.
 	 */
 	public function __construct(
-		private readonly array $channels,
+		private readonly Registered_Channels $channels,
 	) {}
 
 	/**
@@ -85,7 +85,7 @@ final class Channel_Queues {
 	private function queue( string $name, array $context ): ?Queue {
 		$found = null;
 
-		foreach ( $this->channels as $channel ) {
+		foreach ( $this->channels->all() as $channel ) {
 			if ( $channel->name() === $name ) {
 				$used = array_intersect_key( $context, array_flip( $channel->uses_context() ) );
 				$key  = wp_json_encode( [ $name, $used ] );
