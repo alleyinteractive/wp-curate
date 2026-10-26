@@ -12,16 +12,18 @@ jest.mock('@wordpress/data', () => ({
 
 describe('registerMultiTypeEntity', () => {
   const addEntities = jest.fn();
-  const invalidateResolutionForStoreSelector = jest.fn();
+  const invalidateResolution = jest.fn();
   const getEntityConfig = jest.fn();
+  const getCachedResolvers = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
     (dispatch as jest.Mock).mockReturnValue({
       addEntities,
-      invalidateResolutionForStoreSelector,
+      invalidateResolution,
     });
-    (select as jest.Mock).mockReturnValue({ getEntityConfig });
+    (select as jest.Mock).mockReturnValue({ getEntityConfig, getCachedResolvers });
+    getCachedResolvers.mockReturnValue({});
   });
 
   it('does nothing for a single post type', () => {
@@ -50,13 +52,37 @@ describe('registerMultiTypeEntity', () => {
 
   it('retries entity requests made before the entity existed', () => {
     getEntityConfig.mockReturnValue(undefined);
+    const query = { per_page: 10, context: 'view' };
+    getCachedResolvers.mockReturnValue({
+      getEntityRecords: new Map([
+        [['postType', 'post,page', query], { status: 'finished' }],
+      ]),
+    });
 
     registerMultiTypeEntity('post,page');
 
-    expect(invalidateResolutionForStoreSelector).toHaveBeenCalledWith('getEntityRecords');
-    expect(addEntities.mock.invocationCallOrder[0]).toBeLessThan(
-      invalidateResolutionForStoreSelector.mock.invocationCallOrder[0],
+    expect(invalidateResolution).toHaveBeenCalledWith(
+      'getEntityRecords',
+      ['postType', 'post,page', query],
     );
+    expect(addEntities.mock.invocationCallOrder[0]).toBeLessThan(
+      invalidateResolution.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('does not retry requests for other entities', () => {
+    getEntityConfig.mockReturnValue(undefined);
+    getCachedResolvers.mockReturnValue({
+      getEntityRecords: new Map([
+        [['postType', 'post', { per_page: 10 }], { status: 'finished' }],
+        [['postType', 'post,page,attachment', {}], { status: 'finished' }],
+        [['taxonomy', 'category', {}], { status: 'finished' }],
+      ]),
+    });
+
+    registerMultiTypeEntity('post,page');
+
+    expect(invalidateResolution).not.toHaveBeenCalled();
   });
 
   it('does not register the entity twice', () => {
@@ -65,6 +91,6 @@ describe('registerMultiTypeEntity', () => {
     registerMultiTypeEntity('post,page');
 
     expect(addEntities).not.toHaveBeenCalled();
-    expect(invalidateResolutionForStoreSelector).not.toHaveBeenCalled();
+    expect(invalidateResolution).not.toHaveBeenCalled();
   });
 });

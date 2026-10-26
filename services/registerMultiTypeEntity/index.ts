@@ -41,11 +41,23 @@ const registerMultiTypeEntity = (postTypeString: string): void => {
   ]);
 
   // If `core/post-template` asked for this entity before it existed, core-data resolved that
-  // request as a no-op and won't retry it on its own. Invalidating makes it run again.
-  // Every store has this metadata action, but core-data's types don't include it.
-  (coreDispatch as unknown as {
-    invalidateResolutionForStoreSelector: (selectorName: string) => void;
-  }).invalidateResolutionForStoreSelector('getEntityRecords');
+  // request as a no-op and won't retry it on its own. Invalidating makes it run again. Only
+  // requests for this entity are invalidated, so other entity lists in the editor aren't refetched.
+  // Every store has these metadata selectors and actions, but core-data's types don't include them.
+  const { getCachedResolvers } = select(coreStore) as unknown as {
+    getCachedResolvers: () => Record<string, {
+      forEach: (callback: (status: unknown, args: unknown[]) => void) => void;
+    } | undefined>;
+  };
+  const { invalidateResolution } = coreDispatch as unknown as {
+    invalidateResolution: (selectorName: string, args: unknown[]) => void;
+  };
+
+  getCachedResolvers().getEntityRecords?.forEach((status, args) => {
+    if (args[0] === 'postType' && args[1] === postTypeString) {
+      invalidateResolution('getEntityRecords', args);
+    }
+  });
 };
 
 export default registerMultiTypeEntity;
