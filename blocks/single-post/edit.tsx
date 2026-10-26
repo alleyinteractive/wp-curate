@@ -3,31 +3,43 @@ import React from 'react';
 
 // WordPress dependencies.
 import {
-  // @ts-expect-error BlockContextProvider not available in types yet.
-  BlockContextProvider,
   BlockControls,
+  store as blockEditorStore,
   useBlockProps,
   useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { BlockEditProps, InnerBlockTemplate } from '@wordpress/blocks';
+import {
+  BlockEditProps,
+  BlockInstance,
+  InnerBlockTemplate,
+  createBlocksFromInnerBlocksTemplate,
+} from '@wordpress/blocks';
 import {
   Placeholder,
   Spinner,
   ToolbarButton,
   ToolbarGroup,
 } from '@wordpress/components';
-import { useMemo, useState } from '@wordpress/element';
+import { useDispatch, useSelect } from '@wordpress/data';
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { cancelCircleFilled, pencil } from '@wordpress/icons';
 
 // Plugin dependencies.
-import useChannelQueue from '../../hooks/useChannelQueue';
-import useChannelRecord from '../../hooks/useChannelRecord';
+import useBlockChannel from '../../hooks/useBlockChannel';
 
 // Internal dependencies.
 import PostPicker from './components/post-picker';
 
-// The inner blocks of a new block, until a layout modal like the one in Single Term is available.
+/*
+ * The inner blocks of a new block outside a Many Posts block, until a layout modal like the one
+ * in Single Term is available.
+ */
 const BASIC_TEMPLATE: InnerBlockTemplate[] = [
   ['core/post-title', { isLink: true }],
 ];
@@ -39,60 +51,178 @@ interface SinglePostAttributes {
 }
 
 /**
- * The wp-curate/single-post block edit function.
+ * The editable inner blocks of a block outside a Many Posts block.
  */
-export default function Edit({
-  attributes: {
-    channel,
-    postType: pinnedPostType,
-    ref,
-  },
-  clientId,
-  setAttributes,
-}: BlockEditProps<SinglePostAttributes> & { clientId: string }) {
-  const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const blockProps = useBlockProps();
+function StandaloneInnerBlocks({ blockProps }: { blockProps: Record<string, unknown> }) {
   const innerBlocksProps = useInnerBlocksProps(blockProps, {
     template: BASIC_TEMPLATE,
   });
-  const queuedIds = useChannelQueue(clientId);
-  const record = useChannelRecord(channel);
 
-  // The pinned post, or else the top of the channel's queue after the blocks before this one.
+  return <div {...innerBlocksProps} />;
+}
+
+/**
+ * Converts blocks to a template in the shape of `InnerBlockTemplate`.
+ *
+ * @param blocks Blocks.
+ */
+function toInnerBlockTemplate(blocks: BlockInstance[]): InnerBlockTemplate[] {
+  return blocks.map(({
+    attributes,
+    innerBlocks,
+    name,
+  }) => [name, attributes, toInnerBlockTemplate(innerBlocks)]);
+}
+
+/**
+ * The inner blocks of a block inside a Many Posts block, which edit that block's template.
+ *
+ * The inner blocks are controlled: they come from the template, and each change goes back to the
+ * template. The editor does not save controlled inner blocks with the block itself. Every Single
+ * Post block in the Many Posts block edits the same template.
+ */
+function TemplateInnerBlocks({
+  blockProps,
+  manyPostsClientId,
+  template,
+}: {
+  blockProps: Record<string, unknown>;
+  manyPostsClientId: string;
+  template: InnerBlockTemplate[];
+}) {
+  const {
+    updateBlockAttributes,
+  } = useDispatch(blockEditorStore);
+
+  // The last blocks that this block sent to the template, and the template made from them.
+  const sent = useRef<{ blocks: BlockInstance[], template: InnerBlockTemplate[] } | null>(null);
+
+  /*
+   * Give back the blocks that this block sent when the template is the one made from them, so that
+   * the editor does not replace the blocks that the user is editing.
+   */
+  const value = useMemo(() => {
+    let blocks: BlockInstance[] = [];
+
+    if (sent.current !== null && sent.current.template === template) {
+      ({ blocks } = sent.current);
+    } else {
+      blocks = createBlocksFromInnerBlocksTemplate(template);
+    }
+
+    return blocks;
+  }, [template]);
+
+  const onChange = useCallback((blocks: BlockInstance[]) => {
+    const next = toInnerBlockTemplate(blocks);
+
+    sent.current = {
+      blocks,
+      template: next,
+    };
+
+    updateBlockAttributes(manyPostsClientId, { template: next });
+  }, [manyPostsClientId, updateBlockAttributes]);
+
+  const innerBlocksProps = useInnerBlocksProps(blockProps, {
+    // @ts-expect-error value, onChange, and onInput not available in types yet.
+    onChange,
+    onInput: onChange,
+    value,
+  });
+
+  return <div {...innerBlocksProps} />;
+}
+
+/**
+ * The wp-curate/single-post block edit function.
+ *
+ * The `wp-curate/channel` block support gives the block its Channel panel, and gives it its post as
+ * the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
+ * after the blocks before this one. The support also gives that post to the inner blocks.
+ *
+ * Outside a Many Posts block, the block has its own inner blocks and its own channel. Inside one,
+ * it has neither: its inner blocks edit the Many Posts block's template, and it uses that block's
+ * channel.
+ */
+export default function Edit({
+  attributes: {
+    channel: channelAttribute,
+    ref,
+  },
+  clientId,
+  context: {
+    postId: contextPostId,
+    'wp-curate/channel': contextChannel,
+    'wp-curate/postTemplate': postTemplate,
+  },
+  setAttributes,
+}: BlockEditProps<SinglePostAttributes> & {
+  clientId: string;
+  context: Record<string, unknown>;
+}) {
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const blockProps = useBlockProps();
+  const blockChannel = useBlockChannel(channelAttribute, contextChannel);
+
+  let channel = '';
+
+  if (blockChannel !== null) {
+    channel = blockChannel;
+  }
+
+  // The post, null while the channel loads, or 0 when there is no post to show.
   let postId: number | null = null;
 
-  if (queuedIds !== null) {
-    postId = 0;
+  if (typeof contextPostId === 'number') {
+    postId = contextPostId;
   }
 
-  if (queuedIds !== null && queuedIds.length > 0) {
-    [postId] = queuedIds;
-  }
+  // The nearest Many Posts block, whose template the block edits, or an empty string.
+  const manyPostsClientId: string = useSelect((select) => {
+    const {
+      getBlockParentsByBlockName,
+    } = select(blockEditorStore) as any;
 
-  let postType = '';
+    const [nearest] = getBlockParentsByBlockName(clientId, 'wp-curate/many-posts', true);
 
-  if (record !== null && postId !== null && postId in record.post_types) {
-    postType = record.post_types[postId];
-  }
+    let out = '';
 
-  // A pinned post can be past the IDs that have loaded, so the block saves its post type.
-  if (ref > 0 && pinnedPostType !== '') {
-    postType = pinnedPostType;
-  }
+    if (typeof nearest === 'string') {
+      out = nearest;
+    }
 
-  // The same context that `render.php` gives the inner blocks.
-  const context = useMemo(() => ({
-    postId,
-    postType,
-  }), [postId, postType]);
+    return out;
+  }, [clientId]);
+
+  // Only a Many Posts block provides a template.
+  const isInManyPosts = Array.isArray(postTemplate) && manyPostsClientId !== '';
 
   let preview = (
-    <BlockContextProvider value={context}>
-      <div {...innerBlocksProps} />
-    </BlockContextProvider>
+    <StandaloneInnerBlocks blockProps={blockProps} />
   );
 
-  if (postId === null) {
+  if (isInManyPosts) {
+    preview = (
+      <TemplateInnerBlocks
+        blockProps={blockProps}
+        manyPostsClientId={manyPostsClientId}
+        template={postTemplate as InnerBlockTemplate[]}
+      />
+    );
+  }
+
+  // There is always a channel unless none are registered, which will be handled later.
+  if (channel === '' && ref === 0 && blockChannel !== null) {
+    preview = (
+      <div {...blockProps}>
+        <Placeholder
+          label={__('Single Post', 'wp-curate')}
+          instructions={__('No channels are available.', 'wp-curate')}
+        />
+      </div>
+    );
+  } else if (postId === null) {
     preview = (
       <div {...blockProps}>
         <Spinner />
@@ -111,23 +241,23 @@ export default function Edit({
 
   return (
     <>
-      {channel !== '' ? (
-        <BlockControls>
-          <ToolbarGroup>
+      <BlockControls>
+        <ToolbarGroup>
+          {channel !== '' ? (
             <ToolbarButton icon={pencil} onClick={() => setIsPickerOpen(true)}>
               {ref > 0 ? __('Replace post', 'wp-curate') : __('Select post', 'wp-curate')}
             </ToolbarButton>
-            {ref > 0 ? (
-              <ToolbarButton
-                icon={cancelCircleFilled}
-                onClick={() => setAttributes({ postType: '', ref: 0 })}
-              >
-                {__('Clear', 'wp-curate')}
-              </ToolbarButton>
-            ) : null}
-          </ToolbarGroup>
-        </BlockControls>
-      ) : null}
+          ) : null}
+          {ref > 0 ? (
+            <ToolbarButton
+              icon={cancelCircleFilled}
+              onClick={() => setAttributes({ postType: '', ref: 0 })}
+            >
+              {__('Clear', 'wp-curate')}
+            </ToolbarButton>
+          ) : null}
+        </ToolbarGroup>
+      </BlockControls>
 
       {preview}
 
