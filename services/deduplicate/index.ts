@@ -3,6 +3,7 @@ import { addAction } from '@wordpress/hooks';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import isShallowEqual from '@wordpress/is-shallow-equal';
 import type { Block } from '../../types/block';
+import getDedupeScopeBlocks from '../getDedupeScopeBlocks';
 import recursivelyFindBlocksByName from '../recursivelyFindBlocksByName';
 import registerMultiTypeEntity from '../registerMultiTypeEntity';
 
@@ -129,13 +130,7 @@ export function mainDedupe() {
 
   // @ts-expect-error Methods not fully typed.
   const { getBlocksByName, getBlocks } = select(blockEditorStore);
-
-  /**
-   * There isn't support yet for deduplicating posts throughout an entire template.
-   * If we're in template mode, narrow the scope to just the blocks in post content.
-   */
-  const root: Block[] = getBlocksByName('core/post-content');
-  const blocks: Block[] = root.length === 1 ? getBlocks(root) : getBlocks();
+  const blocks = getDedupeScopeBlocks(getBlocksByName, getBlocks);
 
   const {
     wp_curate_deduplication: wpCurateDeduplication = true,
