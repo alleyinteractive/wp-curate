@@ -20,9 +20,12 @@ use WP_Block_Type_Registry;
 function main(): void {
 	$stop_queries_var = 'wp_curate_stop_queries';
 	$main_query       = new Global_Post_Query( 'wp_query' );
-	$channels         = [
-		new Channels\Latest_Posts(),
-	];
+	$channels         = new Channels\Registered_Channels();
+	$default_channel  = new Channels\Default_Channel(
+		channels: $channels,
+		preferred: 'latest_post',
+	);
+	$channel_meta_key = 'wp_curate_default_channel';
 
 	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore
 	$plugin = new Group(
@@ -54,12 +57,22 @@ function main(): void {
 		new Features\Block_Patterns(),
 		new Features\Channels_REST_Route(
 			channels: $channels,
+			default_channel: $default_channel,
+		),
+		new Features\Default_Channel_Meta(
+			default_channel: $default_channel,
+			meta_key: $channel_meta_key,
+		),
+		new Features\Channel_Block_Context(
+			default_channel: $default_channel,
+			meta_key: $channel_meta_key,
 		),
 		new Features\Channel_Queues_Block_Context(
 			queues: new Channels\Channel_Queues(
 				channels: $channels,
 			),
 		),
+		new Features\Channel_Block_Support(),
 	);
 	// phpcs:enable
 
