@@ -212,7 +212,7 @@ export function channelQueueIds(
        * Keep the inherited channel apart from `context`, which goes to the channel and is part of
        * the key of its requests.
        */
-      if (isProvider && name !== null && name !== '') {
+      if (isProvider && name !== null) {
         childChannel = name;
       }
 
