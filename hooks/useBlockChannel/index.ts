@@ -27,6 +27,24 @@ const NO_ARG_FIELDS: ChannelArgField[] = [];
 
 const NO_ARGS: Record<string, unknown> = {};
 
+const NO_CONTEXT: Record<string, unknown> = {};
+
+/**
+ * Whether a channel can be a post's default channel or the global default. A channel that reads
+ * arguments or block context cannot. Only a block can give it arguments, and the default applies
+ * to blocks in any context.
+ *
+ * Keep the rule matched with `Default_Channel` in PHP.
+ *
+ * @param channel The channel in the list of channels.
+ */
+export function canBeDefaultChannel({
+  arg_fields: argFields,
+  uses_context: usesContext,
+}: ChannelOption): boolean {
+  return argFields.length === 0 && usesContext.length === 0;
+}
+
 /**
  * Whether a block type has the `wp-curate/channel` block support.
  *
@@ -115,7 +133,7 @@ function toPostMetaChannel(select: any): string {
 /**
  * Get the post's default channel if it is registered, or else the global default channel.
  *
- * A channel that reads arguments cannot be the default, because only a block can give them.
+ * Only some channels can be the default, which `canBeDefaultChannel()` describes.
  *
  * Keep the rules matched with `Channel_Block_Context` and `Default_Channel` in PHP.
  *
@@ -145,9 +163,7 @@ export function postDefaultChannel(select: any): string | null {
     }
   });
 
-  if (channels.some(({ arg_fields: argFields, name }) => (
-    name === postChannel && argFields.length === 0
-  ))) {
+  if (channels.some((option) => option.name === postChannel && canBeDefaultChannel(option))) {
     channel = postChannel;
   }
 
@@ -290,6 +306,92 @@ export function channelArgFields(select: any, name: string): ChannelArgField[] {
   }
 
   return fields;
+}
+
+/**
+ * Get only the values of the block context that some channels read.
+ *
+ * @param keys    The names of the context values.
+ * @param context The block context.
+ */
+function pickContext(keys: string[], context: Record<string, unknown>): Record<string, unknown> {
+  let out = NO_CONTEXT;
+
+  keys.forEach((key) => {
+    if (key in context && context[key] !== undefined) {
+      out = { ...out, [key]: context[key] };
+    }
+  });
+
+  return out;
+}
+
+/**
+ * Get only the values of the block context that a channel reads.
+ *
+ * Leaving out the others gives every block that uses the channel with the same context the same
+ * request and queue, like the queues in PHP.
+ *
+ * @param select  The data registry's `select`.
+ * @param name    Channel name.
+ * @param context The block context.
+ * @return The context, or none while the list of channels loads.
+ */
+export function channelContext(
+  select: any,
+  name: string,
+  context: Record<string, unknown>,
+): Record<string, unknown> {
+  const {
+    getChannels,
+  } = select('wp-curate/channels') as any;
+
+  const channels: ChannelOption[] | null = getChannels();
+
+  let keys: string[] = [];
+
+  if (channels === null) {
+    return NO_CONTEXT;
+  }
+
+  const option = channels.find((channel) => channel.name === name);
+
+  if (option !== undefined) {
+    keys = option.uses_context;
+  }
+
+  return pickContext(keys, context);
+}
+
+/**
+ * Get only the values of the block context that any channel reads, which tell which channels the
+ * block can select.
+ *
+ * @param select  The data registry's `select`.
+ * @param context The block context.
+ * @return The context, or null while the list of channels loads.
+ */
+export function channelsContext(
+  select: any,
+  context: Record<string, unknown>,
+): Record<string, unknown> | null {
+  const {
+    getChannels,
+  } = select('wp-curate/channels') as any;
+
+  const channels: ChannelOption[] | null = getChannels();
+
+  if (channels === null) {
+    return null;
+  }
+
+  const keys = new Set<string>();
+
+  channels.forEach(({ uses_context: usesContext }) => {
+    usesContext.forEach((key) => keys.add(key));
+  });
+
+  return pickContext([...keys].sort(), context);
 }
 
 /**

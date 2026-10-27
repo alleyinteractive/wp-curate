@@ -33,7 +33,7 @@ export interface ChannelPanelFillProps {
  * WP Curate adds a channel with the `wp_curate_channels` filter in PHP, gives its fields a type
  * with a prefix, and fills the slot by its name, such as with
  * `<wp.components.Fill name="WPCurateChannelPanel">` from a plugin that `registerPlugin()` adds.
- * The Channel Post Card mu-plugin is an example.
+ * WP Curate adds its own term picker the same way, in `entries/block-editor/channelTermArgs`.
  */
 export const {
   Fill: ChannelPanelFill,

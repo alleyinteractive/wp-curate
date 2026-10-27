@@ -49,6 +49,7 @@ interface ChannelControlsProps {
   channel: string;
   channelArgs: Record<string, unknown>;
   clientId: string;
+  context: Record<string, unknown>;
   contextChannel: unknown;
   isProvider: boolean;
   setAttributes: (attributes: Record<string, unknown>) => void;
@@ -68,6 +69,7 @@ function ChannelControls({
   channel,
   channelArgs,
   clientId,
+  context,
   contextChannel,
   isProvider,
   setAttributes,
@@ -146,11 +148,13 @@ function ChannelControls({
           panelId={clientId}
         >
           <ChannelSelectControl
+            // The block's context, from the block around it, tells which channels it can select.
+            context={context}
             help={help}
             // The arguments of one channel are not the arguments of another.
             onChange={(next) => setAttributes({ channel: { name: next } })}
             value={channel}
-            withArgChannels
+            withBlockChannels
           />
         </ToolsPanelItem>
         <ChannelPanelSlot fillProps={fillProps} />
@@ -269,6 +273,7 @@ const withChannelSupport = createHigherOrderComponent(
           channel={ownName}
           channelArgs={toChannelArgs(channel)}
           clientId={clientId}
+          context={context}
           contextChannel={contextChannel}
           isProvider={isProvider}
           setAttributes={setAttributes}

@@ -7,8 +7,8 @@ import { addQueryArgs } from '@wordpress/url';
 import type { ChannelPage, ChannelRecord } from '../../../hooks/useChannelRecord';
 
 /*
- * The list of channels, the channels by name, arguments, and context, and the pages of them that
- * pickers show.
+ * The list of channels, alone and for each block context, the channels by name, arguments, and
+ * context, and the pages of them that pickers show.
  * Blocks read it by the store name, `wp-curate/channels`, so that it is registered only once, here.
  *
  * core-data is not used because it stores an entity record by its key alone, so the same channel
@@ -36,18 +36,22 @@ export interface ChannelArgField {
 
 /**
  * A channel in the list of channels. `is_default` is true for the global default channel.
- * `arg_fields` lists the arguments that the channel reads.
+ * `arg_fields` lists the arguments that the channel reads, and `uses_context` the block context.
+ * `is_available` tells whether a block with the context of the list can select the channel.
  */
 export interface ChannelOption {
   arg_fields: ChannelArgField[];
+  is_available: boolean;
   is_default: boolean;
   label: string;
   name: string;
+  uses_context: string[];
 }
 
 interface ChannelState {
   channels: Record<string, ChannelRecord>;
   list: ChannelOption[] | null;
+  listsInContext: Record<string, ChannelOption[]>;
   pages: Record<string, ChannelPage>;
 }
 
@@ -249,17 +253,27 @@ function toChannelOptions(value: unknown): ChannelOption[] {
 
     const {
       arg_fields: argFields,
+      is_available: isAvailable,
       is_default: isDefault,
       label,
       name,
+      uses_context: usesContext,
     } = item as Record<string, unknown>;
+
+    let usedKeys: string[] = [];
+
+    if (Array.isArray(usesContext)) {
+      usedKeys = usesContext.filter((key: unknown): key is string => typeof key === 'string');
+    }
 
     if (typeof label === 'string' && typeof name === 'string') {
       options.push({
         arg_fields: toChannelArgFields(argFields),
+        is_available: isAvailable === true,
         is_default: isDefault === true,
         label,
         name,
+        uses_context: usedKeys,
       });
     }
   });
@@ -446,6 +460,23 @@ const loadChannelPage = (
 };
 
 /**
+ * Fetches the list of channels.
+ *
+ * @param context Block context, which tells whether a block can select each channel.
+ */
+async function fetchChannels(context: object): Promise<ChannelOption[]> {
+  let response: unknown = null;
+
+  try {
+    response = await apiFetch({ path: addQueryArgs('/wp-curate/v1/channels', { context }) });
+  } catch {
+    // A list that fails to load counts as empty.
+  }
+
+  return toChannelOptions(response);
+}
+
+/**
  * Loads the list of channels.
  */
 const loadChannels = () => async ({
@@ -455,15 +486,22 @@ const loadChannels = () => async ({
     receiveChannels,
   } = dispatch;
 
-  let response: unknown = null;
+  receiveChannels(await fetchChannels({}));
+};
 
-  try {
-    response = await apiFetch({ path: '/wp-curate/v1/channels' });
-  } catch {
-    // A list that fails to load counts as empty.
-  }
+/**
+ * Loads the list of channels for a block context.
+ *
+ * @param context Block context.
+ */
+const loadChannelsInContext = (context: object) => async ({
+  dispatch,
+}: any) => {
+  const {
+    receiveChannelsInContext,
+  } = dispatch;
 
-  receiveChannels(toChannelOptions(response));
+  receiveChannelsInContext(JSON.stringify(context), await fetchChannels(context));
 };
 
 /**
@@ -555,6 +593,27 @@ const getChannelPostType = (
  */
 const getChannels = (state: ChannelState) => state.list;
 
+/**
+ * Get the channels, with whether a block with the context can select each one.
+ *
+ * Pass only the context that the channels use, so that blocks with the same context share one
+ * request.
+ *
+ * @param state   Store state.
+ * @param context Block context.
+ * @return The channels, or null until they load.
+ */
+const getChannelsInContext = (state: ChannelState, context: object) => {
+  const key = JSON.stringify(context);
+  let list: ChannelOption[] | null = null;
+
+  if (key in state.listsInContext) {
+    list = state.listsInContext[key];
+  }
+
+  return list;
+};
+
 const getChannelResolver = (
   name: string,
   args: object,
@@ -595,6 +654,7 @@ const store = createReduxStore('wp-curate/channels', {
     let out: ChannelState = {
       channels: {},
       list: null,
+      listsInContext: {},
       pages: {},
     };
 
@@ -623,6 +683,13 @@ const store = createReduxStore('wp-curate/channels', {
       };
     }
 
+    if (action.type === 'RECEIVE_CHANNELS_IN_CONTEXT') {
+      out = {
+        ...out,
+        listsInContext: { ...out.listsInContext, [action.key]: action.list },
+      };
+    }
+
     if (action.type === 'RECEIVE_CHANNEL_PAGE') {
       out = {
         ...out,
@@ -642,17 +709,22 @@ const store = createReduxStore('wp-curate/channels', {
     receiveChannels(list: ChannelOption[]) {
       return { list, type: 'RECEIVE_CHANNELS' };
     },
+    receiveChannelsInContext(key: string, list: ChannelOption[]) {
+      return { key, list, type: 'RECEIVE_CHANNELS_IN_CONTEXT' };
+    },
   },
   selectors: {
     getChannel,
     getChannelPage,
     getChannelPostType,
     getChannels,
+    getChannelsInContext,
   },
   resolvers: {
     getChannel: getChannelResolver,
     getChannelPage: getChannelPageResolver,
     getChannels: loadChannels,
+    getChannelsInContext: loadChannelsInContext,
   },
 });
 
