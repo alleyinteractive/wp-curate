@@ -24,7 +24,7 @@ final readonly class Channel_Block_Context implements Feature {
 	 *
 	 * @var string
 	 */
-	public const CONTEXT = 'wp-curate/channel';
+	private const CONTEXT = 'wp-curate/channel';
 
 	/**
 	 * Constructor.
