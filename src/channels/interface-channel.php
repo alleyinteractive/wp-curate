@@ -41,11 +41,10 @@ interface Channel {
 	/**
 	 * The arguments that the channel reads, as fields for the editor.
 	 *
-	 * Each field has an `id`, which is its key in the arguments, a `label`, and a `type`, which
-	 * names the control that the editor shows for it. A type can need more keys. The editor knows
-	 * these types:
-	 *
-	 * - `term`: A term ID, which the user selects with a term picker. The field has a `taxonomy`.
+	 * Each field has an `id`, which is its key in the arguments, a `label`, and a `type`. A type can
+	 * need more keys. The editor shows a control for a field only if a script adds one for its type
+	 * to the slot of the Channel panel. WP Curate adds a term picker for the `term` type, which
+	 * needs a `taxonomy`.
 	 *
 	 * The channel has no IDs until a block gives it a value for each field.
 	 *

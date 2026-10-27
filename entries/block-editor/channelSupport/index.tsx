@@ -8,15 +8,19 @@ import {
   InspectorControls,
 } from '@wordpress/block-editor';
 import { getBlockType } from '@wordpress/blocks';
-import { PanelBody } from '@wordpress/components';
+import {
+  __experimentalToolsPanel as ToolsPanel,
+  __experimentalToolsPanelItem as ToolsPanelItem,
+} from '@wordpress/components';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { useSelect } from '@wordpress/data';
-import { useEffect, useMemo } from '@wordpress/element';
+import { useCallback, useEffect, useMemo } from '@wordpress/element';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
-import ChannelArgsControls from '../../../components/ChannelArgsControls';
+import { ChannelPanelSlot } from '../../../components/ChannelPanelSlotFill';
+import type { ChannelPanelFillProps } from '../../../components/ChannelPanelSlotFill';
 import ChannelSelectControl from '../../../components/ChannelSelectControl';
 import useBlockChannel, {
   CHANNEL_CONTEXT,
@@ -34,14 +38,17 @@ import useChannelQueue from '../../../hooks/useChannelQueue';
  * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. It
  * can pin a post with an integer `ref` attribute, and a `postType` attribute with the pinned post's
  * type. Like a block binding, the `channel` attribute is an object with the channel `name` and
- * the `args` that the block gives the channel, such as a term. The `Channel_Block_Support` feature
- * in PHP adds the `channel` attribute and the context that the block uses, and gives the block the
- * same post on the front end.
+ * the `args` that the block gives the channel, such as a term. Other scripts add the controls of
+ * the arguments through the Channel panel's slot, in `components/ChannelPanelSlotFill`. The
+ * `Channel_Block_Support` feature in PHP adds the `channel` attribute and the context that the
+ * block uses, and gives the block the same post on the front end.
  */
 
 interface ChannelControlsProps {
+  blockName: string;
   channel: string;
   channelArgs: Record<string, unknown>;
+  clientId: string;
   contextChannel: unknown;
   isProvider: boolean;
   setAttributes: (attributes: Record<string, unknown>) => void;
@@ -57,8 +64,10 @@ interface ChannelControlsProps {
  * The block uses its own channel again if it moves back out.
  */
 function ChannelControls({
+  blockName,
   channel,
   channelArgs,
+  clientId,
   contextChannel,
   isProvider,
   setAttributes,
@@ -86,6 +95,19 @@ function ChannelControls({
     }
   }, [channel, inheritedChannel, inherits, setAttributes]);
 
+  const setArgs = useCallback((args: Record<string, unknown>) => {
+    setAttributes({ channel: { args, name: channel } });
+  }, [channel, setAttributes]);
+
+  const fillProps: ChannelPanelFillProps = useMemo(() => ({
+    argFields,
+    args: channelArgs,
+    blockName,
+    channel,
+    clientId,
+    setArgs,
+  }), [argFields, blockName, channel, channelArgs, clientId, setArgs]);
+
   if (inherits) {
     return null;
   }
@@ -98,20 +120,41 @@ function ChannelControls({
 
   return (
     <InspectorControls>
-      <PanelBody title={__('WP Curate: Channel', 'wp-curate')}>
-        <ChannelSelectControl
-          help={help}
-          // The arguments of one channel are not the arguments of another.
-          onChange={(next) => setAttributes({ channel: { name: next } })}
-          value={channel}
-          withArgChannels
-        />
-        <ChannelArgsControls
-          args={channelArgs}
-          fields={argFields}
-          onChange={(next) => setAttributes({ channel: { args: next, name: channel } })}
-        />
-      </PanelBody>
+      <ToolsPanel
+        label={__('WP Curate: Channel', 'wp-curate')}
+        panelId={clientId}
+        resetAll={(filters = []) => {
+          let next = channelArgs;
+
+          // Each fill's filter returns the arguments without its own value.
+          filters.forEach((filter) => {
+            const out = filter(next);
+
+            if (typeof out === 'object' && out !== null) {
+              next = out;
+            }
+          });
+
+          setArgs(next);
+        }}
+      >
+        {/* A block always has a channel, so the item has no value to reset. */}
+        <ToolsPanelItem
+          hasValue={() => false}
+          isShownByDefault
+          label={__('Channel', 'wp-curate')}
+          panelId={clientId}
+        >
+          <ChannelSelectControl
+            help={help}
+            // The arguments of one channel are not the arguments of another.
+            onChange={(next) => setAttributes({ channel: { name: next } })}
+            value={channel}
+            withArgChannels
+          />
+        </ToolsPanelItem>
+        <ChannelPanelSlot fillProps={fillProps} />
+      </ToolsPanel>
     </InspectorControls>
   );
 }
@@ -222,8 +265,10 @@ const withChannelSupport = createHigherOrderComponent(
     return (
       <>
         <ChannelControls
+          blockName={name}
           channel={ownName}
           channelArgs={toChannelArgs(channel)}
+          clientId={clientId}
           contextChannel={contextChannel}
           isProvider={isProvider}
           setAttributes={setAttributes}

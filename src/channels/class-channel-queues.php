@@ -91,7 +91,11 @@ final class Channel_Queues {
 
 		foreach ( $this->channels->all() as $channel ) {
 			if ( $channel->name() === $name ) {
-				// A block can keep arguments of the channel that it used before, which this channel ignores.
+				/*
+				 * A block's arguments can include keys that this channel does not read, such as from
+				 * hand-written markup or a field that the channel no longer has. Leaving them out gives
+				 * every block that uses the same arguments the same queue.
+				 */
 				$used_args = array_intersect_key( $args, array_flip( array_column( $channel->arg_fields(), 'id' ) ) );
 				$used      = array_intersect_key( $context, array_flip( $channel->uses_context() ) );
 
