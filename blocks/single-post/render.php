@@ -14,47 +14,36 @@
  * @package wp-curate
  */
 
-use Alley\WP\WP_Curate\Channels\Channel_Queues;
+use Alley\WP\WP_Curate\Inner_Block_Template;
 
-$channel = '';
-$ref     = 0;
-$queues  = null;
-$post_id = null;
-
-if ( isset( $attributes['channel'] ) && is_string( $attributes['channel'] ) ) {
-	$channel = $attributes['channel'];
-}
-
-if ( isset( $attributes['ref'] ) && is_int( $attributes['ref'] ) && $attributes['ref'] > 0 ) {
-	$ref = $attributes['ref'];
-}
-
-if ( isset( $block->context['wp-curate/channelQueues'] ) ) {
-	$queues = $block->context['wp-curate/channelQueues'];
-}
-
-if ( $ref > 0 ) {
-	$post_id = $ref;
-}
-
-// Take the ref, or else the top of the channel's queue, and remove that ID from the queue.
-if ( $queues instanceof Channel_Queues ) {
-	$post_id = $queues->take_one( $channel, $ref, $block->context );
-}
-
+/*
+ * The `wp-curate/channel` block support gives the block its post as the `postId` context: the ref,
+ * or else the top of the channel's queue. It is 0 when there is no post to show.
+ */
 $promoted_post = null;
 
-if ( is_int( $post_id ) && $post_id > 0 ) {
-	$promoted_post = get_post( $post_id );
+if ( isset( $block->context['postId'] ) && is_int( $block->context['postId'] ) && $block->context['postId'] > 0 ) {
+	$promoted_post = get_post( $block->context['postId'] );
 }
 
-// A ref can be a post that visitors cannot see, such as a draft, so the block renders nothing.
-if ( ! $promoted_post instanceof WP_Post || ! is_post_publicly_viewable( $promoted_post ) ) {
+if ( ! $promoted_post instanceof WP_Post ) {
 	return;
 }
 
+$parsed_block = $block->parsed_block;
+
+// Inside a Many Posts block, the block renders that block's template, not inner blocks of its own.
+if ( isset( $block->context['wp-curate/postTemplate'] ) && is_array( $block->context['wp-curate/postTemplate'] ) ) {
+	$template        = new Inner_Block_Template( $block->context['wp-curate/postTemplate'] );
+	$template_blocks = parse_blocks( $template->serialized_blocks() );
+
+	$parsed_block['innerBlocks']  = $template_blocks;
+	$parsed_block['innerHTML']    = '';
+	$parsed_block['innerContent'] = array_fill( 0, count( $template_blocks ), null );
+}
+
 // Assume that $parsed_block has the correct shape.
-$inner = new WP_Block( $block->parsed_block ); // @phpstan-ignore-line argument.type
+$inner = new WP_Block( $parsed_block ); // @phpstan-ignore-line argument.type
 
 // Give the post to the inner blocks, the way that a Query Loop gives each post to its template.
 $filter_block_context = static function ( $context ) use ( $promoted_post ) {
