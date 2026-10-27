@@ -26,6 +26,7 @@ function main(): void {
 		preferred: 'latest_post',
 	);
 	$channel_meta_key = 'wp_curate_default_channel';
+	$channel_taken    = new Post_IDs\Post_IDs_Taken_From_Channels();
 
 	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore
 	$plugin = new Group(
@@ -70,7 +71,12 @@ function main(): void {
 		new Features\Channel_Queues_Block_Context(
 			queues: new Channels\Channel_Queues(
 				channels: $channels,
+				taken: $channel_taken,
 			),
+		),
+		new Features\Channel_Deduplication_Block_Context(
+			taken: $channel_taken,
+			block_type_registry: WP_Block_Type_Registry::get_instance(),
 		),
 		new Features\Channel_Block_Support(),
 	);
