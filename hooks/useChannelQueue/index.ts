@@ -81,6 +81,13 @@ export function channelQueueIds(
     getChannel,
   } = select('wp-curate/channels') as any;
 
+  const postChannel = postDefaultChannel(select);
+
+  // Every block can use the post's default channel, so all of them wait for it.
+  if (postChannel === null) {
+    return null;
+  }
+
   // The IDs taken so far from each queue, keyed by the channel and the context that it uses.
   const takenFromQueues = new Map<string, number[]>();
 
@@ -96,11 +103,14 @@ export function channelQueueIds(
   /*
    * Take the IDs that a block renders from its queue. The block is loading if its channel is
    * loading, or if the block above it that gives it its context is loading.
+   *
+   * A block inside a provider uses the provider's channel, even if the block has its own from
+   * before it moved in.
    */
   const take = (
     block: any,
     context: Record<string, unknown>,
-    inheritedChannel: string,
+    providerChannel: string | null,
     isContextLoading: boolean,
   ) => {
     let isLoading = false;
@@ -110,7 +120,11 @@ export function channelQueueIds(
     let taken = NO_IDS;
 
     if (name === '') {
-      name = inheritedChannel;
+      name = postChannel;
+    }
+
+    if (providerChannel !== null) {
+      name = providerChannel;
     }
 
     if (Number.isInteger(block.attributes.ref)) {
@@ -197,7 +211,7 @@ export function channelQueueIds(
   const walk = (
     blocks: any[],
     context: Record<string, unknown>,
-    inheritedChannel: string,
+    providerChannel: string | null,
     isContextLoading: boolean,
   ) => {
     blocks.forEach((block) => {
@@ -205,11 +219,11 @@ export function channelQueueIds(
       const name = channelAttribute(block);
 
       let childContext = context;
-      let childChannel = inheritedChannel;
+      let childChannel = providerChannel;
       let isChildContextLoading = isContextLoading;
 
       /*
-       * Keep the inherited channel apart from `context`, which goes to the channel and is part of
+       * Keep the provider's channel apart from `context`, which goes to the channel and is part of
        * the key of its requests.
        */
       if (isProvider && name !== null) {
@@ -220,7 +234,7 @@ export function channelQueueIds(
         const {
           isLoading,
           taken,
-        } = take(block, context, inheritedChannel, isContextLoading);
+        } = take(block, context, providerChannel, isContextLoading);
 
         if (block.clientId === clientId) {
           isOutLoading = isLoading;
@@ -259,14 +273,7 @@ export function channelQueueIds(
     startContext = previewContext;
   }
 
-  const postChannel = postDefaultChannel(select);
-
-  // Every block can inherit the post's default channel, so all of them wait for it.
-  if (postChannel === null) {
-    return null;
-  }
-
-  walk(getBlocks(), startContext, postChannel, false);
+  walk(getBlocks(), startContext, null, false);
 
   let ids: number[] | null = out;
 

@@ -145,9 +145,10 @@ export function postDefaultChannel(select: any): string | null {
 /**
  * Get the channel that a block uses.
  *
- * Keep the rules matched with `Channel_Block_Context` in PHP. The block uses its own channel, or
- * else the channel in its block context, which a Many Posts block around it provides, or else the
- * post's default channel, or else the global default channel.
+ * Keep the rules matched with `Channel_Block_Support` in PHP. The block uses the channel in its
+ * block context, which a Many Posts block around it provides, even if the block has its own from
+ * before it moved in. Otherwise it uses its own channel, or else the post's default channel, or
+ * else the global default channel.
  *
  * @param select         The data registry's `select`.
  * @param ownChannel     The block's `channel` attribute.
@@ -160,12 +161,12 @@ export function toBlockChannel(
   ownChannel: string,
   contextChannel: unknown,
 ): string | null {
-  let channel: string | null = ownChannel;
-
   // A Many Posts block without a channel is an error, so the blocks inside it get no channel.
-  if (channel === '' && typeof contextChannel === 'string') {
+  if (typeof contextChannel === 'string') {
     return contextChannel;
   }
+
+  let channel: string | null = ownChannel;
 
   if (channel === '') {
     channel = postDefaultChannel(select);

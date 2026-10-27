@@ -143,7 +143,7 @@ function TemplateInnerBlocks({
  *
  * Outside a Many Posts block, the block has its own inner blocks and its own channel. Inside one,
  * it has neither: its inner blocks edit the Many Posts block's template, and it uses that block's
- * channel.
+ * channel. A block moved in from outside loses its inner blocks, and keeps its pinned post.
  */
 export default function Edit({
   attributes: {

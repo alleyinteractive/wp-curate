@@ -12,19 +12,20 @@ use Alley\WP\WP_Curate\Channels\Default_Channel;
 use WP_Block;
 
 /**
- * Gives top-level blocks the post's default channel as the `wp-curate/channel` block context.
+ * Gives top-level blocks the post's default channel as the `wp-curate/defaultChannel` block
+ * context.
  *
- * Core passes the context to the blocks inside them. A Many Posts block replaces it with its own
- * channel for the blocks inside it, through `providesContext`. Keep the rules matched with
- * `useBlockChannel()`.
+ * Core passes the context to the blocks inside them. It is apart from the `wp-curate/channel`
+ * context that a Many Posts block provides, so that a block can tell the two apart. Keep the rules
+ * matched with `useBlockChannel()`.
  */
 final readonly class Channel_Block_Context implements Feature {
 	/**
-	 * The block context that holds the channel.
+	 * The block context that holds the post's default channel.
 	 *
 	 * @var string
 	 */
-	private const CONTEXT = 'wp-curate/channel';
+	private const CONTEXT = 'wp-curate/defaultChannel';
 
 	/**
 	 * Constructor.
