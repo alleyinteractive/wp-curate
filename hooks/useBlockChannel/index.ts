@@ -2,7 +2,7 @@
 import { useSelect } from '@wordpress/data';
 
 // Plugin dependencies.
-import type { ChannelOption } from '../../entries/block-editor/channelStore';
+import type { ChannelArgField, ChannelOption } from '../../entries/block-editor/channelStore';
 
 /**
  * The post meta key of the post's default channel.
@@ -13,11 +13,19 @@ export const DEFAULT_CHANNEL_META_KEY = 'wp_curate_default_channel';
  * The block support of a block that has a channel. wp-curate gives the block a `channel` attribute
  * and a Channel panel. A block that also provides the `wp-curate/channel` context, like Many Posts,
  * gives its channel to the blocks inside it. Any other block takes a post from its channel.
+ *
+ * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
+ * block gives the channel, such as `{ name: 'latest_post_in_category', args: { term: 7 } }`. An
+ * empty name means the post's default channel.
  */
 export const CHANNEL_SUPPORT = 'wp-curate/channel';
 
-// The block context that holds the channel.
+// The block context that holds the channel, in the shape of the `channel` attribute.
 export const CHANNEL_CONTEXT = 'wp-curate/channel';
+
+const NO_ARG_FIELDS: ChannelArgField[] = [];
+
+const NO_ARGS: Record<string, unknown> = {};
 
 /**
  * Whether a block type has the `wp-curate/channel` block support.
@@ -107,6 +115,8 @@ function toPostMetaChannel(select: any): string {
 /**
  * Get the post's default channel if it is registered, or else the global default channel.
  *
+ * A channel that reads arguments cannot be the default, because only a block can give them.
+ *
  * Keep the rules matched with `Channel_Block_Context` and `Default_Channel` in PHP.
  *
  * @param select The data registry's `select`.
@@ -135,11 +145,64 @@ export function postDefaultChannel(select: any): string | null {
     }
   });
 
-  if (channels.some(({ name }) => name === postChannel)) {
+  if (channels.some(({ arg_fields: argFields, name }) => (
+    name === postChannel && argFields.length === 0
+  ))) {
     channel = postChannel;
   }
 
   return channel;
+}
+
+/**
+ * Reads the name in a `channel` attribute or context.
+ *
+ * @param value The attribute or context.
+ * @return The name, an empty string for the post's default channel, or null if the value is not a
+ *         channel, such as the context of a block that is not inside a Many Posts block.
+ */
+export function toChannelName(value: unknown): string | null {
+  let name: string | null = null;
+
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return name;
+  }
+
+  name = '';
+
+  const {
+    name: channelName,
+  } = value as Record<string, unknown>;
+
+  if (typeof channelName === 'string') {
+    name = channelName;
+  }
+
+  return name;
+}
+
+/**
+ * Reads the arguments in a `channel` attribute or context.
+ *
+ * @param value The attribute or context.
+ * @return The arguments, or none if the value has no object of them.
+ */
+export function toChannelArgs(value: unknown): Record<string, unknown> {
+  let args = NO_ARGS;
+
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return args;
+  }
+
+  const {
+    args: channelArgs,
+  } = value as Record<string, unknown>;
+
+  if (typeof channelArgs === 'object' && channelArgs !== null && !Array.isArray(channelArgs)) {
+    args = channelArgs as Record<string, unknown>;
+  }
+
+  return args;
 }
 
 /**
@@ -151,22 +214,24 @@ export function postDefaultChannel(select: any): string | null {
  * else the global default channel.
  *
  * @param select         The data registry's `select`.
- * @param ownChannel     The block's `channel` attribute.
+ * @param ownName        The name in the block's `channel` attribute.
  * @param contextChannel The `wp-curate/channel` block context.
  * @return The channel, an empty string if no channels are registered or the Many Posts block around
  *         the block has no channel, or null while the list of channels loads.
  */
 export function toBlockChannel(
   select: any,
-  ownChannel: string,
+  ownName: string,
   contextChannel: unknown,
 ): string | null {
+  const contextName = toChannelName(contextChannel);
+
   // A Many Posts block without a channel is an error, so the blocks inside it get no channel.
-  if (typeof contextChannel === 'string') {
-    return contextChannel;
+  if (contextName !== null) {
+    return contextName;
   }
 
-  let channel: string | null = ownChannel;
+  let channel: string | null = ownName;
 
   if (channel === '') {
     channel = postDefaultChannel(select);
@@ -176,19 +241,111 @@ export function toBlockChannel(
 }
 
 /**
- * Get the channel that a block uses.
+ * Get the arguments that a block gives its channel.
+ *
+ * Like the channel, the block uses the arguments in its block context, which a Many Posts block
+ * around it provides, even if the block has its own from before it moved in.
  *
  * @param ownChannel     The block's `channel` attribute.
+ * @param contextChannel The `wp-curate/channel` block context.
+ */
+export function toBlockChannelArgs(
+  ownChannel: unknown,
+  contextChannel: unknown,
+): Record<string, unknown> {
+  let args = toChannelArgs(ownChannel);
+
+  if (toChannelName(contextChannel) !== null) {
+    args = toChannelArgs(contextChannel);
+  }
+
+  return args;
+}
+
+/**
+ * Get the fields of the arguments that a channel reads.
+ *
+ * @param select The data registry's `select`.
+ * @param name   Channel name.
+ * @return The fields, or none for a channel that reads no arguments or while the list of channels
+ *         loads.
+ */
+export function channelArgFields(select: any, name: string): ChannelArgField[] {
+  const {
+    getChannels,
+  } = select('wp-curate/channels') as any;
+
+  const channels: ChannelOption[] | null = getChannels();
+
+  let fields = NO_ARG_FIELDS;
+
+  if (channels === null) {
+    return fields;
+  }
+
+  const option = channels.find((channel) => channel.name === name);
+
+  if (option !== undefined) {
+    fields = option.arg_fields;
+  }
+
+  return fields;
+}
+
+/**
+ * Get only the arguments that a channel reads, in the order of its fields.
+ *
+ * A block can keep arguments of the channel that it used before. Leaving them out keeps the
+ * requests for a channel the same for every block, like the queues in PHP.
+ *
+ * @param fields The fields of the arguments that the channel reads.
+ * @param args   The block's arguments.
+ */
+export function pickChannelArgs(
+  fields: ChannelArgField[],
+  args: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+
+  fields.forEach(({ id }) => {
+    if (id in args) {
+      out[id] = args[id];
+    }
+  });
+
+  return out;
+}
+
+/**
+ * Whether a block gives its channel a value for each argument that the channel reads. Without
+ * them, the channel has no posts.
+ *
+ * @param fields The fields of the arguments that the channel reads.
+ * @param args   The block's arguments.
+ */
+export function hasEveryChannelArg(
+  fields: ChannelArgField[],
+  args: Record<string, unknown>,
+): boolean {
+  return fields.every(({ id }) => (
+    args[id] !== undefined && args[id] !== null && args[id] !== ''
+  ));
+}
+
+/**
+ * Get the channel that a block uses.
+ *
+ * @param ownName        The name in the block's `channel` attribute.
  * @param contextChannel The `wp-curate/channel` block context.
  * @return The channel, an empty string if no channels are registered, or null while the list of
  *         channels loads.
  */
 export default function useBlockChannel(
-  ownChannel: string,
+  ownName: string,
   contextChannel: unknown,
 ): string | null {
   return useSelect(
-    (select) => toBlockChannel(select, ownChannel, contextChannel),
-    [contextChannel, ownChannel],
+    (select) => toBlockChannel(select, ownName, contextChannel),
+    [contextChannel, ownName],
   );
 }

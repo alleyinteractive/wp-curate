@@ -4,40 +4,40 @@ import { store as blocksStore } from '@wordpress/blocks';
 import { useSelect } from '@wordpress/data';
 
 // Plugin dependencies.
-import { isChannelProvider, postDefaultChannel } from '../useBlockChannel';
+import {
+  channelArgFields,
+  hasEveryChannelArg,
+  isChannelProvider,
+  pickChannelArgs,
+  postDefaultChannel,
+  toBlockChannelArgs,
+  toChannelName,
+} from '../useBlockChannel';
 import { CHANNEL_PAGE_SIZE, type ChannelRecord } from '../useChannelRecord';
 
 const NO_IDS: number[] = [];
 
 /**
- * The `channel` attribute of a block that has one, or null for any other block.
+ * The `channel` attribute of a block, or undefined if it has none.
  *
  * @param block Block.
  */
-function channelAttribute(block: unknown): string | null {
-  let name: string | null = null;
+function channelAttribute(block: unknown): unknown {
+  let channel: unknown;
 
   if (typeof block !== 'object' || block === null) {
-    return name;
+    return channel;
   }
 
   const {
     attributes,
   } = block as Record<string, unknown>;
 
-  if (typeof attributes !== 'object' || attributes === null) {
-    return name;
+  if (typeof attributes === 'object' && attributes !== null) {
+    ({ channel } = attributes as Record<string, unknown>);
   }
 
-  const {
-    channel,
-  } = attributes as Record<string, unknown>;
-
-  if (typeof channel === 'string') {
-    name = channel;
-  }
-
-  return name;
+  return channel;
 }
 
 /**
@@ -53,7 +53,9 @@ function channelAttribute(block: unknown): string | null {
  * - A list block takes every ID that is left in its channel's queue.
  * - A block that supports `wp-curate/channel`, like Many Posts, takes nothing.
  *
- * A block without a channel of its own uses the channel that `toBlockChannel()` describes.
+ * A block without a channel of its own uses the channel that `toBlockChannel()` describes. A
+ * channel has a separate queue for each set of arguments that it reads, and has no posts until the
+ * block gives it each of them.
  *
  * A block waits only for its own channel and for the block that gives it its context, so a block
  * that changes its channel does not make the other blocks wait.
@@ -88,12 +90,16 @@ export function channelQueueIds(
     return null;
   }
 
-  // The IDs taken so far from each queue, keyed by the channel and the context that it uses.
+  /*
+   * The IDs taken so far from each queue, keyed by the channel and the arguments and context that
+   * it uses.
+   */
   const takenFromQueues = new Map<string, number[]>();
 
   /*
-   * The channels that are loading for a block. The blocks after it in the same channel cannot know
-   * their IDs until it loads, but the blocks in other channels can.
+   * The channels that are loading for a block, with their arguments. The blocks after it in the
+   * same channel with the same arguments cannot know their IDs until it loads, but the blocks in
+   * others can.
    */
   const loadingChannels = new Set<string>();
 
@@ -104,27 +110,28 @@ export function channelQueueIds(
    * Take the IDs that a block renders from its queue. The block is loading if its channel is
    * loading, or if the block above it that gives it its context is loading.
    *
-   * A block inside a provider uses the provider's channel, even if the block has its own from
-   * before it moved in.
+   * A block inside a provider uses the provider's channel and arguments, even if the block has its
+   * own from before it moved in.
    */
   const take = (
     block: any,
     context: Record<string, unknown>,
-    providerChannel: string | null,
+    providerChannel: unknown,
     isContextLoading: boolean,
   ) => {
+    const providerName = toChannelName(providerChannel);
+
     let isLoading = false;
-    let name = channelAttribute(block);
+    let name = toChannelName(channelAttribute(block));
     let ref = 0;
-    let record: ChannelRecord | null = null;
     let taken = NO_IDS;
 
     if (name === '') {
       name = postChannel;
     }
 
-    if (providerChannel !== null) {
-      name = providerChannel;
+    if (providerName !== null) {
+      name = providerName;
     }
 
     if (Number.isInteger(block.attributes.ref)) {
@@ -136,9 +143,32 @@ export function channelQueueIds(
       taken = [ref];
     }
 
+    // Without a channel, there is nothing to take.
+    if (name === null || name === '') {
+      return {
+        isLoading,
+        taken,
+      };
+    }
+
+    const fields = channelArgFields(select, name);
+    const args = pickChannelArgs(
+      fields,
+      toBlockChannelArgs(channelAttribute(block), providerChannel),
+    );
+    const loadingKey = JSON.stringify([name, args]);
+
+    // The channel has no posts until the block gives it each argument.
+    if (!hasEveryChannelArg(fields, args)) {
+      return {
+        isLoading,
+        taken,
+      };
+    }
+
     // Do not request a channel with context that is not known yet.
-    if (name !== null && name !== '' && (isContextLoading || loadingChannels.has(name))) {
-      loadingChannels.add(name);
+    if (isContextLoading || loadingChannels.has(loadingKey)) {
+      loadingChannels.add(loadingKey);
 
       return {
         isLoading: true,
@@ -147,21 +177,19 @@ export function channelQueueIds(
     }
 
     // The first page of the channel tells which context the channel uses.
-    if (name !== null && name !== '') {
-      record = getChannel(name, context, CHANNEL_PAGE_SIZE);
+    const record: ChannelRecord | null = getChannel(name, args, context, CHANNEL_PAGE_SIZE);
 
-      if (record === null) {
-        isLoading = true;
-      }
+    if (record === null) {
+      isLoading = true;
     }
 
     if (record !== null) {
-      // Key the queue by the context that the channel uses, like PHP does.
+      // Key the queue by the arguments and context that the channel uses, like PHP does.
       const used = Object.fromEntries(
         record.uses_context.map((usedKey: string) => [usedKey, context[usedKey]]),
       );
 
-      const key = JSON.stringify([name, used]);
+      const key = JSON.stringify([name, args, used]);
 
       let previous = NO_IDS;
 
@@ -175,7 +203,7 @@ export function channelQueueIds(
        */
       if (ref === 0) {
         const count = Math.ceil((previous.length + 1) / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
-        const loaded: ChannelRecord | null = getChannel(name, context, count);
+        const loaded: ChannelRecord | null = getChannel(name, args, context, count);
 
         if (loaded === null) {
           isLoading = true;
@@ -193,8 +221,8 @@ export function channelQueueIds(
       takenFromQueues.set(key, [...previous, ...taken]);
     }
 
-    if (isLoading && name !== null && name !== '') {
-      loadingChannels.add(name);
+    if (isLoading) {
+      loadingChannels.add(loadingKey);
     }
 
     return {
@@ -211,12 +239,12 @@ export function channelQueueIds(
   const walk = (
     blocks: any[],
     context: Record<string, unknown>,
-    providerChannel: string | null,
+    providerChannel: unknown,
     isContextLoading: boolean,
   ) => {
     blocks.forEach((block) => {
       const isProvider = isChannelProvider(getBlockType(block.name));
-      const name = channelAttribute(block);
+      const name = toChannelName(channelAttribute(block));
 
       let childContext = context;
       let childChannel = providerChannel;
@@ -227,7 +255,7 @@ export function channelQueueIds(
        * the key of its requests.
        */
       if (isProvider && name !== null) {
-        childChannel = name;
+        childChannel = channelAttribute(block);
       }
 
       if (!isProvider && name !== null) {
@@ -273,7 +301,7 @@ export function channelQueueIds(
     startContext = previewContext;
   }
 
-  walk(getBlocks(), startContext, null, false);
+  walk(getBlocks(), startContext, undefined, false);
 
   let ids: number[] | null = out;
 

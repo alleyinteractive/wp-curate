@@ -31,7 +31,13 @@ import { __ } from '@wordpress/i18n';
 import { cancelCircleFilled, pencil } from '@wordpress/icons';
 
 // Plugin dependencies.
-import useBlockChannel from '../../hooks/useBlockChannel';
+import useBlockChannel, {
+  channelArgFields,
+  hasEveryChannelArg,
+  pickChannelArgs,
+  toBlockChannelArgs,
+  toChannelName,
+} from '../../hooks/useBlockChannel';
 
 // Internal dependencies.
 import PostPicker from './components/post-picker';
@@ -45,7 +51,7 @@ const BASIC_TEMPLATE: InnerBlockTemplate[] = [
 ];
 
 interface SinglePostAttributes {
-  channel: string;
+  channel: { args?: Record<string, unknown>, name: string };
   postType: string;
   ref: number;
 }
@@ -147,7 +153,7 @@ function TemplateInnerBlocks({
  */
 export default function Edit({
   attributes: {
-    channel: channelAttribute,
+    channel: ownChannel,
     ref,
   },
   clientId,
@@ -163,13 +169,33 @@ export default function Edit({
 }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const blockProps = useBlockProps();
-  const blockChannel = useBlockChannel(channelAttribute, contextChannel);
+  let ownName = toChannelName(ownChannel);
+
+  if (ownName === null) {
+    ownName = '';
+  }
+
+  const blockChannel = useBlockChannel(ownName, contextChannel);
 
   let channel = '';
 
   if (blockChannel !== null) {
     channel = blockChannel;
   }
+
+  const argFields = useSelect(
+    (select) => channelArgFields(select, channel),
+    [channel],
+  );
+
+  // The arguments that the queue gives the channel, which the picker gives it too.
+  const args = useMemo(
+    () => pickChannelArgs(argFields, toBlockChannelArgs(ownChannel, contextChannel)),
+    [argFields, contextChannel, ownChannel],
+  );
+
+  // The channel has no posts to pick from until the block gives it each argument.
+  const hasPosts = channel !== '' && hasEveryChannelArg(argFields, args);
 
   // The post, null while the channel loads, or 0 when there is no post to show.
   let postId: number | null = null;
@@ -222,6 +248,15 @@ export default function Edit({
         />
       </div>
     );
+  } else if (!hasEveryChannelArg(argFields, args) && ref === 0) {
+    preview = (
+      <div {...blockProps}>
+        <Placeholder
+          label={__('Single Post', 'wp-curate')}
+          instructions={__('Complete the channel settings to show its posts.', 'wp-curate')}
+        />
+      </div>
+    );
   } else if (postId === null) {
     preview = (
       <div {...blockProps}>
@@ -243,7 +278,7 @@ export default function Edit({
     <>
       <BlockControls>
         <ToolbarGroup>
-          {channel !== '' ? (
+          {hasPosts ? (
             <ToolbarButton icon={pencil} onClick={() => setIsPickerOpen(true)}>
               {ref > 0 ? __('Replace post', 'wp-curate') : __('Select post', 'wp-curate')}
             </ToolbarButton>
@@ -263,6 +298,7 @@ export default function Edit({
 
       {isPickerOpen ? (
         <PostPicker
+          args={args}
           channel={channel}
           selectedId={ref}
           onClose={() => setIsPickerOpen(false)}

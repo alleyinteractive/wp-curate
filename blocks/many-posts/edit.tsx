@@ -27,11 +27,11 @@ const ALLOWED_BLOCKS = [SINGLE_POST.name];
  * The wp-curate/many-posts block edit function.
  *
  * The inner blocks are Single Post blocks, which each show one post, so the number of them is the
- * number of posts. The block gives its channel and its `template` attribute to them as block
- * context.
+ * number of posts. The block gives its channel, its channel arguments, and its `template` attribute
+ * to them as block context.
  *
- * A Single Post moved in from outside uses this block's channel and template instead of its own,
- * and keeps its pinned post.
+ * A Single Post moved in from outside uses this block's channel, arguments, and template instead of
+ * its own, and keeps its pinned post.
  *
  * The `wp-curate/channel` block support gives the block its Channel panel, and gives a new block
  * the channel that it would inherit.

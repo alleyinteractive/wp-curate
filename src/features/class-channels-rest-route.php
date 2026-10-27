@@ -20,11 +20,13 @@ use WP_REST_Server;
  *
  * GET /wp-json/wp-curate/v1/channels
  *
- * Lists the name and label of each channel, and whether it is the global default.
+ * Lists the name and label of each channel, whether it is the global default, and the fields of
+ * the arguments that it reads.
  *
- * GET /wp-json/wp-curate/v1/channels/<name>?context[<key>]=<value>&page=<page>&per_page=<per_page>&search=<search>
+ * GET /wp-json/wp-curate/v1/channels/<name>?args[<key>]=<value>&context[<key>]=<value>&page=<page>&per_page=<per_page>&search=<search>
  *
- * `context` is the block context that the channel uses. `page` and `per_page` select a page of IDs,
+ * `args` is the block's arguments for the channel. `context` is the block context that the channel
+ * uses. `page` and `per_page` select a page of IDs,
  * so that the editor reads only as many IDs as its blocks need. `search` limits the IDs to the
  * channel's matches.
  *
@@ -69,6 +71,10 @@ final readonly class Channels_REST_Route implements Feature {
 			'/channels/(?P<name>[a-z0-9_-]+)',
 			[
 				'args'                => [
+					'args'     => [
+						'default' => [],
+						'type'    => 'object',
+					],
 					'context'  => [
 						'default' => [],
 						'type'    => 'object',
@@ -97,7 +103,8 @@ final readonly class Channels_REST_Route implements Feature {
 	}
 
 	/**
-	 * Respond with the name and label of each channel, and whether it is the global default.
+	 * Respond with the name and label of each channel, whether it is the global default, and the
+	 * fields of the arguments that it reads.
 	 *
 	 * @return WP_REST_Response
 	 */
@@ -106,6 +113,7 @@ final readonly class Channels_REST_Route implements Feature {
 
 		foreach ( $this->channels->all() as $channel ) {
 			$list[] = [
+				'arg_fields' => $channel->arg_fields(),
 				'is_default' => $channel->name() === $this->default_channel->name(),
 				'label'      => $channel->label(),
 				'name'       => $channel->name(),
@@ -126,6 +134,7 @@ final readonly class Channels_REST_Route implements Feature {
 	public function get_callback( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		$response = new WP_Error( 'rest_channel_invalid_name', __( 'Invalid channel name.', 'wp-curate' ), [ 'status' => 404 ] );
 
+		$block_args         = $request->get_param( 'args' );
 		$available_context  = $request->get_param( 'context' );
 		$requested_page     = $request->get_param( 'page' );
 		$requested_per_page = $request->get_param( 'per_page' );
@@ -149,18 +158,23 @@ final readonly class Channels_REST_Route implements Feature {
 
 		foreach ( $this->channels->all() as $channel ) {
 			if ( $channel->name() === $request->get_param( 'name' ) ) {
+				$args    = [];
 				$context = [];
+
+				if ( is_array( $block_args ) ) {
+					$args = array_intersect_key( $block_args, array_flip( array_column( $channel->arg_fields(), 'id' ) ) );
+				}
 
 				if ( is_array( $available_context ) ) {
 					$context = array_intersect_key( $available_context, array_flip( $channel->uses_context() ) );
 				}
 
-				$channel_ids = $channel->ids( $context );
-				$total       = $channel->total( $context );
+				$channel_ids = $channel->ids( $args, $context );
+				$total       = $channel->total( $args, $context );
 
 				if ( '' !== $search ) {
-					$channel_ids = $channel->ids_matching( $search, $context );
-					$total       = $channel->total_matching( $search, $context );
+					$channel_ids = $channel->ids_matching( $search, $args, $context );
+					$total       = $channel->total_matching( $search, $args, $context );
 				}
 
 				$offset     = ( $page - 1 ) * $per_page;

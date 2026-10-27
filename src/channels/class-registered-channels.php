@@ -10,7 +10,8 @@ namespace Alley\WP\WP_Curate\Channels;
 use Alley\WP\WP_Curate\Supported_Post_Types;
 
 /**
- * The channels that blocks can use: a "Latest" channel for each supported post type.
+ * The channels that blocks can use: a "Latest" channel for each supported post type, and a
+ * "Latest in Category" and "Latest in Tag" channel for each one that has categories or tags.
  *
  * The list depends on the registered post types, so it is built when it is first needed, not when
  * the plugin loads.
@@ -33,10 +34,17 @@ final class Registered_Channels {
 
 		if ( null === $channels ) {
 			$channels   = [];
+			$taxonomies = [ 'category', 'post_tag' ];
 			$post_types = array_unique( ( new Supported_Post_Types() )->get_supported_post_types() );
 
 			foreach ( $post_types as $post_type ) {
 				$channels[] = new Latest_Posts( $post_type );
+
+				foreach ( $taxonomies as $taxonomy ) {
+					if ( is_object_in_taxonomy( $post_type, $taxonomy ) ) {
+						$channels[] = new Latest_Posts_In_Term( $post_type, $taxonomy );
+					}
+				}
 			}
 		}
 

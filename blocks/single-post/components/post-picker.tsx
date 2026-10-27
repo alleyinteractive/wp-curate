@@ -13,6 +13,7 @@ import { __ } from '@wordpress/i18n';
 import useChannelRecord, { CHANNEL_PAGE_SIZE, type ChannelPage } from '../../../hooks/useChannelRecord';
 
 interface PostPickerProps {
+  args: Record<string, unknown>;
   channel: string;
   selectedId: number;
   onClose: () => void;
@@ -169,9 +170,10 @@ function toPostTitle(post: unknown): string {
  * Modal for picking one post from a block's channel.
  *
  * The picker loads one page at a time, of the posts or of the posts that match a search, in
- * channel order.
+ * channel order. It gives the channel the same arguments that the block's queue does.
  */
 export default function PostPicker({
+  args,
   channel,
   selectedId,
   onClose,
@@ -210,7 +212,7 @@ export default function PostPicker({
   }
 
   // The whole channel, for its label, which stays the same while a page loads.
-  const channelRecord = useChannelRecord(channel);
+  const channelRecord = useChannelRecord(channel, args);
 
   const {
     getChannelPostType,
@@ -222,8 +224,8 @@ export default function PostPicker({
       getChannelPage,
     } = select('wp-curate/channels') as any;
 
-    return getChannelPage(channel, {}, search, page, perPage);
-  }, [channel, page, perPage, search]);
+    return getChannelPage(channel, args, {}, search, page, perPage);
+  }, [args, channel, page, perPage, search]);
 
   // The totals of the last page that loaded, so that the pagination stays while the next one loads.
   const [paginationInfo, setPaginationInfo] = useState({ totalItems: 0, totalPages: 0 });

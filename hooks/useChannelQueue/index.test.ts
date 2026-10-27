@@ -13,6 +13,9 @@ jest.mock('@wordpress/data', () => ({
   useSelect: jest.fn(),
 }));
 
+// A channel of the posts in a term, which reads a `term` argument.
+const IN_CATEGORY = 'latest_post_in_category';
+
 /**
  * A `select` function with the given blocks and a channel record with the given IDs.
  *
@@ -42,8 +45,24 @@ function fakeSelect(
     let selectors: object = {
       getChannel,
       getChannels: () => [
-        { is_default: true, label: 'Global', name: 'global_default' },
-        { is_default: false, label: 'Post default', name: 'post_default' },
+        {
+          arg_fields: [],
+          is_default: true,
+          label: 'Global',
+          name: 'global_default',
+        },
+        {
+          arg_fields: [],
+          is_default: false,
+          label: 'Post default',
+          name: 'post_default',
+        },
+        {
+          arg_fields: [{ id: 'term', label: 'Category', type: 'term' }],
+          is_default: false,
+          label: 'In category',
+          name: IN_CATEGORY,
+        },
       ],
     };
 
@@ -88,7 +107,7 @@ function fakeSelect(
 function singleBlock(clientId: string, channel = 'latest_post') {
   return {
     attributes: {
-      channel,
+      channel: { name: channel },
       ref: 0,
     },
     clientId,
@@ -124,7 +143,7 @@ describe('channelQueueIds', () => {
     expect(getChannel.mock.calls.length).toBeGreaterThan(0);
 
     getChannel.mock.calls.forEach((args: unknown[]) => {
-      expect(args).toEqual(['latest_post', {}, 10]);
+      expect(args).toEqual(['latest_post', {}, {}, 10]);
     });
   });
 
@@ -136,13 +155,13 @@ describe('channelQueueIds', () => {
     } = fakeSelect(blocks, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
 
     expect(channelQueueIds(select, '10')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('latest_post', {}, 20);
+    expect(getChannel).toHaveBeenCalledWith('latest_post', {}, {}, 20);
   });
 
   it('gives a Many Posts channel to the blocks without one inside it, in document order', () => {
     const blocks = [
       singleBlock('before'),
-      parentBlock('wp-curate/many-posts', { channel: 'latest_post' }, [
+      parentBlock('wp-curate/many-posts', { channel: { name: 'latest_post' } }, [
         singleBlock('first', ''),
         parentBlock('core/group', {}, [singleBlock('nested', '')]),
       ]),
@@ -159,9 +178,9 @@ describe('channelQueueIds', () => {
 
   it('gives a Many Posts channel to a block inside it that has its own, and keeps its pin', () => {
     const blocks = [
-      parentBlock('wp-curate/many-posts', { channel: 'latest_page' }, [
+      parentBlock('wp-curate/many-posts', { channel: { name: 'latest_page' } }, [
         singleBlock('moved'),
-        { ...singleBlock('pinned'), attributes: { channel: 'latest_post', ref: 99 } },
+        { ...singleBlock('pinned'), attributes: { channel: { name: 'latest_post' }, ref: 99 } },
         singleBlock('last', ''),
       ]),
     ];
@@ -173,13 +192,13 @@ describe('channelQueueIds', () => {
     expect(channelQueueIds(select, 'moved')).toEqual([11]);
     expect(channelQueueIds(select, 'pinned')).toEqual([99]);
     expect(channelQueueIds(select, 'last')).toEqual([12]);
-    expect(getChannel).not.toHaveBeenCalledWith('latest_post', {}, 10);
+    expect(getChannel).not.toHaveBeenCalledWith('latest_post', {}, {}, 10);
   });
 
   it('gives no channel to the blocks inside a Many Posts block that has none', () => {
     const blocks = [
-      parentBlock('wp-curate/many-posts', { channel: 'outer' }, [
-        parentBlock('wp-curate/many-posts', { channel: '' }, [singleBlock('inner', '')]),
+      parentBlock('wp-curate/many-posts', { channel: { name: 'outer' } }, [
+        parentBlock('wp-curate/many-posts', { channel: { name: '' } }, [singleBlock('inner', '')]),
       ]),
     ];
     const {
@@ -198,7 +217,7 @@ describe('channelQueueIds', () => {
     } = fakeSelect([singleBlock('alone', '')], [11], 'post_default');
 
     expect(channelQueueIds(select, 'alone')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('post_default', {}, 10);
+    expect(getChannel).toHaveBeenCalledWith('post_default', {}, {}, 10);
   });
 
   it('gives the global default channel to a block when the post has no default', () => {
@@ -208,7 +227,7 @@ describe('channelQueueIds', () => {
     } = fakeSelect([singleBlock('alone', '')], [11]);
 
     expect(channelQueueIds(select, 'alone')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('global_default', {}, 10);
+    expect(getChannel).toHaveBeenCalledWith('global_default', {}, {}, 10);
   });
 
   it('makes only the blocks in a loading channel wait', () => {
@@ -230,7 +249,7 @@ describe('channelQueueIds', () => {
 
   it('makes the blocks inside a loading block wait, without requesting their channel', () => {
     const blocks = [
-      parentBlock('wp-curate/single-post', { channel: 'latest_page', ref: 0 }, [
+      parentBlock('wp-curate/single-post', { channel: { name: 'latest_page' }, ref: 0 }, [
         singleBlock('inside', 'latest_post'),
       ]),
     ];
@@ -240,6 +259,74 @@ describe('channelQueueIds', () => {
     } = fakeSelect(blocks, [11], '', ['latest_page']);
 
     expect(channelQueueIds(select, 'inside')).toBeNull();
-    expect(getChannel).not.toHaveBeenCalledWith('latest_post', expect.anything(), expect.anything());
+    expect(getChannel).not.toHaveBeenCalledWith(
+      'latest_post',
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it('keeps a separate queue for each set of arguments, and sends them to the channel', () => {
+    const blocks = [
+      { ...singleBlock('five'), attributes: { channel: { args: { term: 5 }, name: IN_CATEGORY }, ref: 0 } },
+      { ...singleBlock('six'), attributes: { channel: { args: { term: 6 }, name: IN_CATEGORY }, ref: 0 } },
+      { ...singleBlock('five_again'), attributes: { channel: { args: { term: 5 }, name: IN_CATEGORY }, ref: 0 } },
+    ];
+    const {
+      getChannel,
+      select,
+    } = fakeSelect(blocks, [11, 12]);
+
+    expect(channelQueueIds(select, 'five')).toEqual([11]);
+    expect(channelQueueIds(select, 'six')).toEqual([11]);
+    expect(channelQueueIds(select, 'five_again')).toEqual([12]);
+    expect(getChannel).toHaveBeenCalledWith(IN_CATEGORY, { term: 5 }, {}, 10);
+    expect(getChannel).toHaveBeenCalledWith(IN_CATEGORY, { term: 6 }, {}, 10);
+  });
+
+  it('takes nothing from a channel without each of its arguments, but keeps a pin', () => {
+    const blocks = [
+      singleBlock('none', IN_CATEGORY),
+      { ...singleBlock('pinned'), attributes: { channel: { name: IN_CATEGORY }, ref: 99 } },
+    ];
+    const {
+      getChannel,
+      select,
+    } = fakeSelect(blocks, [11]);
+
+    expect(channelQueueIds(select, 'none')).toEqual([]);
+    expect(channelQueueIds(select, 'pinned')).toEqual([99]);
+    expect(getChannel).not.toHaveBeenCalled();
+  });
+
+  it('gives Many Posts arguments to the blocks inside it, even if they have their own', () => {
+    const blocks = [
+      parentBlock('wp-curate/many-posts', { channel: { args: { term: 5 }, name: IN_CATEGORY } }, [
+        singleBlock('first', ''),
+        { ...singleBlock('moved'), attributes: { channel: { args: { term: 6 }, name: IN_CATEGORY }, ref: 0 } },
+      ]),
+    ];
+    const {
+      getChannel,
+      select,
+    } = fakeSelect(blocks, [11, 12]);
+
+    expect(channelQueueIds(select, 'first')).toEqual([11]);
+    expect(channelQueueIds(select, 'moved')).toEqual([12]);
+    expect(getChannel).not.toHaveBeenCalledWith(IN_CATEGORY, { term: 6 }, {}, expect.anything());
+  });
+
+  it('sends only the arguments that the channel reads', () => {
+    const blocks = [
+      { ...singleBlock('stale'), attributes: { channel: { args: { term: 5 }, name: 'latest_post' }, ref: 0 } },
+    ];
+    const {
+      getChannel,
+      select,
+    } = fakeSelect(blocks, [11]);
+
+    expect(channelQueueIds(select, 'stale')).toEqual([11]);
+    expect(getChannel).toHaveBeenCalledWith('latest_post', {}, {}, 10);
   });
 });

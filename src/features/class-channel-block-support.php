@@ -16,13 +16,14 @@ use WP_Post;
 /**
  * The `wp-curate/channel` block support, for blocks that have a channel.
  *
- * A block with the support gets a `channel` attribute and the channel context. A block that also
- * provides the `wp-curate/channel` context, like Many Posts, gives its channel to the blocks inside
- * it, which use that channel instead of their own. Any other block takes a post from its channel's
- * queue and gets that post as the `postId` and
- * `postType` context, which is 0 and an empty string when the channel has no posts left. It can pin
- * a post with an integer `ref` attribute. Keep the rules matched with the `channelSupport` editor
- * script.
+ * A block with the support gets a `channel` attribute and the channel context. Like a block binding,
+ * the attribute is an object with the channel `name` and the `args` that the block gives the
+ * channel, such as `{"name":"latest_post_in_category","args":{"term":7}}`. An empty name means the
+ * post's default channel. A block that also provides the `wp-curate/channel` context, like Many
+ * Posts, gives its channel to the blocks inside it, which use it instead of their own. Any other block takes a post from its channel's queue
+ * and gets that post as the `postId` and `postType` context, which is 0 and an empty string when
+ * the channel has no posts left. It can pin a post with an integer `ref` attribute. Keep the rules
+ * matched with the `channelSupport` editor script.
  */
 final readonly class Channel_Block_Support implements Feature {
 	/**
@@ -96,9 +97,15 @@ final readonly class Channel_Block_Support implements Feature {
 			$uses_context = array_filter( $args['uses_context'], 'is_string' );
 		}
 
+		/*
+		 * The default has a key, so that the editor gets an object and not an empty array. A block that
+		 * provides the channel always provides an object, even without a channel of its own.
+		 */
 		$attributes['channel'] ??= [
-			'type'    => 'string',
-			'default' => '',
+			'type'    => 'object',
+			'default' => [
+				'name' => '',
+			],
 		];
 
 		$uses_context[] = self::CHANNEL_CONTEXT;
@@ -145,7 +152,6 @@ final readonly class Channel_Block_Support implements Feature {
 		}
 
 		$attrs   = [];
-		$channel = '';
 		$ref     = 0;
 		$post_id = null;
 
@@ -153,18 +159,24 @@ final readonly class Channel_Block_Support implements Feature {
 			$attrs = $parsed_block['attrs'];
 		}
 
-		if ( isset( $attrs['channel'] ) && is_string( $attrs['channel'] ) ) {
-			$channel = $attrs['channel'];
+		$own_channel = [];
+
+		if ( isset( $attrs['channel'] ) && is_array( $attrs['channel'] ) ) {
+			$own_channel = $attrs['channel'];
 		}
+
+		$channel      = $this->channel_name( $own_channel );
+		$channel_args = $this->channel_args( $own_channel );
 
 		// A block without its own channel uses the post's default channel.
 		if ( '' === $channel && isset( $context[ self::DEFAULT_CONTEXT ] ) && is_string( $context[ self::DEFAULT_CONTEXT ] ) ) {
 			$channel = $context[ self::DEFAULT_CONTEXT ];
 		}
 
-		// A block inside a Many Posts block uses its channel, even if the block has its own from before it moved in.
-		if ( isset( $context[ self::CHANNEL_CONTEXT ] ) && is_string( $context[ self::CHANNEL_CONTEXT ] ) ) {
-			$channel = $context[ self::CHANNEL_CONTEXT ];
+		// A block inside a Many Posts block uses its channel and arguments, even if the block has its own from before it moved in.
+		if ( isset( $context[ self::CHANNEL_CONTEXT ] ) && is_array( $context[ self::CHANNEL_CONTEXT ] ) ) {
+			$channel      = $this->channel_name( $context[ self::CHANNEL_CONTEXT ] );
+			$channel_args = $this->channel_args( $context[ self::CHANNEL_CONTEXT ] );
 		}
 
 		if ( isset( $attrs['ref'] ) && is_int( $attrs['ref'] ) && $attrs['ref'] > 0 ) {
@@ -173,7 +185,7 @@ final readonly class Channel_Block_Support implements Feature {
 
 		// Take the ref, or else the top of the channel's queue, and remove that ID from the queue.
 		if ( isset( $context[ self::QUEUES_CONTEXT ] ) && $context[ self::QUEUES_CONTEXT ] instanceof Channel_Queues ) {
-			$post_id = $context[ self::QUEUES_CONTEXT ]->take_one( $channel, $ref, $context );
+			$post_id = $context[ self::QUEUES_CONTEXT ]->take_one( $channel, $ref, $channel_args, $context );
 		}
 
 		$taken = null;
@@ -192,5 +204,37 @@ final readonly class Channel_Block_Support implements Feature {
 		}
 
 		return $context;
+	}
+
+	/**
+	 * The channel name in a `channel` attribute or context.
+	 *
+	 * @param mixed[] $value The attribute or context.
+	 * @return string The name, or an empty string for the post's default channel.
+	 */
+	private function channel_name( array $value ): string {
+		$name = '';
+
+		if ( isset( $value['name'] ) && is_string( $value['name'] ) ) {
+			$name = $value['name'];
+		}
+
+		return $name;
+	}
+
+	/**
+	 * The arguments for the channel in a `channel` attribute or context.
+	 *
+	 * @param mixed[] $value The attribute or context.
+	 * @return mixed[]
+	 */
+	private function channel_args( array $value ): array {
+		$args = [];
+
+		if ( isset( $value['args'] ) && is_array( $value['args'] ) ) {
+			$args = $value['args'];
+		}
+
+		return $args;
 	}
 }

@@ -10,6 +10,11 @@ namespace Alley\WP\WP_Curate\Channels;
 /**
  * An ordered set of posts or terms that individual blocks can take items from.
  * Individual blocks subscribe to a channel.
+ *
+ * A block can give its channel arguments, like the `args` of a block binding, such as the term of a
+ * channel of the posts in a term. The block saves them in the `args` of its `channel` attribute.
+ * The channel reads them, and lists their fields so that the editor can show a control for each
+ * one.
  */
 interface Channel {
 	/**
@@ -32,6 +37,23 @@ interface Channel {
 	 * @return string
 	 */
 	public function entity_kind(): string;
+
+	/**
+	 * The arguments that the channel reads, as fields for the editor.
+	 *
+	 * Each field has an `id`, which is its key in the arguments, a `label`, and a `type`, which
+	 * names the control that the editor shows for it. A type can need more keys. The editor knows
+	 * these types:
+	 *
+	 * - `term`: A term ID, which the user selects with a term picker. The field has a `taxonomy`.
+	 *
+	 * The channel has no IDs until a block gives it a value for each field.
+	 *
+	 * @phpstan-return list<array<string, string>>
+	 *
+	 * @return array[]
+	 */
+	public function arg_fields(): array;
 
 	/**
 	 * Names of the block context values that the channel reads.
@@ -64,10 +86,11 @@ interface Channel {
 	 *
 	 * @phpstan-return iterable<int>
 	 *
+	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs. Empty if the context does not make a channel.
+	 * @return iterable Integer IDs. Empty if the arguments and context do not make a channel.
 	 */
-	public function ids( array $context ): iterable;
+	public function ids( array $args, array $context ): iterable;
 
 	/**
 	 * IDs in the channel that match a search, in channel order.
@@ -77,20 +100,22 @@ interface Channel {
 	 * @phpstan-return iterable<int>
 	 *
 	 * @param string  $search  Search terms.
+	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return iterable Integer IDs. Empty if nothing matches.
 	 */
-	public function ids_matching( string $search, array $context ): iterable;
+	public function ids_matching( string $search, array $args, array $context ): iterable;
 
 	/**
 	 * Number of IDs in the channel.
 	 *
 	 * It counts the same IDs that `ids()` returns.
 	 *
+	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int Number of IDs. 0 if the context does not make a channel.
+	 * @return int Number of IDs. 0 if the arguments and context do not make a channel.
 	 */
-	public function total( array $context ): int;
+	public function total( array $args, array $context ): int;
 
 	/**
 	 * Number of IDs in the channel that match a search.
@@ -98,8 +123,9 @@ interface Channel {
 	 * It counts the same IDs that `ids_matching()` returns.
 	 *
 	 * @param string  $search  Search terms.
+	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return int Number of IDs. 0 if nothing matches.
 	 */
-	public function total_matching( string $search, array $context ): int;
+	public function total_matching( string $search, array $args, array $context ): int;
 }
