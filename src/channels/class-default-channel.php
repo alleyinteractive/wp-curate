@@ -13,7 +13,8 @@ namespace Alley\WP\WP_Curate\Channels;
  * The preferred channel is the default while it is registered. Otherwise, the first registered
  * channel is. With no channels registered, there is no default; that case will be handled later.
  *
- * A channel that reads arguments cannot be the default, because only a block can give them.
+ * A channel that reads arguments or block context cannot be the default. Only a block can give it
+ * arguments, and the default applies to blocks in any context.
  */
 final readonly class Default_Channel {
 	/**
@@ -73,7 +74,7 @@ final readonly class Default_Channel {
 		$names = [];
 
 		foreach ( $this->channels->all() as $channel ) {
-			if ( count( $channel->arg_fields() ) === 0 ) {
+			if ( [] === $channel->arg_fields() && [] === $channel->uses_context() ) {
 				$names[] = $channel->name();
 			}
 		}

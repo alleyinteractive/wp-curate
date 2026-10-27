@@ -1,5 +1,5 @@
 // Internal dependencies.
-import { channelQueueIds } from './index';
+import { channelQueueContext, channelQueueIds } from './index';
 
 jest.mock('@wordpress/block-editor', () => ({
   store: 'core/block-editor',
@@ -15,6 +15,12 @@ jest.mock('@wordpress/data', () => ({
 
 // A channel of the posts in a term, which reads a `term` argument.
 const IN_CATEGORY = 'latest_post_in_category';
+
+// A channel of the articles in an issue, which reads the `postId` context.
+const IN_ISSUE = 'articles_in_issue';
+
+// The post in the editor.
+const POST_ID = 5;
 
 /**
  * A `select` function with the given blocks and a channel record with the given IDs.
@@ -47,21 +53,35 @@ function fakeSelect(
       getChannels: () => [
         {
           arg_fields: [],
+          is_available: true,
           is_default: true,
           label: 'Global',
           name: 'global_default',
+          uses_context: [],
         },
         {
           arg_fields: [],
+          is_available: true,
           is_default: false,
           label: 'Post default',
           name: 'post_default',
+          uses_context: [],
         },
         {
           arg_fields: [{ id: 'term', label: 'Category', type: 'term' }],
+          is_available: true,
           is_default: false,
           label: 'In category',
           name: IN_CATEGORY,
+          uses_context: [],
+        },
+        {
+          arg_fields: [],
+          is_available: true,
+          is_default: false,
+          label: 'In issue',
+          name: IN_ISSUE,
+          uses_context: ['postId'],
         },
       ],
     };
@@ -85,6 +105,8 @@ function fakeSelect(
 
     if (storeName === 'core/editor') {
       selectors = {
+        getCurrentPostId: () => POST_ID,
+        getCurrentPostType: () => 'post',
         getEditedPostAttribute: () => ({ wp_curate_default_channel: defaultChannel }),
       };
     }
@@ -328,5 +350,75 @@ describe('channelQueueIds', () => {
 
     expect(channelQueueIds(select, 'stale')).toEqual([11]);
     expect(getChannel).toHaveBeenCalledWith('latest_post', {}, {}, 10);
+  });
+
+  it('sends a channel the post as context at the top of the post', () => {
+    const {
+      getChannel,
+      select,
+    } = fakeSelect([singleBlock('top', IN_ISSUE)], [11]);
+
+    expect(channelQueueIds(select, 'top')).toEqual([11]);
+    expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: POST_ID }, 10);
+  });
+
+  it('sends a channel the post of the Single Post around it, with a queue for each post', () => {
+    /**
+     * A Single Post of the latest post that holds a Many Posts block of the articles in it.
+     *
+     * @param clientId Client ID of the Single Post.
+     * @param ref      The pinned post.
+     */
+    const issueBlock = (clientId: string, ref: number) => ({
+      attributes: { channel: { name: 'latest_post' }, postType: 'magazine_issue', ref },
+      clientId,
+      innerBlocks: [
+        parentBlock('wp-curate/many-posts', { channel: { name: IN_ISSUE } }, [
+          singleBlock(`${clientId}-article`, ''),
+        ]),
+      ],
+      name: 'wp-curate/single-post',
+    });
+
+    const {
+      getChannel,
+      select,
+    } = fakeSelect([issueBlock('first', 0), issueBlock('second', 30)], [11, 12]);
+
+    expect(channelQueueIds(select, 'first-article')).toEqual([11]);
+    expect(channelQueueIds(select, 'second-article')).toEqual([11]);
+    expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 11 }, 10);
+    expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 30 }, 10);
+    expect(getChannel).not.toHaveBeenCalledWith('latest_post', {}, { postId: POST_ID }, 10);
+    expect(channelQueueContext(select, 'first-article')).toEqual({
+      postId: 11,
+      postType: 'magazine_issue',
+    });
+    expect(channelQueueContext(select, 'second-article')).toEqual({
+      postId: 30,
+      postType: 'magazine_issue',
+    });
+  });
+
+  it('gives a block at the top of the post the post as its context', () => {
+    const {
+      select,
+    } = fakeSelect([singleBlock('top')], [11]);
+
+    expect(channelQueueContext(select, 'top')).toEqual({ postId: POST_ID, postType: 'post' });
+  });
+
+  it('has no context for a block while the block that gives it its context loads', () => {
+    const blocks = [
+      {
+        ...singleBlock('outer', 'loading'),
+        innerBlocks: [singleBlock('inner')],
+      },
+    ];
+    const {
+      select,
+    } = fakeSelect(blocks, [11], '', ['loading']);
+
+    expect(channelQueueContext(select, 'inner')).toBeNull();
   });
 });

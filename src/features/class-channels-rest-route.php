@@ -18,10 +18,11 @@ use WP_REST_Server;
 /**
  * Exposes the channels and the IDs in a channel to the editor.
  *
- * GET /wp-json/wp-curate/v1/channels
+ * GET /wp-json/wp-curate/v1/channels?context[<key>]=<value>
  *
- * Lists the name and label of each channel, whether it is the global default, and the fields of
- * the arguments that it reads.
+ * Lists the name and label of each channel, whether it is the global default, the fields of the
+ * arguments that it reads, the context that it reads, and whether a block with the `context` can
+ * select it.
  *
  * GET /wp-json/wp-curate/v1/channels/<name>?args[<key>]=<value>&context[<key>]=<value>&page=<page>&per_page=<per_page>&search=<search>
  *
@@ -60,6 +61,12 @@ final readonly class Channels_REST_Route implements Feature {
 			'wp-curate/v1',
 			'/channels',
 			[
+				'args'                => [
+					'context' => [
+						'default' => [],
+						'type'    => 'object',
+					],
+				],
 				'callback'            => [ $this, 'get_list_callback' ],
 				'methods'             => WP_REST_Server::READABLE,
 				'permission_callback' => fn () => current_user_can( 'edit_posts' ),
@@ -103,20 +110,29 @@ final readonly class Channels_REST_Route implements Feature {
 	}
 
 	/**
-	 * Respond with the name and label of each channel, whether it is the global default, and the
-	 * fields of the arguments that it reads.
+	 * Respond with the name and label of each channel, whether it is the global default, the fields
+	 * of the arguments that it reads, the context that it reads, and whether a block with the
+	 * `context` can select it.
 	 *
+	 * @param WP_REST_Request $request REST API request.
 	 * @return WP_REST_Response
 	 */
-	public function get_list_callback(): WP_REST_Response {
-		$list = [];
+	public function get_list_callback( WP_REST_Request $request ): WP_REST_Response {
+		$available_context = $request->get_param( 'context' );
+		$list              = [];
+
+		if ( ! is_array( $available_context ) ) {
+			$available_context = [];
+		}
 
 		foreach ( $this->channels->all() as $channel ) {
 			$list[] = [
-				'arg_fields' => $channel->arg_fields(),
-				'is_default' => $channel->name() === $this->default_channel->name(),
-				'label'      => $channel->label(),
-				'name'       => $channel->name(),
+				'arg_fields'   => $channel->arg_fields(),
+				'is_available' => $channel->is_available( array_intersect_key( $available_context, array_flip( $channel->uses_context() ) ) ),
+				'is_default'   => $channel->name() === $this->default_channel->name(),
+				'label'        => $channel->label(),
+				'name'         => $channel->name(),
+				'uses_context' => $channel->uses_context(),
 			];
 		}
 
