@@ -32,7 +32,7 @@ if ( ! $promoted_post instanceof WP_Post ) {
 
 $parsed_block = $block->parsed_block;
 
-// Inside a Many Posts block, the block renders that block's template, not inner blocks of its own.
+// Inside a Channel Loop block, the block renders that block's template, not inner blocks of its own.
 if ( isset( $block->context['wp-curate/postTemplate'] ) && is_array( $block->context['wp-curate/postTemplate'] ) ) {
 	$template        = new Inner_Block_Template( $block->context['wp-curate/postTemplate'] );
 	$template_blocks = parse_blocks( $template->serialized_blocks() );

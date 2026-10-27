@@ -16,7 +16,7 @@ use function Alley\WP\match_blocks;
 /**
  * Post IDs that the channel blocks in some content pin with their `ref` attribute.
  *
- * A block that gives its channel to the blocks inside it, like Many Posts, pins nothing. Keep the
+ * A block that gives its channel to the blocks inside it, like Channel Loop, pins nothing. Keep the
  * rules matched with `useChannelQueue()`.
  */
 final readonly class Pinned_In_Channel_Blocks implements Post_IDs {

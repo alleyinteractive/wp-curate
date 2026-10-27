@@ -96,7 +96,7 @@ describe('toBlockChannel', () => {
     expect(toBlockChannel(fakeSelect('other'), '', undefined)).toBe('other');
   });
 
-  it('uses no channel inside a Many Posts block without one', () => {
+  it('uses no channel inside a Channel Loop block without one', () => {
     expect(toBlockChannel(fakeSelect('other'), '', { name: '' })).toBe('');
   });
 
@@ -204,14 +204,14 @@ describe('toBlockChannelArgs', () => {
     expect(toBlockChannelArgs({ args: { term: 5 }, name: 'in_category' }, undefined)).toEqual({ term: 5 });
   });
 
-  it('uses the arguments from block context inside a Many Posts block, instead of its own', () => {
+  it('uses the arguments from block context inside a Channel Loop block, instead of its own', () => {
     expect(toBlockChannelArgs(
       { args: { term: 5 }, name: 'in_category' },
       { args: { term: 6 }, name: 'in_category' },
     )).toEqual({ term: 6 });
   });
 
-  it('uses no arguments inside a Many Posts block without them', () => {
+  it('uses no arguments inside a Channel Loop block without them', () => {
     expect(toBlockChannelArgs({ args: { term: 5 }, name: 'in_category' }, { name: '' })).toEqual({});
   });
 });

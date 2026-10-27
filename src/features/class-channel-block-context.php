@@ -16,7 +16,7 @@ use WP_Block;
  * context.
  *
  * Core passes the context to the blocks inside them. It is apart from the `wp-curate/channel`
- * context that a Many Posts block provides, so that a block can tell the two apart. Keep the rules
+ * context that a Channel Loop block provides, so that a block can tell the two apart. Keep the rules
  * matched with `useBlockChannel()`.
  */
 final readonly class Channel_Block_Context implements Feature {
