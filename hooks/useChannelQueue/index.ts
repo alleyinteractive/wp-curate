@@ -7,6 +7,7 @@ import { useSelect } from '@wordpress/data';
 import {
   channelArgFields,
   channelContext,
+  hasChannelSupport,
   hasEveryChannelArg,
   isChannelProvider,
   pickChannelArgs,
@@ -77,6 +78,77 @@ function postContext(select: any): Record<string, unknown> {
 }
 
 /**
+ * Reads the post-level deduplication settings that Query blocks also follow. Unique pinned posts
+ * applies only with deduplication on, like it does for Query blocks.
+ *
+ * Keep the rules matched with `Channel_Deduplication_Block_Context` in PHP.
+ *
+ * @param select The data registry's `select`.
+ */
+function postDeduplication(select: any): { isEnabled: boolean, isUniquePinned: boolean } {
+  // An editor without a post, such as the widgets editor, has no editor store.
+  const editor = select('core/editor');
+
+  let isEnabled = false;
+  let isUniquePinned = false;
+
+  if (typeof editor !== 'object' || editor === null) {
+    return {
+      isEnabled,
+      isUniquePinned,
+    };
+  }
+
+  const {
+    getEditedPostAttribute,
+  } = editor;
+
+  const meta = getEditedPostAttribute('meta');
+
+  if (typeof meta === 'object' && meta !== null) {
+    const {
+      wp_curate_deduplication: deduplication,
+      wp_curate_unique_pinned_posts: uniquePinnedPosts,
+    } = meta as Record<string, unknown>;
+
+    isEnabled = deduplication === true;
+    isUniquePinned = isEnabled && uniquePinnedPosts === true;
+  }
+
+  return {
+    isEnabled,
+    isUniquePinned,
+  };
+}
+
+/**
+ * Get the IDs that the blocks with a channel pin. A block that gives its channel to the blocks
+ * inside it, like Many Posts, pins nothing.
+ *
+ * @param blocks       Blocks.
+ * @param getBlockType The blocks store's `getBlockType`.
+ * @param out          The IDs found so far.
+ */
+function pinnedIds(blocks: any[], getBlockType: any, out = new Set<number>()): Set<number> {
+  blocks.forEach((block) => {
+    const blockType = getBlockType(block.name);
+
+    if (
+      hasChannelSupport(blockType)
+      && !isChannelProvider(blockType)
+      && Number.isInteger(block.attributes.ref)
+      && block.attributes.ref > 0
+    ) {
+      out.add(block.attributes.ref);
+    }
+
+    pinnedIds(block.innerBlocks, getBlockType, out);
+  });
+
+  return out;
+}
+
+/**
  * Get the IDs that a block with a channel shows, given the blocks before it in the editor, and the
  * context that the block gives its channel.
  *
@@ -92,8 +164,13 @@ function postContext(select: any): Record<string, unknown> {
  * posts until the block gives it each argument. The context of a block inside a block that takes a
  * post, like Single Post, has that post as `postId` and `postType`. Otherwise, it has the post.
  *
- * A block waits only for its own channel and for the block that gives it its context, so a block
- * that changes its channel does not make the other blocks wait.
+ * With the post's deduplication setting on, a block that takes the top of its queue also skips
+ * the IDs that the blocks before it took from any queue. With unique pinned posts also on, it
+ * skips the IDs that any block in the post pins. A block always shows its own pin.
+ *
+ * Without deduplication, a block waits only for its own channel and for the block that gives it
+ * its context, so a block that changes its channel does not make the other blocks wait. With it, a
+ * block also waits for every block before it, whose IDs it skips.
  *
  * @param select         The data registry's `select`.
  * @param clientId       Client ID of the block.
@@ -141,6 +218,21 @@ function channelQueue(
    * others can.
    */
   const loadingChannels = new Set<string>();
+
+  const deduplication = postDeduplication(select);
+
+  // The IDs that any block in the post pins, which the other blocks skip.
+  let pinned = new Set<number>();
+
+  if (deduplication.isUniquePinned) {
+    pinned = pinnedIds(getBlocks(), getBlockType);
+  }
+
+  // The IDs taken so far from any queue.
+  const usedIds = new Set<number>();
+
+  // Whether a block before the current one is loading.
+  let isEarlierLoading = false;
 
   let isOutLoading = false;
   let out = NO_IDS;
@@ -234,22 +326,42 @@ function channelQueue(
       }
 
       /*
-       * Without a ref, the block takes the top of the queue. Every ID taken before can be in the
-       * queue, so load that many IDs plus one, in whole pages.
+       * Without a ref, the block takes the top of the queue that it does not skip. Every ID taken
+       * before can be in the queue, so load that many IDs plus one, in whole pages, and then a
+       * page more each time that every loaded ID is skipped.
        */
       if (ref === 0) {
-        const count = Math.ceil((previous.length + 1) / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
-        const loaded: ChannelRecord | null = getChannel(name, args, used, count);
+        const skipped = new Set<number>(previous);
 
-        if (loaded === null) {
-          isLoading = true;
+        if (deduplication.isEnabled) {
+          usedIds.forEach((id) => skipped.add(id));
+          pinned.forEach((id) => skipped.add(id));
         }
 
-        if (loaded !== null) {
-          const top = loaded.ids.find((id) => !previous.includes(id));
+        let count = Math.ceil((previous.length + 1) / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
+        let isSearching = true;
 
-          if (top !== undefined) {
-            taken = [top];
+        while (isSearching) {
+          const loaded: ChannelRecord | null = getChannel(name, args, used, count);
+
+          isSearching = false;
+
+          if (loaded === null) {
+            isLoading = true;
+          }
+
+          if (loaded !== null) {
+            const top = loaded.ids.find((id) => !skipped.has(id));
+
+            if (top !== undefined) {
+              taken = [top];
+            }
+
+            // The store gives a record with fewer IDs than the count only at the channel's end.
+            if (top === undefined && loaded.has_more && loaded.ids.length >= count) {
+              count += CHANNEL_PAGE_SIZE;
+              isSearching = true;
+            }
           }
         }
       }
@@ -300,14 +412,23 @@ function channelQueue(
 
       if (!isProvider && name !== null) {
         const {
-          isLoading,
+          isLoading: isChannelLoading,
           taken,
         } = take(block, context, providerChannel, isContextLoading);
+
+        // A block that skips the IDs of the blocks before it waits for them.
+        const isLoading = isChannelLoading || (deduplication.isEnabled && isEarlierLoading);
 
         if (block.clientId === clientId) {
           isOutLoading = isLoading;
           out = taken;
         }
+
+        if (isLoading) {
+          isEarlierLoading = true;
+        }
+
+        taken.forEach((id) => usedIds.add(id));
 
         // Until the block's post is known, the blocks inside it do not know their context.
         if (isLoading) {

@@ -7,13 +7,15 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
+use Alley\WP\Types\Post_IDs;
 use Generator;
 
 /**
  * The queue of available IDs in a channel.
  *
- * The channel's IDs are read only as far as the blocks on a page need them.
- * This class is mutable, one per channel per request.
+ * The channel's IDs are read only as far as the blocks on a page need them, and kept, so that an
+ * ID that one block skips stays available to the blocks after it. This class is mutable, one per
+ * channel per request.
  */
 final class Queue {
 	/**
@@ -22,6 +24,13 @@ final class Queue {
 	 * @var bool[]
 	 */
 	private array $removed = [];
+
+	/**
+	 * The IDs read from the channel so far, in channel order.
+	 *
+	 * @var int[]
+	 */
+	private array $read = [];
 
 	/**
 	 * The channel's IDs, or null before they are needed.
@@ -46,21 +55,22 @@ final class Queue {
 	/**
 	 * Returns the next ID and keeps it in the queue.
 	 *
+	 * @param Post_IDs $skipped IDs to pass over, which stay in the queue.
 	 * @return int|null The ID, or null when no IDs remain.
 	 */
-	public function top(): ?int {
-		$ids = $this->ids();
-		$top = null;
+	public function top( Post_IDs $skipped ): ?int {
+		$skipped = array_flip( $skipped->post_ids() );
+		$index   = 0;
+		$top     = null;
 
-		while ( null === $top && $ids->valid() ) {
-			$id = $this->current_id();
+		while ( null === $top && $this->has_read( $index ) ) {
+			$id = $this->read[ $index ];
 
-			// Skip removed IDs and IDs that are not positive integers.
-			if ( $id > 0 && ! isset( $this->removed[ $id ] ) ) {
+			if ( ! isset( $this->removed[ $id ] ) && ! isset( $skipped[ $id ] ) ) {
 				$top = $id;
-			} else {
-				$ids->next();
 			}
+
+			++$index;
 		}
 
 		return $top;
@@ -82,36 +92,53 @@ final class Queue {
 	 */
 	public function take_rest(): array {
 		$taken = [];
-		$ids   = $this->ids();
 
-		while ( $ids->valid() ) {
-			$id = $this->current_id();
+		// Read the whole channel.
+		do {
+			$has_more = $this->read_next();
+		} while ( $has_more );
 
-			if ( $id > 0 && ! isset( $this->removed[ $id ] ) ) {
+		foreach ( $this->read as $id ) {
+			if ( ! isset( $this->removed[ $id ] ) ) {
 				$taken[]              = $id;
 				$this->removed[ $id ] = true;
 			}
-
-			$ids->next();
 		}
 
 		return $taken;
 	}
 
 	/**
-	 * The ID that the generator points to now.
+	 * Whether the IDs read so far reach a position, reading the next ID from the channel if needed.
 	 *
-	 * @return int The ID, or 0 when the value is not an integer.
+	 * @param int $index Position in the IDs read so far.
+	 * @return bool
 	 */
-	private function current_id(): int {
-		$current = $this->ids()->current();
-		$id      = 0;
+	private function has_read( int $index ): bool {
+		return $index < count( $this->read ) || $this->read_next();
+	}
 
-		if ( is_int( $current ) ) {
-			$id = $current;
+	/**
+	 * Reads the channel's next ID that is a positive integer into the IDs read so far.
+	 *
+	 * @return bool Whether an ID was read.
+	 */
+	private function read_next(): bool {
+		$ids  = $this->ids();
+		$read = false;
+
+		while ( ! $read && $ids->valid() ) {
+			$current = $ids->current();
+
+			if ( is_int( $current ) && $current > 0 ) {
+				$this->read[] = $current;
+				$read         = true;
+			}
+
+			$ids->next();
 		}
 
-		return $id;
+		return $read;
 	}
 
 	/**
