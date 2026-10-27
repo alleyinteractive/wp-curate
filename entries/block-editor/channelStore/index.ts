@@ -7,11 +7,12 @@ import { addQueryArgs } from '@wordpress/url';
 import type { ChannelPage, ChannelRecord } from '../../../hooks/useChannelRecord';
 
 /*
- * The list of channels, the channels by name and context, and the pages of them that pickers show.
+ * The list of channels, the channels by name, arguments, and context, and the pages of them that
+ * pickers show.
  * Blocks read it by the store name, `wp-curate/channels`, so that it is registered only once, here.
  *
  * core-data is not used because it stores an entity record by its key alone, so the same channel
- * name with different context would overwrite itself.
+ * name with different arguments or context would overwrite itself.
  *
  * A channel record holds only as many IDs as blocks have asked for. Asking for more loads the
  * channel again from its start, through the new count, so that the queue reads the IDs in one
@@ -22,9 +23,22 @@ import type { ChannelPage, ChannelRecord } from '../../../hooks/useChannelRecord
 const MAX_PER_PAGE = 100;
 
 /**
+ * A field of an argument that a channel reads. `id` is the argument's key, and `type` names the
+ * control that the editor shows for it. A type can need more keys, such as `taxonomy`.
+ */
+export interface ChannelArgField {
+  [key: string]: string;
+  id: string;
+  label: string;
+  type: string;
+}
+
+/**
  * A channel in the list of channels. `is_default` is true for the global default channel.
+ * `arg_fields` lists the arguments that the channel reads.
  */
 export interface ChannelOption {
+  arg_fields: ChannelArgField[];
   is_default: boolean;
   label: string;
   name: string;
@@ -40,17 +54,20 @@ interface ChannelState {
  * The key of a stored channel record.
  *
  * @param name    Channel name.
+ * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  */
 const channelKey = (
   name: string,
+  args: object,
   context: object,
-) => JSON.stringify([name, context]);
+) => JSON.stringify([name, args, context]);
 
 /**
  * The key of a stored page record.
  *
  * @param name    Channel name.
+ * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  * @param search  Search terms, or an empty string for the whole channel.
  * @param page    Page number.
@@ -58,11 +75,12 @@ const channelKey = (
  */
 const pageKey = (
   name: string,
+  args: object,
   context: object,
   search: string,
   page: number,
   perPage: number,
-) => JSON.stringify([name, context, search, page, perPage]);
+) => JSON.stringify([name, args, context, search, page, perPage]);
 
 /**
  * Reads a stored record, if it has at least the number of IDs, or if the channel has no more IDs
@@ -166,6 +184,51 @@ function toChannelRecord(value: unknown): ChannelRecord {
 }
 
 /**
+ * Reads the argument fields of a channel from a REST API response. A field without a string `id`,
+ * `label`, and `type` is left out.
+ *
+ * @param value The `arg_fields` value of the response.
+ */
+function toChannelArgFields(value: unknown): ChannelArgField[] {
+  const fields: ChannelArgField[] = [];
+
+  if (!Array.isArray(value)) {
+    return fields;
+  }
+
+  value.forEach((item: unknown) => {
+    if (typeof item !== 'object' || item === null) {
+      return;
+    }
+
+    const field: Record<string, string> = {};
+
+    Object.entries(item).forEach(([key, fieldValue]) => {
+      if (typeof fieldValue === 'string') {
+        field[key] = fieldValue;
+      }
+    });
+
+    const {
+      id,
+      label,
+      type,
+    } = field;
+
+    if (id !== undefined && label !== undefined && type !== undefined) {
+      fields.push({
+        ...field,
+        id,
+        label,
+        type,
+      });
+    }
+  });
+
+  return fields;
+}
+
+/**
  * Reads the list of channels from a REST API response, which can be another type when the
  * request fails.
  *
@@ -184,6 +247,7 @@ function toChannelOptions(value: unknown): ChannelOption[] {
     }
 
     const {
+      arg_fields: argFields,
       is_default: isDefault,
       label,
       name,
@@ -191,6 +255,7 @@ function toChannelOptions(value: unknown): ChannelOption[] {
 
     if (typeof label === 'string' && typeof name === 'string') {
       options.push({
+        arg_fields: toChannelArgFields(argFields),
         is_default: isDefault === true,
         label,
         name,
@@ -221,6 +286,7 @@ function toHeaderInteger(value: string | null): number {
  * Fetches one page of a channel, or of its matches for a search.
  *
  * @param name    Channel name.
+ * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  * @param search  Search terms, or an empty string for the whole channel.
  * @param page    Page number.
@@ -228,12 +294,14 @@ function toHeaderInteger(value: string | null): number {
  */
 async function fetchChannelPage(
   name: string,
+  args: object,
   context: object,
   search: string,
   page: number,
   perPage: number,
 ): Promise<ChannelPage> {
   const queryArgs: Record<string, unknown> = {
+    args,
     context,
     page,
     per_page: perPage,
@@ -272,11 +340,13 @@ async function fetchChannelPage(
  * Loads the first IDs of a channel through the count, in pages of up to `MAX_PER_PAGE`.
  *
  * @param name    Channel name.
+ * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  * @param count   Number of IDs.
  */
 const loadChannel = (
   name: string,
+  args: object,
   context: object,
   count: number,
 ) => async ({
@@ -295,7 +365,7 @@ const loadChannel = (
   const pages = Array.from({ length: Math.ceil(count / perPage) }, (_, index) => index + 1);
 
   const pageRecords = await Promise.all(
-    pages.map((page) => fetchChannelPage(name, context, '', page, perPage)),
+    pages.map((page) => fetchChannelPage(name, args, context, '', page, perPage)),
   );
 
   const {
@@ -330,13 +400,14 @@ const loadChannel = (
     }
   });
 
-  receiveChannel(channelKey(name, context), record);
+  receiveChannel(channelKey(name, args, context), record);
 };
 
 /**
  * Loads one page of a channel, or of its matches for a search.
  *
  * @param name    Channel name.
+ * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  * @param search  Search terms, or an empty string for the whole channel.
  * @param page    Page number.
@@ -344,6 +415,7 @@ const loadChannel = (
  */
 const loadChannelPage = (
   name: string,
+  args: object,
   context: object,
   search: string,
   page: number,
@@ -367,8 +439,8 @@ const loadChannelPage = (
   }
 
   receiveChannelPage(
-    pageKey(name, context, search, page, perPage),
-    await fetchChannelPage(name, context, search, page, perPage),
+    pageKey(name, args, context, search, page, perPage),
+    await fetchChannelPage(name, args, context, search, page, perPage),
   );
 };
 
@@ -402,6 +474,7 @@ const loadChannels = () => async ({
  *
  * @param state   Store state.
  * @param name    Channel name.
+ * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  * @param count   Number of IDs, as a multiple of `CHANNEL_PAGE_SIZE`.
  * @return The record, or null until it has the number of IDs.
@@ -409,9 +482,10 @@ const loadChannels = () => async ({
 const getChannel = (
   state: ChannelState,
   name: string,
+  args: object,
   context: object,
   count: number,
-) => toLoadedChannel(state.channels, channelKey(name, context), count);
+) => toLoadedChannel(state.channels, channelKey(name, args, context), count);
 
 /**
  * Get one page of a channel, or of its matches for a search.
@@ -420,6 +494,7 @@ const getChannel = (
  *
  * @param state   Store state.
  * @param name    Channel name.
+ * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  * @param search  Search terms, or an empty string for the whole channel.
  * @param page    Page number.
@@ -429,12 +504,13 @@ const getChannel = (
 const getChannelPage = (
   state: ChannelState,
   name: string,
+  args: object,
   context: object,
   search: string,
   page: number,
   perPage: number,
 ) => {
-  const key = pageKey(name, context, search, page, perPage);
+  const key = pageKey(name, args, context, search, page, perPage);
   let record: ChannelPage | null = null;
 
   if (key in state.pages) {
@@ -480,34 +556,38 @@ const getChannels = (state: ChannelState) => state.list;
 
 const getChannelResolver = (
   name: string,
+  args: object,
   context: object,
   count: number,
-) => loadChannel(name, context, count);
+) => loadChannel(name, args, context, count);
 
 const getChannelPageResolver = (
   name: string,
+  args: object,
   context: object,
   search: string,
   page: number,
   perPage: number,
-) => loadChannelPage(name, context, search, page, perPage);
+) => loadChannelPage(name, args, context, search, page, perPage);
 
 // Skip the request when the store already has enough IDs.
 getChannelResolver.isFulfilled = (
   state: ChannelState,
   name: string,
+  args: object,
   context: object,
   count: number,
-) => getChannel(state, name, context, count) !== null;
+) => getChannel(state, name, args, context, count) !== null;
 
 getChannelPageResolver.isFulfilled = (
   state: ChannelState,
   name: string,
+  args: object,
   context: object,
   search: string,
   page: number,
   perPage: number,
-) => getChannelPage(state, name, context, search, page, perPage) !== null;
+) => getChannelPage(state, name, args, context, search, page, perPage) !== null;
 
 const store = createReduxStore('wp-curate/channels', {
   reducer(state: ChannelState | undefined, action: any) {

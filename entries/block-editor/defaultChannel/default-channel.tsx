@@ -30,6 +30,7 @@ export default function DefaultChannel() {
         help={__('Blocks without a channel selected use this channel.', 'wp-curate')}
         onChange={setDefaultChannel}
         value={defaultChannel}
+        withArgChannels={false}
       />
     </PluginDocumentSettingPanel>
   );

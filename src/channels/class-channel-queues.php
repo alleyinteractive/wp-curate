@@ -10,8 +10,9 @@ namespace Alley\WP\WP_Curate\Channels;
 /**
  * The queues that blocks share during a request.
  *
- * A block names its channel. Each channel gets a separate queue for each context value that it
- * uses. Blocks take IDs in render order. Keep these rules matched with `useChannelQueue()`.
+ * A block names its channel. Each channel gets a separate queue for each set of arguments and
+ * context values that it uses. Blocks take IDs in render order. Keep these rules matched with
+ * `useChannelQueue()`.
  */
 final class Channel_Queues {
 	/**
@@ -35,11 +36,12 @@ final class Channel_Queues {
 	 *
 	 * @param string  $name    Channel name that the block uses.
 	 * @param int     $ref     Pinned ID, or 0.
+	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context Block context.
 	 * @return int|null The ID, or null when none remains.
 	 */
-	public function take_one( string $name, int $ref, array $context ): ?int {
-		$queue = $this->queue( $name, $context );
+	public function take_one( string $name, int $ref, array $args, array $context ): ?int {
+		$queue = $this->queue( $name, $args, $context );
 		$taken = null;
 
 		if ( $ref > 0 ) {
@@ -61,11 +63,12 @@ final class Channel_Queues {
 	 * Takes every remaining ID.
 	 *
 	 * @param string  $name    Channel name that the block uses.
+	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context Block context.
 	 * @return int[] Remaining IDs.
 	 */
-	public function take_rest( string $name, array $context ): array {
-		$queue = $this->queue( $name, $context );
+	public function take_rest( string $name, array $args, array $context ): array {
+		$queue = $this->queue( $name, $args, $context );
 		$taken = [];
 
 		if ( $queue instanceof Queue ) {
@@ -76,22 +79,28 @@ final class Channel_Queues {
 	}
 
 	/**
-	 * Finds or creates the queue that matches the channel and the context that it uses.
+	 * Finds or creates the queue that matches the channel and the arguments and context that it uses.
 	 *
 	 * @param string  $name    Channel name.
+	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context Block context.
 	 * @return Queue|null The queue, or null when no channel has the name.
 	 */
-	private function queue( string $name, array $context ): ?Queue {
+	private function queue( string $name, array $args, array $context ): ?Queue {
 		$found = null;
 
 		foreach ( $this->channels->all() as $channel ) {
 			if ( $channel->name() === $name ) {
-				$used = array_intersect_key( $context, array_flip( $channel->uses_context() ) );
-				$key  = wp_json_encode( [ $name, $used ] );
+				// A block can keep arguments of the channel that it used before, which this channel ignores.
+				$used_args = array_intersect_key( $args, array_flip( array_column( $channel->arg_fields(), 'id' ) ) );
+				$used      = array_intersect_key( $context, array_flip( $channel->uses_context() ) );
+
+				ksort( $used_args );
+
+				$key = wp_json_encode( [ $name, $used_args, $used ] );
 
 				if ( is_string( $key ) ) {
-					$this->queues[ $key ] ??= new Queue( $channel, $used );
+					$this->queues[ $key ] ??= new Queue( $channel, $used_args, $used );
 					$found                  = $this->queues[ $key ];
 				}
 

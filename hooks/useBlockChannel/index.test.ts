@@ -1,5 +1,12 @@
 // Internal dependencies.
-import { toBlockChannel } from './index';
+import {
+  hasEveryChannelArg,
+  pickChannelArgs,
+  toBlockChannel,
+  toBlockChannelArgs,
+  toChannelArgs,
+  toChannelName,
+} from './index';
 
 jest.mock('@wordpress/data', () => ({
   useSelect: jest.fn(),
@@ -7,9 +14,27 @@ jest.mock('@wordpress/data', () => ({
 
 // The list of channels, with the global default.
 const CHANNELS = [
-  { is_default: false, label: 'Other', name: 'other' },
-  { is_default: true, label: 'Global', name: 'global_default' },
+  {
+    arg_fields: [],
+    is_default: false,
+    label: 'Other',
+    name: 'other',
+  },
+  {
+    arg_fields: [],
+    is_default: true,
+    label: 'Global',
+    name: 'global_default',
+  },
+  {
+    arg_fields: [{ id: 'term', label: 'Category', type: 'term' }],
+    is_default: false,
+    label: 'In category',
+    name: 'in_category',
+  },
 ];
+
+const TERM_FIELDS = [{ id: 'term', label: 'Category', type: 'term' }];
 
 /**
  * A `select` function with the given post default channel and channels.
@@ -43,11 +68,11 @@ describe('toBlockChannel', () => {
   });
 
   it('uses the channel from block context instead of its own', () => {
-    expect(toBlockChannel(fakeSelect('other'), 'own', 'from_context')).toBe('from_context');
+    expect(toBlockChannel(fakeSelect('other'), 'own', { name: 'from_context' })).toBe('from_context');
   });
 
   it('uses the channel from block context without its own', () => {
-    expect(toBlockChannel(fakeSelect('other'), '', 'from_context')).toBe('from_context');
+    expect(toBlockChannel(fakeSelect('other'), '', { name: 'from_context' })).toBe('from_context');
   });
 
   it('uses the post default channel without its own or one from context', () => {
@@ -55,7 +80,7 @@ describe('toBlockChannel', () => {
   });
 
   it('uses no channel inside a Many Posts block without one', () => {
-    expect(toBlockChannel(fakeSelect('other'), '', '')).toBe('');
+    expect(toBlockChannel(fakeSelect('other'), '', { name: '' })).toBe('');
   });
 
   it('uses the global default channel in an editor without a post', () => {
@@ -80,5 +105,72 @@ describe('toBlockChannel', () => {
 
   it('has no channel when no channels are registered', () => {
     expect(toBlockChannel(fakeSelect('', []), '', undefined)).toBe('');
+  });
+
+  it('uses the global default channel for a post default that reads arguments', () => {
+    expect(toBlockChannel(fakeSelect('in_category'), '', undefined)).toBe('global_default');
+  });
+});
+
+describe('toChannelName', () => {
+  it('reads the name of a channel', () => {
+    expect(toChannelName({ args: { term: 5 }, name: 'in_category' })).toBe('in_category');
+  });
+
+  it('reads a channel without a name as the post default', () => {
+    expect(toChannelName({})).toBe('');
+  });
+
+  it('reads a value that is not an object as no channel', () => {
+    expect(toChannelName('in_category')).toBeNull();
+    expect(toChannelName(undefined)).toBeNull();
+  });
+});
+
+describe('toChannelArgs', () => {
+  it('reads the arguments of a channel', () => {
+    expect(toChannelArgs({ args: { term: 5 }, name: 'in_category' })).toEqual({ term: 5 });
+  });
+
+  it('reads a channel without arguments as none', () => {
+    expect(toChannelArgs({ name: 'in_category' })).toEqual({});
+    expect(toChannelArgs({ args: [5], name: 'in_category' })).toEqual({});
+  });
+});
+
+describe('toBlockChannelArgs', () => {
+  it('uses the block\'s own arguments', () => {
+    expect(toBlockChannelArgs({ args: { term: 5 }, name: 'in_category' }, undefined)).toEqual({ term: 5 });
+  });
+
+  it('uses the arguments from block context inside a Many Posts block, instead of its own', () => {
+    expect(toBlockChannelArgs(
+      { args: { term: 5 }, name: 'in_category' },
+      { args: { term: 6 }, name: 'in_category' },
+    )).toEqual({ term: 6 });
+  });
+
+  it('uses no arguments inside a Many Posts block without them', () => {
+    expect(toBlockChannelArgs({ args: { term: 5 }, name: 'in_category' }, { name: '' })).toEqual({});
+  });
+});
+
+describe('pickChannelArgs', () => {
+  it('keeps only the arguments that the channel reads', () => {
+    expect(pickChannelArgs(TERM_FIELDS, { stale: 1, term: 5 })).toEqual({ term: 5 });
+  });
+});
+
+describe('hasEveryChannelArg', () => {
+  it('is true when the block gives each argument', () => {
+    expect(hasEveryChannelArg(TERM_FIELDS, { term: 5 })).toBe(true);
+  });
+
+  it('is false when the block does not give an argument', () => {
+    expect(hasEveryChannelArg(TERM_FIELDS, {})).toBe(false);
+  });
+
+  it('is true for a channel that reads no arguments', () => {
+    expect(hasEveryChannelArg([], {})).toBe(true);
   });
 });

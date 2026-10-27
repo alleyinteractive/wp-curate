@@ -16,11 +16,15 @@ import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
+import ChannelArgsControls from '../../../components/ChannelArgsControls';
 import ChannelSelectControl from '../../../components/ChannelSelectControl';
 import useBlockChannel, {
   CHANNEL_CONTEXT,
+  channelArgFields,
   hasChannelSupport,
   isChannelProvider,
+  toChannelArgs,
+  toChannelName,
 } from '../../../hooks/useBlockChannel';
 import useChannelQueue from '../../../hooks/useChannelQueue';
 
@@ -29,12 +33,15 @@ import useChannelQueue from '../../../hooks/useChannelQueue';
  * channel context, like Many Posts, gives the channel to the blocks inside it. Any other block
  * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. It
  * can pin a post with an integer `ref` attribute, and a `postType` attribute with the pinned post's
- * type. The `Channel_Block_Support` feature in PHP adds the `channel` attribute and the context
- * that the block uses, and gives the block the same post on the front end.
+ * type. Like a block binding, the `channel` attribute is an object with the channel `name` and
+ * the `args` that the block gives the channel, such as a term. The `Channel_Block_Support` feature
+ * in PHP adds the `channel` attribute and the context that the block uses, and gives the block the
+ * same post on the front end.
  */
 
 interface ChannelControlsProps {
   channel: string;
+  channelArgs: Record<string, unknown>;
   contextChannel: unknown;
   isProvider: boolean;
   setAttributes: (attributes: Record<string, unknown>) => void;
@@ -51,6 +58,7 @@ interface ChannelControlsProps {
  */
 function ChannelControls({
   channel,
+  channelArgs,
   contextChannel,
   isProvider,
   setAttributes,
@@ -58,8 +66,13 @@ function ChannelControls({
   // The channel that the block would use without its own: a Many Posts block's, or the post's.
   const inheritedChannel = useBlockChannel('', contextChannel);
 
-  // Only a block that provides the channel context, like Many Posts, gives the editor a string.
-  const isInProvider = typeof contextChannel === 'string';
+  const argFields = useSelect(
+    (select) => channelArgFields(select, channel),
+    [channel],
+  );
+
+  // Only a block that provides the channel context, like Many Posts, gives the editor a channel.
+  const isInProvider = toChannelName(contextChannel) !== null;
 
   const inherits = !isProvider && isInProvider;
 
@@ -69,7 +82,7 @@ function ChannelControls({
      * the channel above it changes later.
      */
     if (!inherits && channel === '' && inheritedChannel !== null && inheritedChannel !== '') {
-      setAttributes({ channel: inheritedChannel });
+      setAttributes({ channel: { name: inheritedChannel } });
     }
   }, [channel, inheritedChannel, inherits, setAttributes]);
 
@@ -88,8 +101,15 @@ function ChannelControls({
       <PanelBody title={__('WP Curate: Channel', 'wp-curate')}>
         <ChannelSelectControl
           help={help}
-          onChange={(next) => setAttributes({ channel: next })}
+          // The arguments of one channel are not the arguments of another.
+          onChange={(next) => setAttributes({ channel: { name: next } })}
           value={channel}
+          withArgChannels
+        />
+        <ChannelArgsControls
+          args={channelArgs}
+          fields={argFields}
+          onChange={(next) => setAttributes({ channel: { args: next, name: channel } })}
         />
       </PanelBody>
     </InspectorControls>
@@ -185,7 +205,9 @@ const withChannelSupport = createHigherOrderComponent(
 
     const blockType = getBlockType(name);
 
-    if (!hasChannelSupport(blockType) || typeof channel !== 'string') {
+    const ownName = toChannelName(channel);
+
+    if (!hasChannelSupport(blockType) || ownName === null) {
       return <BlockEdit {...props} />;
     }
 
@@ -200,7 +222,8 @@ const withChannelSupport = createHigherOrderComponent(
     return (
       <>
         <ChannelControls
-          channel={channel}
+          channel={ownName}
+          channelArgs={toChannelArgs(channel)}
           contextChannel={contextChannel}
           isProvider={isProvider}
           setAttributes={setAttributes}

@@ -57,11 +57,11 @@ describe('wp-curate/channels store', () => {
       getChannel,
     } = resolveSelect('wp-curate/channels') as any;
 
-    await getChannel('missing_count', {});
+    await getChannel('missing_count', {}, {});
 
     expect(mockedApiFetch).not.toHaveBeenCalled();
 
-    const record = await getChannel('missing_count', {}, 10);
+    const record = await getChannel('missing_count', {}, {}, 10);
 
     expect(record.ids).toHaveLength(10);
   });
@@ -72,8 +72,8 @@ describe('wp-curate/channels store', () => {
       getChannelPage,
     } = resolveSelect('wp-curate/channels') as any;
 
-    const results = await getChannelPage('search', {}, 'hello', 2, 20);
-    const record = await getChannel('search', {}, 10);
+    const results = await getChannelPage('search', {}, {}, 'hello', 2, 20);
+    const record = await getChannel('search', {}, {}, 10);
 
     expect(results.ids).toEqual([3]);
     expect(results.total).toBe(21);
@@ -92,7 +92,7 @@ describe('wp-curate/channels store', () => {
 
     mockedApiFetch.mockImplementation(async () => toResponse(PAGE_BODY, {}));
 
-    const page = await getChannelPage('no_headers', {}, '', 1, 10);
+    const page = await getChannelPage('no_headers', {}, {}, '', 1, 10);
 
     expect(page.ids).toHaveLength(10);
     expect(page.total).toBe(0);
@@ -104,8 +104,21 @@ describe('wp-curate/channels store', () => {
       getChannelPage,
     } = resolveSelect('wp-curate/channels') as any;
 
-    await getChannelPage('too_many', {}, '', 1, 101);
+    await getChannelPage('too_many', {}, {}, '', 1, 101);
 
     expect(mockedApiFetch).not.toHaveBeenCalled();
+  });
+
+  it('sends the arguments, and keeps a separate record for each set of them', async () => {
+    const {
+      getChannel,
+    } = resolveSelect('wp-curate/channels') as any;
+
+    await getChannel('with_args', { term: 7 }, {}, 10);
+    await getChannel('with_args', { term: 8 }, {}, 10);
+
+    expect(mockedApiFetch).toHaveBeenCalledTimes(2);
+    expect(decodeURIComponent(mockedApiFetch.mock.calls[0][0].path)).toContain('args[term]=7');
+    expect(decodeURIComponent(mockedApiFetch.mock.calls[1][0].path)).toContain('args[term]=8');
   });
 });

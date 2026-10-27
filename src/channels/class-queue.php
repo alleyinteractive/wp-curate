@@ -34,10 +34,12 @@ final class Queue {
 	 * Constructor.
 	 *
 	 * @param Channel $channel The channel to take IDs from.
+	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values that the channel uses.
 	 */
 	public function __construct(
 		private readonly Channel $channel,
+		private readonly array $args,
 		private readonly array $context,
 	) {}
 
@@ -120,7 +122,7 @@ final class Queue {
 	private function ids(): Generator {
 		if ( null === $this->ids ) {
 			// Wrap the iterable so that arrays and generators behave alike.
-			$this->ids = ( fn () => yield from $this->channel->ids( $this->context ) )();
+			$this->ids = ( fn () => yield from $this->channel->ids( $this->args, $this->context ) )();
 		}
 
 		return $this->ids;

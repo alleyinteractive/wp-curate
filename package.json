@@ -52,6 +52,7 @@
     "@wordpress/editor": "^14.33.11",
     "@wordpress/element": "^6.33.1",
     "@wordpress/hooks": "^4.33.1",
+    "@wordpress/html-entities": "^4.57.0",
     "@wordpress/i18n": "^6.6.1",
     "@wordpress/icons": "^11.0.1",
     "@wordpress/is-shallow-equal": "^5.33.1",

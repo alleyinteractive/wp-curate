@@ -12,6 +12,8 @@ namespace Alley\WP\WP_Curate\Channels;
  *
  * The preferred channel is the default while it is registered. Otherwise, the first registered
  * channel is. With no channels registered, there is no default; that case will be handled later.
+ *
+ * A channel that reads arguments cannot be the default, because only a block can give them.
  */
 final readonly class Default_Channel {
 	/**
@@ -33,21 +35,21 @@ final readonly class Default_Channel {
 	public function name(): string {
 		$name = '';
 
-		if ( $this->is_registered( $this->preferred ) ) {
+		$names = $this->names();
+
+		if ( in_array( $this->preferred, $names, true ) ) {
 			$name = $this->preferred;
 		}
 
-		$channels = $this->channels->all();
-
-		if ( '' === $name && isset( $channels[0] ) ) {
-			$name = $channels[0]->name();
+		if ( '' === $name && isset( $names[0] ) ) {
+			$name = $names[0];
 		}
 
 		return $name;
 	}
 
 	/**
-	 * The given channel name if it is registered, or else the default.
+	 * The given channel name if it can be the default, or else the default.
 	 *
 	 * @param string $name Channel name.
 	 * @return string The name, or an empty string if no channels are registered.
@@ -55,7 +57,7 @@ final readonly class Default_Channel {
 	public function or_default( string $name ): string {
 		$out = $this->name();
 
-		if ( $this->is_registered( $name ) ) {
+		if ( in_array( $name, $this->names(), true ) ) {
 			$out = $name;
 		}
 
@@ -63,14 +65,19 @@ final readonly class Default_Channel {
 	}
 
 	/**
-	 * Whether a channel with the name is registered.
+	 * Names of the registered channels that can be the default, in order.
 	 *
-	 * @param string $name Channel name.
-	 * @return bool
+	 * @return string[]
 	 */
-	private function is_registered( string $name ): bool {
-		$names = array_map( fn ( Channel $channel ) => $channel->name(), $this->channels->all() );
+	private function names(): array {
+		$names = [];
 
-		return in_array( $name, $names, true );
+		foreach ( $this->channels->all() as $channel ) {
+			if ( count( $channel->arg_fields() ) === 0 ) {
+				$names[] = $channel->name();
+			}
+		}
+
+		return $names;
 	}
 }

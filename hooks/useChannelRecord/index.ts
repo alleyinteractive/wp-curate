@@ -38,16 +38,19 @@ export interface ChannelPage extends ChannelRecord {
  * Get the record of a block's channel.
  *
  * @param name    The block's channel, or an empty string if it has none.
+ * @param args    Block arguments to send to the channel.
  * @param context Block context to send to the channel.
  * @param count   Number of IDs to load, as a multiple of `CHANNEL_PAGE_SIZE`.
  * @return The record, or null while the channel loads or if there is no channel.
  */
 export default function useChannelRecord(
   name: string,
+  args: Record<string, unknown> = {},
   context: Record<string, unknown> = {},
   count: number = CHANNEL_PAGE_SIZE,
 ): ChannelRecord | null {
-  // Compare the context by value, since callers pass a new object on each render.
+  // Compare the arguments and context by value, since callers pass new objects on each render.
+  const argsKey = JSON.stringify(args);
   const contextKey = JSON.stringify(context);
 
   return useSelect((select) => {
@@ -59,9 +62,9 @@ export default function useChannelRecord(
 
     // Without a channel, there is nothing to request.
     if (name !== '') {
-      record = getChannel(name, JSON.parse(contextKey), count);
+      record = getChannel(name, JSON.parse(argsKey), JSON.parse(contextKey), count);
     }
 
     return record;
-  }, [count, name, contextKey]);
+  }, [argsKey, count, name, contextKey]);
 }
