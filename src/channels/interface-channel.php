@@ -57,9 +57,24 @@ interface Channel {
 	/**
 	 * Names of the block context values that the channel reads.
 	 *
+	 * A block with the `wp-curate/channel` support has the `postId` and `postType` context of the
+	 * block around it, or else of the post. A REST API request gives the values as strings.
+	 *
 	 * @return string[]
 	 */
 	public function uses_context(): array;
+
+	/**
+	 * Whether a block with the context can select the channel.
+	 *
+	 * The editor lists only the channels that are available. A block can keep a channel after it
+	 * moves to where the channel is not available, so the channel must give IDs for any context,
+	 * such as none.
+	 *
+	 * @param mixed[] $context The block context values in `uses_context()`.
+	 * @return bool
+	 */
+	public function is_available( array $context ): bool;
 
 	/**
 	 * Human-readable name of the channel order, such as "Most recent article".

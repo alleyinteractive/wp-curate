@@ -10,11 +10,14 @@ import { useMemo, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
+import { channelContext } from '../../../hooks/useBlockChannel';
+import { channelQueueContext } from '../../../hooks/useChannelQueue';
 import useChannelRecord, { CHANNEL_PAGE_SIZE, type ChannelPage } from '../../../hooks/useChannelRecord';
 
 interface PostPickerProps {
   args: Record<string, unknown>;
   channel: string;
+  clientId: string;
   selectedId: number;
   onClose: () => void;
   onSelect: (id: number, postType: string) => void;
@@ -175,6 +178,7 @@ function toPostTitle(post: unknown): string {
 export default function PostPicker({
   args,
   channel,
+  clientId,
   selectedId,
   onClose,
   onSelect,
@@ -211,8 +215,38 @@ export default function PostPicker({
     search = view.search.trim();
   }
 
+  /*
+   * The context that the block's queue gives the channel, which the picker gives it too, or null
+   * while the block above it that gives it its context loads.
+   */
+  const contextKey: string = useSelect((select) => {
+    const blockContext = channelQueueContext(select, clientId);
+
+    let key = 'null';
+
+    if (blockContext !== null) {
+      key = JSON.stringify(channelContext(select, channel, blockContext));
+    }
+
+    return key;
+  }, [channel, clientId]);
+
+  const context: Record<string, unknown> | null = useMemo(
+    () => JSON.parse(contextKey),
+    [contextKey],
+  );
+
+  let recordChannel = '';
+  let recordContext: Record<string, unknown> = {};
+
+  // Without its context, the channel is not requested.
+  if (context !== null) {
+    recordChannel = channel;
+    recordContext = context;
+  }
+
   // The whole channel, for its label, which stays the same while a page loads.
-  const channelRecord = useChannelRecord(channel, args);
+  const channelRecord = useChannelRecord(recordChannel, args, recordContext);
 
   const {
     getChannelPostType,
@@ -224,8 +258,14 @@ export default function PostPicker({
       getChannelPage,
     } = select('wp-curate/channels') as any;
 
-    return getChannelPage(channel, args, {}, search, page, perPage);
-  }, [args, channel, page, perPage, search]);
+    let out: ChannelPage | null = null;
+
+    if (context !== null) {
+      out = getChannelPage(channel, args, context, search, page, perPage);
+    }
+
+    return out;
+  }, [args, channel, context, page, perPage, search]);
 
   // The totals of the last page that loaded, so that the pagination stays while the next one loads.
   const [paginationInfo, setPaginationInfo] = useState({ totalItems: 0, totalPages: 0 });

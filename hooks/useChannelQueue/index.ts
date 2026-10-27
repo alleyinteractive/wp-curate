@@ -6,6 +6,7 @@ import { useSelect } from '@wordpress/data';
 // Plugin dependencies.
 import {
   channelArgFields,
+  channelContext,
   hasEveryChannelArg,
   isChannelProvider,
   pickChannelArgs,
@@ -41,10 +42,43 @@ function channelAttribute(block: unknown): unknown {
 }
 
 /**
- * Get the IDs that a block with a channel shows, given the blocks before it in the editor.
+ * Get the context of the blocks at the top of the post, which is the post itself, the way that
+ * `render_block()` gives it in PHP.
  *
- * This is a plain function of `select`, so that a block bindings source's `getValues()`, which
- * cannot call hooks, can use it. `useChannelQueue()` wraps it for components.
+ * @param select The data registry's `select`.
+ */
+function postContext(select: any): Record<string, unknown> {
+  // An editor without a post, such as the widgets editor, has no editor store.
+  const editor = select('core/editor');
+
+  let context: Record<string, unknown> = {};
+
+  if (typeof editor !== 'object' || editor === null) {
+    return context;
+  }
+
+  const {
+    getCurrentPostId,
+    getCurrentPostType,
+  } = editor;
+
+  const postId = getCurrentPostId();
+  const postType = getCurrentPostType();
+
+  // A template in the site editor has a string ID, and no post to give.
+  if (Number.isInteger(postId) && postId > 0 && typeof postType === 'string') {
+    context = {
+      postId,
+      postType,
+    };
+  }
+
+  return context;
+}
+
+/**
+ * Get the IDs that a block with a channel shows, given the blocks before it in the editor, and the
+ * context that the block gives its channel.
  *
  * Keep the rules in sync with `Channel_Queues` in PHP. Blocks take IDs in document order:
  *
@@ -54,8 +88,9 @@ function channelAttribute(block: unknown): unknown {
  * - A block that supports `wp-curate/channel`, like Many Posts, takes nothing.
  *
  * A block without a channel of its own uses the channel that `toBlockChannel()` describes. A
- * channel has a separate queue for each set of arguments that it reads, and has no posts until the
- * block gives it each of them.
+ * channel has a separate queue for each set of arguments and context that it reads, and has no
+ * posts until the block gives it each argument. The context of a block inside a block that takes a
+ * post, like Single Post, has that post as `postId` and `postType`. Otherwise, it has the post.
  *
  * A block waits only for its own channel and for the block that gives it its context, so a block
  * that changes its channel does not make the other blocks wait.
@@ -63,13 +98,14 @@ function channelAttribute(block: unknown): unknown {
  * @param select         The data registry's `select`.
  * @param clientId       Client ID of the block.
  * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
- * @return The IDs, or null while channels load.
+ * @return The IDs, or null while channels load, and the context, or null while the block above it
+ *         that gives it its context loads.
  */
-export function channelQueueIds(
+function channelQueue(
   select: any,
   clientId: string,
-  previewContext: Record<string, unknown> = {},
-): number[] | null {
+  previewContext: Record<string, unknown>,
+): { context: Record<string, unknown> | null, ids: number[] | null } {
   const {
     getBlocks,
     getSettings,
@@ -87,7 +123,10 @@ export function channelQueueIds(
 
   // Every block can use the post's default channel, so all of them wait for it.
   if (postChannel === null) {
-    return null;
+    return {
+      context: null,
+      ids: null,
+    };
   }
 
   /*
@@ -105,6 +144,7 @@ export function channelQueueIds(
 
   let isOutLoading = false;
   let out = NO_IDS;
+  let outContext: Record<string, unknown> | null = null;
 
   /*
    * Take the IDs that a block renders from its queue. The block is loading if its channel is
@@ -176,19 +216,15 @@ export function channelQueueIds(
       };
     }
 
-    // The first page of the channel tells which context the channel uses.
-    const record: ChannelRecord | null = getChannel(name, args, context, CHANNEL_PAGE_SIZE);
+    // Send and key the queue by only the context that the channel uses, like PHP does.
+    const used = channelContext(select, name, context);
+    const record: ChannelRecord | null = getChannel(name, args, used, CHANNEL_PAGE_SIZE);
 
     if (record === null) {
       isLoading = true;
     }
 
     if (record !== null) {
-      // Key the queue by the arguments and context that the channel uses, like PHP does.
-      const used = Object.fromEntries(
-        record.uses_context.map((usedKey: string) => [usedKey, context[usedKey]]),
-      );
-
       const key = JSON.stringify([name, args, used]);
 
       let previous = NO_IDS;
@@ -203,7 +239,7 @@ export function channelQueueIds(
        */
       if (ref === 0) {
         const count = Math.ceil((previous.length + 1) / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
-        const loaded: ChannelRecord | null = getChannel(name, args, context, count);
+        const loaded: ChannelRecord | null = getChannel(name, args, used, count);
 
         if (loaded === null) {
           isLoading = true;
@@ -250,6 +286,10 @@ export function channelQueueIds(
       let childChannel = providerChannel;
       let isChildContextLoading = isContextLoading;
 
+      if (block.clientId === clientId && !isContextLoading) {
+        outContext = context;
+      }
+
       /*
        * Keep the provider's channel apart from `context`, which goes to the channel and is part of
        * the key of its requests.
@@ -295,7 +335,7 @@ export function channelQueueIds(
     isPreviewMode,
   } = getSettings();
 
-  let startContext: Record<string, unknown> = {};
+  let startContext = postContext(select);
 
   if (isPreviewMode === true) {
     startContext = previewContext;
@@ -309,7 +349,50 @@ export function channelQueueIds(
     ids = null;
   }
 
-  return ids;
+  return {
+    context: outContext,
+    ids,
+  };
+}
+
+/**
+ * Get the IDs that a block with a channel shows, given the blocks before it in the editor.
+ *
+ * This is a plain function of `select`, so that a block bindings source's `getValues()`, which
+ * cannot call hooks, can use it. `useChannelQueue()` wraps it for components.
+ *
+ * @param select         The data registry's `select`.
+ * @param clientId       Client ID of the block.
+ * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
+ * @return The IDs, or null while channels load.
+ */
+export function channelQueueIds(
+  select: any,
+  clientId: string,
+  previewContext: Record<string, unknown> = {},
+): number[] | null {
+  return channelQueue(select, clientId, previewContext).ids;
+}
+
+/**
+ * Get the block context that a block gives its channel, such as the `postId` of the Single Post
+ * around it. The block's own `postId` and `postType` context is the post that it takes, so a
+ * picker of the channel's posts reads the context here, the way that the queue does.
+ *
+ * Each block builds as a separate script, so a React context that one script provides is not
+ * the one that another script reads. This function reads only the stores, which are shared.
+ *
+ * @param select         The data registry's `select`.
+ * @param clientId       Client ID of the block.
+ * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
+ * @return The context, or null while the block above it that gives it its context loads.
+ */
+export function channelQueueContext(
+  select: any,
+  clientId: string,
+  previewContext: Record<string, unknown> = {},
+): Record<string, unknown> | null {
+  return channelQueue(select, clientId, previewContext).context;
 }
 
 /**
