@@ -11,7 +11,7 @@ import { decodeEntities } from '@wordpress/html-entities';
 import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
-import TermPicker from '../TermPicker';
+import TermPicker from '../../../components/TermPicker';
 
 interface TermControlProps {
   label: string;

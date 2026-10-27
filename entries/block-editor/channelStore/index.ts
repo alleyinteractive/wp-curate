@@ -23,8 +23,9 @@ import type { ChannelPage, ChannelRecord } from '../../../hooks/useChannelRecord
 const MAX_PER_PAGE = 100;
 
 /**
- * A field of an argument that a channel reads. `id` is the argument's key, and `type` names the
- * control that the editor shows for it. A type can need more keys, such as `taxonomy`.
+ * A field of an argument that a channel reads. `id` is the argument's key. `type` tells the fills
+ * of the Channel panel which control to show for it, and a type can need more keys, such as the
+ * `taxonomy` of a `term`.
  */
 export interface ChannelArgField {
   [key: string]: string;

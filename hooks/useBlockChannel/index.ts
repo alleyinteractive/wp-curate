@@ -295,8 +295,9 @@ export function channelArgFields(select: any, name: string): ChannelArgField[] {
 /**
  * Get only the arguments that a channel reads, in the order of its fields.
  *
- * A block can keep arguments of the channel that it used before. Leaving them out keeps the
- * requests for a channel the same for every block, like the queues in PHP.
+ * A block's arguments can include keys that the channel does not read, such as from hand-written
+ * markup or a field that the channel no longer has. Leaving them out gives every block that uses
+ * the same arguments the same request and queue, like the queues in PHP.
  *
  * @param fields The fields of the arguments that the channel reads.
  * @param args   The block's arguments.
