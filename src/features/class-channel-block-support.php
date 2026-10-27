@@ -16,7 +16,8 @@ use WP_Post;
 /**
  * The `wp-curate/channel` block support, for blocks that have a channel.
  *
- * A block with the support gets a `channel` attribute and the channel context. Like a block binding,
+ * A block with the support gets a `channel` attribute, the channel context, and the `postId` and
+ * `postType` context for channels that read it. Like a block binding,
  * the attribute is an object with the channel `name` and the `args` that the block gives the
  * channel, such as `{"name":"latest_post_in_category","args":{"term":7}}`. An empty name means the
  * post's default channel. A block that also provides the `wp-curate/channel` context, like Many
@@ -108,6 +109,9 @@ final readonly class Channel_Block_Support implements Feature {
 			],
 		];
 
+		// The post of the block around it, or else of the post, for channels that read it.
+		$uses_context[] = 'postId';
+		$uses_context[] = 'postType';
 		$uses_context[] = self::CHANNEL_CONTEXT;
 		$uses_context[] = self::DEFAULT_CONTEXT;
 		$uses_context[] = self::QUEUES_CONTEXT;

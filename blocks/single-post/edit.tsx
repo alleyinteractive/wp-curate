@@ -300,6 +300,7 @@ export default function Edit({
         <PostPicker
           args={args}
           channel={channel}
+          clientId={clientId}
           selectedId={ref}
           onClose={() => setIsPickerOpen(false)}
           onSelect={(id, selectedPostType) => {

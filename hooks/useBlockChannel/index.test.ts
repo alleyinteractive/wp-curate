@@ -1,5 +1,8 @@
 // Internal dependencies.
 import {
+  canBeDefaultChannel,
+  channelContext,
+  channelsContext,
   hasEveryChannelArg,
   pickChannelArgs,
   toBlockChannel,
@@ -16,21 +19,35 @@ jest.mock('@wordpress/data', () => ({
 const CHANNELS = [
   {
     arg_fields: [],
+    is_available: true,
     is_default: false,
     label: 'Other',
     name: 'other',
+    uses_context: [],
   },
   {
     arg_fields: [],
+    is_available: true,
     is_default: true,
     label: 'Global',
     name: 'global_default',
+    uses_context: [],
   },
   {
     arg_fields: [{ id: 'term', label: 'Category', type: 'term' }],
+    is_available: true,
     is_default: false,
     label: 'In category',
     name: 'in_category',
+    uses_context: [],
+  },
+  {
+    arg_fields: [],
+    is_available: false,
+    is_default: false,
+    label: 'In issue',
+    name: 'in_issue',
+    uses_context: ['postId'],
   },
 ];
 
@@ -109,6 +126,50 @@ describe('toBlockChannel', () => {
 
   it('uses the global default channel for a post default that reads arguments', () => {
     expect(toBlockChannel(fakeSelect('in_category'), '', undefined)).toBe('global_default');
+  });
+
+  it('uses the global default channel for a post default that reads block context', () => {
+    expect(toBlockChannel(fakeSelect('in_issue'), '', undefined)).toBe('global_default');
+  });
+});
+
+describe('canBeDefaultChannel', () => {
+  it('is true for a channel that reads no arguments or context', () => {
+    expect(canBeDefaultChannel(CHANNELS[0])).toBe(true);
+  });
+
+  it('is false for a channel that reads arguments', () => {
+    expect(canBeDefaultChannel(CHANNELS[2])).toBe(false);
+  });
+
+  it('is false for a channel that reads block context', () => {
+    expect(canBeDefaultChannel(CHANNELS[3])).toBe(false);
+  });
+});
+
+describe('channelContext', () => {
+  const context = { postId: 7, postType: 'magazine_issue', query: {} };
+
+  it('keeps only the context that the channel reads', () => {
+    expect(channelContext(fakeSelect(''), 'in_issue', context)).toEqual({ postId: 7 });
+  });
+
+  it('keeps no context for a channel that reads none', () => {
+    expect(channelContext(fakeSelect(''), 'other', context)).toEqual({});
+  });
+
+  it('keeps no context while the list of channels loads', () => {
+    expect(channelContext(fakeSelect('', null), 'in_issue', context)).toEqual({});
+  });
+});
+
+describe('channelsContext', () => {
+  it('keeps only the context that any channel reads', () => {
+    expect(channelsContext(fakeSelect(''), { postId: 7, postType: 'post' })).toEqual({ postId: 7 });
+  });
+
+  it('is null while the list of channels loads', () => {
+    expect(channelsContext(fakeSelect('', null), { postId: 7 })).toBeNull();
   });
 });
 

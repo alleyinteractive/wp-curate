@@ -78,6 +78,16 @@ final readonly class Latest_Posts implements Channel {
 	}
 
 	/**
+	 * Whether a block with the context can select the channel.
+	 *
+	 * @param mixed[] $context The block context values in `uses_context()`.
+	 * @return bool
+	 */
+	public function is_available( array $context ): bool {
+		return true;
+	}
+
+	/**
 	 * Human-readable name of the channel order.
 	 *
 	 * @return string

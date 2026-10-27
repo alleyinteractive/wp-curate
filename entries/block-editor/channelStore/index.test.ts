@@ -121,4 +121,28 @@ describe('wp-curate/channels store', () => {
     expect(decodeURIComponent(mockedApiFetch.mock.calls[0][0].path)).toContain('args[term]=7');
     expect(decodeURIComponent(mockedApiFetch.mock.calls[1][0].path)).toContain('args[term]=8');
   });
+
+  it('loads a list of channels for each context, with whether each one is available', async () => {
+    mockedApiFetch.mockImplementation(async ({ path }: { path: string }) => [
+      {
+        arg_fields: [],
+        is_available: path.includes('context%5BpostId%5D=7'),
+        is_default: false,
+        label: 'In issue',
+        name: 'in_issue',
+        uses_context: ['postId'],
+      },
+    ]);
+
+    const {
+      getChannelsInContext,
+    } = resolveSelect('wp-curate/channels') as any;
+
+    const [inIssue] = await getChannelsInContext({ postId: 7 });
+    const [elsewhere] = await getChannelsInContext({ postId: 8 });
+
+    expect(inIssue.is_available).toBe(true);
+    expect(inIssue.uses_context).toEqual(['postId']);
+    expect(elsewhere.is_available).toBe(false);
+  });
 });
