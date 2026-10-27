@@ -24,7 +24,7 @@ const NEW_BLOCK_TEMPLATE: InnerBlockTemplate[] = [
 const ALLOWED_BLOCKS = [SINGLE_POST.name];
 
 /**
- * The wp-curate/many-posts block edit function.
+ * The wp-curate/channel-loop block edit function.
  *
  * The inner blocks are Single Post blocks, which each show one post, so the number of them is the
  * number of posts. The block gives its channel, its channel arguments, and its `template` attribute

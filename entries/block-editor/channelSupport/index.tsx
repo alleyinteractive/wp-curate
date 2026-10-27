@@ -34,7 +34,7 @@ import useChannelQueue from '../../../hooks/useChannelQueue';
 
 /*
  * Blocks with the `wp-curate/channel` block support get a Channel panel. A block that provides the
- * channel context, like Many Posts, gives the channel to the blocks inside it. Any other block
+ * channel context, like Channel Loop, gives the channel to the blocks inside it. Any other block
  * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. It
  * can pin a post with an integer `ref` attribute, and a `postType` attribute with the pinned post's
  * type. Like a block binding, the `channel` attribute is an object with the channel `name` and
@@ -74,7 +74,7 @@ function ChannelControls({
   isProvider,
   setAttributes,
 }: ChannelControlsProps) {
-  // The channel that the block would use without its own: a Many Posts block's, or the post's.
+  // The channel that the block would use without its own: a Channel Loop block's, or the post's.
   const inheritedChannel = useBlockChannel('', contextChannel);
 
   const argFields = useSelect(
@@ -82,7 +82,7 @@ function ChannelControls({
     [channel],
   );
 
-  // Only a block that provides the channel context, like Many Posts, gives the editor a channel.
+  // Only a block that provides the channel context, like Channel Loop, gives the editor a channel.
   const isInProvider = toChannelName(contextChannel) !== null;
 
   const inherits = !isProvider && isInProvider;

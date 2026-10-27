@@ -123,7 +123,7 @@ function postDeduplication(select: any): { isEnabled: boolean, isUniquePinned: b
 
 /**
  * Get the IDs that the blocks with a channel pin. A block that gives its channel to the blocks
- * inside it, like Many Posts, pins nothing.
+ * inside it, like Channel Loop, pins nothing.
  *
  * @param blocks       Blocks.
  * @param getBlockType The blocks store's `getBlockType`.
@@ -157,7 +157,7 @@ function pinnedIds(blocks: any[], getBlockType: any, out = new Set<number>()): S
  * - A single-item block shows its ref, or else the top of its channel's queue. That ID is then
  *   removed from the queue.
  * - A list block takes every ID that is left in its channel's queue.
- * - A block that supports `wp-curate/channel`, like Many Posts, takes nothing.
+ * - A block that supports `wp-curate/channel`, like Channel Loop, takes nothing.
  *
  * A block without a channel of its own uses the channel that `toBlockChannel()` describes. A
  * channel has a separate queue for each set of arguments and context that it reads, and has no

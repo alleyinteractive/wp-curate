@@ -43,7 +43,7 @@ import useBlockChannel, {
 import PostPicker from './components/post-picker';
 
 /*
- * The inner blocks of a new block outside a Many Posts block, until a layout modal like the one
+ * The inner blocks of a new block outside a Channel Loop block, until a layout modal like the one
  * in Single Term is available.
  */
 const BASIC_TEMPLATE: InnerBlockTemplate[] = [
@@ -57,7 +57,7 @@ interface SinglePostAttributes {
 }
 
 /**
- * The editable inner blocks of a block outside a Many Posts block.
+ * The editable inner blocks of a block outside a Channel Loop block.
  */
 function StandaloneInnerBlocks({ blockProps }: { blockProps: Record<string, unknown> }) {
   const innerBlocksProps = useInnerBlocksProps(blockProps, {
@@ -81,19 +81,19 @@ function toInnerBlockTemplate(blocks: BlockInstance[]): InnerBlockTemplate[] {
 }
 
 /**
- * The inner blocks of a block inside a Many Posts block, which edit that block's template.
+ * The inner blocks of a block inside a Channel Loop block, which edit that block's template.
  *
  * The inner blocks are controlled: they come from the template, and each change goes back to the
  * template. The editor does not save controlled inner blocks with the block itself. Every Single
- * Post block in the Many Posts block edits the same template.
+ * Post block in the Channel Loop block edits the same template.
  */
 function TemplateInnerBlocks({
   blockProps,
-  manyPostsClientId,
+  channelLoopClientId,
   template,
 }: {
   blockProps: Record<string, unknown>;
-  manyPostsClientId: string;
+  channelLoopClientId: string;
   template: InnerBlockTemplate[];
 }) {
   const {
@@ -127,8 +127,8 @@ function TemplateInnerBlocks({
       template: next,
     };
 
-    updateBlockAttributes(manyPostsClientId, { template: next });
-  }, [manyPostsClientId, updateBlockAttributes]);
+    updateBlockAttributes(channelLoopClientId, { template: next });
+  }, [channelLoopClientId, updateBlockAttributes]);
 
   const innerBlocksProps = useInnerBlocksProps(blockProps, {
     // @ts-expect-error value, onChange, and onInput not available in types yet.
@@ -147,8 +147,8 @@ function TemplateInnerBlocks({
  * the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
  * after the blocks before this one. The support also gives that post to the inner blocks.
  *
- * Outside a Many Posts block, the block has its own inner blocks and its own channel. Inside one,
- * it has neither: its inner blocks edit the Many Posts block's template, and it uses that block's
+ * Outside a Channel Loop block, the block has its own inner blocks and its own channel. Inside one,
+ * it has neither: its inner blocks edit the Channel Loop block's template, and it uses that block's
  * channel. A block moved in from outside loses its inner blocks, and keeps its pinned post.
  */
 export default function Edit({
@@ -204,13 +204,13 @@ export default function Edit({
     postId = contextPostId;
   }
 
-  // The nearest Many Posts block, whose template the block edits, or an empty string.
-  const manyPostsClientId: string = useSelect((select) => {
+  // The nearest Channel Loop block, whose template the block edits, or an empty string.
+  const channelLoopClientId: string = useSelect((select) => {
     const {
       getBlockParentsByBlockName,
     } = select(blockEditorStore) as any;
 
-    const [nearest] = getBlockParentsByBlockName(clientId, 'wp-curate/many-posts', true);
+    const [nearest] = getBlockParentsByBlockName(clientId, 'wp-curate/channel-loop', true);
 
     let out = '';
 
@@ -221,18 +221,18 @@ export default function Edit({
     return out;
   }, [clientId]);
 
-  // Only a Many Posts block provides a template.
-  const isInManyPosts = Array.isArray(postTemplate) && manyPostsClientId !== '';
+  // Only a Channel Loop block provides a template.
+  const isInChannelLoop = Array.isArray(postTemplate) && channelLoopClientId !== '';
 
   let preview = (
     <StandaloneInnerBlocks blockProps={blockProps} />
   );
 
-  if (isInManyPosts) {
+  if (isInChannelLoop) {
     preview = (
       <TemplateInnerBlocks
         blockProps={blockProps}
-        manyPostsClientId={manyPostsClientId}
+        channelLoopClientId={channelLoopClientId}
         template={postTemplate as InnerBlockTemplate[]}
       />
     );

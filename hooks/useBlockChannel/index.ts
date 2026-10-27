@@ -11,8 +11,8 @@ export const DEFAULT_CHANNEL_META_KEY = 'wp_curate_default_channel';
 
 /*
  * The block support of a block that has a channel. wp-curate gives the block a `channel` attribute
- * and a Channel panel. A block that also provides the `wp-curate/channel` context, like Many Posts,
- * gives its channel to the blocks inside it. Any other block takes a post from its channel.
+ * and a Channel panel. A block that also provides the `wp-curate/channel` context, like Channel
+ * Loop, gives its channel to the blocks inside it. Any other block takes a post from its channel.
  *
  * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
  * block gives the channel, such as `{ name: 'latest_post_in_category', args: { term: 7 } }`. An
@@ -69,7 +69,7 @@ export function hasChannelSupport(blockType: unknown): boolean {
 }
 
 /**
- * Whether a block type gives its channel to the blocks inside it, like Many Posts.
+ * Whether a block type gives its channel to the blocks inside it, like Channel Loop.
  *
  * @param blockType Block type from the blocks store.
  */
@@ -175,7 +175,7 @@ export function postDefaultChannel(select: any): string | null {
  *
  * @param value The attribute or context.
  * @return The name, an empty string for the post's default channel, or null if the value is not a
- *         channel, such as the context of a block that is not inside a Many Posts block.
+ *         channel, such as the context of a block that is not inside a Channel Loop block.
  */
 export function toChannelName(value: unknown): string | null {
   let name: string | null = null;
@@ -225,15 +225,15 @@ export function toChannelArgs(value: unknown): Record<string, unknown> {
  * Get the channel that a block uses.
  *
  * Keep the rules matched with `Channel_Block_Support` in PHP. The block uses the channel in its
- * block context, which a Many Posts block around it provides, even if the block has its own from
+ * block context, which a Channel Loop block around it provides, even if the block has its own from
  * before it moved in. Otherwise it uses its own channel, or else the post's default channel, or
  * else the global default channel.
  *
  * @param select         The data registry's `select`.
  * @param ownName        The name in the block's `channel` attribute.
  * @param contextChannel The `wp-curate/channel` block context.
- * @return The channel, an empty string if no channels are registered or the Many Posts block around
- *         the block has no channel, or null while the list of channels loads.
+ * @return The channel, an empty string if no channels are registered or the Channel Loop block
+ *         around the block has no channel, or null while the list of channels loads.
  */
 export function toBlockChannel(
   select: any,
@@ -242,7 +242,7 @@ export function toBlockChannel(
 ): string | null {
   const contextName = toChannelName(contextChannel);
 
-  // A Many Posts block without a channel is an error, so the blocks inside it get no channel.
+  // A Channel Loop block without a channel is an error, so the blocks inside it get no channel.
   if (contextName !== null) {
     return contextName;
   }
@@ -259,7 +259,7 @@ export function toBlockChannel(
 /**
  * Get the arguments that a block gives its channel.
  *
- * Like the channel, the block uses the arguments in its block context, which a Many Posts block
+ * Like the channel, the block uses the arguments in its block context, which a Channel Loop block
  * around it provides, even if the block has its own from before it moved in.
  *
  * @param ownChannel     The block's `channel` attribute.

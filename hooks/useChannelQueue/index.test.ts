@@ -101,11 +101,11 @@ function fakeSelect(
       };
     }
 
-    // Only Many Posts gives its channel to the blocks inside it.
+    // Only Channel Loop gives its channel to the blocks inside it.
     if (storeName === 'core/blocks') {
       selectors = {
         getBlockType: (name: string) => ({
-          providesContext: name === 'wp-curate/many-posts' ? { 'wp-curate/channel': 'channel' } : {},
+          providesContext: name === 'wp-curate/channel-loop' ? { 'wp-curate/channel': 'channel' } : {},
           supports: { 'wp-curate/channel': true },
         }),
       };
@@ -188,10 +188,10 @@ describe('channelQueueIds', () => {
     expect(getChannel).toHaveBeenCalledWith('latest_post', {}, {}, 20);
   });
 
-  it('gives a Many Posts channel to the blocks without one inside it, in document order', () => {
+  it('gives a Channel Loop channel to the blocks without one inside it, in document order', () => {
     const blocks = [
       singleBlock('before'),
-      parentBlock('wp-curate/many-posts', { channel: { name: 'latest_post' } }, [
+      parentBlock('wp-curate/channel-loop', { channel: { name: 'latest_post' } }, [
         singleBlock('first', ''),
         parentBlock('core/group', {}, [singleBlock('nested', '')]),
       ]),
@@ -206,9 +206,9 @@ describe('channelQueueIds', () => {
     expect(channelQueueIds(select, 'after')).toEqual([14]);
   });
 
-  it('gives a Many Posts channel to a block inside it that has its own, and keeps its pin', () => {
+  it('gives a Channel Loop channel to a block inside it that has its own, and keeps its pin', () => {
     const blocks = [
-      parentBlock('wp-curate/many-posts', { channel: { name: 'latest_page' } }, [
+      parentBlock('wp-curate/channel-loop', { channel: { name: 'latest_page' } }, [
         singleBlock('moved'),
         { ...singleBlock('pinned'), attributes: { channel: { name: 'latest_post' }, ref: 99 } },
         singleBlock('last', ''),
@@ -225,10 +225,10 @@ describe('channelQueueIds', () => {
     expect(getChannel).not.toHaveBeenCalledWith('latest_post', {}, {}, 10);
   });
 
-  it('gives no channel to the blocks inside a Many Posts block that has none', () => {
+  it('gives no channel to the blocks inside a Channel Loop block that has none', () => {
     const blocks = [
-      parentBlock('wp-curate/many-posts', { channel: { name: 'outer' } }, [
-        parentBlock('wp-curate/many-posts', { channel: { name: '' } }, [singleBlock('inner', '')]),
+      parentBlock('wp-curate/channel-loop', { channel: { name: 'outer' } }, [
+        parentBlock('wp-curate/channel-loop', { channel: { name: '' } }, [singleBlock('inner', '')]),
       ]),
     ];
     const {
@@ -330,9 +330,9 @@ describe('channelQueueIds', () => {
     expect(getChannel).not.toHaveBeenCalled();
   });
 
-  it('gives Many Posts arguments to the blocks inside it, even if they have their own', () => {
+  it('gives Channel Loop arguments to the blocks inside it, even if they have their own', () => {
     const blocks = [
-      parentBlock('wp-curate/many-posts', { channel: { args: { term: 5 }, name: IN_CATEGORY } }, [
+      parentBlock('wp-curate/channel-loop', { channel: { args: { term: 5 }, name: IN_CATEGORY } }, [
         singleBlock('first', ''),
         { ...singleBlock('moved'), attributes: { channel: { args: { term: 6 }, name: IN_CATEGORY }, ref: 0 } },
       ]),
@@ -372,7 +372,7 @@ describe('channelQueueIds', () => {
 
   it('sends a channel the post of the Single Post around it, with a queue for each post', () => {
     /**
-     * A Single Post of the latest post that holds a Many Posts block of the articles in it.
+     * A Single Post of the latest post that holds a Channel Loop block of the articles in it.
      *
      * @param clientId Client ID of the Single Post.
      * @param ref      The pinned post.
@@ -381,7 +381,7 @@ describe('channelQueueIds', () => {
       attributes: { channel: { name: 'latest_post' }, postType: 'magazine_issue', ref },
       clientId,
       innerBlocks: [
-        parentBlock('wp-curate/many-posts', { channel: { name: IN_ISSUE } }, [
+        parentBlock('wp-curate/channel-loop', { channel: { name: IN_ISSUE } }, [
           singleBlock(`${clientId}-article`, ''),
         ]),
       ],
