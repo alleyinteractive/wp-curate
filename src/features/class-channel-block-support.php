@@ -18,7 +18,8 @@ use WP_Post;
  *
  * A block with the support gets a `channel` attribute and the channel context. A block that also
  * provides the `wp-curate/channel` context, like Many Posts, gives its channel to the blocks inside
- * it. Any other block takes a post from its channel's queue and gets that post as the `postId` and
+ * it, which use that channel instead of their own. Any other block takes a post from its channel's
+ * queue and gets that post as the `postId` and
  * `postType` context, which is 0 and an empty string when the channel has no posts left. It can pin
  * a post with an integer `ref` attribute. Keep the rules matched with the `channelSupport` editor
  * script.
@@ -37,6 +38,13 @@ final readonly class Channel_Block_Support implements Feature {
 	 * @var string
 	 */
 	private const CHANNEL_CONTEXT = 'wp-curate/channel';
+
+	/**
+	 * The block context that holds the post's default channel.
+	 *
+	 * @var string
+	 */
+	private const DEFAULT_CONTEXT = 'wp-curate/defaultChannel';
 
 	/**
 	 * The block context that holds the channel queues.
@@ -94,6 +102,7 @@ final readonly class Channel_Block_Support implements Feature {
 		];
 
 		$uses_context[] = self::CHANNEL_CONTEXT;
+		$uses_context[] = self::DEFAULT_CONTEXT;
 		$uses_context[] = self::QUEUES_CONTEXT;
 
 		$args['attributes']   = $attributes;
@@ -148,8 +157,13 @@ final readonly class Channel_Block_Support implements Feature {
 			$channel = $attrs['channel'];
 		}
 
-		// A block without its own channel uses the channel that it inherits from its ancestors or its post.
-		if ( '' === $channel && isset( $context[ self::CHANNEL_CONTEXT ] ) && is_string( $context[ self::CHANNEL_CONTEXT ] ) ) {
+		// A block without its own channel uses the post's default channel.
+		if ( '' === $channel && isset( $context[ self::DEFAULT_CONTEXT ] ) && is_string( $context[ self::DEFAULT_CONTEXT ] ) ) {
+			$channel = $context[ self::DEFAULT_CONTEXT ];
+		}
+
+		// A block inside a Many Posts block uses its channel, even if the block has its own from before it moved in.
+		if ( isset( $context[ self::CHANNEL_CONTEXT ] ) && is_string( $context[ self::CHANNEL_CONTEXT ] ) ) {
 			$channel = $context[ self::CHANNEL_CONTEXT ];
 		}
 

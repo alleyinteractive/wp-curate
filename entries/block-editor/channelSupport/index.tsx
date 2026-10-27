@@ -44,8 +44,10 @@ interface ChannelControlsProps {
  * The Channel panel of a block with the support, which also sets the channel of a new block.
  *
  * A block that takes a post inside a block that provides a channel, like a Single Post in a Many
- * Posts block, always uses that channel, so it has no panel and no channel of its own. A block
- * moved in loses its channel. That is accepted for now.
+ * Posts block, always uses that channel, so it has no panel. A block moved in keeps its own channel
+ * attribute, which has no effect there. The editor does not clear it, because a change made in
+ * response to a move would be a separate undo step, and undoing it would move the block in again.
+ * The block uses its own channel again if it moves back out.
  */
 function ChannelControls({
   channel,
@@ -62,10 +64,6 @@ function ChannelControls({
   const inherits = !isProvider && isInProvider;
 
   useEffect(() => {
-    if (inherits && channel !== '') {
-      setAttributes({ channel: '' });
-    }
-
     /*
      * Any other new block gets the channel that it would inherit, so that it keeps that channel if
      * the channel above it changes later.
