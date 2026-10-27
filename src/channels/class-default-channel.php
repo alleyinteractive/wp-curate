@@ -63,21 +63,14 @@ final readonly class Default_Channel {
 	}
 
 	/**
-	 * Names of the registered channels.
-	 *
-	 * @return string[]
-	 */
-	public function names(): array {
-		return array_map( fn ( Channel $channel ) => $channel->name(), $this->channels->all() );
-	}
-
-	/**
 	 * Whether a channel with the name is registered.
 	 *
 	 * @param string $name Channel name.
 	 * @return bool
 	 */
 	private function is_registered( string $name ): bool {
-		return in_array( $name, $this->names(), true );
+		$names = array_map( fn ( Channel $channel ) => $channel->name(), $this->channels->all() );
+
+		return in_array( $name, $names, true );
 	}
 }
