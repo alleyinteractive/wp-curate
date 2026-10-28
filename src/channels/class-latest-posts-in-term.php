@@ -141,81 +141,15 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	}
 
 	/**
-	 * IDs in the channel, in channel order.
-	 *
-	 * @phpstan-return iterable<int>
+	 * IDs in the channel, in channel order, and the number of them.
 	 *
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs. Empty without a term.
+	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @return Channel_IDs No IDs without a term.
 	 */
-	public function ids( array $args, array $context ): iterable {
-		$posts = $this->posts( [], $args );
-		$ids   = [];
-
-		if ( $posts instanceof Queried_Post_Ids ) {
-			$ids = $posts->post_ids();
-		}
-
-		return $ids;
-	}
-
-	/**
-	 * IDs in the channel that match a search, in channel order.
-	 *
-	 * @phpstan-return iterable<int>
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs. Empty without a term.
-	 */
-	public function ids_matching( string $search, array $args, array $context ): iterable {
-		$posts = $this->posts( [ 's' => $search ], $args );
-		$ids   = [];
-
-		if ( $posts instanceof Queried_Post_Ids ) {
-			$ids = $posts->post_ids();
-		}
-
-		return $ids;
-	}
-
-	/**
-	 * Number of IDs in the channel.
-	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int Number of IDs. 0 without a term.
-	 */
-	public function total( array $args, array $context ): int {
-		$posts = $this->posts( [], $args );
-		$total = 0;
-
-		if ( $posts instanceof Queried_Post_Ids ) {
-			$total = $posts->total();
-		}
-
-		return $total;
-	}
-
-	/**
-	 * Number of IDs in the channel that match a search.
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int Number of IDs. 0 without a term.
-	 */
-	public function total_matching( string $search, array $args, array $context ): int {
-		$posts = $this->posts( [ 's' => $search ], $args );
-		$total = 0;
-
-		if ( $posts instanceof Queried_Post_Ids ) {
-			$total = $posts->total();
-		}
-
-		return $total;
+	public function ids( array $args, array $context, string $search ): Channel_IDs {
+		return $this->posts( $args, $search );
 	}
 
 	/**
@@ -255,14 +189,19 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	 *
 	 * The query keeps its own `orderby`, so a search returns matches in channel order, not by relevance.
 	 *
-	 * @param array<string, mixed> $query_args Query arguments to add to the channel's own.
-	 * @param mixed[]              $args       The block's arguments for the channel.
-	 * @return Queried_Post_Ids|null The posts, or null without a term in the taxonomy.
+	 * @param mixed[] $args   The block's arguments for the channel.
+	 * @param string  $search Search terms, or an empty string for every post.
+	 * @return Channel_IDs The posts, or none without a term in the taxonomy.
 	 */
-	private function posts( array $query_args, array $args ): ?Queried_Post_Ids {
-		$term_id = 0;
-		$term    = null;
-		$posts   = null;
+	private function posts( array $args, string $search ): Channel_IDs {
+		$term_id    = 0;
+		$term       = null;
+		$posts      = new Empty_Channel_IDs();
+		$query_args = [];
+
+		if ( '' !== $search ) {
+			$query_args['s'] = $search;
+		}
 
 		if ( isset( $args['term'] ) ) {
 			$term_id = $args['term'];

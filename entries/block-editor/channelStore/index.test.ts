@@ -11,7 +11,6 @@ const mockedApiFetch = apiFetch as unknown as jest.Mock;
 
 const PAGE_BODY = {
   entity_kind: 'postType',
-  has_more: true,
   ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   label: 'Test',
   order: 'desc',
@@ -43,7 +42,7 @@ describe('wp-curate/channels store', () => {
 
       if (path.includes('search=hello')) {
         response = toResponse(
-          { has_more: false, ids: [3] },
+          { ids: [3] },
           { 'X-WP-Total': '21', 'X-WP-TotalPages': '2' },
         );
       }
@@ -85,6 +84,34 @@ describe('wp-curate/channels store', () => {
     expect(mockedApiFetch.mock.calls[1][0].path).not.toContain('search=');
   });
 
+  it('reads whether more IDs remain from the page count', async () => {
+    const {
+      getChannelPage,
+    } = resolveSelect('wp-curate/channels') as any;
+
+    const first = await getChannelPage('paged', {}, {}, '', 1, 10);
+    const last = await getChannelPage('paged', {}, {}, '', 3, 10);
+
+    expect(first.has_more).toBe(true);
+    expect(last.has_more).toBe(false);
+  });
+
+  it('stores a whole channel as complete when its only page is the last one', async () => {
+    const {
+      getChannel,
+    } = resolveSelect('wp-curate/channels') as any;
+
+    mockedApiFetch.mockImplementation(async () => toResponse(
+      { ...PAGE_BODY, ids: [1, 2] },
+      { 'X-WP-Total': '2', 'X-WP-TotalPages': '1' },
+    ));
+
+    const record = await getChannel('short', {}, {}, 10);
+
+    expect(record.ids).toEqual([1, 2]);
+    expect(record.has_more).toBe(false);
+  });
+
   it('counts a page without total headers as 0', async () => {
     const {
       getChannelPage,
@@ -97,6 +124,7 @@ describe('wp-curate/channels store', () => {
     expect(page.ids).toHaveLength(10);
     expect(page.total).toBe(0);
     expect(page.total_pages).toBe(0);
+    expect(page.has_more).toBe(false);
   });
 
   it('ignores a page size that the REST API rejects', async () => {

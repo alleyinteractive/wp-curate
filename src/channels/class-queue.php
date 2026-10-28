@@ -149,7 +149,7 @@ final class Queue {
 	private function ids(): Generator {
 		if ( null === $this->ids ) {
 			// Wrap the iterable so that arrays and generators behave alike.
-			$this->ids = ( fn () => yield from $this->channel->ids( $this->args, $this->context ) )();
+			$this->ids = ( fn () => yield from $this->channel->ids( $this->args, $this->context, '' )->ids() )();
 		}
 
 		return $this->ids;

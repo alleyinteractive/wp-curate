@@ -121,53 +121,15 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * IDs in the default channel, in channel order.
-	 *
-	 * @phpstan-return iterable<int>
+	 * IDs in the default channel, in channel order, and the number of them.
 	 *
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs.
+	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @return Channel_IDs
 	 */
-	public function ids( array $args, array $context ): iterable {
-		return $this->channel()?->ids( $args, $context ) ?? [];
-	}
-
-	/**
-	 * IDs in the default channel that match a search, in channel order.
-	 *
-	 * @phpstan-return iterable<int>
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs.
-	 */
-	public function ids_matching( string $search, array $args, array $context ): iterable {
-		return $this->channel()?->ids_matching( $search, $args, $context ) ?? [];
-	}
-
-	/**
-	 * Number of IDs in the default channel.
-	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int
-	 */
-	public function total( array $args, array $context ): int {
-		return $this->channel()?->total( $args, $context ) ?? 0;
-	}
-
-	/**
-	 * Number of IDs in the default channel that match a search.
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int
-	 */
-	public function total_matching( string $search, array $args, array $context ): int {
-		return $this->channel()?->total_matching( $search, $args, $context ) ?? 0;
+	public function ids( array $args, array $context, string $search ): Channel_IDs {
+		return $this->channel()?->ids( $args, $context, $search ) ?? new Empty_Channel_IDs();
 	}
 
 	/**

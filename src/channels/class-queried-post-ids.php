@@ -12,8 +12,10 @@ use WP_Query;
 
 /**
  * The IDs of the posts that query arguments select, and the number of them.
+ *
+ * The IDs and the number come from the same query arguments, so they agree.
  */
-final readonly class Queried_Post_Ids {
+final readonly class Queried_Post_Ids implements Channel_IDs {
 	/**
 	 * Number of posts to query at a time.
 	 *
@@ -39,7 +41,7 @@ final readonly class Queried_Post_Ids {
 	 *
 	 * @return Generator
 	 */
-	public function post_ids(): Generator {
+	public function ids(): Generator {
 		$page       = 1;
 		$batch_size = self::BATCH_SIZE;
 

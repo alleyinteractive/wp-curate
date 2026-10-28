@@ -174,81 +174,15 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * IDs in the channel, in channel order.
-	 *
-	 * @phpstan-return iterable<int>
+	 * IDs in the channel, in channel order, and the number of them.
 	 *
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs.
+	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @return Channel_IDs No IDs without a post type.
 	 */
-	public function ids( array $args, array $context ): iterable {
-		$posts = $this->posts( $args, '' );
-		$ids   = [];
-
-		if ( $posts instanceof Queried_Post_Ids ) {
-			$ids = $posts->post_ids();
-		}
-
-		return $ids;
-	}
-
-	/**
-	 * IDs in the channel that match a search, in channel order.
-	 *
-	 * @phpstan-return iterable<int>
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs.
-	 */
-	public function ids_matching( string $search, array $args, array $context ): iterable {
-		$posts = $this->posts( $args, $search );
-		$ids   = [];
-
-		if ( $posts instanceof Queried_Post_Ids ) {
-			$ids = $posts->post_ids();
-		}
-
-		return $ids;
-	}
-
-	/**
-	 * Number of IDs in the channel.
-	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int Number of IDs.
-	 */
-	public function total( array $args, array $context ): int {
-		$posts = $this->posts( $args, '' );
-		$total = 0;
-
-		if ( $posts instanceof Queried_Post_Ids ) {
-			$total = $posts->total();
-		}
-
-		return $total;
-	}
-
-	/**
-	 * Number of IDs in the channel that match a search.
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int Number of IDs.
-	 */
-	public function total_matching( string $search, array $args, array $context ): int {
-		$posts = $this->posts( $args, $search );
-		$total = 0;
-
-		if ( $posts instanceof Queried_Post_Ids ) {
-			$total = $posts->total();
-		}
-
-		return $total;
+	public function ids( array $args, array $context, string $search ): Channel_IDs {
+		return $this->posts( $args, $search );
 	}
 
 	/**
@@ -259,13 +193,13 @@ final readonly class Free_For_All implements Channel {
 	 *
 	 * @param mixed[] $args   The block's arguments for the channel.
 	 * @param string  $search Search terms, or an empty string.
-	 * @return Queried_Post_Ids|null The posts, or null without a post type.
+	 * @return Channel_IDs The posts, or none without a post type.
 	 */
-	private function posts( array $args, string $search ): ?Queried_Post_Ids {
+	private function posts( array $args, string $search ): Channel_IDs {
 		$post_types = [];
 		$relation   = 'AND';
 		$own_search = '';
-		$posts      = null;
+		$posts      = new Empty_Channel_IDs();
 		$tax_query  = [];
 
 		if ( isset( $args['post_types'] ) && is_array( $args['post_types'] ) ) {

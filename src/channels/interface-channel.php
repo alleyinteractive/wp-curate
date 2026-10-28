@@ -106,53 +106,13 @@ interface Channel {
 	public function order_direction(): string;
 
 	/**
-	 * IDs in the channel, in channel order.
-	 *
-	 * An implementation can return an array or yield IDs from a generator. A caller that needs
-	 * only some IDs stops iterating when it has enough.
-	 *
-	 * @phpstan-return iterable<int>
+	 * IDs in the channel, in channel order, and the number of them. With a search, only the IDs
+	 * that match it, still in channel order.
 	 *
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs. Empty if the arguments and context do not make a channel.
+	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @return Channel_IDs No IDs if the arguments and context do not make a channel.
 	 */
-	public function ids( array $args, array $context ): iterable;
-
-	/**
-	 * IDs in the channel that match a search, in channel order.
-	 *
-	 * Like `ids()`, an implementation can return an array or yield IDs from a generator.
-	 *
-	 * @phpstan-return iterable<int>
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs. Empty if nothing matches.
-	 */
-	public function ids_matching( string $search, array $args, array $context ): iterable;
-
-	/**
-	 * Number of IDs in the channel.
-	 *
-	 * It counts the same IDs that `ids()` returns.
-	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int Number of IDs. 0 if the arguments and context do not make a channel.
-	 */
-	public function total( array $args, array $context ): int;
-
-	/**
-	 * Number of IDs in the channel that match a search.
-	 *
-	 * It counts the same IDs that `ids_matching()` returns.
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int Number of IDs. 0 if nothing matches.
-	 */
-	public function total_matching( string $search, array $args, array $context ): int;
+	public function ids( array $args, array $context, string $search ): Channel_IDs;
 }
