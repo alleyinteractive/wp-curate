@@ -15,7 +15,7 @@ use WP_Query;
  *
  * The IDs and the number come from the same query arguments, so they agree.
  */
-final readonly class Queried_Post_Ids implements Channel_IDs {
+final readonly class Queried_Post_Ids implements Results {
 	/**
 	 * Number of posts to query at a time.
 	 *
