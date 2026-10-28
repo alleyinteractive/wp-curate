@@ -14,7 +14,7 @@ jest.mock('@wordpress/data', () => ({
 }));
 
 // A channel of the posts in a term, which reads a `term` argument.
-const IN_CATEGORY = 'latest_post_in_category';
+const IN_CATEGORY = 'post_category_latest';
 
 // A channel of the articles in an issue, which reads the `postId` context.
 const IN_ISSUE = 'articles_in_issue';
@@ -76,7 +76,9 @@ function fakeSelect(
           uses_context: [],
         },
         {
-          arg_fields: [{ id: 'term', label: 'Category', type: 'term' }],
+          arg_fields: [{
+            id: 'term', label: 'Category', required: true,
+          }],
           is_available: true,
           is_default: false,
           label: 'In category',
@@ -134,7 +136,7 @@ function fakeSelect(
  * @param clientId Client ID.
  * @param channel  Channel name.
  */
-function singleBlock(clientId: string, channel = 'latest_post') {
+function singleBlock(clientId: string, channel = 'post_latest') {
   return {
     attributes: {
       channel: { name: channel },
@@ -173,7 +175,7 @@ describe('channelQueueIds', () => {
     expect(getChannel.mock.calls.length).toBeGreaterThan(0);
 
     getChannel.mock.calls.forEach((args: unknown[]) => {
-      expect(args).toEqual(['latest_post', {}, {}, 10]);
+      expect(args).toEqual(['post_latest', {}, {}, 10]);
     });
   });
 
@@ -185,13 +187,13 @@ describe('channelQueueIds', () => {
     } = fakeSelect(blocks, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
 
     expect(channelQueueIds(select, '10')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('latest_post', {}, {}, 20);
+    expect(getChannel).toHaveBeenCalledWith('post_latest', {}, {}, 20);
   });
 
   it('gives a Channel Loop channel to the blocks without one inside it, in document order', () => {
     const blocks = [
       singleBlock('before'),
-      parentBlock('wp-curate/channel-loop', { channel: { name: 'latest_post' } }, [
+      parentBlock('wp-curate/channel-loop', { channel: { name: 'post_latest' } }, [
         singleBlock('first', ''),
         parentBlock('core/group', {}, [singleBlock('nested', '')]),
       ]),
@@ -208,9 +210,9 @@ describe('channelQueueIds', () => {
 
   it('gives a Channel Loop channel to a block inside it that has its own, and keeps its pin', () => {
     const blocks = [
-      parentBlock('wp-curate/channel-loop', { channel: { name: 'latest_page' } }, [
+      parentBlock('wp-curate/channel-loop', { channel: { name: 'page_latest' } }, [
         singleBlock('moved'),
-        { ...singleBlock('pinned'), attributes: { channel: { name: 'latest_post' }, ref: 99 } },
+        { ...singleBlock('pinned'), attributes: { channel: { name: 'post_latest' }, ref: 99 } },
         singleBlock('last', ''),
       ]),
     ];
@@ -222,7 +224,7 @@ describe('channelQueueIds', () => {
     expect(channelQueueIds(select, 'moved')).toEqual([11]);
     expect(channelQueueIds(select, 'pinned')).toEqual([99]);
     expect(channelQueueIds(select, 'last')).toEqual([12]);
-    expect(getChannel).not.toHaveBeenCalledWith('latest_post', {}, {}, 10);
+    expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
   it('gives no channel to the blocks inside a Channel Loop block that has none', () => {
@@ -263,13 +265,13 @@ describe('channelQueueIds', () => {
   it('makes only the blocks in a loading channel wait', () => {
     const blocks = [
       singleBlock('first'),
-      singleBlock('switched', 'latest_page'),
+      singleBlock('switched', 'page_latest'),
       singleBlock('second'),
-      singleBlock('after', 'latest_page'),
+      singleBlock('after', 'page_latest'),
     ];
     const {
       select,
-    } = fakeSelect(blocks, [11, 12, 13], '', ['latest_page']);
+    } = fakeSelect(blocks, [11, 12, 13], '', ['page_latest']);
 
     expect(channelQueueIds(select, 'first')).toEqual([11]);
     expect(channelQueueIds(select, 'switched')).toBeNull();
@@ -279,18 +281,18 @@ describe('channelQueueIds', () => {
 
   it('makes the blocks inside a loading block wait, without requesting their channel', () => {
     const blocks = [
-      parentBlock('wp-curate/single-post', { channel: { name: 'latest_page' }, ref: 0 }, [
-        singleBlock('inside', 'latest_post'),
+      parentBlock('wp-curate/single-post', { channel: { name: 'page_latest' }, ref: 0 }, [
+        singleBlock('inside', 'post_latest'),
       ]),
     ];
     const {
       getChannel,
       select,
-    } = fakeSelect(blocks, [11], '', ['latest_page']);
+    } = fakeSelect(blocks, [11], '', ['page_latest']);
 
     expect(channelQueueIds(select, 'inside')).toBeNull();
     expect(getChannel).not.toHaveBeenCalledWith(
-      'latest_post',
+      'post_latest',
       expect.anything(),
       expect.anything(),
       expect.anything(),
@@ -349,7 +351,7 @@ describe('channelQueueIds', () => {
 
   it('sends only the arguments that the channel reads', () => {
     const blocks = [
-      { ...singleBlock('stale'), attributes: { channel: { args: { term: 5 }, name: 'latest_post' }, ref: 0 } },
+      { ...singleBlock('stale'), attributes: { channel: { args: { term: 5 }, name: 'post_latest' }, ref: 0 } },
     ];
     const {
       getChannel,
@@ -357,7 +359,7 @@ describe('channelQueueIds', () => {
     } = fakeSelect(blocks, [11]);
 
     expect(channelQueueIds(select, 'stale')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('latest_post', {}, {}, 10);
+    expect(getChannel).toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
   it('sends a channel the post as context at the top of the post', () => {
@@ -378,7 +380,7 @@ describe('channelQueueIds', () => {
      * @param ref      The pinned post.
      */
     const issueBlock = (clientId: string, ref: number) => ({
-      attributes: { channel: { name: 'latest_post' }, postType: 'magazine_issue', ref },
+      attributes: { channel: { name: 'post_latest' }, postType: 'magazine_issue', ref },
       clientId,
       innerBlocks: [
         parentBlock('wp-curate/channel-loop', { channel: { name: IN_ISSUE } }, [
@@ -397,7 +399,7 @@ describe('channelQueueIds', () => {
     expect(channelQueueIds(select, 'second-article')).toEqual([11]);
     expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 11 }, 10);
     expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 30 }, 10);
-    expect(getChannel).not.toHaveBeenCalledWith('latest_post', {}, { postId: POST_ID }, 10);
+    expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, { postId: POST_ID }, 10);
     expect(channelQueueContext(select, 'first-article')).toEqual({
       postId: 11,
       postType: 'magazine_issue',

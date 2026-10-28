@@ -23,12 +23,12 @@ final readonly class Latest_Posts implements Channel {
 	) {}
 
 	/**
-	 * Machine name that blocks use to name the channel, such as `latest_post` for posts.
+	 * Machine name that blocks use to name the channel, such as `post_latest` for posts.
 	 *
 	 * @return string
 	 */
 	public function name(): string {
-		return 'latest_' . $this->post_type;
+		return $this->post_type . '_latest';
 	}
 
 	/**
@@ -60,7 +60,7 @@ final readonly class Latest_Posts implements Channel {
 	/**
 	 * The arguments that the channel reads, as fields for the editor.
 	 *
-	 * @phpstan-return list<array<string, string>>
+	 * @phpstan-return list<array{id: string, label: string, ...<string, mixed>}>
 	 *
 	 * @return array[]
 	 */

@@ -23,15 +23,15 @@ import type { ChannelPage, ChannelRecord } from '../../../hooks/useChannelRecord
 const MAX_PER_PAGE = 100;
 
 /**
- * A field of an argument that a channel reads. `id` is the argument's key. `type` tells the fills
- * of the Channel panel which control to show for it, and a type can need more keys, such as the
- * `taxonomy` of a `term`.
+ * A field of an argument that a channel reads. `id` is the argument's key. `required` is true for
+ * an argument that the channel needs. The fill of the Channel panel for the channel reads the other
+ * keys, such as the `taxonomy` of a term field. See `Channel::arg_fields()` in PHP.
  */
 export interface ChannelArgField {
-  [key: string]: string;
+  [key: string]: unknown;
   id: string;
   label: string;
-  type: string;
+  required: boolean;
 }
 
 /**
@@ -189,8 +189,8 @@ function toChannelRecord(value: unknown): ChannelRecord {
 }
 
 /**
- * Reads the argument fields of a channel from a REST API response. A field without a string `id`,
- * `label`, and `type` is left out.
+ * Reads the argument fields of a channel from a REST API response. A field without a string `id`
+ * and `label` is left out.
  *
  * @param value The `arg_fields` value of the response.
  */
@@ -206,26 +206,20 @@ function toChannelArgFields(value: unknown): ChannelArgField[] {
       return;
     }
 
-    const field: Record<string, string> = {};
-
-    Object.entries(item).forEach(([key, fieldValue]) => {
-      if (typeof fieldValue === 'string') {
-        field[key] = fieldValue;
-      }
-    });
+    const field = item as Record<string, unknown>;
 
     const {
       id,
       label,
-      type,
+      required,
     } = field;
 
-    if (id !== undefined && label !== undefined && type !== undefined) {
+    if (typeof id === 'string' && typeof label === 'string') {
       fields.push({
         ...field,
         id,
         label,
-        type,
+        required: required === true,
       });
     }
   });

@@ -26,14 +26,15 @@ export interface ChannelPanelFillProps {
 /*
  * The Channel panel of a block is a ToolsPanel with a slot for the controls of channel arguments.
  * A fill gets `ChannelPanelFillProps` and adds a ToolsPanelItem with `clientId` as its `panelId`
- * for each argument that it handles, usually by the field `type`. A ToolsPanelItem `label` must be
- * unique in the panel. Its `resetAllFilter` gets the arguments and returns them without its value.
+ * for each argument that it handles. A fill handles the fields of its own channels, found by the
+ * channel name, and finds each field by its `id`. A ToolsPanelItem `label` must be unique in the
+ * panel. Its `resetAllFilter` gets the arguments and returns them without its value.
  *
  * The channel reads only the arguments in its fields, so a fill cannot add others. A plugin outside
- * WP Curate adds a channel with the `wp_curate_channels` filter in PHP, gives its fields a type
- * with a prefix, and fills the slot by its name, such as with
- * `<wp.components.Fill name="WPCurateChannelPanel">` from a plugin that `registerPlugin()` adds.
- * WP Curate adds its own term picker the same way, in `entries/block-editor/channelTermArgs`.
+ * WP Curate adds a channel with the `wp_curate_channels` filter in PHP and fills the slot by its
+ * name, such as with `<wp.components.Fill name="WPCurateChannelPanel">` from a plugin that
+ * `registerPlugin()` adds. WP Curate adds the controls of its own channels the same way, such as
+ * in `entries/block-editor/freeForAllArgs`.
  */
 export const {
   Fill: ChannelPanelFill,
