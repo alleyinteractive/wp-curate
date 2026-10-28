@@ -15,7 +15,7 @@ export const DEFAULT_CHANNEL_META_KEY = 'wp_curate_default_channel';
  * Loop, gives its channel to the blocks inside it. Any other block takes a post from its channel.
  *
  * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
- * block gives the channel, such as `{ name: 'latest_post_in_category', args: { term: 7 } }`. An
+ * block gives the channel, such as `{ name: 'post_category_latest', args: { term: 7 } }`. An
  * empty name means the post's default channel.
  */
 export const CHANNEL_SUPPORT = 'wp-curate/channel';
@@ -420,8 +420,8 @@ export function pickChannelArgs(
 }
 
 /**
- * Whether a block gives its channel a value for each argument that the channel reads. Without
- * them, the channel has no posts.
+ * Whether a block gives its channel a value for each argument that the channel needs. Without
+ * them, the channel has no posts. An empty string or an empty list is no value.
  *
  * @param fields The fields of the arguments that the channel reads.
  * @param args   The block's arguments.
@@ -430,8 +430,14 @@ export function hasEveryChannelArg(
   fields: ChannelArgField[],
   args: Record<string, unknown>,
 ): boolean {
-  return fields.every(({ id }) => (
-    args[id] !== undefined && args[id] !== null && args[id] !== ''
+  return fields.every(({ id, required }) => (
+    !required
+    || (
+      args[id] !== undefined
+      && args[id] !== null
+      && args[id] !== ''
+      && !(Array.isArray(args[id]) && (args[id] as unknown[]).length === 0)
+    )
   ));
 }
 

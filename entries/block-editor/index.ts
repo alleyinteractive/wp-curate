@@ -1,6 +1,7 @@
 // Internal dependencies.
 import './channelStore';
 import './channelSupport';
-import './channelTermArgs';
+import './latestPostsInTermArgs';
+import './freeForAllArgs';
 import './deduplication';
 import './defaultChannel';

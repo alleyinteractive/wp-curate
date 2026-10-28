@@ -34,11 +34,13 @@ const CHANNELS = [
     uses_context: [],
   },
   {
-    arg_fields: [{ id: 'term', label: 'Category', type: 'term' }],
+    arg_fields: [{
+      id: 'term', label: 'Category', required: true,
+    }],
     is_available: true,
     is_default: false,
     label: 'In category',
-    name: 'in_category',
+    name: 'post_category_latest',
     uses_context: [],
   },
   {
@@ -51,7 +53,9 @@ const CHANNELS = [
   },
 ];
 
-const TERM_FIELDS = [{ id: 'term', label: 'Category', type: 'term' }];
+const TERM_FIELDS = [{
+  id: 'term', label: 'Category', required: true,
+}];
 
 /**
  * A `select` function with the given post default channel and channels.
@@ -125,7 +129,7 @@ describe('toBlockChannel', () => {
   });
 
   it('uses the global default channel for a post default that reads arguments', () => {
-    expect(toBlockChannel(fakeSelect('in_category'), '', undefined)).toBe('global_default');
+    expect(toBlockChannel(fakeSelect('post_category_latest'), '', undefined)).toBe('global_default');
   });
 
   it('uses the global default channel for a post default that reads block context', () => {
@@ -175,7 +179,7 @@ describe('channelsContext', () => {
 
 describe('toChannelName', () => {
   it('reads the name of a channel', () => {
-    expect(toChannelName({ args: { term: 5 }, name: 'in_category' })).toBe('in_category');
+    expect(toChannelName({ args: { term: 5 }, name: 'post_category_latest' })).toBe('post_category_latest');
   });
 
   it('reads a channel without a name as the post default', () => {
@@ -183,36 +187,36 @@ describe('toChannelName', () => {
   });
 
   it('reads a value that is not an object as no channel', () => {
-    expect(toChannelName('in_category')).toBeNull();
+    expect(toChannelName('post_category_latest')).toBeNull();
     expect(toChannelName(undefined)).toBeNull();
   });
 });
 
 describe('toChannelArgs', () => {
   it('reads the arguments of a channel', () => {
-    expect(toChannelArgs({ args: { term: 5 }, name: 'in_category' })).toEqual({ term: 5 });
+    expect(toChannelArgs({ args: { term: 5 }, name: 'post_category_latest' })).toEqual({ term: 5 });
   });
 
   it('reads a channel without arguments as none', () => {
-    expect(toChannelArgs({ name: 'in_category' })).toEqual({});
-    expect(toChannelArgs({ args: [5], name: 'in_category' })).toEqual({});
+    expect(toChannelArgs({ name: 'post_category_latest' })).toEqual({});
+    expect(toChannelArgs({ args: [5], name: 'post_category_latest' })).toEqual({});
   });
 });
 
 describe('toBlockChannelArgs', () => {
   it('uses the block\'s own arguments', () => {
-    expect(toBlockChannelArgs({ args: { term: 5 }, name: 'in_category' }, undefined)).toEqual({ term: 5 });
+    expect(toBlockChannelArgs({ args: { term: 5 }, name: 'post_category_latest' }, undefined)).toEqual({ term: 5 });
   });
 
   it('uses the arguments from block context inside a Channel Loop block, instead of its own', () => {
     expect(toBlockChannelArgs(
-      { args: { term: 5 }, name: 'in_category' },
-      { args: { term: 6 }, name: 'in_category' },
+      { args: { term: 5 }, name: 'post_category_latest' },
+      { args: { term: 6 }, name: 'post_category_latest' },
     )).toEqual({ term: 6 });
   });
 
   it('uses no arguments inside a Channel Loop block without them', () => {
-    expect(toBlockChannelArgs({ args: { term: 5 }, name: 'in_category' }, { name: '' })).toEqual({});
+    expect(toBlockChannelArgs({ args: { term: 5 }, name: 'post_category_latest' }, { name: '' })).toEqual({});
   });
 });
 
@@ -233,5 +237,22 @@ describe('hasEveryChannelArg', () => {
 
   it('is true for a channel that reads no arguments', () => {
     expect(hasEveryChannelArg([], {})).toBe(true);
+  });
+
+  it('ignores an argument that the channel does not need', () => {
+    const fields = [{
+      id: 'search', label: 'Search', required: false,
+    }];
+
+    expect(hasEveryChannelArg(fields, {})).toBe(true);
+  });
+
+  it('is false when the block gives an empty list for an argument that the channel needs', () => {
+    const fields = [{
+      id: 'post_types', label: 'Post Types', required: true,
+    }];
+
+    expect(hasEveryChannelArg(fields, { post_types: [] })).toBe(false);
+    expect(hasEveryChannelArg(fields, { post_types: ['post'] })).toBe(true);
   });
 });

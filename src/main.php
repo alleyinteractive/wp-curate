@@ -23,7 +23,7 @@ function main(): void {
 	$channels         = new Channels\Registered_Channels();
 	$default_channel  = new Channels\Default_Channel(
 		channels: $channels,
-		preferred: 'latest_post',
+		preferred: 'post_latest',
 	);
 	$channel_meta_key = 'wp_curate_default_channel';
 	$channel_taken    = new Post_IDs\Post_IDs_Taken_From_Channels();

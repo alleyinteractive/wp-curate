@@ -30,12 +30,12 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	) {}
 
 	/**
-	 * Machine name that blocks use to name the channel, such as `latest_post_in_category`.
+	 * Machine name that blocks use to name the channel, such as `post_category_latest`.
 	 *
 	 * @return string
 	 */
 	public function name(): string {
-		return 'latest_' . $this->post_type . '_in_' . $this->taxonomy;
+		return $this->post_type . '_' . $this->taxonomy . '_latest';
 	}
 
 	/**
@@ -58,9 +58,11 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads, as fields for the editor: the term.
+	 * The arguments that the channel reads, as fields for the editor: the term. The editor script
+	 * `entries/block-editor/latestPostsInTermArgs` adds a term picker for the `term` field of a
+	 * channel whose name ends with the field's `taxonomy` and `_latest`.
 	 *
-	 * @phpstan-return list<array<string, string>>
+	 * @phpstan-return list<array{id: string, label: string, ...<string, mixed>}>
 	 *
 	 * @return array[]
 	 */
@@ -69,8 +71,8 @@ final readonly class Latest_Posts_In_Term implements Channel {
 			[
 				'id'       => 'term',
 				'label'    => $this->taxonomy_name(),
+				'required' => true,
 				'taxonomy' => $this->taxonomy,
-				'type'     => 'term',
 			],
 		];
 	}

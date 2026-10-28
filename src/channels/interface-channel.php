@@ -41,14 +41,14 @@ interface Channel {
 	/**
 	 * The arguments that the channel reads, as fields for the editor.
 	 *
-	 * Each field has an `id`, which is its key in the arguments, a `label`, and a `type`. A type can
-	 * need more keys. The editor shows a control for a field only if a script adds one for its type
-	 * to the slot of the Channel panel. WP Curate adds a term picker for the `term` type, which
-	 * needs a `taxonomy`.
+	 * Each field has an `id`, which is its key in the arguments, and a `label`. A field with
+	 * `required` set to true is one that the channel needs. The editor shows a control for a field
+	 * only if a script adds one to the slot of the Channel panel. The script finds the fields of its
+	 * own channels by the channel name and the field `id`. A field can have more keys for that script.
 	 *
-	 * The channel has no IDs until a block gives it a value for each field.
+	 * The channel has no IDs until a block gives it a value for each required field.
 	 *
-	 * @phpstan-return list<array<string, string>>
+	 * @phpstan-return list<array{id: string, label: string, ...<string, mixed>}>
 	 *
 	 * @return array[]
 	 */

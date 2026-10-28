@@ -11,10 +11,11 @@ import { decodeEntities } from '@wordpress/html-entities';
 import { __ } from '@wordpress/i18n';
 
 interface TermPickerProps {
-  taxonomy: string;
-  selectedId: number;
+  multiple: boolean;
   onClose: () => void;
-  onSelect: (id: number) => void;
+  onSelect: (ids: number[]) => void;
+  selectedIds: number[];
+  taxonomy: string;
 }
 
 interface PickerItem {
@@ -120,17 +121,19 @@ function toTaxonomyLabel(taxonomyObject: unknown, key: string): string {
 }
 
 /**
- * Modal for picking one term of a taxonomy.
+ * Modal for picking one term of a taxonomy, or with `multiple`, any number of them.
  *
- * The picker loads one page at a time, of the terms or of the terms that match a search.
+ * The picker loads one page at a time, of the terms or of the terms that match a search. The
+ * selection can include terms on pages that the picker showed before.
  */
 export default function TermPicker({
-  taxonomy,
-  selectedId,
+  multiple,
   onClose,
   onSelect,
+  selectedIds,
+  taxonomy,
 }: TermPickerProps) {
-  const [selection, setSelection] = useState<string[]>(selectedId > 0 ? [String(selectedId)] : []);
+  const [selection, setSelection] = useState<string[]>(() => selectedIds.map(String));
   const [view, setView] = useState<any>({
     fields: ['count'],
     filters: [],
@@ -252,17 +255,19 @@ export default function TermPicker({
           {
             // Use the selection. The callback only gets the selected items on the current page.
             callback: () => {
-              const id = Number(selection[0]);
+              const ids = selection
+                .map(Number)
+                .filter((id) => Number.isInteger(id) && id > 0);
 
-              // The selected term can be on a page that the picker showed before.
-              if (Number.isInteger(id) && id > 0) {
-                onSelect(id);
+              if (multiple || ids.length > 0) {
+                onSelect(ids);
               }
             },
             id: 'select',
             isPrimary: true,
             label: __('Select', 'wp-curate'),
-            supportsBulk: false,
+            // An action that supports bulk selection makes the picker select more than one item.
+            supportsBulk: multiple,
           },
         ]}
         data={data}

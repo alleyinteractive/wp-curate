@@ -21,7 +21,7 @@ use WP_Post;
  * A block with the support gets a `channel` attribute, the channel context, and the `postId` and
  * `postType` context for channels that read it. Like a block binding, the attribute is an object
  * with the channel `name` and the `args` that the block gives the channel, such as
- * `{"name":"latest_post_in_category","args":{"term":7}}`. An empty name means the post's default
+ * `{"name":"post_category_latest","args":{"term":7}}`. An empty name means the post's default
  * channel. A block that also provides the `wp-curate/channel` context, like Channel Loop, gives its
  * channel to the blocks inside it, which use it instead of their own. Any other block takes a post
  * from its channel's queue, following the post's deduplication rule, and gets that post as the
