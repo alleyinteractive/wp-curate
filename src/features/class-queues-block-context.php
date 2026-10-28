@@ -33,7 +33,7 @@ final readonly class Queues_Block_Context implements Feature {
 	}
 
 	/**
-	 * Filters the default context provided to a rendered block.
+	 * Filters the default context provided to a rendered block to give it the channel queues.
 	 *
 	 * @phpstan-param mixed $context
 	 *
