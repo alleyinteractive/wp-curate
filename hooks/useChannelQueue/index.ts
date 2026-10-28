@@ -152,7 +152,7 @@ function pinnedIds(blocks: any[], getBlockType: any, out = new Set<number>()): S
  * Get the IDs that a block with a channel shows, given the blocks before it in the editor, and the
  * context that the block gives its channel.
  *
- * Keep the rules in sync with `Channel_Queues` in PHP. Blocks take IDs in document order:
+ * Keep the rules in sync with `Queues` in PHP. Blocks take IDs in document order:
  *
  * - A single-item block shows its ref, or else the top of its channel's queue. That ID is then
  *   removed from the queue.

@@ -62,8 +62,8 @@ function main(): void {
 			channels: $channels,
 			default_channel: $default_channel,
 		),
-		new Features\Channel_Queues_Block_Context(
-			queues: new Channels\Channel_Queues(
+		new Features\Queues_Block_Context(
+			queues: new Channels\Queues(
 				channels: $channels,
 				taken: $channel_taken,
 			),

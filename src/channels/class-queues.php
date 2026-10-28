@@ -1,6 +1,6 @@
 <?php
 /**
- * Channel_Queues class file
+ * Queues class file
  *
  * @package wp-curate
  */
@@ -17,7 +17,7 @@ use Alley\WP\WP_Curate\Post_IDs\History;
  * context values that it uses. Blocks take IDs in render order, and each block can skip more IDs,
  * such as by its post's deduplication rule. Keep these rules matched with `useChannelQueue()`.
  */
-final class Channel_Queues {
+final class Queues {
 	/**
 	 * Queues that exist so far, keyed by channel and context.
 	 *
