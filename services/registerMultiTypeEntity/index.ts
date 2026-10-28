@@ -36,6 +36,8 @@ const registerMultiTypeEntity = (postTypeString: string): void => {
       baseURL: '/wp/v2/posts',
       baseURLParams: { context: 'edit' },
       label: postTypeString,
+      // Without this, `title` is a {raw, rendered} object instead of a string.
+      rawAttributes: ['title', 'excerpt', 'content'],
       supportsPagination: true,
     },
   ]);

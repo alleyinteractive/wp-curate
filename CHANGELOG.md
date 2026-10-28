@@ -4,6 +4,10 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
+## 3.4.2 - 2026-10-28
+
+- Bug fix: Fix editor crash when moving a pinned post in a multi-post-type query. The registered multi-type entity now declares `rawAttributes` so titles are strings.
+
 ## 3.4.1 - 2026-10-26
 
 - Changed: Relabel the Post block's "Backfill Post" button to "Unpin Post", the inverse of "Pin a Post".
