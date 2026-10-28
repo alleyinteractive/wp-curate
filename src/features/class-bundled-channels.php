@@ -49,10 +49,96 @@ final readonly class Bundled_Channels implements Feature {
 				}
 			}
 
-			$bundled[] = new Free_For_All( $post_types );
-			$channels  = array_merge( $bundled, $channels );
+			$bundled[] = new Free_For_All(
+				post_types: $this->allowed_post_types(),
+				taxonomies: $this->allowed_taxonomies(),
+				orderby_options: $this->orderby_options(),
+				meta_keys: $this->order_by_meta_keys(),
+			);
+
+			$channels = array_merge( $bundled, $channels );
 		}
 
 		return $channels;
+	}
+
+	/**
+	 * The registered post types that the Query block allows.
+	 *
+	 * @return string[]
+	 */
+	private function allowed_post_types(): array {
+		/** This filter is documented in blocks/query/index.php */
+		$filtered = apply_filters( 'wp_curate_allowed_post_types', [ 'post' ] );
+
+		if ( ! is_array( $filtered ) ) {
+			$filtered = [];
+		}
+
+		return array_values( array_unique( array_filter( array_filter( $filtered, 'is_string' ), 'post_type_exists' ) ) );
+	}
+
+	/**
+	 * The registered taxonomies that the Query block allows.
+	 *
+	 * @return string[]
+	 */
+	private function allowed_taxonomies(): array {
+		/** This filter is documented in blocks/query/index.php */
+		$filtered = apply_filters( 'wp_curate_allowed_taxonomies', [ 'category', 'post_tag' ] );
+
+		if ( ! is_array( $filtered ) ) {
+			$filtered = [];
+		}
+
+		return array_values( array_unique( array_filter( array_filter( $filtered, 'is_string' ), 'taxonomy_exists' ) ) );
+	}
+
+	/**
+	 * The ways to order posts that the Query block offers, with their names.
+	 *
+	 * @phpstan-return array<string, string>
+	 *
+	 * @return string[] Names, keyed by `orderby` value.
+	 */
+	private function orderby_options(): array {
+		$options = [];
+
+		/** This filter is documented in blocks/query/index.php */
+		$filtered = apply_filters(
+			'wp_curate_order_by_options',
+			[
+				'date'  => __( 'Date', 'wp-curate' ),
+				'title' => __( 'Title', 'wp-curate' ),
+			],
+		);
+
+		if ( ! is_array( $filtered ) ) {
+			$filtered = [];
+		}
+
+		foreach ( $filtered as $value => $label ) {
+			if ( is_string( $value ) && is_string( $label ) ) {
+				$options[ $value ] = $label;
+			}
+		}
+
+		return $options;
+	}
+
+	/**
+	 * The meta keys whose values the Query block can order posts by.
+	 *
+	 * @return string[]
+	 */
+	private function order_by_meta_keys(): array {
+		/** This filter is documented in blocks/query/index.php */
+		$filtered = apply_filters( 'wp_curate_order_by_meta_keys', [] );
+
+		if ( ! is_array( $filtered ) ) {
+			$filtered = [];
+		}
+
+		return array_values( array_unique( array_filter( $filtered, 'is_string' ) ) );
 	}
 }
