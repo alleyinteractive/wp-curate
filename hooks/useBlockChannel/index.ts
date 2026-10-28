@@ -71,7 +71,7 @@ export function isChannelProvider(blockType: unknown): boolean {
 }
 
 /**
- * Get the default channel, which the list of channels marks with `is_default`.
+ * Get the default channel, which the list of channels marks with `default`.
  *
  * Keep the rules matched with `Default_Channel` in PHP.
  *
@@ -93,7 +93,7 @@ export function defaultChannel(select: any): string | null {
   // With no channels registered, there is no default. That case will be handled later.
   let channel = '';
 
-  channels.forEach(({ is_default: isDefault, name }) => {
+  channels.forEach(({ default: isDefault, name }) => {
     if (isDefault) {
       channel = name;
     }

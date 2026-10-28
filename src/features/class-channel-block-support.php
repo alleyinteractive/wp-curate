@@ -10,8 +10,8 @@ namespace Alley\WP\WP_Curate\Features;
 use Alley\WP\Post_IDs\Empty_Post_IDs;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_IDs;
+use Alley\WP\WP_Curate\Channels\Channel;
 use Alley\WP\WP_Curate\Channels\Channel_Queues;
-use Alley\WP\WP_Curate\Channels\Default_Channel;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
 use WP_Post;
@@ -62,10 +62,10 @@ final readonly class Channel_Block_Support implements Feature {
 	/**
 	 * Constructor.
 	 *
-	 * @param Default_Channel $default_channel The channel of a block without its own.
+	 * @param Channel $default_channel The channel of a block without its own.
 	 */
 	public function __construct(
-		private Default_Channel $default_channel,
+		private Channel $default_channel,
 	) {}
 
 	/**

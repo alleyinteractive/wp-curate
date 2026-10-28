@@ -115,8 +115,44 @@ final readonly class Free_For_All implements Channel {
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return bool
 	 */
-	public function is_available( array $context ): bool {
+	public function available( array $context ): bool {
 		return true;
+	}
+
+	/**
+	 * Whether a user can read the channel. A block can select any of the post types, so the user
+	 * must be able to read each one: anyone, if it is viewable on the site, or else a user who can
+	 * edit posts of the type.
+	 *
+	 * @param int $user_id User ID, or 0 for a visitor who is not logged in.
+	 * @return bool
+	 */
+	public function can_read( int $user_id ): bool {
+		$can_read = true;
+
+		foreach ( $this->post_types as $post_type ) {
+			$type_can_read = false;
+			$object        = get_post_type_object( $post_type );
+
+			if ( $object instanceof WP_Post_Type ) {
+				$type_can_read = is_post_type_viewable( $object );
+			}
+
+			if (
+				! $type_can_read
+				&& $object instanceof WP_Post_Type
+				&& isset( $object->cap->edit_posts )
+				&& is_string( $object->cap->edit_posts )
+			) {
+				$type_can_read = user_can( $user_id, $object->cap->edit_posts );
+			}
+
+			if ( ! $type_can_read ) {
+				$can_read = false;
+			}
+		}
+
+		return $can_read;
 	}
 
 	/**

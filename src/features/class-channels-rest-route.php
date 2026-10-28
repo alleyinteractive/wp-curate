@@ -8,7 +8,7 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
-use Alley\WP\WP_Curate\Channels\Default_Channel;
+use Alley\WP\WP_Curate\Channels\Channel;
 use Alley\WP\WP_Curate\Channels\Registered_Channels;
 use WP_Error;
 use WP_REST_Request;
@@ -17,33 +17,17 @@ use WP_REST_Server;
 
 /**
  * Exposes the channels and the IDs in a channel to the editor.
- *
- * GET /wp-json/wp-curate/v1/channels?context[<key>]=<value>
- *
- * Lists the name and label of each channel, whether it is the global default, the arguments that
- * it reads as `args`, the context that it reads, and whether a block with the `context` can select
- * it.
- *
- * GET /wp-json/wp-curate/v1/channels/<name>?args[<key>]=<value>&context[<key>]=<value>&page=<page>&per_page=<per_page>&search=<search>
- *
- * `args` is the block's arguments for the channel. `context` is the block context that the channel
- * uses. `page` and `per_page` select a page of IDs,
- * so that the editor reads only as many IDs as its blocks need. `search` limits the IDs to the
- * channel's matches.
- *
- * Like core endpoints, the `X-WP-Total` and `X-WP-TotalPages` headers give the number of IDs and
- * pages.
  */
 final readonly class Channels_REST_Route implements Feature {
 	/**
 	 * Constructor.
 	 *
 	 * @param Registered_Channels $channels        Available channels.
-	 * @param Default_Channel     $default_channel The global default channel.
+	 * @param Channel             $default_channel The global default channel.
 	 */
 	public function __construct(
 		private Registered_Channels $channels,
-		private Default_Channel $default_channel,
+		private Channel $default_channel,
 	) {}
 
 	/**
@@ -67,9 +51,9 @@ final readonly class Channels_REST_Route implements Feature {
 						'type'    => 'object',
 					],
 				],
-				'callback'            => [ $this, 'get_list_callback' ],
+				'callback'            => [ $this, 'get_items' ],
 				'methods'             => WP_REST_Server::READABLE,
-				'permission_callback' => fn () => current_user_can( 'edit_posts' ),
+				'permission_callback' => '__return_true',
 			],
 		);
 
@@ -102,53 +86,55 @@ final readonly class Channels_REST_Route implements Feature {
 						'type'    => 'string',
 					],
 				],
-				'callback'            => [ $this, 'get_callback' ],
+				'callback'            => [ $this, 'get_item' ],
 				'methods'             => WP_REST_Server::READABLE,
-				'permission_callback' => fn () => current_user_can( 'edit_posts' ),
+				'permission_callback' => '__return_true',
 			],
 		);
 	}
 
 	/**
-	 * Respond with the name and label of each channel, whether it is the global default, the
-	 * arguments that it reads, the context that it reads, and whether a block with the `context` can
-	 * select it.
+	 * Respond with details of each channel that the user can read.
 	 *
 	 * @param WP_REST_Request $request REST API request.
 	 * @return WP_REST_Response
 	 */
-	public function get_list_callback( WP_REST_Request $request ): WP_REST_Response {
+	public function get_items( WP_REST_Request $request ): WP_REST_Response {
+		$out = [];
+
 		$available_context = $request->get_param( 'context' );
-		$list              = [];
+		$user_id           = get_current_user_id();
 
 		if ( ! is_array( $available_context ) ) {
 			$available_context = [];
 		}
 
 		foreach ( $this->channels->all() as $channel ) {
-			$list[] = [
-				// An object even without arguments, like the `args` of a route in the REST API index.
+			if ( ! $channel->can_read( $user_id ) ) {
+				continue;
+			}
+
+			$out[] = [
+				// Cast to object, like the `args` of a route in the REST API index.
 				'args'         => (object) $channel->args(),
-				'is_available' => $channel->is_available( array_intersect_key( $available_context, array_flip( $channel->uses_context() ) ) ),
-				'is_default'   => $channel->name() === $this->default_channel->name(),
+				'available'    => $channel->available( array_intersect_key( $available_context, array_flip( $channel->uses_context() ) ) ),
+				'default'      => $channel->name() === $this->default_channel->name(),
 				'label'        => $channel->label(),
 				'name'         => $channel->name(),
 				'uses_context' => $channel->uses_context(),
 			];
 		}
 
-		return rest_ensure_response( $list );
+		return rest_ensure_response( $out );
 	}
 
 	/**
-	 * Respond with a page of the channel's IDs, whether more IDs remain, the type of each post, and the
-	 * channel's label, order, and the context that it uses. With `search`, the IDs are the channel's
-	 * matches.
+	 * Respond with a page of the channel's IDs.
 	 *
 	 * @param WP_REST_Request $request REST API request.
 	 * @return WP_REST_Response|WP_Error
 	 */
-	public function get_callback( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+	public function get_item( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		$response = new WP_Error( 'rest_channel_invalid_name', __( 'Invalid channel name.', 'wp-curate' ), [ 'status' => 404 ] );
 
 		$block_args         = $request->get_param( 'args' );
@@ -174,6 +160,11 @@ final readonly class Channels_REST_Route implements Feature {
 		}
 
 		foreach ( $this->channels->all() as $channel ) {
+			if ( $channel->name() === $request->get_param( 'name' ) && ! $channel->can_read( get_current_user_id() ) ) {
+				$response = new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to read this channel.', 'wp-curate' ), [ 'status' => rest_authorization_required_code() ] );
+				break;
+			}
+
 			if ( $channel->name() === $request->get_param( 'name' ) ) {
 				$args    = [];
 				$context = [];
@@ -194,11 +185,11 @@ final readonly class Channels_REST_Route implements Feature {
 					$total       = $channel->total_matching( $search, $args, $context );
 				}
 
+				$ids        = [];
+				$post_types = [];
 				$offset     = ( $page - 1 ) * $per_page;
 				$position   = 0;
-				$ids        = [];
 				$has_more   = false;
-				$post_types = [];
 
 				// Read the channel only through this page, plus one ID to tell whether more remain.
 				foreach ( $channel_ids as $id ) {
