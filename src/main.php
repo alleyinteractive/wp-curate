@@ -26,9 +26,6 @@ function main(): void {
 		channels: $channels,
 		preferred: 'post_latest',
 	);
-	$channel_taken    = new History(
-		seed: new Empty_Post_IDs(),
-	);
 
 	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore
 	$plugin = new Group(
@@ -65,12 +62,10 @@ function main(): void {
 		new Features\Queues_Block_Context(
 			queues: new Channels\Queues(
 				channels: $channels,
-				taken: $channel_taken,
+				taken: new History(
+					seed: new Empty_Post_IDs(),
+				),
 			),
-		),
-		new Features\Channel_Deduplication_Block_Context(
-			taken: $channel_taken,
-			block_type_registry: WP_Block_Type_Registry::get_instance(),
 		),
 		new Features\Channel_Block_Support(
 			default_channel: $default_channel,

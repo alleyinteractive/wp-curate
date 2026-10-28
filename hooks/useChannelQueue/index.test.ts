@@ -28,13 +28,11 @@ const POST_ID = 5;
  * @param blocks  Blocks in the editor.
  * @param ids     IDs in every channel.
  * @param loading Channels that have not loaded.
- * @param meta    Post meta, such as the deduplication settings.
  */
 function fakeSelect(
   blocks: object[],
   ids: number[],
   loading: string[] = [],
-  meta: Record<string, unknown> = {},
 ) {
   // Like the store, a record has the IDs through the count, or all of them at the channel's end.
   const getChannel = jest.fn((
@@ -115,7 +113,6 @@ function fakeSelect(
       selectors = {
         getCurrentPostId: () => POST_ID,
         getCurrentPostType: () => 'post',
-        getEditedPostAttribute: () => meta,
       };
     }
 
@@ -250,12 +247,11 @@ describe('channelQueueIds', () => {
     expect(getChannel).toHaveBeenCalledWith('global_default', {}, {}, 10);
   });
 
-  it('makes only the blocks in a loading channel wait', () => {
+  it('makes a loading block and every block after it wait, in any channel', () => {
     const blocks = [
       singleBlock('first'),
       singleBlock('switched', 'page_latest'),
       singleBlock('second'),
-      singleBlock('after', 'page_latest'),
     ];
     const {
       select,
@@ -263,8 +259,7 @@ describe('channelQueueIds', () => {
 
     expect(channelQueueIds(select, 'first')).toEqual([11]);
     expect(channelQueueIds(select, 'switched')).toBeNull();
-    expect(channelQueueIds(select, 'second')).toEqual([12]);
-    expect(channelQueueIds(select, 'after')).toBeNull();
+    expect(channelQueueIds(select, 'second')).toBeNull();
   });
 
   it('makes the blocks inside a loading block wait, without requesting their channel', () => {
@@ -296,11 +291,11 @@ describe('channelQueueIds', () => {
     const {
       getChannel,
       select,
-    } = fakeSelect(blocks, [11, 12]);
+    } = fakeSelect(blocks, [11, 12, 13]);
 
     expect(channelQueueIds(select, 'five')).toEqual([11]);
-    expect(channelQueueIds(select, 'six')).toEqual([11]);
-    expect(channelQueueIds(select, 'five_again')).toEqual([12]);
+    expect(channelQueueIds(select, 'six')).toEqual([12]);
+    expect(channelQueueIds(select, 'five_again')).toEqual([13]);
     expect(getChannel).toHaveBeenCalledWith(IN_CATEGORY, { term: 5 }, {}, 10);
     expect(getChannel).toHaveBeenCalledWith(IN_CATEGORY, { term: 6 }, {}, 10);
   });
@@ -381,10 +376,11 @@ describe('channelQueueIds', () => {
     const {
       getChannel,
       select,
-    } = fakeSelect([issueBlock('first', 0), issueBlock('second', 30)], [11, 12]);
+    } = fakeSelect([issueBlock('first', 0), issueBlock('second', 30)], [11, 12, 13]);
 
-    expect(channelQueueIds(select, 'first-article')).toEqual([11]);
-    expect(channelQueueIds(select, 'second-article')).toEqual([11]);
+    // The first issue takes 11, so its articles skip it.
+    expect(channelQueueIds(select, 'first-article')).toEqual([12]);
+    expect(channelQueueIds(select, 'second-article')).toEqual([13]);
     expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 11 }, 10);
     expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 30 }, 10);
     expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, { postId: POST_ID }, 10);
@@ -421,22 +417,11 @@ describe('channelQueueIds', () => {
   });
 });
 
-describe('channelQueueIds with post-level deduplication', () => {
-  const DEDUPLICATION = { wp_curate_deduplication: true };
-  const UNIQUE_PINNED = { wp_curate_deduplication: true, wp_curate_unique_pinned_posts: true };
-
-  it('lets blocks in different channels show the same post without it', () => {
-    const {
-      select,
-    } = fakeSelect([singleBlock('a'), singleBlock('b', 'other')], [11, 12]);
-
-    expect(channelQueueIds(select, 'b')).toEqual([11]);
-  });
-
+describe('channelQueueIds deduplication', () => {
   it('skips the posts that blocks before it took from any channel', () => {
     const {
       select,
-    } = fakeSelect([singleBlock('a'), singleBlock('b', 'other')], [11, 12], [], DEDUPLICATION);
+    } = fakeSelect([singleBlock('a'), singleBlock('b', 'other')], [11, 12]);
 
     expect(channelQueueIds(select, 'a')).toEqual([11]);
     expect(channelQueueIds(select, 'b')).toEqual([12]);
@@ -449,29 +434,19 @@ describe('channelQueueIds with post-level deduplication', () => {
     ];
     const {
       select,
-    } = fakeSelect(blocks, [11, 12], [], DEDUPLICATION);
+    } = fakeSelect(blocks, [11, 12]);
 
     expect(channelQueueIds(select, 'b')).toEqual([11]);
   });
 
-  it('skips a post that a block after it pins only with unique pinned posts', () => {
-    const blocks = [
-      singleBlock('a'),
-      { ...singleBlock('b', 'other'), attributes: { channel: { name: 'other' }, ref: 11 } },
-    ];
-
-    expect(channelQueueIds(fakeSelect(blocks, [11, 12], [], DEDUPLICATION).select, 'a')).toEqual([11]);
-    expect(channelQueueIds(fakeSelect(blocks, [11, 12], [], UNIQUE_PINNED).select, 'a')).toEqual([12]);
-  });
-
-  it('ignores unique pinned posts without deduplication', () => {
+  it('does not skip a post that a block after it pins', () => {
     const blocks = [
       singleBlock('a'),
       { ...singleBlock('b', 'other'), attributes: { channel: { name: 'other' }, ref: 11 } },
     ];
     const {
       select,
-    } = fakeSelect(blocks, [11, 12], [], { wp_curate_unique_pinned_posts: true });
+    } = fakeSelect(blocks, [11, 12]);
 
     expect(channelQueueIds(select, 'a')).toEqual([11]);
   });
@@ -485,16 +460,9 @@ describe('channelQueueIds with post-level deduplication', () => {
     const {
       getChannel,
       select,
-    } = fakeSelect(blocks, ids, [], DEDUPLICATION);
+    } = fakeSelect(blocks, ids);
 
     expect(channelQueueIds(select, 'b')).toEqual([11]);
     expect(getChannel).toHaveBeenCalledWith('other', {}, {}, 20);
-  });
-
-  it('makes a block wait for a loading block before it in another channel', () => {
-    const blocks = [singleBlock('a', 'loading'), singleBlock('b')];
-
-    expect(channelQueueIds(fakeSelect(blocks, [11], ['loading']).select, 'b')).toEqual([11]);
-    expect(channelQueueIds(fakeSelect(blocks, [11], ['loading'], DEDUPLICATION).select, 'b')).toBeNull();
   });
 });
