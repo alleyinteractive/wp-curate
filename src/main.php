@@ -21,7 +21,7 @@ use WP_Block_Type_Registry;
 function main(): void {
 	$stop_queries_var = 'wp_curate_stop_queries';
 	$main_query       = new Global_Post_Query( 'wp_query' );
-	$channels         = new Channels\Registered_Channels();
+	$channels         = new Channels\Available_Channels();
 	$default_channel  = new Channels\Default_Channel(
 		channels: $channels,
 		preferred: 'post_latest',
@@ -55,6 +55,7 @@ function main(): void {
 		new Features\GraphQL(),
 		new Features\Block_Variations(),
 		new Features\Block_Patterns(),
+		new Features\Bundled_Channels(),
 		new Features\Channels_REST_Route(
 			channels: $channels,
 			default_channel: $default_channel,

@@ -25,11 +25,11 @@ final readonly class Default_Channel implements Channel {
 	/**
 	 * Constructor.
 	 *
-	 * @param Registered_Channels $channels  Available channels.
-	 * @param string              $preferred Name of the preferred default channel.
+	 * @param Available_Channels $channels  Available channels.
+	 * @param string             $preferred Name of the preferred default channel.
 	 */
 	public function __construct(
-		private Registered_Channels $channels,
+		private Available_Channels $channels,
 		private string $preferred,
 	) {}
 

@@ -9,7 +9,7 @@ namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
 use Alley\WP\WP_Curate\Channels\Channel;
-use Alley\WP\WP_Curate\Channels\Registered_Channels;
+use Alley\WP\WP_Curate\Channels\Available_Channels;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -22,11 +22,11 @@ final readonly class Channels_REST_Route implements Feature {
 	/**
 	 * Constructor.
 	 *
-	 * @param Registered_Channels $channels        Available channels.
-	 * @param Channel             $default_channel The global default channel.
+	 * @param Available_Channels $channels        Available channels.
+	 * @param Channel            $default_channel The global default channel.
 	 */
 	public function __construct(
-		private Registered_Channels $channels,
+		private Available_Channels $channels,
 		private Channel $default_channel,
 	) {}
 
