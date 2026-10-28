@@ -20,9 +20,9 @@ use WP_REST_Server;
  *
  * GET /wp-json/wp-curate/v1/channels?context[<key>]=<value>
  *
- * Lists the name and label of each channel, whether it is the global default, the fields of the
- * arguments that it reads, the context that it reads, and whether a block with the `context` can
- * select it.
+ * Lists the name and label of each channel, whether it is the global default, the arguments that
+ * it reads as `args`, the context that it reads, and whether a block with the `context` can select
+ * it.
  *
  * GET /wp-json/wp-curate/v1/channels/<name>?args[<key>]=<value>&context[<key>]=<value>&page=<page>&per_page=<per_page>&search=<search>
  *
@@ -110,9 +110,9 @@ final readonly class Channels_REST_Route implements Feature {
 	}
 
 	/**
-	 * Respond with the name and label of each channel, whether it is the global default, the fields
-	 * of the arguments that it reads, the context that it reads, and whether a block with the
-	 * `context` can select it.
+	 * Respond with the name and label of each channel, whether it is the global default, the
+	 * arguments that it reads, the context that it reads, and whether a block with the `context` can
+	 * select it.
 	 *
 	 * @param WP_REST_Request $request REST API request.
 	 * @return WP_REST_Response
@@ -127,7 +127,8 @@ final readonly class Channels_REST_Route implements Feature {
 
 		foreach ( $this->channels->all() as $channel ) {
 			$list[] = [
-				'arg_fields'   => $channel->arg_fields(),
+				// An object even without arguments, like the `args` of a route in the REST API index.
+				'args'         => (object) $channel->args(),
 				'is_available' => $channel->is_available( array_intersect_key( $available_context, array_flip( $channel->uses_context() ) ) ),
 				'is_default'   => $channel->name() === $this->default_channel->name(),
 				'label'        => $channel->label(),
@@ -178,7 +179,7 @@ final readonly class Channels_REST_Route implements Feature {
 				$context = [];
 
 				if ( is_array( $block_args ) ) {
-					$args = array_intersect_key( $block_args, array_flip( array_column( $channel->arg_fields(), 'id' ) ) );
+					$args = array_intersect_key( $block_args, $channel->args() );
 				}
 
 				if ( is_array( $available_context ) ) {

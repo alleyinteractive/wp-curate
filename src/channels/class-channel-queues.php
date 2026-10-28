@@ -108,10 +108,10 @@ final class Channel_Queues {
 			if ( $channel->name() === $name ) {
 				/*
 				 * A block's arguments can include keys that this channel does not read, such as from
-				 * hand-written markup or a field that the channel no longer has. Leaving them out gives
+				 * hand-written markup or an argument that the channel no longer has. Leaving them out gives
 				 * every block that uses the same arguments the same queue.
 				 */
-				$used_args = array_intersect_key( $args, array_flip( array_column( $channel->arg_fields(), 'id' ) ) );
+				$used_args = array_intersect_key( $args, $channel->args() );
 				$used      = array_intersect_key( $context, array_flip( $channel->uses_context() ) );
 
 				ksort( $used_args );

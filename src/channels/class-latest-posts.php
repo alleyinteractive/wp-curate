@@ -58,13 +58,13 @@ final readonly class Latest_Posts implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads, as fields for the editor.
+	 * The arguments that the channel reads: none.
 	 *
-	 * @phpstan-return list<array{id: string, label: string, ...<string, mixed>}>
+	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *
 	 * @return array[]
 	 */
-	public function arg_fields(): array {
+	public function args(): array {
 		return [];
 	}
 

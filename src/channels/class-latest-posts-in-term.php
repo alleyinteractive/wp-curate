@@ -58,18 +58,17 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads, as fields for the editor: the term. The editor script
-	 * `entries/block-editor/latestPostsInTermArgs` adds a term picker for the `term` field of a
-	 * channel whose name ends with the field's `taxonomy` and `_latest`.
+	 * The arguments that the channel reads: the term. The editor script
+	 * `entries/block-editor/latestPostsInTermArgs` adds a term picker for the `term` argument of a
+	 * channel whose name ends with the argument's `taxonomy` and `_latest`.
 	 *
-	 * @phpstan-return list<array{id: string, label: string, ...<string, mixed>}>
+	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *
 	 * @return array[]
 	 */
-	public function arg_fields(): array {
+	public function args(): array {
 		return [
-			[
-				'id'       => 'term',
+			'term' => [
 				'label'    => $this->taxonomy_name(),
 				'required' => true,
 				'taxonomy' => $this->taxonomy,

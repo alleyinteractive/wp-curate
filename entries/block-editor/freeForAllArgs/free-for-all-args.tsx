@@ -46,9 +46,9 @@ function hasArgValue(value: unknown): boolean {
 }
 
 /**
- * Reads the `options` of a field: a list of labels and values.
+ * Reads the `options` of an argument's description: a list of labels and values.
  *
- * @param field The field.
+ * @param field The argument's description.
  */
 function toFieldOptions(field: ChannelArgField): FieldOption[] {
   const options: FieldOption[] = [];
@@ -95,22 +95,23 @@ function toStrings(value: unknown): string[] {
 }
 
 /**
- * The control of an argument of the Free-For-All channel, by the field `id`, or null for a field
+ * The control of an argument of the Free-For-All channel, by its name, or null for an argument
  * that the channel does not have.
  *
- * @param field    The field.
+ * @param id       The argument's name.
+ * @param field    The argument's description.
  * @param value    The argument.
  * @param help     Help text.
  * @param onChange Saves the argument, or removes it when given undefined.
  */
 function argControl(
+  id: string,
   field: ChannelArgField,
   value: unknown,
   help: string,
   onChange: (next: unknown) => void,
 ): React.ReactElement | null {
   const {
-    id,
     label,
     taxonomy,
   } = field;
@@ -173,7 +174,7 @@ function argControl(
 }
 
 /**
- * A panel item for each argument of the Free-For-All channel. A required field always shows. The
+ * A panel item for each argument of the Free-For-All channel. A required argument always shows. The
  * others are in the panel's menu.
  */
 function FreeForAllArgItems({
@@ -189,10 +190,9 @@ function FreeForAllArgItems({
 
   return (
     <>
-      {argFields.map((field) => {
+      {Object.entries(argFields).map(([id, field]) => {
         const {
           help: fieldHelp,
-          id,
           label,
           required,
         } = field;
@@ -207,7 +207,7 @@ function FreeForAllArgItems({
           help = __('The channel shows no posts until this is set.', 'wp-curate');
         }
 
-        const control = argControl(field, args[id], help, (next) => {
+        const control = argControl(id, field, args[id], help, (next) => {
           setArgs(next === undefined ? withoutArg(args, id) : { ...args, [id]: next });
         });
 

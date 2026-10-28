@@ -13,8 +13,8 @@ namespace Alley\WP\WP_Curate\Channels;
  *
  * A block can give its channel arguments, like the `args` of a block binding, such as the term of a
  * channel of the posts in a term. The block saves them in the `args` of its `channel` attribute.
- * The channel reads them, and lists their fields so that the editor can show a control for each
- * one.
+ * The channel reads them, and describes them in `args()` so that the editor can show a control for
+ * each one.
  */
 interface Channel {
 	/**
@@ -39,20 +39,22 @@ interface Channel {
 	public function entity_kind(): string;
 
 	/**
-	 * The arguments that the channel reads, as fields for the editor.
+	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API
+	 * route.
 	 *
-	 * Each field has an `id`, which is its key in the arguments, and a `label`. A field with
-	 * `required` set to true is one that the channel needs. The editor shows a control for a field
-	 * only if a script adds one to the slot of the Channel panel. The script finds the fields of its
-	 * own channels by the channel name and the field `id`. A field can have more keys for that script.
+	 * An argument name is a key in the block's `args`, and it cannot be a number. Each argument has a
+	 * `label`. An argument with `required` set to true is one that the channel needs. The editor
+	 * shows a control for an argument only if a script adds one to the slot of the Channel panel. The
+	 * script finds the arguments of its own channels by the channel name and the argument name. An
+	 * argument can have more keys for that script.
 	 *
-	 * The channel has no IDs until a block gives it a value for each required field.
+	 * The channel has no IDs until a block gives it a value for each required argument.
 	 *
-	 * @phpstan-return list<array{id: string, label: string, ...<string, mixed>}>
+	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *
 	 * @return array[]
 	 */
-	public function arg_fields(): array;
+	public function args(): array;
 
 	/**
 	 * Names of the block context values that the channel reads.
