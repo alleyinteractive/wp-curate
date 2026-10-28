@@ -33,7 +33,7 @@ import useBlockChannel, {
 import useChannelQueue from '../../../hooks/useChannelQueue';
 
 /*
- * Blocks with the `wp-curate/channel` block support get a Channel panel. A block that provides the
+ * Blocks with the `wp-curate/channels` block support get a Channel panel. A block that provides the
  * channel context, like Channel Loop, gives the channel to the blocks inside it. Any other block
  * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. It
  * can pin a post with an integer `ref` attribute, and a `postType` attribute with the pinned post's

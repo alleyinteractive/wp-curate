@@ -12,7 +12,7 @@
   "render": "file:render.php",
   "supports": {
     "html": false,
-    "wp-curate/channel": true
+    "wp-curate/channels": true
   },
   "attributes": {
     "postType": {

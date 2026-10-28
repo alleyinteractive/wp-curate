@@ -15,41 +15,22 @@ use WP_Block_Type_Registry;
 use WP_Post;
 
 /**
- * The `wp-curate/channel` block support, for blocks that have a channel.
+ * The `wp-curate/channels` block support, for blocks that have a channel.
  *
- * A block with the support gets a `channel` attribute, the channel context, and the `postId` and
- * `postType` context for channels that read it. Like a block binding, the attribute is an object
- * with the channel `name` and the `args` that the block gives the channel, such as
- * `{"name":"post_category_latest","args":{"term":7}}`. An empty name means the default channel. A
- * block that also provides the `wp-curate/channel` context, like Channel Loop, gives its
- * channel to the blocks inside it, which use it instead of their own. Any other block takes a post
- * from its channel's queue, skipping the posts that blocks before it took, and gets that post as the
- * `postId` and `postType` context, which is 0 and an empty string when the channel has no posts
- * left. It can pin a post with an integer `ref` attribute. Keep the rules matched with the
- * `channelSupport` editor script.
+ * A block with the support gets a `channel` attribute, the channel context, and the `postId` and `postType` context for
+ * channels that read it.
+ *
+ * Like a block binding, the `channel` attribute is an object with the channel `name` and the `args` that the block
+ * gives the channel, such as `{"name":"post_category_latest","args":{"term":7}}`.
+ *
+ * A block that also provides the `wp-curate/channel` context, like Channel Loop, passes its channel to its inner
+ * blocks. Any other block takes a post from its channel's queue, skipping the posts that blocks before it took, and
+ * gets that post as the `postId` and `postType` context, which is 0 and an empty string when the channel has no posts
+ * left. Blocks can pin a post with an integer `ref` attribute.
+ *
+ * Keep the rules matched with the `channelSupport` editor script.
  */
 final readonly class Channel_Block_Support implements Feature {
-	/**
-	 * The block support.
-	 *
-	 * @var string
-	 */
-	private const SUPPORT = 'wp-curate/channel';
-
-	/**
-	 * The block context that holds the channel.
-	 *
-	 * @var string
-	 */
-	private const CHANNEL_CONTEXT = 'wp-curate/channel';
-
-	/**
-	 * The block context that holds the channel queues.
-	 *
-	 * @var string
-	 */
-	private const QUEUES_CONTEXT = 'wp-curate/queues';
-
 	/**
 	 * Constructor.
 	 *
@@ -85,8 +66,8 @@ final readonly class Channel_Block_Support implements Feature {
 			! is_array( $args )
 			|| ! isset( $args['supports'] )
 			|| ! is_array( $args['supports'] )
-			|| ! isset( $args['supports'][ self::SUPPORT ] )
-			|| true !== $args['supports'][ self::SUPPORT ]
+			|| ! isset( $args['supports']['wp-curate/channels'] )
+			|| true !== $args['supports']['wp-curate/channels']
 		) {
 			return $args;
 		}
@@ -116,8 +97,8 @@ final readonly class Channel_Block_Support implements Feature {
 		// The post of the block around it, or else of the post, for channels that read it.
 		$uses_context[] = 'postId';
 		$uses_context[] = 'postType';
-		$uses_context[] = self::CHANNEL_CONTEXT;
-		$uses_context[] = self::QUEUES_CONTEXT;
+		$uses_context[] = 'wp-curate/channel';
+		$uses_context[] = 'wp-curate/queues';
 
 		$args['attributes']   = $attributes;
 		$args['uses_context'] = array_values( array_unique( $uses_context ) );
@@ -126,8 +107,7 @@ final readonly class Channel_Block_Support implements Feature {
 	}
 
 	/**
-	 * Gives a block with the support that does not provide the channel context a post from its
-	 * channel.
+	 * Gives a block with the support that does not provide the channel context a post from its channel.
 	 *
 	 * Blocks take posts in render order, so this runs once for each block, just before it renders.
 	 *
@@ -152,8 +132,8 @@ final readonly class Channel_Block_Support implements Feature {
 
 		if (
 			! $block_type instanceof WP_Block_Type
-			|| ! block_has_support( $block_type, self::SUPPORT )
-			|| isset( $block_type->provides_context[ self::CHANNEL_CONTEXT ] )
+			|| ! block_has_support( $block_type, 'wp-curate/channels' )
+			|| isset( $block_type->provides_context['wp-curate/channel'] )
 		) {
 			return $context;
 		}
@@ -181,9 +161,9 @@ final readonly class Channel_Block_Support implements Feature {
 		}
 
 		// A block inside a Channel Loop block uses its channel and arguments, even if the block has its own from before it moved in.
-		if ( isset( $context[ self::CHANNEL_CONTEXT ] ) && is_array( $context[ self::CHANNEL_CONTEXT ] ) ) {
-			$channel      = $this->channel_name( $context[ self::CHANNEL_CONTEXT ] );
-			$channel_args = $this->channel_args( $context[ self::CHANNEL_CONTEXT ] );
+		if ( isset( $context['wp-curate/channel'] ) && is_array( $context['wp-curate/channel'] ) ) {
+			$channel      = $this->channel_name( $context['wp-curate/channel'] );
+			$channel_args = $this->channel_args( $context['wp-curate/channel'] );
 		}
 
 		if ( isset( $attrs['ref'] ) && is_int( $attrs['ref'] ) && $attrs['ref'] > 0 ) {
@@ -191,8 +171,8 @@ final readonly class Channel_Block_Support implements Feature {
 		}
 
 		// Take the ref, or else the top of the channel's queue, and remove that ID from the queue.
-		if ( isset( $context[ self::QUEUES_CONTEXT ] ) && $context[ self::QUEUES_CONTEXT ] instanceof Queues ) {
-			$post_id = $context[ self::QUEUES_CONTEXT ]->take_one( $channel, $ref, $channel_args, $context );
+		if ( isset( $context['wp-curate/queues'] ) && $context['wp-curate/queues'] instanceof Queues ) {
+			$post_id = $context['wp-curate/queues']->take_one( $channel, $ref, $channel_args, $context );
 		}
 
 		$taken = null;

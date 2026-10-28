@@ -17,7 +17,7 @@
 use Alley\WP\WP_Curate\Inner_Block_Template;
 
 /*
- * The `wp-curate/channel` block support gives the block its post as the `postId` context: the ref,
+ * The `wp-curate/channels` block support gives the block its post as the `postId` context: the ref,
  * or else the top of the channel's queue. It is 0 when there is no post to show.
  */
 $promoted_post = null;

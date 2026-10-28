@@ -13,7 +13,7 @@ import type { ChannelArgField, ChannelOption } from '../../entries/block-editor/
  * block gives the channel, such as `{ name: 'post_category_latest', args: { term: 7 } }`. An
  * empty name means the default channel.
  */
-export const CHANNEL_SUPPORT = 'wp-curate/channel';
+export const CHANNEL_SUPPORT = 'wp-curate/channels';
 
 // The block context that holds the channel, in the shape of the `channel` attribute.
 export const CHANNEL_CONTEXT = 'wp-curate/channel';
@@ -25,7 +25,7 @@ const NO_ARGS: Record<string, unknown> = {};
 const NO_CONTEXT: Record<string, unknown> = {};
 
 /**
- * Whether a block type has the `wp-curate/channel` block support.
+ * Whether a block type has the `wp-curate/channels` block support.
  *
  * @param blockType Block type from the blocks store.
  */
