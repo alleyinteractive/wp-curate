@@ -7,9 +7,7 @@
 
 namespace Alley\WP\WP_Curate\Features;
 
-use Alley\WP\Post_IDs\Empty_Post_IDs;
 use Alley\WP\Types\Feature;
-use Alley\WP\Types\Post_IDs;
 use Alley\WP\WP_Curate\Channels\Channel;
 use Alley\WP\WP_Curate\Channels\Queues;
 use WP_Block_Type;
@@ -25,7 +23,7 @@ use WP_Post;
  * `{"name":"post_category_latest","args":{"term":7}}`. An empty name means the default channel. A
  * block that also provides the `wp-curate/channel` context, like Channel Loop, gives its
  * channel to the blocks inside it, which use it instead of their own. Any other block takes a post
- * from its channel's queue, following the post's deduplication rule, and gets that post as the
+ * from its channel's queue, skipping the posts that blocks before it took, and gets that post as the
  * `postId` and `postType` context, which is 0 and an empty string when the channel has no posts
  * left. It can pin a post with an integer `ref` attribute. Keep the rules matched with the
  * `channelSupport` editor script.
@@ -51,13 +49,6 @@ final readonly class Channel_Block_Support implements Feature {
 	 * @var string
 	 */
 	private const QUEUES_CONTEXT = 'wp-curate/queues';
-
-	/**
-	 * The block context that holds the IDs that the post's deduplication rule skips.
-	 *
-	 * @var string
-	 */
-	private const DEDUPLICATION_CONTEXT = 'wp-curate/channelDeduplication';
 
 	/**
 	 * Constructor.
@@ -127,7 +118,6 @@ final readonly class Channel_Block_Support implements Feature {
 		$uses_context[] = 'postType';
 		$uses_context[] = self::CHANNEL_CONTEXT;
 		$uses_context[] = self::QUEUES_CONTEXT;
-		$uses_context[] = self::DEDUPLICATION_CONTEXT;
 
 		$args['attributes']   = $attributes;
 		$args['uses_context'] = array_values( array_unique( $uses_context ) );
@@ -200,16 +190,9 @@ final readonly class Channel_Block_Support implements Feature {
 			$ref = $attrs['ref'];
 		}
 
-		// Outside a post, the block does not deduplicate.
-		$skipped = new Empty_Post_IDs();
-
-		if ( isset( $context[ self::DEDUPLICATION_CONTEXT ] ) && $context[ self::DEDUPLICATION_CONTEXT ] instanceof Post_IDs ) {
-			$skipped = $context[ self::DEDUPLICATION_CONTEXT ];
-		}
-
 		// Take the ref, or else the top of the channel's queue, and remove that ID from the queue.
 		if ( isset( $context[ self::QUEUES_CONTEXT ] ) && $context[ self::QUEUES_CONTEXT ] instanceof Queues ) {
-			$post_id = $context[ self::QUEUES_CONTEXT ]->take_one( $channel, $ref, $channel_args, $context, $skipped );
+			$post_id = $context[ self::QUEUES_CONTEXT ]->take_one( $channel, $ref, $channel_args, $context );
 		}
 
 		$taken = null;

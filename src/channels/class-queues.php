@@ -7,15 +7,16 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
-use Alley\WP\Types\Post_IDs;
 use Alley\WP\WP_Curate\Post_IDs\History;
 
 /**
  * The queues that blocks share during a request.
  *
  * A block names its channel. Each channel gets a separate queue for each set of arguments and
- * context values that it uses. Blocks take IDs in render order, and each block can skip more IDs,
- * such as by its post's deduplication rule. Keep these rules matched with `useChannelQueue()`.
+ * context values that it uses. Blocks take IDs in render order. A block that takes the top of its
+ * queue skips the IDs that blocks took from any queue before it, so channel blocks never show the
+ * same post twice. A block always shows its own pin. Keep these rules matched with
+ * `useChannelQueue()`.
  */
 final class Queues {
 	/**
@@ -42,14 +43,13 @@ final class Queues {
 	 * Takes the ref from a block or else the next queued ID that the block does not skip. Then
 	 * removes the ID from the queue.
 	 *
-	 * @param string   $name    Channel name that the block uses.
-	 * @param int      $ref     Pinned ID, or 0.
-	 * @param mixed[]  $args    The block's arguments for the channel.
-	 * @param mixed[]  $context Block context.
-	 * @param Post_IDs $skipped IDs that the block skips at the top of the queue.
+	 * @param string  $name    Channel name that the block uses.
+	 * @param int     $ref     Pinned ID, or 0.
+	 * @param mixed[] $args    The block's arguments for the channel.
+	 * @param mixed[] $context Block context.
 	 * @return int|null The ID, or null when none remains.
 	 */
-	public function take_one( string $name, int $ref, array $args, array $context, Post_IDs $skipped ): ?int {
+	public function take_one( string $name, int $ref, array $args, array $context ): ?int {
 		$queue = $this->queue( $name, $args, $context );
 		$taken = null;
 
@@ -58,7 +58,7 @@ final class Queues {
 		}
 
 		if ( null === $taken && $queue instanceof Queue ) {
-			$taken = $queue->top( $skipped );
+			$taken = $queue->top( $this->taken );
 		}
 
 		if ( null !== $taken && $queue instanceof Queue ) {
