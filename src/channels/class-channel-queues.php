@@ -8,7 +8,7 @@
 namespace Alley\WP\WP_Curate\Channels;
 
 use Alley\WP\Types\Post_IDs;
-use Alley\WP\WP_Curate\Post_IDs\Post_IDs_Taken_From_Channels;
+use Alley\WP\WP_Curate\Post_IDs\History;
 
 /**
  * The queues that blocks share during a request.
@@ -28,12 +28,14 @@ final class Channel_Queues {
 	/**
 	 * Constructor.
 	 *
-	 * @param Registered_Channels          $channels Available channels.
-	 * @param Post_IDs_Taken_From_Channels $taken    The record of the IDs that blocks take from any queue.
+	 * @param Registered_Channels $channels Available channels.
+	 * @param History             $taken    The record of the IDs that blocks take from any queue. It is
+	 *                                      apart from the history of the Query blocks, because channel
+	 *                                      blocks deduplicate only among themselves.
 	 */
 	public function __construct(
 		private readonly Registered_Channels $channels,
-		private readonly Post_IDs_Taken_From_Channels $taken,
+		private readonly History $taken,
 	) {}
 
 	/**
@@ -86,9 +88,7 @@ final class Channel_Queues {
 			$taken = $queue->take_rest();
 		}
 
-		foreach ( $taken as $id ) {
-			$this->taken->record( $id );
-		}
+		$this->taken->record( $taken );
 
 		return $taken;
 	}
