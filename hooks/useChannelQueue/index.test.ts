@@ -45,8 +45,6 @@ function fakeSelect(
     has_more: ids.length > count,
     ids: ids.slice(0, count),
     label: 'Test',
-    order: 'desc',
-    order_label: 'Test order',
     post_types: {},
     uses_context: [],
   }));

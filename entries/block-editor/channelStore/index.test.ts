@@ -13,8 +13,6 @@ const PAGE_BODY = {
   entity_kind: 'postType',
   ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   label: 'Test',
-  order: 'desc',
-  order_label: 'Test order',
   post_types: {},
   uses_context: [],
 };
