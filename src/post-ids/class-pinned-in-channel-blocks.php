@@ -47,8 +47,9 @@ final readonly class Pinned_In_Channel_Blocks implements Post_IDs {
 
 				if (
 					$type_obj instanceof WP_Block_Type
+					// Include blocks that support selecting channels, but...
 					&& block_has_support( $type_obj, 'wp-curate/channel' )
-					// Exclude blocks that provide a channel as context.
+					// ...exclude blocks that provide a channel as context.
 					&& ! isset( $type_obj->provides_context['wp-curate/channel'] )
 				) {
 					$attrs = $proc->allocate_and_return_parsed_attributes();
