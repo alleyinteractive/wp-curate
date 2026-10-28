@@ -8,32 +8,16 @@
 namespace Alley\WP\WP_Curate\Post_IDs;
 
 use Alley\WP\Types\Post_IDs;
+use WP_Block_Processor;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
 
-use function Alley\WP\match_blocks;
-
 /**
- * Post IDs that the channel blocks in some content pin with their `ref` attribute.
+ * Post IDs that the channel blocks in the given content pin with their `ref` attribute.
  *
- * A block that gives its channel to the blocks inside it, like Channel Loop, pins nothing. Keep the
- * rules matched with `useChannelQueue()`.
+ * Keep the rules matched with `useChannelQueue()`.
  */
 final readonly class Pinned_In_Channel_Blocks implements Post_IDs {
-	/**
-	 * The block support of a block that has a channel.
-	 *
-	 * @var string
-	 */
-	private const SUPPORT = 'wp-curate/channel';
-
-	/**
-	 * The block context that a block provides to give its channel to the blocks inside it.
-	 *
-	 * @var string
-	 */
-	private const CHANNEL_CONTEXT = 'wp-curate/channel';
-
 	/**
 	 * Constructor.
 	 *
@@ -51,40 +35,36 @@ final readonly class Pinned_In_Channel_Blocks implements Post_IDs {
 	 * @return int[]
 	 */
 	public function post_ids(): array {
-		$pinned_ids = [];
+		$out = [];
 
-		$blocks = match_blocks(
-			$this->content,
-			[
-				'flatten'    => true,
-				'with_attrs' => 'ref',
-			],
-		);
+		$proc = new WP_Block_Processor( $this->content );
 
-		if ( ! is_array( $blocks ) ) {
-			$blocks = [];
-		}
+		while ( $proc->next_block() ) {
+			$type = $proc->get_block_type();
 
-		foreach ( $blocks as $block ) {
-			$block_type = null;
+			if ( is_string( $type ) ) {
+				$type_obj = $this->block_type_registry->get_registered( $type );
 
-			// A freeform block has a null name.
-			if ( isset( $block['blockName'] ) ) {
-				$block_type = $this->block_type_registry->get_registered( $block['blockName'] );
-			}
+				if (
+					$type_obj instanceof WP_Block_Type
+					&& block_has_support( $type_obj, 'wp-curate/channel' )
+					// Exclude blocks that provide a channel as context.
+					&& ! isset( $type_obj->provides_context['wp-curate/channel'] )
+				) {
+					$attrs = $proc->allocate_and_return_parsed_attributes();
 
-			if (
-				$block_type instanceof WP_Block_Type
-				&& block_has_support( $block_type, self::SUPPORT )
-				&& ! isset( $block_type->provides_context[ self::CHANNEL_CONTEXT ] )
-				&& isset( $block['attrs']['ref'] )
-				&& is_int( $block['attrs']['ref'] )
-				&& $block['attrs']['ref'] > 0
-			) {
-				$pinned_ids[] = $block['attrs']['ref'];
+					if (
+						is_array( $attrs )
+						&& isset( $attrs['ref'] )
+						&& is_int( $attrs['ref'] )
+						&& $attrs['ref'] > 0
+					) {
+						$out[] = $attrs['ref'];
+					}
+				}
 			}
 		}
 
-		return $pinned_ids;
+		return $out;
 	}
 }
