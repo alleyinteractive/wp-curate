@@ -7,7 +7,8 @@ import type { ChannelArgField, ChannelOption } from '../../entries/block-editor/
 /*
  * The block support of a block that has a channel. wp-curate gives the block a `channel` attribute
  * and a Channel panel. A block that also provides the `wp-curate/channel` context, like Channel
- * Loop, gives its channel to the blocks inside it. Any other block takes a post from its channel.
+ * Content, gives its channel to the blocks inside it. Any other block takes a post from its
+ * channel.
  *
  * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
  * block gives the channel, such as `{ name: 'post_category_latest', args: { term: 7 } }`. An
@@ -48,7 +49,7 @@ export function hasChannelSupport(blockType: unknown): boolean {
 }
 
 /**
- * Whether a block type gives its channel to the blocks inside it, like Channel.
+ * Whether a block type gives its channel to the blocks inside it, like Channel Content.
  *
  * @param blockType Block type from the blocks store.
  */
@@ -107,7 +108,7 @@ export function defaultChannel(select: any): string | null {
  *
  * @param value The attribute or context.
  * @return The name, an empty string for the default channel, or null if the value is not a
- *         channel, such as the context of a block that is not inside a Channel block.
+ *         channel, such as the context of a block that is not inside a Channel Content block.
  */
 export function toChannelName(value: unknown): string | null {
   let name: string | null = null;
@@ -157,14 +158,14 @@ export function toChannelArgs(value: unknown): Record<string, unknown> {
  * Get the channel that a block uses.
  *
  * Keep the rules matched with `Channel_Block_Support` in PHP. The block uses the channel in its
- * block context, which the nearest Channel block around it provides, even if the block has its own
- * from before it moved in. Otherwise it uses its own channel, or else the default channel.
+ * block context, which the nearest Channel Content block around it provides, even if the block has
+ * its own from before it moved in. Otherwise it uses its own channel, or else the default channel.
  *
  * @param select         The data registry's `select`.
  * @param ownName        The name in the block's `channel` attribute.
  * @param contextChannel The `wp-curate/channel` block context.
- * @return The channel, an empty string if no channels are registered or the Channel block around
- *         the block has no channel, or null while the list of channels loads.
+ * @return The channel, an empty string if no channels are registered or the Channel Content block
+ *         around the block has no channel, or null while the list of channels loads.
  */
 export function toBlockChannel(
   select: any,
@@ -173,7 +174,7 @@ export function toBlockChannel(
 ): string | null {
   const contextName = toChannelName(contextChannel);
 
-  // A Channel block without a channel is an error, so the blocks inside it get no channel.
+  // A Channel Content block without a channel is an error, so the blocks inside it get no channel.
   if (contextName !== null) {
     return contextName;
   }

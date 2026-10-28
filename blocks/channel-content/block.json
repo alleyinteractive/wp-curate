@@ -1,9 +1,9 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "wp-curate/channel",
+  "name": "wp-curate/channel-content",
   "version": "0.1.0",
-  "title": "Channel",
+  "title": "Channel Content",
   "category": "theme",
   "icon": "rss",
   "description": "Gives a channel to the blocks inside it. Each Single Post block inside shows a post from this block's channel, directly or in a Channel Loop.",

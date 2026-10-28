@@ -92,7 +92,7 @@ describe('toBlockChannel', () => {
     expect(toBlockChannel(fakeSelect(), '', undefined)).toBe('global_default');
   });
 
-  it('uses no channel inside a Channel block without one', () => {
+  it('uses no channel inside a Channel Content block without one', () => {
     expect(toBlockChannel(fakeSelect(), '', { name: '' })).toBe('');
   });
 
@@ -166,14 +166,14 @@ describe('toBlockChannelArgs', () => {
     expect(toBlockChannelArgs({ args: { term: 5 }, name: 'post_category_latest' }, undefined)).toEqual({ term: 5 });
   });
 
-  it('uses the arguments from block context inside a Channel block, instead of its own', () => {
+  it('uses the arguments from block context inside a Channel Content block, instead of its own', () => {
     expect(toBlockChannelArgs(
       { args: { term: 5 }, name: 'post_category_latest' },
       { args: { term: 6 }, name: 'post_category_latest' },
     )).toEqual({ term: 6 });
   });
 
-  it('uses no arguments inside a Channel block without them', () => {
+  it('uses no arguments inside a Channel Content block without them', () => {
     expect(toBlockChannelArgs({ args: { term: 5 }, name: 'post_category_latest' }, { name: '' })).toEqual({});
   });
 });

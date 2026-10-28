@@ -141,9 +141,9 @@ function TemplateInnerBlocks({
  * as the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
  * after the blocks before this one. The support also gives that post to the inner blocks.
  *
- * Inside a Channel block, directly or in a Channel Loop, the block uses the Channel block's channel
- * instead of its own. Inside a Channel Loop block, its inner blocks edit that block's template
- * instead of its own. A block moved in from outside keeps its pinned post.
+ * Inside a Channel Content block, directly or in a Channel Loop, the block uses the Channel Content
+ * block's channel instead of its own. Inside a Channel Loop block, its inner blocks edit that
+ * block's template instead of its own. A block moved in from outside keeps its pinned post.
  */
 export default function Edit({
   attributes: {

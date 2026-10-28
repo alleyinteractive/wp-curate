@@ -42,7 +42,7 @@ function withChannels(channels: object[] | null) {
   }));
 }
 
-describe('Channel block label', () => {
+describe('Channel Content block label', () => {
   beforeEach(() => {
     withChannels(CHANNELS);
   });
