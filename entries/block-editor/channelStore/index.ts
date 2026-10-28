@@ -146,10 +146,6 @@ function toChannelRecord(value: unknown): ChannelRecord {
     record.entity_kind = response.entity_kind;
   }
 
-  if (typeof response.has_more === 'boolean') {
-    record.has_more = response.has_more;
-  }
-
   if (Array.isArray(response.ids)) {
     record.ids = response.ids.filter((id: unknown): id is number => Number.isInteger(id));
   }
@@ -336,8 +332,10 @@ async function fetchChannelPage(
     // A page that fails to load counts as empty, which ends the channel.
   }
 
+  // The channel counts the same IDs that it gives, so the page count tells whether more remain.
   return {
     ...toChannelRecord(body),
+    has_more: page < totalPages,
     total,
     total_pages: totalPages,
   };

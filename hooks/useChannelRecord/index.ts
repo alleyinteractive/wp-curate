@@ -10,7 +10,7 @@ export const CHANNEL_PAGE_SIZE = 10;
  * A channel from the `wp-curate/channels` store.
  *
  * `ids` holds the IDs that have loaded so far, in channel order. `has_more` is true when the
- * channel has more IDs after them.
+ * channel has more IDs after them, which the store reads from the `X-WP-TotalPages` header.
  */
 export interface ChannelRecord {
   entity_kind: string;

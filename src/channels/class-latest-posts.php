@@ -133,53 +133,15 @@ final readonly class Latest_Posts implements Channel {
 	}
 
 	/**
-	 * IDs in the channel, in channel order.
-	 *
-	 * @phpstan-return iterable<int>
+	 * IDs in the channel, in channel order, and the number of them.
 	 *
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs.
+	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @return Channel_IDs
 	 */
-	public function ids( array $args, array $context ): iterable {
-		return $this->posts( [] )->post_ids();
-	}
-
-	/**
-	 * IDs in the channel that match a search, in channel order.
-	 *
-	 * @phpstan-return iterable<int>
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return iterable Integer IDs.
-	 */
-	public function ids_matching( string $search, array $args, array $context ): iterable {
-		return $this->posts( [ 's' => $search ] )->post_ids();
-	}
-
-	/**
-	 * Number of IDs in the channel.
-	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int Number of IDs.
-	 */
-	public function total( array $args, array $context ): int {
-		return $this->posts( [] )->total();
-	}
-
-	/**
-	 * Number of IDs in the channel that match a search.
-	 *
-	 * @param string  $search  Search terms.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @return int Number of IDs.
-	 */
-	public function total_matching( string $search, array $args, array $context ): int {
-		return $this->posts( [ 's' => $search ] )->total();
+	public function ids( array $args, array $context, string $search ): Channel_IDs {
+		return $this->posts( $search );
 	}
 
 	/**
@@ -187,10 +149,16 @@ final readonly class Latest_Posts implements Channel {
 	 *
 	 * The query keeps its own `orderby`, so a search returns matches in channel order, not by relevance.
 	 *
-	 * @param array<string, mixed> $query_args Query arguments to add to the channel's own.
+	 * @param string $search Search terms, or an empty string for every post.
 	 * @return Queried_Post_Ids
 	 */
-	private function posts( array $query_args ): Queried_Post_Ids {
+	private function posts( string $search ): Queried_Post_Ids {
+		$query_args = [];
+
+		if ( '' !== $search ) {
+			$query_args['s'] = $search;
+		}
+
 		return new Queried_Post_Ids(
 			array_merge(
 				$query_args,
