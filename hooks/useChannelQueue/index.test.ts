@@ -104,7 +104,7 @@ function fakeSelect(
       selectors = {
         getBlockType: (name: string) => ({
           providesContext: name === 'wp-curate/channel-loop' ? { 'wp-curate/channel': 'channel' } : {},
-          supports: { 'wp-curate/channel': true },
+          supports: { 'wp-curate/channels': true },
         }),
       };
     }

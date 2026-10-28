@@ -137,8 +137,8 @@ function TemplateInnerBlocks({
 /**
  * The wp-curate/single-post block edit function.
  *
- * The `wp-curate/channel` block support gives the block its Channel panel, and gives it its post as
- * the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
+ * The `wp-curate/channels` block support gives the block its Channel panel, and gives it its post
+ * as the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
  * after the blocks before this one. The support also gives that post to the inner blocks.
  *
  * Outside a Channel Loop block, the block has its own inner blocks and its own channel. Inside one,

@@ -59,7 +59,7 @@ interface Channel {
 	/**
 	 * Names of the block context values that the channel reads.
 	 *
-	 * A block with the `wp-curate/channel` support has the `postId` and `postType` context of the
+	 * A block with the `wp-curate/channels` support has the `postId` and `postType` context of the
 	 * block around it, or else of the post. A REST API request gives the values as strings.
 	 *
 	 * @return string[]
