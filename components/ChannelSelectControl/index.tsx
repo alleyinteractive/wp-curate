@@ -56,7 +56,7 @@ export default function ChannelSelectControl({
     let out: ChannelOption[] | null = null;
 
     if (channelsInContext !== null) {
-      out = channelsInContext.filter(({ is_available: isAvailable }) => isAvailable);
+      out = channelsInContext.filter(({ available: isAvailable }) => isAvailable);
     }
 
     return out;

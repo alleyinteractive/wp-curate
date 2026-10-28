@@ -126,8 +126,8 @@ describe('wp-curate/channels store', () => {
     mockedApiFetch.mockImplementation(async ({ path }: { path: string }) => [
       {
         args: {},
-        is_available: path.includes('context%5BpostId%5D=7'),
-        is_default: false,
+        available: path.includes('context%5BpostId%5D=7'),
+        default: false,
         label: 'In issue',
         name: 'in_issue',
         uses_context: ['postId'],
@@ -141,9 +141,9 @@ describe('wp-curate/channels store', () => {
     const [inIssue] = await getChannelsInContext({ postId: 7 });
     const [elsewhere] = await getChannelsInContext({ postId: 8 });
 
-    expect(inIssue.is_available).toBe(true);
+    expect(inIssue.available).toBe(true);
     expect(inIssue.uses_context).toEqual(['postId']);
-    expect(elsewhere.is_available).toBe(false);
+    expect(elsewhere.available).toBe(false);
   });
 
   it('reads the arguments of each channel, keyed by argument name', async () => {
@@ -153,16 +153,16 @@ describe('wp-curate/channels store', () => {
           no_label: { required: true },
           term: { label: 'Category', required: true, taxonomy: 'category' },
         },
-        is_available: true,
-        is_default: false,
+        available: true,
+        default: false,
         label: 'In category',
         name: 'post_category_latest',
         uses_context: [],
       },
       {
         args: [],
-        is_available: true,
-        is_default: true,
+        available: true,
+        default: true,
         label: 'Latest',
         name: 'post_latest',
         uses_context: [],
