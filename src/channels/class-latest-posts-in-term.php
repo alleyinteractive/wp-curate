@@ -96,30 +96,13 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	}
 
 	/**
-	 * Whether a user can read the channel: anyone, if the post type is viewable on the site, or else
-	 * a user who can edit posts of the type.
+	 * Whether a user can read the channel.
 	 *
 	 * @param int $user_id User ID, or 0 for a visitor who is not logged in.
 	 * @return bool
 	 */
 	public function can_read( int $user_id ): bool {
-		$can_read = false;
-		$object   = get_post_type_object( $this->post_type );
-
-		if ( $object instanceof WP_Post_Type ) {
-			$can_read = is_post_type_viewable( $object );
-		}
-
-		if (
-			! $can_read
-			&& $object instanceof WP_Post_Type
-			&& isset( $object->cap->edit_posts )
-			&& is_string( $object->cap->edit_posts )
-		) {
-			$can_read = user_can( $user_id, $object->cap->edit_posts );
-		}
-
-		return $can_read;
+		return user_can( $user_id, 'edit_posts' );
 	}
 
 	/**
