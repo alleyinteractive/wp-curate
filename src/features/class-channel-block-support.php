@@ -11,7 +11,7 @@ use Alley\WP\Post_IDs\Empty_Post_IDs;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_IDs;
 use Alley\WP\WP_Curate\Channels\Channel;
-use Alley\WP\WP_Curate\Channels\Channel_Queues;
+use Alley\WP\WP_Curate\Channels\Queues;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
 use WP_Post;
@@ -50,7 +50,7 @@ final readonly class Channel_Block_Support implements Feature {
 	 *
 	 * @var string
 	 */
-	private const QUEUES_CONTEXT = 'wp-curate/channelQueues';
+	private const QUEUES_CONTEXT = 'wp-curate/queues';
 
 	/**
 	 * The block context that holds the IDs that the post's deduplication rule skips.
@@ -74,7 +74,7 @@ final readonly class Channel_Block_Support implements Feature {
 	public function boot(): void {
 		add_filter( 'register_block_type_args', [ $this, 'filter_register_block_type_args' ] );
 
-		// After `Channel_Queues_Block_Context` adds its context.
+		// After `Queues_Block_Context` adds its context.
 		add_filter( 'render_block_context', [ $this, 'filter_render_block_context' ], 20, 2 );
 	}
 
@@ -208,7 +208,7 @@ final readonly class Channel_Block_Support implements Feature {
 		}
 
 		// Take the ref, or else the top of the channel's queue, and remove that ID from the queue.
-		if ( isset( $context[ self::QUEUES_CONTEXT ] ) && $context[ self::QUEUES_CONTEXT ] instanceof Channel_Queues ) {
+		if ( isset( $context[ self::QUEUES_CONTEXT ] ) && $context[ self::QUEUES_CONTEXT ] instanceof Queues ) {
 			$post_id = $context[ self::QUEUES_CONTEXT ]->take_one( $channel, $ref, $channel_args, $context, $skipped );
 		}
 
