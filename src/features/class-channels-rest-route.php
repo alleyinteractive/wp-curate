@@ -51,9 +51,10 @@ final readonly class Channels_REST_Route implements Feature {
 						'type'    => 'object',
 					],
 				],
-				'callback'            => [ $this, 'get_items' ],
+				'callback'            => [ $this, 'channels' ],
 				'methods'             => WP_REST_Server::READABLE,
 				'permission_callback' => '__return_true',
+				'show_in_index'       => false,
 			],
 		);
 
@@ -86,9 +87,10 @@ final readonly class Channels_REST_Route implements Feature {
 						'type'    => 'string',
 					],
 				],
-				'callback'            => [ $this, 'get_item' ],
+				'callback'            => [ $this, 'channel' ],
 				'methods'             => WP_REST_Server::READABLE,
 				'permission_callback' => '__return_true',
+				'show_in_index'       => false,
 			],
 		);
 	}
@@ -99,7 +101,7 @@ final readonly class Channels_REST_Route implements Feature {
 	 * @param WP_REST_Request $request REST API request.
 	 * @return WP_REST_Response
 	 */
-	public function get_items( WP_REST_Request $request ): WP_REST_Response {
+	public function channels( WP_REST_Request $request ): WP_REST_Response {
 		$out = [];
 
 		$available_context = $request->get_param( 'context' );
@@ -134,7 +136,7 @@ final readonly class Channels_REST_Route implements Feature {
 	 * @param WP_REST_Request $request REST API request.
 	 * @return WP_REST_Response|WP_Error
 	 */
-	public function get_item( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+	public function channel( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		$response = new WP_Error( 'rest_channel_invalid_name', __( 'Invalid channel name.', 'wp-curate' ), [ 'status' => 404 ] );
 
 		$block_args         = $request->get_param( 'args' );
@@ -160,12 +162,12 @@ final readonly class Channels_REST_Route implements Feature {
 		}
 
 		foreach ( $this->channels->all() as $channel ) {
-			if ( $channel->name() === $request->get_param( 'name' ) && ! $channel->can_read( get_current_user_id() ) ) {
-				$response = new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to read this channel.', 'wp-curate' ), [ 'status' => rest_authorization_required_code() ] );
-				break;
-			}
-
 			if ( $channel->name() === $request->get_param( 'name' ) ) {
+				if ( ! $channel->can_read( get_current_user_id() ) ) {
+					$response = new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to read this channel.', 'wp-curate' ), [ 'status' => rest_authorization_required_code() ] );
+					break;
+				}
+
 				$args    = [];
 				$context = [];
 
@@ -177,37 +179,35 @@ final readonly class Channels_REST_Route implements Feature {
 					$context = array_intersect_key( $available_context, array_flip( $channel->uses_context() ) );
 				}
 
-				$channel_ids = $channel->ids( $args, $context );
-				$total       = $channel->total( $args, $context );
-
-				if ( '' !== $search ) {
-					$channel_ids = $channel->ids_matching( $search, $args, $context );
-					$total       = $channel->total_matching( $search, $args, $context );
-				}
-
+				$result     = $channel->ids( $args, $context, $search );
+				$total      = $result->total();
 				$ids        = [];
 				$post_types = [];
 				$offset     = ( $page - 1 ) * $per_page;
-				$position   = 0;
-				$has_more   = false;
+				$index      = 0;
 
-				// Read the channel only through this page, plus one ID to tell whether more remain.
-				foreach ( $channel_ids as $id ) {
+				/*
+				 * Read the channel only through this page. The IDs can come from a generator that queries
+				 * in batches, so stopping early saves the queries for the pages after this one. `$index` is
+				 * the index of `$id` among the channel's valid IDs.
+				 */
+				foreach ( $result->ids() as $id ) {
 					// Skip the IDs that `Queue` skips, so that the editor and the page agree.
 					if ( $id <= 0 ) {
 						continue;
 					}
 
-					if ( $position >= $offset + $per_page ) {
-						$has_more = true;
+					// The page is full, so the rest of the channel is not needed.
+					if ( $index >= $offset + $per_page ) {
 						break;
 					}
 
-					if ( $position >= $offset ) {
+					// IDs before the offset are on earlier pages.
+					if ( $index >= $offset ) {
 						$ids[] = $id;
 					}
 
-					++$position;
+					++$index;
 				}
 
 				// The editor needs each post's type to load it, since a channel can mix post types.
@@ -226,7 +226,6 @@ final readonly class Channels_REST_Route implements Feature {
 				$response = rest_ensure_response(
 					[
 						'entity_kind'  => $channel->entity_kind(),
-						'has_more'     => $has_more,
 						'ids'          => $ids,
 						'label'        => $channel->label(),
 						'order'        => $channel->order_direction(),

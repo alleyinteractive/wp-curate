@@ -79,10 +79,7 @@ interface Channel {
 	public function available( array $context ): bool;
 
 	/**
-	 * Whether a user can read the channel through the REST API: its description and its IDs.
-	 *
-	 * A channel of posts that anyone can view on the site can let any user read it, including a
-	 * visitor who is not logged in.
+	 * Whether a user can read the channel.
 	 *
 	 * @param int $user_id User ID, or 0 for a visitor who is not logged in.
 	 * @return bool
