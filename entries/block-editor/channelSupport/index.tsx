@@ -34,7 +34,7 @@ import useChannelQueue from '../../../hooks/useChannelQueue';
 
 /*
  * Blocks with the `wp-curate/channels` block support get a Channel panel. A block that provides the
- * channel context, like Channel Loop, gives the channel to the blocks inside it. Any other block
+ * channel context, like Channel, gives the channel to the blocks inside it. Any other block
  * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. It
  * can pin a post with an integer `ref` attribute, and a `postType` attribute with the pinned post's
  * type. Like a block binding, the `channel` attribute is an object with the channel `name` and
@@ -48,7 +48,8 @@ import useChannelQueue from '../../../hooks/useChannelQueue';
  * The Channel panel of a block with the support, which also sets the channel of a new block.
  *
  * A block that takes a post inside a block that provides a channel, like a Single Post in a
- * Channel Loop block, always uses that channel, so it has no panel. A block moved in keeps its own
+ * Channel block, always uses that channel, so it has no panel. A Channel block inside another one
+ * provides its own channel, so it has a panel. A block moved in keeps its own
  * channel attribute, which has no effect there. The editor does not clear it, because a change
  * made in response to a move would be a separate undo step, and undoing it would move the block
  * in again. The block uses its own channel again if it moves back out.
@@ -72,7 +73,7 @@ function ChannelControls({
   isProvider: boolean;
   setAttributes: (attributes: Record<string, unknown>) => void;
 }) {
-  // The channel that the block would use without its own: a Channel Loop block's, or the post's.
+  // The channel that the block would use without its own: a Channel block's, or the default.
   const inheritedChannel = useBlockChannel('', contextChannel);
 
   const argFields = useSelect(
@@ -80,7 +81,7 @@ function ChannelControls({
     [channel],
   );
 
-  // Only a block that provides the channel context, like Channel Loop, gives the editor a channel.
+  // Only a block that provides the channel context, like Channel, gives the editor a channel.
   const isInProvider = toChannelName(contextChannel) !== null;
 
   const inherits = !isProvider && isInProvider;

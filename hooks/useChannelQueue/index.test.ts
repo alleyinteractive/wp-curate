@@ -97,12 +97,12 @@ function fakeSelect(
       };
     }
 
-    // Only Channel Loop gives its channel to the blocks inside it.
+    // Only Channel gives its channel to the blocks inside it. Channel Loop has no channel.
     if (storeName === 'core/blocks') {
       selectors = {
         getBlockType: (name: string) => ({
-          providesContext: name === 'wp-curate/channel-loop' ? { 'wp-curate/channel': 'channel' } : {},
-          supports: { 'wp-curate/channels': true },
+          providesContext: name === 'wp-curate/channel' ? { 'wp-curate/channel': 'channel' } : {},
+          supports: { 'wp-curate/channels': name !== 'wp-curate/channel-loop' },
         }),
       };
     }
@@ -183,10 +183,10 @@ describe('channelQueueIds', () => {
     expect(getChannel).toHaveBeenCalledWith('post_latest', {}, {}, 20);
   });
 
-  it('gives a Channel Loop channel to the blocks without one inside it, in document order', () => {
+  it('gives a Channel block channel to the blocks without one inside it, in document order', () => {
     const blocks = [
       singleBlock('before'),
-      parentBlock('wp-curate/channel-loop', { channel: { name: 'post_latest' } }, [
+      parentBlock('wp-curate/channel', { channel: { name: 'post_latest' } }, [
         singleBlock('first', ''),
         parentBlock('core/group', {}, [singleBlock('nested', '')]),
       ]),
@@ -201,9 +201,9 @@ describe('channelQueueIds', () => {
     expect(channelQueueIds(select, 'after')).toEqual([14]);
   });
 
-  it('gives a Channel Loop channel to a block inside it that has its own, and keeps its pin', () => {
+  it('gives a Channel block channel to a block inside it that has its own, and keeps its pin', () => {
     const blocks = [
-      parentBlock('wp-curate/channel-loop', { channel: { name: 'page_latest' } }, [
+      parentBlock('wp-curate/channel', { channel: { name: 'page_latest' } }, [
         singleBlock('moved'),
         { ...singleBlock('pinned'), attributes: { channel: { name: 'post_latest' }, ref: 99 } },
         singleBlock('last', ''),
@@ -220,10 +220,10 @@ describe('channelQueueIds', () => {
     expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
-  it('gives no channel to the blocks inside a Channel Loop block that has none', () => {
+  it('gives no channel to the blocks inside a Channel block that has none', () => {
     const blocks = [
-      parentBlock('wp-curate/channel-loop', { channel: { name: 'outer' } }, [
-        parentBlock('wp-curate/channel-loop', { channel: { name: '' } }, [singleBlock('inner', '')]),
+      parentBlock('wp-curate/channel', { channel: { name: 'outer' } }, [
+        parentBlock('wp-curate/channel', { channel: { name: '' } }, [singleBlock('inner', '')]),
       ]),
     ];
     const {
@@ -313,9 +313,9 @@ describe('channelQueueIds', () => {
     expect(getChannel).not.toHaveBeenCalled();
   });
 
-  it('gives Channel Loop arguments to the blocks inside it, even if they have their own', () => {
+  it('gives Channel block arguments to the blocks inside it, even if they have their own', () => {
     const blocks = [
-      parentBlock('wp-curate/channel-loop', { channel: { args: { term: 5 }, name: IN_CATEGORY } }, [
+      parentBlock('wp-curate/channel', { channel: { args: { term: 5 }, name: IN_CATEGORY } }, [
         singleBlock('first', ''),
         { ...singleBlock('moved'), attributes: { channel: { args: { term: 6 }, name: IN_CATEGORY }, ref: 0 } },
       ]),
@@ -355,7 +355,7 @@ describe('channelQueueIds', () => {
 
   it('sends a channel the post of the Single Post around it, with a queue for each post', () => {
     /**
-     * A Single Post of the latest post that holds a Channel Loop block of the articles in it.
+     * A Single Post of the latest post that holds a Channel block of the articles in it.
      *
      * @param clientId Client ID of the Single Post.
      * @param ref      The pinned post.
@@ -364,7 +364,7 @@ describe('channelQueueIds', () => {
       attributes: { channel: { name: 'post_latest' }, postType: 'magazine_issue', ref },
       clientId,
       innerBlocks: [
-        parentBlock('wp-curate/channel-loop', { channel: { name: IN_ISSUE } }, [
+        parentBlock('wp-curate/channel', { channel: { name: IN_ISSUE } }, [
           singleBlock(`${clientId}-article`, ''),
         ]),
       ],
@@ -390,6 +390,58 @@ describe('channelQueueIds', () => {
       postId: 30,
       postType: 'magazine_issue',
     });
+  });
+
+  it('gives a Channel block channel to a Single Post and to a Channel Loop beside it, in order', () => {
+    const blocks = [
+      parentBlock('wp-curate/channel', { channel: { name: 'page_latest' } }, [
+        singleBlock('featured', ''),
+        parentBlock('wp-curate/channel-loop', {}, [
+          singleBlock('second', ''),
+          singleBlock('third', ''),
+        ]),
+      ]),
+    ];
+    const {
+      getChannel,
+      select,
+    } = fakeSelect(blocks, [11, 12, 13]);
+
+    expect(channelQueueIds(select, 'featured')).toEqual([11]);
+    expect(channelQueueIds(select, 'second')).toEqual([12]);
+    expect(channelQueueIds(select, 'third')).toEqual([13]);
+    expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
+  });
+
+  it('gives the blocks inside a Channel block inside another one the inner channel', () => {
+    const blocks = [
+      parentBlock('wp-curate/channel', { channel: { name: 'post_latest' } }, [
+        parentBlock('wp-curate/channel', { channel: { name: 'page_latest' } }, [
+          singleBlock('inner', ''),
+        ]),
+      ]),
+    ];
+    const {
+      getChannel,
+      select,
+    } = fakeSelect(blocks, [11]);
+
+    expect(channelQueueIds(select, 'inner')).toEqual([11]);
+    expect(getChannel).toHaveBeenCalledWith('page_latest', {}, {}, 10);
+    expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
+  });
+
+  it('lets the blocks in a Channel Loop outside a Channel block use their own channels', () => {
+    const blocks = [
+      parentBlock('wp-curate/channel-loop', {}, [singleBlock('own', 'page_latest')]),
+    ];
+    const {
+      getChannel,
+      select,
+    } = fakeSelect(blocks, [11]);
+
+    expect(channelQueueIds(select, 'own')).toEqual([11]);
+    expect(getChannel).toHaveBeenCalledWith('page_latest', {}, {}, 10);
   });
 
   it('gives a block at the top of the post the post as its context', () => {

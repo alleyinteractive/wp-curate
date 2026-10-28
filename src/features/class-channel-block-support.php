@@ -23,7 +23,7 @@ use WP_Post;
  * Like a block binding, the `channel` attribute is an object with the channel `name` and the `args` that the block
  * gives the channel, such as `{"name":"post_category_latest","args":{"term":7}}`.
  *
- * A block that also provides the `wp-curate/channel` context, like Channel Loop, passes its channel to its inner
+ * A block that also provides the `wp-curate/channel` context, like Channel, passes its channel to its inner
  * blocks. Any other block takes a post from its channel's queue, skipping the posts that blocks before it took, and
  * gets that post as the `postId` and `postType` context, which is 0 and an empty string when the channel has no posts
  * left. Blocks can pin a post with an integer `ref` attribute.
@@ -108,7 +108,7 @@ final readonly class Channel_Block_Support implements Feature {
 	 *
 	 * A block gets a post if it has `wp-curate/channels` support and does not itself provide the
 	 * `wp-curate/channel` context, like Single Post. A block that provides the context, like
-	 * Channel Loop, gets no post and instead passes its channel to the blocks inside it.
+	 * Channel, gets no post and instead passes its channel to the blocks inside it.
 	 *
 	 * @phpstan-param mixed $context
 	 * @phpstan-param mixed $parsed_block
