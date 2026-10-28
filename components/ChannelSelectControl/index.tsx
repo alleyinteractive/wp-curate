@@ -11,14 +11,6 @@ import { __ } from '@wordpress/i18n';
 import type { ChannelOption } from '../../entries/block-editor/channelStore';
 import { canBeDefaultChannel, channelsContext } from '../../hooks/useBlockChannel';
 
-interface ChannelSelectControlProps {
-  context?: Record<string, unknown>;
-  help: string;
-  onChange: (channel: string) => void;
-  value: string;
-  withBlockChannels: boolean;
-}
-
 /**
  * A dropdown of the channels.
  *
@@ -32,7 +24,13 @@ export default function ChannelSelectControl({
   onChange,
   value,
   withBlockChannels,
-}: ChannelSelectControlProps) {
+}: {
+  context?: Record<string, unknown>;
+  help: string;
+  onChange: (channel: string) => void;
+  value: string;
+  withBlockChannels: boolean;
+}) {
   // Compare the context by value, since callers can pass a new object on each render.
   const contextKey = JSON.stringify(context);
 

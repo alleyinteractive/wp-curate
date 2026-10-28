@@ -10,14 +10,6 @@ import { useMemo, useState } from '@wordpress/element';
 import { decodeEntities } from '@wordpress/html-entities';
 import { __ } from '@wordpress/i18n';
 
-interface TermPickerProps {
-  multiple: boolean;
-  onClose: () => void;
-  onSelect: (ids: number[]) => void;
-  selectedIds: number[];
-  taxonomy: string;
-}
-
 interface PickerItem {
   count: number;
   id: number;
@@ -132,7 +124,13 @@ export default function TermPicker({
   onSelect,
   selectedIds,
   taxonomy,
-}: TermPickerProps) {
+}: {
+  multiple: boolean;
+  onClose: () => void;
+  onSelect: (ids: number[]) => void;
+  selectedIds: number[];
+  taxonomy: string;
+}) {
   const [selection, setSelection] = useState<string[]>(() => selectedIds.map(String));
   const [view, setView] = useState<any>({
     fields: ['count'],
