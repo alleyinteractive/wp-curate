@@ -50,12 +50,6 @@ const BASIC_TEMPLATE: InnerBlockTemplate[] = [
   ['core/post-title', { isLink: true }],
 ];
 
-interface SinglePostAttributes {
-  channel: { args?: Record<string, unknown>, name: string };
-  postType: string;
-  ref: number;
-}
-
 /**
  * The editable inner blocks of a block outside a Channel Loop block.
  */
@@ -163,7 +157,11 @@ export default function Edit({
     'wp-curate/postTemplate': postTemplate,
   },
   setAttributes,
-}: BlockEditProps<SinglePostAttributes> & {
+}: BlockEditProps<{
+  channel: { args?: Record<string, unknown>, name: string };
+  postType: string;
+  ref: number;
+}> & {
   clientId: string;
   context: Record<string, unknown>;
 }) {

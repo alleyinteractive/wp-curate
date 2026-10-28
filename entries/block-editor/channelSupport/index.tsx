@@ -44,25 +44,14 @@ import useChannelQueue from '../../../hooks/useChannelQueue';
  * block uses, and gives the block the same post on the front end.
  */
 
-interface ChannelControlsProps {
-  blockName: string;
-  channel: string;
-  channelArgs: Record<string, unknown>;
-  clientId: string;
-  context: Record<string, unknown>;
-  contextChannel: unknown;
-  isProvider: boolean;
-  setAttributes: (attributes: Record<string, unknown>) => void;
-}
-
 /**
  * The Channel panel of a block with the support, which also sets the channel of a new block.
  *
- * A block that takes a post inside a block that provides a channel, like a Single Post in a Many
- * Posts block, always uses that channel, so it has no panel. A block moved in keeps its own channel
- * attribute, which has no effect there. The editor does not clear it, because a change made in
- * response to a move would be a separate undo step, and undoing it would move the block in again.
- * The block uses its own channel again if it moves back out.
+ * A block that takes a post inside a block that provides a channel, like a Single Post in a
+ * Channel Loop block, always uses that channel, so it has no panel. A block moved in keeps its own
+ * channel attribute, which has no effect there. The editor does not clear it, because a change
+ * made in response to a move would be a separate undo step, and undoing it would move the block
+ * in again. The block uses its own channel again if it moves back out.
  */
 function ChannelControls({
   blockName,
@@ -73,7 +62,16 @@ function ChannelControls({
   contextChannel,
   isProvider,
   setAttributes,
-}: ChannelControlsProps) {
+}: {
+  blockName: string;
+  channel: string;
+  channelArgs: Record<string, unknown>;
+  clientId: string;
+  context: Record<string, unknown>;
+  contextChannel: unknown;
+  isProvider: boolean;
+  setAttributes: (attributes: Record<string, unknown>) => void;
+}) {
   // The channel that the block would use without its own: a Channel Loop block's, or the post's.
   const inheritedChannel = useBlockChannel('', contextChannel);
 

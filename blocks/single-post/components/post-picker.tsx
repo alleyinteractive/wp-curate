@@ -14,15 +14,6 @@ import { channelContext } from '../../../hooks/useBlockChannel';
 import { channelQueueContext } from '../../../hooks/useChannelQueue';
 import useChannelRecord, { CHANNEL_PAGE_SIZE, type ChannelPage } from '../../../hooks/useChannelRecord';
 
-interface PostPickerProps {
-  args: Record<string, unknown>;
-  channel: string;
-  clientId: string;
-  selectedId: number;
-  onClose: () => void;
-  onSelect: (id: number, postType: string) => void;
-}
-
 interface PickerItem {
   id: number;
   imageUrl: string;
@@ -182,7 +173,14 @@ export default function PostPicker({
   selectedId,
   onClose,
   onSelect,
-}: PostPickerProps) {
+}: {
+  args: Record<string, unknown>;
+  channel: string;
+  clientId: string;
+  selectedId: number;
+  onClose: () => void;
+  onSelect: (id: number, postType: string) => void;
+}) {
   const [selection, setSelection] = useState<string[]>(selectedId > 0 ? [String(selectedId)] : []);
   const [view, setView] = useState<any>({
     fields: [],
