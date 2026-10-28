@@ -152,7 +152,6 @@ function ChannelControls({
             // The arguments of one channel are not the arguments of another.
             onChange={(next) => setAttributes({ channel: { name: next } })}
             value={channel}
-            withBlockChannels
           />
         </ToolsPanelItem>
         <ChannelPanelSlot fillProps={fillProps} />

@@ -4,11 +4,6 @@ import { useSelect } from '@wordpress/data';
 // Plugin dependencies.
 import type { ChannelArgField, ChannelOption } from '../../entries/block-editor/channelStore';
 
-/**
- * The post meta key of the post's default channel.
- */
-export const DEFAULT_CHANNEL_META_KEY = 'wp_curate_default_channel';
-
 /*
  * The block support of a block that has a channel. wp-curate gives the block a `channel` attribute
  * and a Channel panel. A block that also provides the `wp-curate/channel` context, like Channel
@@ -16,7 +11,7 @@ export const DEFAULT_CHANNEL_META_KEY = 'wp_curate_default_channel';
  *
  * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
  * block gives the channel, such as `{ name: 'post_category_latest', args: { term: 7 } }`. An
- * empty name means the post's default channel.
+ * empty name means the default channel.
  */
 export const CHANNEL_SUPPORT = 'wp-curate/channel';
 
@@ -28,22 +23,6 @@ const NO_ARG_FIELDS: ChannelArgField[] = [];
 const NO_ARGS: Record<string, unknown> = {};
 
 const NO_CONTEXT: Record<string, unknown> = {};
-
-/**
- * Whether a channel can be a post's default channel or the global default. A channel that reads
- * arguments or block context cannot. Only a block can give it arguments, and the default applies
- * to blocks in any context.
- *
- * Keep the rule matched with `Default_Channel` in PHP.
- *
- * @param channel The channel in the list of channels.
- */
-export function canBeDefaultChannel({
-  arg_fields: argFields,
-  uses_context: usesContext,
-}: ChannelOption): boolean {
-  return argFields.length === 0 && usesContext.length === 0;
-}
 
 /**
  * Whether a block type has the `wp-curate/channel` block support.
@@ -92,58 +71,15 @@ export function isChannelProvider(blockType: unknown): boolean {
 }
 
 /**
- * Reads the post's default channel from the editor, or an empty string if the post has none.
+ * Get the default channel, which the list of channels marks with `is_default`.
  *
- * The REST API gives a post without the meta the global default channel. The meta can name a
- * channel that is no longer registered. A post type without the meta, such as a template, has none.
- *
- * @param select The data registry's `select`.
- */
-function toPostMetaChannel(select: any): string {
-  // An editor without a post, such as the widgets editor, has no editor store.
-  const editor = select('core/editor');
-
-  let channel = '';
-
-  if (typeof editor !== 'object' || editor === null) {
-    return channel;
-  }
-
-  const {
-    getEditedPostAttribute,
-  } = editor;
-
-  const meta = getEditedPostAttribute('meta');
-
-  if (typeof meta !== 'object' || meta === null) {
-    return channel;
-  }
-
-  const {
-    [DEFAULT_CHANNEL_META_KEY]: value,
-  } = meta as Record<string, unknown>;
-
-  if (typeof value === 'string') {
-    channel = value;
-  }
-
-  return channel;
-}
-
-/**
- * Get the post's default channel if it is registered, or else the global default channel.
- *
- * Only some channels can be the default, which `canBeDefaultChannel()` describes.
- *
- * Keep the rules matched with `Channel_Block_Context` and `Default_Channel` in PHP.
+ * Keep the rules matched with `Default_Channel` in PHP.
  *
  * @param select The data registry's `select`.
  * @return The channel, an empty string if no channels are registered, or null while the list of
  *         channels loads.
  */
-export function postDefaultChannel(select: any): string | null {
-  const postChannel = toPostMetaChannel(select);
-
+export function defaultChannel(select: any): string | null {
   const {
     getChannels,
   } = select('wp-curate/channels') as any;
@@ -163,10 +99,6 @@ export function postDefaultChannel(select: any): string | null {
     }
   });
 
-  if (channels.some((option) => option.name === postChannel && canBeDefaultChannel(option))) {
-    channel = postChannel;
-  }
-
   return channel;
 }
 
@@ -174,7 +106,7 @@ export function postDefaultChannel(select: any): string | null {
  * Reads the name in a `channel` attribute or context.
  *
  * @param value The attribute or context.
- * @return The name, an empty string for the post's default channel, or null if the value is not a
+ * @return The name, an empty string for the default channel, or null if the value is not a
  *         channel, such as the context of a block that is not inside a Channel Loop block.
  */
 export function toChannelName(value: unknown): string | null {
@@ -226,8 +158,7 @@ export function toChannelArgs(value: unknown): Record<string, unknown> {
  *
  * Keep the rules matched with `Channel_Block_Support` in PHP. The block uses the channel in its
  * block context, which a Channel Loop block around it provides, even if the block has its own from
- * before it moved in. Otherwise it uses its own channel, or else the post's default channel, or
- * else the global default channel.
+ * before it moved in. Otherwise it uses its own channel, or else the default channel.
  *
  * @param select         The data registry's `select`.
  * @param ownName        The name in the block's `channel` attribute.
@@ -250,7 +181,7 @@ export function toBlockChannel(
   let channel: string | null = ownName;
 
   if (channel === '') {
-    channel = postDefaultChannel(select);
+    channel = defaultChannel(select);
   }
 
   return channel;

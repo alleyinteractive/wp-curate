@@ -1,6 +1,5 @@
 // Internal dependencies.
 import {
-  canBeDefaultChannel,
   channelContext,
   channelsContext,
   hasEveryChannelArg,
@@ -15,7 +14,7 @@ jest.mock('@wordpress/data', () => ({
   useSelect: jest.fn(),
 }));
 
-// The list of channels, with the global default.
+// The list of channels, with the default.
 const CHANNELS = [
   {
     arg_fields: [],
@@ -58,12 +57,11 @@ const TERM_FIELDS = [{
 }];
 
 /**
- * A `select` function with the given post default channel and channels.
+ * A `select` function with the given channels.
  *
- * @param defaultChannel The post's default channel, or undefined for an editor without a post.
- * @param channels       The list of channels, or null while it loads.
+ * @param channels The list of channels, or null while it loads.
  */
-function fakeSelect(defaultChannel?: string, channels: object[] | null = CHANNELS) {
+function fakeSelect(channels: object[] | null = CHANNELS) {
   return (storeName: string) => {
     let selectors: object | undefined;
 
@@ -73,81 +71,41 @@ function fakeSelect(defaultChannel?: string, channels: object[] | null = CHANNEL
       };
     }
 
-    if (storeName === 'core/editor' && defaultChannel !== undefined) {
-      selectors = {
-        getEditedPostAttribute: () => ({ wp_curate_default_channel: defaultChannel }),
-      };
-    }
-
     return selectors;
   };
 }
 
 describe('toBlockChannel', () => {
   it('uses the block\'s own channel', () => {
-    expect(toBlockChannel(fakeSelect('other'), 'own', undefined)).toBe('own');
+    expect(toBlockChannel(fakeSelect(), 'own', undefined)).toBe('own');
   });
 
   it('uses the channel from block context instead of its own', () => {
-    expect(toBlockChannel(fakeSelect('other'), 'own', { name: 'from_context' })).toBe('from_context');
+    expect(toBlockChannel(fakeSelect(), 'own', { name: 'from_context' })).toBe('from_context');
   });
 
   it('uses the channel from block context without its own', () => {
-    expect(toBlockChannel(fakeSelect('other'), '', { name: 'from_context' })).toBe('from_context');
+    expect(toBlockChannel(fakeSelect(), '', { name: 'from_context' })).toBe('from_context');
   });
 
-  it('uses the post default channel without its own or one from context', () => {
-    expect(toBlockChannel(fakeSelect('other'), '', undefined)).toBe('other');
-  });
-
-  it('uses no channel inside a Channel Loop block without one', () => {
-    expect(toBlockChannel(fakeSelect('other'), '', { name: '' })).toBe('');
-  });
-
-  it('uses the global default channel in an editor without a post', () => {
+  it('uses the default channel without its own or one from context', () => {
     expect(toBlockChannel(fakeSelect(), '', undefined)).toBe('global_default');
   });
 
-  it('uses the global default channel for a post without a default', () => {
-    expect(toBlockChannel(fakeSelect(''), '', undefined)).toBe('global_default');
-  });
-
-  it('uses the global default channel for a post default that is not registered', () => {
-    expect(toBlockChannel(fakeSelect('removed'), '', undefined)).toBe('global_default');
+  it('uses no channel inside a Channel Loop block without one', () => {
+    expect(toBlockChannel(fakeSelect(), '', { name: '' })).toBe('');
   });
 
   it('is null while the list of channels loads', () => {
-    expect(toBlockChannel(fakeSelect('', null), '', undefined)).toBeNull();
+    expect(toBlockChannel(fakeSelect(null), '', undefined)).toBeNull();
   });
 
   it('does not need the list of channels when the block has a channel', () => {
-    expect(toBlockChannel(fakeSelect('', null), 'own', undefined)).toBe('own');
+    expect(toBlockChannel(fakeSelect(null), 'own', undefined)).toBe('own');
   });
 
   it('has no channel when no channels are registered', () => {
-    expect(toBlockChannel(fakeSelect('', []), '', undefined)).toBe('');
-  });
-
-  it('uses the global default channel for a post default that reads arguments', () => {
-    expect(toBlockChannel(fakeSelect('post_category_latest'), '', undefined)).toBe('global_default');
-  });
-
-  it('uses the global default channel for a post default that reads block context', () => {
-    expect(toBlockChannel(fakeSelect('in_issue'), '', undefined)).toBe('global_default');
-  });
-});
-
-describe('canBeDefaultChannel', () => {
-  it('is true for a channel that reads no arguments or context', () => {
-    expect(canBeDefaultChannel(CHANNELS[0])).toBe(true);
-  });
-
-  it('is false for a channel that reads arguments', () => {
-    expect(canBeDefaultChannel(CHANNELS[2])).toBe(false);
-  });
-
-  it('is false for a channel that reads block context', () => {
-    expect(canBeDefaultChannel(CHANNELS[3])).toBe(false);
+    expect(toBlockChannel(fakeSelect([]), '', undefined)).toBe('');
   });
 });
 
@@ -155,25 +113,25 @@ describe('channelContext', () => {
   const context = { postId: 7, postType: 'magazine_issue', query: {} };
 
   it('keeps only the context that the channel reads', () => {
-    expect(channelContext(fakeSelect(''), 'in_issue', context)).toEqual({ postId: 7 });
+    expect(channelContext(fakeSelect(), 'in_issue', context)).toEqual({ postId: 7 });
   });
 
   it('keeps no context for a channel that reads none', () => {
-    expect(channelContext(fakeSelect(''), 'other', context)).toEqual({});
+    expect(channelContext(fakeSelect(), 'other', context)).toEqual({});
   });
 
   it('keeps no context while the list of channels loads', () => {
-    expect(channelContext(fakeSelect('', null), 'in_issue', context)).toEqual({});
+    expect(channelContext(fakeSelect(null), 'in_issue', context)).toEqual({});
   });
 });
 
 describe('channelsContext', () => {
   it('keeps only the context that any channel reads', () => {
-    expect(channelsContext(fakeSelect(''), { postId: 7, postType: 'post' })).toEqual({ postId: 7 });
+    expect(channelsContext(fakeSelect(), { postId: 7, postType: 'post' })).toEqual({ postId: 7 });
   });
 
   it('is null while the list of channels loads', () => {
-    expect(channelsContext(fakeSelect('', null), { postId: 7 })).toBeNull();
+    expect(channelsContext(fakeSelect(null), { postId: 7 })).toBeNull();
   });
 });
 
@@ -182,7 +140,7 @@ describe('toChannelName', () => {
     expect(toChannelName({ args: { term: 5 }, name: 'post_category_latest' })).toBe('post_category_latest');
   });
 
-  it('reads a channel without a name as the post default', () => {
+  it('reads a channel without a name as the default', () => {
     expect(toChannelName({})).toBe('');
   });
 

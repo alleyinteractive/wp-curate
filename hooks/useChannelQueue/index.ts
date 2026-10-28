@@ -7,11 +7,11 @@ import { useSelect } from '@wordpress/data';
 import {
   channelArgFields,
   channelContext,
+  defaultChannel,
   hasChannelSupport,
   hasEveryChannelArg,
   isChannelProvider,
   pickChannelArgs,
-  postDefaultChannel,
   toBlockChannelArgs,
   toChannelName,
 } from '../useBlockChannel';
@@ -196,10 +196,10 @@ function channelQueue(
     getChannel,
   } = select('wp-curate/channels') as any;
 
-  const postChannel = postDefaultChannel(select);
+  const globalChannel = defaultChannel(select);
 
-  // Every block can use the post's default channel, so all of them wait for it.
-  if (postChannel === null) {
+  // Every block can use the default channel, so all of them wait for the list of channels.
+  if (globalChannel === null) {
     return {
       context: null,
       ids: null,
@@ -259,7 +259,7 @@ function channelQueue(
     let taken = NO_IDS;
 
     if (name === '') {
-      name = postChannel;
+      name = globalChannel;
     }
 
     if (providerName !== null) {
