@@ -29,13 +29,13 @@ final class Queues {
 	/**
 	 * Constructor.
 	 *
-	 * @param Registered_Channels $channels Available channels.
-	 * @param History             $taken    The record of the IDs that blocks take from any queue. It is
-	 *                                      apart from the history of the Query blocks, because channel
-	 *                                      blocks deduplicate only among themselves.
+	 * @param Available_Channels $channels Available channels.
+	 * @param History            $taken    The record of the IDs that blocks take from any queue. It is
+	 *                                     apart from the history of the Query blocks, because channel
+	 *                                     blocks deduplicate only among themselves.
 	 */
 	public function __construct(
-		private readonly Registered_Channels $channels,
+		private readonly Available_Channels $channels,
 		private readonly History $taken,
 	) {}
 
