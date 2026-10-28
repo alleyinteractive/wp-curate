@@ -111,9 +111,9 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @param string  $search  Search terms, or an empty string for every ID.
-	 * @return Channel_IDs No IDs without a term.
+	 * @return Results No IDs without a term.
 	 */
-	public function ids( array $args, array $context, string $search ): Channel_IDs {
+	public function results( array $args, array $context, string $search ): Results {
 		return $this->posts( $args, $search );
 	}
 
@@ -156,12 +156,12 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	 *
 	 * @param mixed[] $args   The block's arguments for the channel.
 	 * @param string  $search Search terms, or an empty string for every post.
-	 * @return Channel_IDs The posts, or none without a term in the taxonomy.
+	 * @return Results The posts, or none without a term in the taxonomy.
 	 */
-	private function posts( array $args, string $search ): Channel_IDs {
+	private function posts( array $args, string $search ): Results {
 		$term_id    = 0;
 		$term       = null;
-		$posts      = new Empty_Channel_IDs();
+		$posts      = new Empty_Results();
 		$query_args = [];
 
 		if ( '' !== $search ) {

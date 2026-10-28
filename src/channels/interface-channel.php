@@ -80,7 +80,7 @@ interface Channel {
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @param string  $search  Search terms, or an empty string for every ID.
-	 * @return Channel_IDs No IDs if the arguments and context do not make a channel.
+	 * @return Results No IDs if the arguments and context do not make a channel.
 	 */
-	public function ids( array $args, array $context, string $search ): Channel_IDs;
+	public function results( array $args, array $context, string $search ): Results;
 }

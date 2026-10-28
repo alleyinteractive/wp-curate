@@ -179,7 +179,7 @@ final readonly class Channels_REST_Route implements Feature {
 					$context = array_intersect_key( $requested_context, array_flip( $channel->uses_context() ) );
 				}
 
-				$result     = $channel->ids( $args, $context, $search );
+				$result     = $channel->results( $args, $context, $search );
 				$total      = $result->total();
 				$ids        = [];
 				$post_types = [];

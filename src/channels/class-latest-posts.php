@@ -103,9 +103,9 @@ final readonly class Latest_Posts implements Channel {
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @param string  $search  Search terms, or an empty string for every ID.
-	 * @return Channel_IDs
+	 * @return Results
 	 */
-	public function ids( array $args, array $context, string $search ): Channel_IDs {
+	public function results( array $args, array $context, string $search ): Results {
 		return $this->posts( $search );
 	}
 

@@ -135,9 +135,9 @@ final readonly class Free_For_All implements Channel {
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @param string  $search  Search terms, or an empty string for every ID.
-	 * @return Channel_IDs No IDs without a post type.
+	 * @return Results No IDs without a post type.
 	 */
-	public function ids( array $args, array $context, string $search ): Channel_IDs {
+	public function results( array $args, array $context, string $search ): Results {
 		return $this->posts( $args, $search );
 	}
 
@@ -149,13 +149,13 @@ final readonly class Free_For_All implements Channel {
 	 *
 	 * @param mixed[] $args   The block's arguments for the channel.
 	 * @param string  $search Search terms, or an empty string.
-	 * @return Channel_IDs The posts, or none without a post type.
+	 * @return Results The posts, or none without a post type.
 	 */
-	private function posts( array $args, string $search ): Channel_IDs {
+	private function posts( array $args, string $search ): Results {
 		$post_types = [];
 		$relation   = 'AND';
 		$own_search = '';
-		$posts      = new Empty_Channel_IDs();
+		$posts      = new Empty_Results();
 		$tax_query  = [];
 
 		if ( isset( $args['post_types'] ) && is_array( $args['post_types'] ) ) {

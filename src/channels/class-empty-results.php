@@ -1,6 +1,6 @@
 <?php
 /**
- * Empty_Channel_IDs class file
+ * Empty_Results class file
  *
  * @package wp-curate
  */
@@ -10,7 +10,7 @@ namespace Alley\WP\WP_Curate\Channels;
 /**
  * No IDs, such as from a channel that a block has not given its required arguments.
  */
-final readonly class Empty_Channel_IDs implements Channel_IDs {
+final readonly class Empty_Results implements Results {
 	/**
 	 * IDs: none.
 	 *
