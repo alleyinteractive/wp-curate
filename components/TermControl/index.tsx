@@ -1,0 +1,157 @@
+// Global dependencies.
+import React from 'react';
+
+// WordPress dependencies.
+import { BaseControl, Button } from '@wordpress/components';
+import { useInstanceId } from '@wordpress/compose';
+import { store as coreStore } from '@wordpress/core-data';
+import { useSelect } from '@wordpress/data';
+import { useState } from '@wordpress/element';
+import { decodeEntities } from '@wordpress/html-entities';
+import { __ } from '@wordpress/i18n';
+
+// Plugin dependencies.
+import TermPicker from '../TermPicker';
+
+const NO_NAMES: string[] = [];
+
+/**
+ * Reads the term IDs in an argument: one ID, or a list of them.
+ *
+ * @param value The argument.
+ */
+function toTermIds(value: unknown): number[] {
+  let values: unknown[] = [];
+
+  if (Array.isArray(value)) {
+    values = value;
+  }
+
+  if (typeof value === 'number') {
+    values = [value];
+  }
+
+  return values.filter((id): id is number => (
+    typeof id === 'number' && Number.isInteger(id) && id > 0
+  ));
+}
+
+/**
+ * Reads the name of a term record, or an empty string if it has none.
+ *
+ * @param term Term record from core-data.
+ */
+function toTermName(term: unknown): string {
+  let name = '';
+
+  if (typeof term !== 'object' || term === null) {
+    return name;
+  }
+
+  const {
+    name: termName,
+  } = term as Record<string, unknown>;
+
+  // The REST API gives the name with HTML entities, such as `&amp;`.
+  if (typeof termName === 'string') {
+    name = decodeEntities(termName);
+  }
+
+  return name;
+}
+
+/**
+ * The control of a channel argument with one term or a list of terms: the selected terms, with a
+ * button that opens the term picker.
+ */
+export default function TermControl({
+  help,
+  label,
+  multiple,
+  onChange,
+  taxonomy,
+  value,
+}: {
+  help: string;
+  label: string;
+  multiple: boolean;
+  onChange: (ids: number[]) => void;
+  taxonomy: string;
+  value: unknown;
+}) {
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const id = useInstanceId(TermControl, 'wp-curate-channel-term-control');
+  const termIds = toTermIds(value);
+  const idsKey = termIds.join(',');
+
+  // The names of the selected terms, which are empty while the terms load.
+  const termNames: string[] = useSelect((select) => {
+    const {
+      getEntityRecords,
+    } = select(coreStore) as any;
+
+    let names = NO_NAMES;
+
+    // An author can read terms in the `view` context, but not in the `edit` context.
+    if (idsKey !== '') {
+      const terms = getEntityRecords('taxonomy', taxonomy, {
+        context: 'view',
+        include: idsKey,
+        per_page: idsKey.split(',').length,
+      });
+
+      if (Array.isArray(terms)) {
+        names = terms.map(toTermName);
+      }
+    }
+
+    return names;
+  }, [idsKey, taxonomy]);
+
+  let selected: string = __('None selected', 'wp-curate');
+
+  if (termIds.length > 0) {
+    selected = termNames.join(', ');
+  }
+
+  let buttonLabel: string = __('Select', 'wp-curate');
+
+  if (termIds.length > 0) {
+    buttonLabel = multiple ? __('Edit', 'wp-curate') : __('Replace', 'wp-curate');
+  }
+
+  return (
+    <>
+      <BaseControl
+        __nextHasNoMarginBottom
+        help={help}
+        id={id}
+        label={label}
+      >
+        <p>{selected}</p>
+        <div>
+          <Button
+            id={id}
+            onClick={() => setIsPickerOpen(true)}
+            variant="secondary"
+          >
+            {buttonLabel}
+          </Button>
+        </div>
+      </BaseControl>
+
+      {isPickerOpen ? (
+        <TermPicker
+          multiple={multiple}
+          onClose={() => setIsPickerOpen(false)}
+          onSelect={(ids) => {
+            onChange(ids);
+            setIsPickerOpen(false);
+          }}
+          selectedIds={termIds}
+          taxonomy={taxonomy}
+        />
+      ) : null}
+    </>
+  );
+}
