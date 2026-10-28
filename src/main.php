@@ -69,6 +69,7 @@ function main(): void {
 		),
 		new Features\Channel_Block_Support(
 			default_channel: $default_channel,
+			block_type_registry: WP_Block_Type_Registry::get_instance(),
 		),
 	);
 	// phpcs:enable

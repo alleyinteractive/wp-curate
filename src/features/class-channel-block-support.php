@@ -34,10 +34,12 @@ final readonly class Channel_Block_Support implements Feature {
 	/**
 	 * Constructor.
 	 *
-	 * @param Channel $default_channel The channel of a block without its own.
+	 * @param Channel                $default_channel     The channel of a block without its own.
+	 * @param WP_Block_Type_Registry $block_type_registry Core block type registry.
 	 */
 	public function __construct(
 		private Channel $default_channel,
+		private WP_Block_Type_Registry $block_type_registry,
 	) {}
 
 	/**
@@ -51,71 +53,68 @@ final readonly class Channel_Block_Support implements Feature {
 	}
 
 	/**
-	 * Gives a block with the support a `channel` attribute and the context that it needs.
-	 *
-	 * The editor gets the attribute and the context from the block type on the server, so a block
-	 * registered with block.json does not declare them.
+	 * Filters the arguments for registering a block type to give a block with channels support a
+	 * `channel` attribute and the context that it needs.
 	 *
 	 * @phpstan-param mixed $args
 	 *
-	 * @param array $args Arguments for registering a block type.
+	 * @param array $args Array of arguments for registering a block type.
 	 * @return mixed
 	 */
 	public function filter_register_block_type_args( $args ) {
 		if (
-			! is_array( $args )
-			|| ! isset( $args['supports'] )
-			|| ! is_array( $args['supports'] )
-			|| ! isset( $args['supports']['wp-curate/channels'] )
-			|| true !== $args['supports']['wp-curate/channels']
+			is_array( $args )
+			&& isset( $args['supports'] )
+			&& is_array( $args['supports'] )
+			&& isset( $args['supports']['wp-curate/channels'] )
+			&& $args['supports']['wp-curate/channels'] === true
 		) {
-			return $args;
+			$attributes   = [];
+			$uses_context = [];
+
+			if ( isset( $args['attributes'] ) && is_array( $args['attributes'] ) ) {
+				$attributes = $args['attributes'];
+			}
+
+			if ( isset( $args['uses_context'] ) && is_array( $args['uses_context'] ) ) {
+				$uses_context = array_filter( $args['uses_context'], 'is_string' );
+			}
+
+			$attributes['channel'] ??= [
+				'type'    => 'object',
+				// Ensure this is serialized as an object.
+				'default' => [
+					'name' => '',
+				],
+			];
+
+			// Ensure that this context is available to channels that read context.
+			$uses_context[] = 'postId';
+			$uses_context[] = 'postType';
+
+			// The channel of a parent block, and the queues to take a post from.
+			$uses_context[] = 'wp-curate/channel';
+			$uses_context[] = 'wp-curate/queues';
+
+			$args['attributes']   = $attributes;
+			$args['uses_context'] = array_values( array_unique( $uses_context ) );
 		}
-
-		$attributes   = [];
-		$uses_context = [];
-
-		if ( isset( $args['attributes'] ) && is_array( $args['attributes'] ) ) {
-			$attributes = $args['attributes'];
-		}
-
-		if ( isset( $args['uses_context'] ) && is_array( $args['uses_context'] ) ) {
-			$uses_context = array_filter( $args['uses_context'], 'is_string' );
-		}
-
-		/*
-		 * The default has a key, so that the editor gets an object and not an empty array. A block that
-		 * provides the channel always provides an object, even without a channel of its own.
-		 */
-		$attributes['channel'] ??= [
-			'type'    => 'object',
-			'default' => [
-				'name' => '',
-			],
-		];
-
-		// The post of the block around it, or else of the post, for channels that read it.
-		$uses_context[] = 'postId';
-		$uses_context[] = 'postType';
-		$uses_context[] = 'wp-curate/channel';
-		$uses_context[] = 'wp-curate/queues';
-
-		$args['attributes']   = $attributes;
-		$args['uses_context'] = array_values( array_unique( $uses_context ) );
 
 		return $args;
 	}
 
 	/**
-	 * Gives a block with the support that does not provide the channel context a post from its channel.
+	 * Filters the default context provided to a rendered block to give it a post from its channel.
 	 *
-	 * Blocks take posts in render order, so this runs once for each block, just before it renders.
+	 * A block gets a post if it has `wp-curate/channels` support and does not itself provide the
+	 * `wp-curate/channel` context, like Single Post. A block that provides the context, like
+	 * Channel Loop, gets no post and instead passes its channel to the blocks inside it.
 	 *
 	 * @phpstan-param mixed $context
 	 * @phpstan-param mixed $parsed_block
 	 *
 	 * @param array $context      Default context.
-	 * @param array $parsed_block The block being rendered.
+	 * @param array $parsed_block An associative array of the block being rendered.
 	 * @return mixed
 	 */
 	public function filter_render_block_context( $context, $parsed_block ) {
@@ -128,7 +127,7 @@ final readonly class Channel_Block_Support implements Feature {
 			return $context;
 		}
 
-		$block_type = WP_Block_Type_Registry::get_instance()->get_registered( $parsed_block['blockName'] );
+		$block_type = $this->block_type_registry->get_registered( $parsed_block['blockName'] );
 
 		if (
 			! $block_type instanceof WP_Block_Type
@@ -160,7 +159,7 @@ final readonly class Channel_Block_Support implements Feature {
 			$channel = $this->default_channel->name();
 		}
 
-		// A block inside a Channel Loop block uses its channel and arguments, even if the block has its own from before it moved in.
+		// A block inside a parent block uses its channel and arguments, even if the block has its own from before it moved in.
 		if ( isset( $context['wp-curate/channel'] ) && is_array( $context['wp-curate/channel'] ) ) {
 			$channel      = $this->channel_name( $context['wp-curate/channel'] );
 			$channel_args = $this->channel_args( $context['wp-curate/channel'] );
