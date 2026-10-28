@@ -26,7 +26,6 @@ function main(): void {
 		channels: $channels,
 		preferred: 'post_latest',
 	);
-	$channel_meta_key = 'wp_curate_default_channel';
 	$channel_taken    = new History(
 		seed: new Empty_Post_IDs(),
 	);
@@ -64,14 +63,6 @@ function main(): void {
 			channels: $channels,
 			default_channel: $default_channel,
 		),
-		new Features\Default_Channel_Meta(
-			default_channel: $default_channel,
-			meta_key: $channel_meta_key,
-		),
-		new Features\Channel_Block_Context(
-			default_channel: $default_channel,
-			meta_key: $channel_meta_key,
-		),
 		new Features\Channel_Queues_Block_Context(
 			queues: new Channels\Channel_Queues(
 				channels: $channels,
@@ -82,7 +73,9 @@ function main(): void {
 			taken: $channel_taken,
 			block_type_registry: WP_Block_Type_Registry::get_instance(),
 		),
-		new Features\Channel_Block_Support(),
+		new Features\Channel_Block_Support(
+			default_channel: $default_channel,
+		),
 	);
 	// phpcs:enable
 

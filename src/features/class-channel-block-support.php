@@ -11,6 +11,7 @@ use Alley\WP\Post_IDs\Empty_Post_IDs;
 use Alley\WP\Types\Feature;
 use Alley\WP\Types\Post_IDs;
 use Alley\WP\WP_Curate\Channels\Channel_Queues;
+use Alley\WP\WP_Curate\Channels\Default_Channel;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
 use WP_Post;
@@ -21,8 +22,8 @@ use WP_Post;
  * A block with the support gets a `channel` attribute, the channel context, and the `postId` and
  * `postType` context for channels that read it. Like a block binding, the attribute is an object
  * with the channel `name` and the `args` that the block gives the channel, such as
- * `{"name":"post_category_latest","args":{"term":7}}`. An empty name means the post's default
- * channel. A block that also provides the `wp-curate/channel` context, like Channel Loop, gives its
+ * `{"name":"post_category_latest","args":{"term":7}}`. An empty name means the default channel. A
+ * block that also provides the `wp-curate/channel` context, like Channel Loop, gives its
  * channel to the blocks inside it, which use it instead of their own. Any other block takes a post
  * from its channel's queue, following the post's deduplication rule, and gets that post as the
  * `postId` and `postType` context, which is 0 and an empty string when the channel has no posts
@@ -45,13 +46,6 @@ final readonly class Channel_Block_Support implements Feature {
 	private const CHANNEL_CONTEXT = 'wp-curate/channel';
 
 	/**
-	 * The block context that holds the post's default channel.
-	 *
-	 * @var string
-	 */
-	private const DEFAULT_CONTEXT = 'wp-curate/defaultChannel';
-
-	/**
 	 * The block context that holds the channel queues.
 	 *
 	 * @var string
@@ -66,12 +60,21 @@ final readonly class Channel_Block_Support implements Feature {
 	private const DEDUPLICATION_CONTEXT = 'wp-curate/channelDeduplication';
 
 	/**
+	 * Constructor.
+	 *
+	 * @param Default_Channel $default_channel The channel of a block without its own.
+	 */
+	public function __construct(
+		private Default_Channel $default_channel,
+	) {}
+
+	/**
 	 * Boot the feature.
 	 */
 	public function boot(): void {
 		add_filter( 'register_block_type_args', [ $this, 'filter_register_block_type_args' ] );
 
-		// After `Channel_Block_Context` and `Channel_Queues_Block_Context` add their context.
+		// After `Channel_Queues_Block_Context` adds its context.
 		add_filter( 'render_block_context', [ $this, 'filter_render_block_context' ], 20, 2 );
 	}
 
@@ -123,7 +126,6 @@ final readonly class Channel_Block_Support implements Feature {
 		$uses_context[] = 'postId';
 		$uses_context[] = 'postType';
 		$uses_context[] = self::CHANNEL_CONTEXT;
-		$uses_context[] = self::DEFAULT_CONTEXT;
 		$uses_context[] = self::QUEUES_CONTEXT;
 		$uses_context[] = self::DEDUPLICATION_CONTEXT;
 
@@ -183,9 +185,9 @@ final readonly class Channel_Block_Support implements Feature {
 		$channel      = $this->channel_name( $own_channel );
 		$channel_args = $this->channel_args( $own_channel );
 
-		// A block without its own channel uses the post's default channel.
-		if ( '' === $channel && isset( $context[ self::DEFAULT_CONTEXT ] ) && is_string( $context[ self::DEFAULT_CONTEXT ] ) ) {
-			$channel = $context[ self::DEFAULT_CONTEXT ];
+		// A block without its own channel uses the default channel.
+		if ( '' === $channel ) {
+			$channel = $this->default_channel->name();
 		}
 
 		// A block inside a Channel Loop block uses its channel and arguments, even if the block has its own from before it moved in.
@@ -232,7 +234,7 @@ final readonly class Channel_Block_Support implements Feature {
 	 * The channel name in a `channel` attribute or context.
 	 *
 	 * @param mixed[] $value The attribute or context.
-	 * @return string The name, or an empty string for the post's default channel.
+	 * @return string The name, or an empty string for the default channel.
 	 */
 	private function channel_name( array $value ): string {
 		$name = '';

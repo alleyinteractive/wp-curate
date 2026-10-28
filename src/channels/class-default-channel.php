@@ -50,22 +50,6 @@ final readonly class Default_Channel {
 	}
 
 	/**
-	 * The given channel name if it can be the default, or else the default.
-	 *
-	 * @param string $name Channel name.
-	 * @return string The name, or an empty string if no channels are registered.
-	 */
-	public function or_default( string $name ): string {
-		$out = $this->name();
-
-		if ( in_array( $name, $this->names(), true ) ) {
-			$out = $name;
-		}
-
-		return $out;
-	}
-
-	/**
 	 * Names of the registered channels that can be the default, in order.
 	 *
 	 * @return string[]

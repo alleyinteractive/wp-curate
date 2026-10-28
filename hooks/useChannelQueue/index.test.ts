@@ -25,16 +25,14 @@ const POST_ID = 5;
 /**
  * A `select` function with the given blocks and a channel record with the given IDs.
  *
- * @param blocks         Blocks in the editor.
- * @param ids            IDs in every channel.
- * @param defaultChannel The post's default channel.
- * @param loading        Channels that have not loaded.
- * @param meta           More post meta, such as the deduplication settings.
+ * @param blocks  Blocks in the editor.
+ * @param ids     IDs in every channel.
+ * @param loading Channels that have not loaded.
+ * @param meta    Post meta, such as the deduplication settings.
  */
 function fakeSelect(
   blocks: object[],
   ids: number[],
-  defaultChannel = '',
   loading: string[] = [],
   meta: Record<string, unknown> = {},
 ) {
@@ -71,8 +69,8 @@ function fakeSelect(
           arg_fields: [],
           is_available: true,
           is_default: false,
-          label: 'Post default',
-          name: 'post_default',
+          label: 'Other',
+          name: 'other',
           uses_context: [],
         },
         {
@@ -117,7 +115,7 @@ function fakeSelect(
       selectors = {
         getCurrentPostId: () => POST_ID,
         getCurrentPostType: () => 'post',
-        getEditedPostAttribute: () => ({ ...meta, wp_curate_default_channel: defaultChannel }),
+        getEditedPostAttribute: () => meta,
       };
     }
 
@@ -236,23 +234,13 @@ describe('channelQueueIds', () => {
     const {
       getChannel,
       select,
-    } = fakeSelect(blocks, [11], 'post_default');
+    } = fakeSelect(blocks, [11]);
 
     expect(channelQueueIds(select, 'inner')).toEqual([]);
     expect(getChannel).not.toHaveBeenCalled();
   });
 
-  it('gives the post default channel to a block without a channel or an ancestor with one', () => {
-    const {
-      getChannel,
-      select,
-    } = fakeSelect([singleBlock('alone', '')], [11], 'post_default');
-
-    expect(channelQueueIds(select, 'alone')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('post_default', {}, {}, 10);
-  });
-
-  it('gives the global default channel to a block when the post has no default', () => {
+  it('gives the default channel to a block without a channel or an ancestor with one', () => {
     const {
       getChannel,
       select,
@@ -271,7 +259,7 @@ describe('channelQueueIds', () => {
     ];
     const {
       select,
-    } = fakeSelect(blocks, [11, 12, 13], '', ['page_latest']);
+    } = fakeSelect(blocks, [11, 12, 13], ['page_latest']);
 
     expect(channelQueueIds(select, 'first')).toEqual([11]);
     expect(channelQueueIds(select, 'switched')).toBeNull();
@@ -288,7 +276,7 @@ describe('channelQueueIds', () => {
     const {
       getChannel,
       select,
-    } = fakeSelect(blocks, [11], '', ['page_latest']);
+    } = fakeSelect(blocks, [11], ['page_latest']);
 
     expect(channelQueueIds(select, 'inside')).toBeNull();
     expect(getChannel).not.toHaveBeenCalledWith(
@@ -427,7 +415,7 @@ describe('channelQueueIds', () => {
     ];
     const {
       select,
-    } = fakeSelect(blocks, [11], '', ['loading']);
+    } = fakeSelect(blocks, [11], ['loading']);
 
     expect(channelQueueContext(select, 'inner')).toBeNull();
   });
@@ -440,7 +428,7 @@ describe('channelQueueIds with post-level deduplication', () => {
   it('lets blocks in different channels show the same post without it', () => {
     const {
       select,
-    } = fakeSelect([singleBlock('a'), singleBlock('b', 'post_default')], [11, 12]);
+    } = fakeSelect([singleBlock('a'), singleBlock('b', 'other')], [11, 12]);
 
     expect(channelQueueIds(select, 'b')).toEqual([11]);
   });
@@ -448,7 +436,7 @@ describe('channelQueueIds with post-level deduplication', () => {
   it('skips the posts that blocks before it took from any channel', () => {
     const {
       select,
-    } = fakeSelect([singleBlock('a'), singleBlock('b', 'post_default')], [11, 12], '', [], DEDUPLICATION);
+    } = fakeSelect([singleBlock('a'), singleBlock('b', 'other')], [11, 12], [], DEDUPLICATION);
 
     expect(channelQueueIds(select, 'a')).toEqual([11]);
     expect(channelQueueIds(select, 'b')).toEqual([12]);
@@ -457,11 +445,11 @@ describe('channelQueueIds with post-level deduplication', () => {
   it('always shows a pin, even one that a block before it took', () => {
     const blocks = [
       singleBlock('a'),
-      { ...singleBlock('b', 'post_default'), attributes: { channel: { name: 'post_default' }, ref: 11 } },
+      { ...singleBlock('b', 'other'), attributes: { channel: { name: 'other' }, ref: 11 } },
     ];
     const {
       select,
-    } = fakeSelect(blocks, [11, 12], '', [], DEDUPLICATION);
+    } = fakeSelect(blocks, [11, 12], [], DEDUPLICATION);
 
     expect(channelQueueIds(select, 'b')).toEqual([11]);
   });
@@ -469,21 +457,21 @@ describe('channelQueueIds with post-level deduplication', () => {
   it('skips a post that a block after it pins only with unique pinned posts', () => {
     const blocks = [
       singleBlock('a'),
-      { ...singleBlock('b', 'post_default'), attributes: { channel: { name: 'post_default' }, ref: 11 } },
+      { ...singleBlock('b', 'other'), attributes: { channel: { name: 'other' }, ref: 11 } },
     ];
 
-    expect(channelQueueIds(fakeSelect(blocks, [11, 12], '', [], DEDUPLICATION).select, 'a')).toEqual([11]);
-    expect(channelQueueIds(fakeSelect(blocks, [11, 12], '', [], UNIQUE_PINNED).select, 'a')).toEqual([12]);
+    expect(channelQueueIds(fakeSelect(blocks, [11, 12], [], DEDUPLICATION).select, 'a')).toEqual([11]);
+    expect(channelQueueIds(fakeSelect(blocks, [11, 12], [], UNIQUE_PINNED).select, 'a')).toEqual([12]);
   });
 
   it('ignores unique pinned posts without deduplication', () => {
     const blocks = [
       singleBlock('a'),
-      { ...singleBlock('b', 'post_default'), attributes: { channel: { name: 'post_default' }, ref: 11 } },
+      { ...singleBlock('b', 'other'), attributes: { channel: { name: 'other' }, ref: 11 } },
     ];
     const {
       select,
-    } = fakeSelect(blocks, [11, 12], '', [], { wp_curate_unique_pinned_posts: true });
+    } = fakeSelect(blocks, [11, 12], [], { wp_curate_unique_pinned_posts: true });
 
     expect(channelQueueIds(select, 'a')).toEqual([11]);
   });
@@ -492,21 +480,21 @@ describe('channelQueueIds with post-level deduplication', () => {
     const ids = Array.from({ length: 15 }, (_, index) => index + 1);
     const blocks = [
       ...Array.from({ length: 10 }, (_, index) => singleBlock(`a${index}`)),
-      singleBlock('b', 'post_default'),
+      singleBlock('b', 'other'),
     ];
     const {
       getChannel,
       select,
-    } = fakeSelect(blocks, ids, '', [], DEDUPLICATION);
+    } = fakeSelect(blocks, ids, [], DEDUPLICATION);
 
     expect(channelQueueIds(select, 'b')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('post_default', {}, {}, 20);
+    expect(getChannel).toHaveBeenCalledWith('other', {}, {}, 20);
   });
 
   it('makes a block wait for a loading block before it in another channel', () => {
     const blocks = [singleBlock('a', 'loading'), singleBlock('b')];
 
-    expect(channelQueueIds(fakeSelect(blocks, [11], '', ['loading']).select, 'b')).toEqual([11]);
-    expect(channelQueueIds(fakeSelect(blocks, [11], '', ['loading'], DEDUPLICATION).select, 'b')).toBeNull();
+    expect(channelQueueIds(fakeSelect(blocks, [11], ['loading']).select, 'b')).toEqual([11]);
+    expect(channelQueueIds(fakeSelect(blocks, [11], ['loading'], DEDUPLICATION).select, 'b')).toBeNull();
   });
 });
