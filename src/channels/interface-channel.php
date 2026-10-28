@@ -13,8 +13,6 @@ namespace Alley\WP\WP_Curate\Channels;
  *
  * A block can give its channel arguments, like the `args` of a block binding, such as the term of a
  * channel of the posts in a term. The block saves them in the `args` of its `channel` attribute.
- * The channel reads them, and describes them in `args()` so that the editor can show a control for
- * each one.
  */
 interface Channel {
 	/**
