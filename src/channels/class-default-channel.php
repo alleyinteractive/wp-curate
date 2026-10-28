@@ -58,7 +58,7 @@ final readonly class Default_Channel {
 		$names = [];
 
 		foreach ( $this->channels->all() as $channel ) {
-			if ( [] === $channel->arg_fields() && [] === $channel->uses_context() ) {
+			if ( [] === $channel->args() && [] === $channel->uses_context() ) {
 				$names[] = $channel->name();
 			}
 		}

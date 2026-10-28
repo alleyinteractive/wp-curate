@@ -58,7 +58,7 @@ function fakeSelect(
       getChannel,
       getChannels: () => [
         {
-          arg_fields: [],
+          args: {},
           is_available: true,
           is_default: true,
           label: 'Global',
@@ -66,7 +66,7 @@ function fakeSelect(
           uses_context: [],
         },
         {
-          arg_fields: [],
+          args: {},
           is_available: true,
           is_default: false,
           label: 'Other',
@@ -74,9 +74,9 @@ function fakeSelect(
           uses_context: [],
         },
         {
-          arg_fields: [{
-            id: 'term', label: 'Category', required: true,
-          }],
+          args: {
+            term: { label: 'Category', required: true },
+          },
           is_available: true,
           is_default: false,
           label: 'In category',
@@ -84,7 +84,7 @@ function fakeSelect(
           uses_context: [],
         },
         {
-          arg_fields: [],
+          args: {},
           is_available: true,
           is_default: false,
           label: 'In issue',

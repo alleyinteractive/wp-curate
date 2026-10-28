@@ -57,35 +57,31 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads, as fields for the editor. The editor script
-	 * `entries/block-editor/freeForAllArgs` adds the controls of this channel by field `id`, and
-	 * reads the `options`, `taxonomy`, and `help` keys.
+	 * The arguments that the channel reads. The editor script `entries/block-editor/freeForAllArgs`
+	 * adds the controls of this channel by argument name, and reads the `options`, `taxonomy`, and
+	 * `help` keys.
 	 *
-	 * @phpstan-return list<array{id: string, label: string, ...<string, mixed>}>
+	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *
 	 * @return array[]
 	 */
-	public function arg_fields(): array {
+	public function args(): array {
 		return [
-			[
-				'id'       => 'post_types',
+			'post_types'   => [
 				'label'    => __( 'Post Types', 'wp-curate' ),
 				'options'  => $this->post_type_options(),
 				'required' => true,
 			],
-			[
-				'id'       => 'categories',
+			'categories'   => [
 				'label'    => $this->taxonomy_name( 'category', __( 'Categories', 'wp-curate' ) ),
 				'taxonomy' => 'category',
 			],
-			[
-				'id'       => 'tags',
+			'tags'         => [
 				'label'    => $this->taxonomy_name( 'post_tag', __( 'Tags', 'wp-curate' ) ),
 				'taxonomy' => 'post_tag',
 			],
-			[
+			'tax_relation' => [
 				'help'    => __( 'AND: Posts must meet all selected taxonomy requirements. OR: Posts may meet one or more selected taxonomy requirements.', 'wp-curate' ),
-				'id'      => 'tax_relation',
 				'label'   => __( 'Taxonomy Relation', 'wp-curate' ),
 				'options' => [
 					[
@@ -98,8 +94,7 @@ final readonly class Free_For_All implements Channel {
 					],
 				],
 			],
-			[
-				'id'    => 'search',
+			'search'       => [
 				'label' => __( 'Search Term', 'wp-curate' ),
 			],
 		];

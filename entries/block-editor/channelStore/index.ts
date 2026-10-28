@@ -23,24 +23,24 @@ import type { ChannelPage, ChannelRecord } from '../../../hooks/useChannelRecord
 const MAX_PER_PAGE = 100;
 
 /**
- * A field of an argument that a channel reads. `id` is the argument's key. `required` is true for
- * an argument that the channel needs. The fill of the Channel panel for the channel reads the other
- * keys, such as the `taxonomy` of a term field. See `Channel::arg_fields()` in PHP.
+ * The description of an argument that a channel reads. `required` is true for an argument that the
+ * channel needs. The fill of the Channel panel for the channel reads the other keys, such as the
+ * `taxonomy` of a term argument. See `Channel::args()` in PHP.
  */
 export interface ChannelArgField {
   [key: string]: unknown;
-  id: string;
   label: string;
   required: boolean;
 }
 
 /**
- * A channel in the list of channels. `is_default` is true for the global default channel.
- * `arg_fields` lists the arguments that the channel reads, and `uses_context` the block context.
- * `is_available` tells whether a block with the context of the list can select the channel.
+ * A channel in the list of channels. `is_default` is true for the global default channel. `args`
+ * describes the arguments that the channel reads, keyed by argument name, and `uses_context` lists
+ * the block context that it reads. `is_available` tells whether a block with the context of the
+ * list can select the channel.
  */
 export interface ChannelOption {
-  arg_fields: ChannelArgField[];
+  args: Record<string, ChannelArgField>;
   is_available: boolean;
   is_default: boolean;
   label: string;
@@ -189,19 +189,19 @@ function toChannelRecord(value: unknown): ChannelRecord {
 }
 
 /**
- * Reads the argument fields of a channel from a REST API response. A field without a string `id`
- * and `label` is left out.
+ * Reads the arguments of a channel from a REST API response, keyed by argument name. An argument
+ * without a string `label` is left out.
  *
- * @param value The `arg_fields` value of the response.
+ * @param value The `args` value of the response.
  */
-function toChannelArgFields(value: unknown): ChannelArgField[] {
-  const fields: ChannelArgField[] = [];
+function toChannelArgFields(value: unknown): Record<string, ChannelArgField> {
+  const fields: Record<string, ChannelArgField> = {};
 
-  if (!Array.isArray(value)) {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return fields;
   }
 
-  value.forEach((item: unknown) => {
+  Object.entries(value).forEach(([name, item]: [string, unknown]) => {
     if (typeof item !== 'object' || item === null) {
       return;
     }
@@ -209,18 +209,16 @@ function toChannelArgFields(value: unknown): ChannelArgField[] {
     const field = item as Record<string, unknown>;
 
     const {
-      id,
       label,
       required,
     } = field;
 
-    if (typeof id === 'string' && typeof label === 'string') {
-      fields.push({
+    if (typeof label === 'string') {
+      fields[name] = {
         ...field,
-        id,
         label,
         required: required === true,
-      });
+      };
     }
   });
 
@@ -246,7 +244,7 @@ function toChannelOptions(value: unknown): ChannelOption[] {
     }
 
     const {
-      arg_fields: argFields,
+      args,
       is_available: isAvailable,
       is_default: isDefault,
       label,
@@ -262,7 +260,7 @@ function toChannelOptions(value: unknown): ChannelOption[] {
 
     if (typeof label === 'string' && typeof name === 'string') {
       options.push({
-        arg_fields: toChannelArgFields(argFields),
+        args: toChannelArgFields(args),
         is_available: isAvailable === true,
         is_default: isDefault === true,
         label,

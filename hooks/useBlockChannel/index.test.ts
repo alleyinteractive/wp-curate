@@ -17,7 +17,7 @@ jest.mock('@wordpress/data', () => ({
 // The list of channels, with the default.
 const CHANNELS = [
   {
-    arg_fields: [],
+    args: {},
     is_available: true,
     is_default: false,
     label: 'Other',
@@ -25,7 +25,7 @@ const CHANNELS = [
     uses_context: [],
   },
   {
-    arg_fields: [],
+    args: {},
     is_available: true,
     is_default: true,
     label: 'Global',
@@ -33,9 +33,9 @@ const CHANNELS = [
     uses_context: [],
   },
   {
-    arg_fields: [{
-      id: 'term', label: 'Category', required: true,
-    }],
+    args: {
+      term: { label: 'Category', required: true },
+    },
     is_available: true,
     is_default: false,
     label: 'In category',
@@ -43,7 +43,7 @@ const CHANNELS = [
     uses_context: [],
   },
   {
-    arg_fields: [],
+    args: {},
     is_available: false,
     is_default: false,
     label: 'In issue',
@@ -52,9 +52,9 @@ const CHANNELS = [
   },
 ];
 
-const TERM_FIELDS = [{
-  id: 'term', label: 'Category', required: true,
-}];
+const TERM_FIELDS = {
+  term: { label: 'Category', required: true },
+};
 
 /**
  * A `select` function with the given channels.
@@ -194,21 +194,21 @@ describe('hasEveryChannelArg', () => {
   });
 
   it('is true for a channel that reads no arguments', () => {
-    expect(hasEveryChannelArg([], {})).toBe(true);
+    expect(hasEveryChannelArg({}, {})).toBe(true);
   });
 
   it('ignores an argument that the channel does not need', () => {
-    const fields = [{
-      id: 'search', label: 'Search', required: false,
-    }];
+    const fields = {
+      search: { label: 'Search', required: false },
+    };
 
     expect(hasEveryChannelArg(fields, {})).toBe(true);
   });
 
   it('is false when the block gives an empty list for an argument that the channel needs', () => {
-    const fields = [{
-      id: 'post_types', label: 'Post Types', required: true,
-    }];
+    const fields = {
+      post_types: { label: 'Post Types', required: true },
+    };
 
     expect(hasEveryChannelArg(fields, { post_types: [] })).toBe(false);
     expect(hasEveryChannelArg(fields, { post_types: ['post'] })).toBe(true);

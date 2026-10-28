@@ -34,12 +34,11 @@ function LatestPostsInTermArgItems({
 }: ChannelPanelFillProps) {
   return (
     <>
-      {argFields.map(({
-        id,
+      {Object.entries(argFields).map(([id, {
         label,
         required,
         taxonomy,
-      }) => {
+      }]) => {
         if (
           id !== 'term'
           || typeof taxonomy !== 'string'

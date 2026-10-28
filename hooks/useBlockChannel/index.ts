@@ -18,7 +18,7 @@ export const CHANNEL_SUPPORT = 'wp-curate/channel';
 // The block context that holds the channel, in the shape of the `channel` attribute.
 export const CHANNEL_CONTEXT = 'wp-curate/channel';
 
-const NO_ARG_FIELDS: ChannelArgField[] = [];
+const NO_ARG_FIELDS: Record<string, ChannelArgField> = {};
 
 const NO_ARGS: Record<string, unknown> = {};
 
@@ -210,14 +210,14 @@ export function toBlockChannelArgs(
 }
 
 /**
- * Get the fields of the arguments that a channel reads.
+ * Get the descriptions of the arguments that a channel reads, keyed by argument name.
  *
  * @param select The data registry's `select`.
  * @param name   Channel name.
- * @return The fields, or none for a channel that reads no arguments or while the list of channels
- *         loads.
+ * @return The descriptions, or none for a channel that reads no arguments or while the list of
+ *         channels loads.
  */
-export function channelArgFields(select: any, name: string): ChannelArgField[] {
+export function channelArgFields(select: any, name: string): Record<string, ChannelArgField> {
   const {
     getChannels,
   } = select('wp-curate/channels') as any;
@@ -233,7 +233,7 @@ export function channelArgFields(select: any, name: string): ChannelArgField[] {
   const option = channels.find((channel) => channel.name === name);
 
   if (option !== undefined) {
-    fields = option.arg_fields;
+    fields = option.args;
   }
 
   return fields;
@@ -326,24 +326,24 @@ export function channelsContext(
 }
 
 /**
- * Get only the arguments that a channel reads, in the order of its fields.
+ * Get only the arguments that a channel reads, in the order of its descriptions.
  *
  * A block's arguments can include keys that the channel does not read, such as from hand-written
- * markup or a field that the channel no longer has. Leaving them out gives every block that uses
- * the same arguments the same request and queue, like the queues in PHP.
+ * markup or an argument that the channel no longer has. Leaving them out gives every block that
+ * uses the same arguments the same request and queue, like the queues in PHP.
  *
- * @param fields The fields of the arguments that the channel reads.
+ * @param fields The descriptions of the arguments that the channel reads.
  * @param args   The block's arguments.
  */
 export function pickChannelArgs(
-  fields: ChannelArgField[],
+  fields: Record<string, ChannelArgField>,
   args: Record<string, unknown>,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {};
 
-  fields.forEach(({ id }) => {
-    if (id in args) {
-      out[id] = args[id];
+  Object.keys(fields).forEach((name) => {
+    if (name in args) {
+      out[name] = args[name];
     }
   });
 
@@ -354,20 +354,20 @@ export function pickChannelArgs(
  * Whether a block gives its channel a value for each argument that the channel needs. Without
  * them, the channel has no posts. An empty string or an empty list is no value.
  *
- * @param fields The fields of the arguments that the channel reads.
+ * @param fields The descriptions of the arguments that the channel reads.
  * @param args   The block's arguments.
  */
 export function hasEveryChannelArg(
-  fields: ChannelArgField[],
+  fields: Record<string, ChannelArgField>,
   args: Record<string, unknown>,
 ): boolean {
-  return fields.every(({ id, required }) => (
+  return Object.entries(fields).every(([name, { required }]) => (
     !required
     || (
-      args[id] !== undefined
-      && args[id] !== null
-      && args[id] !== ''
-      && !(Array.isArray(args[id]) && (args[id] as unknown[]).length === 0)
+      args[name] !== undefined
+      && args[name] !== null
+      && args[name] !== ''
+      && !(Array.isArray(args[name]) && (args[name] as unknown[]).length === 0)
     )
   ));
 }
