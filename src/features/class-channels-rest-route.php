@@ -228,8 +228,6 @@ final readonly class Channels_REST_Route implements Feature {
 						'entity_kind'  => $channel->entity_kind(),
 						'ids'          => $ids,
 						'label'        => $channel->label(),
-						'order'        => $channel->order_direction(),
-						'order_label'  => $channel->order_label(),
 						'post_types'   => (object) $post_types,
 						'uses_context' => $channel->uses_context(),
 					],

@@ -17,8 +17,6 @@ export interface ChannelRecord {
   has_more: boolean;
   ids: number[];
   label: string;
-  order: 'asc' | 'desc';
-  order_label: string;
   post_types: Record<string, string>;
   uses_context: string[];
 }

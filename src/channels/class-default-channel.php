@@ -103,24 +103,6 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * Human-readable name of the default channel's order.
-	 *
-	 * @return string
-	 */
-	public function order_label(): string {
-		return $this->channel()?->order_label() ?? '';
-	}
-
-	/**
-	 * Direction of the default channel's order: `asc` or `desc`.
-	 *
-	 * @return string
-	 */
-	public function order_direction(): string {
-		return $this->channel()?->order_direction() ?? 'desc';
-	}
-
-	/**
 	 * IDs in the default channel, in channel order, and the number of them.
 	 *
 	 * @param mixed[] $args    The block's arguments for the channel.

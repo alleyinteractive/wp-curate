@@ -39,14 +39,7 @@ interface Channel {
 	public function entity_kind(): string;
 
 	/**
-	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API
-	 * route.
-	 *
-	 * An argument name is a key in the block's `args`, and it cannot be a number. Each argument has a
-	 * `label`. An argument with `required` set to true is one that the channel needs. The editor
-	 * shows a control for an argument only if a script adds one to the slot of the Channel panel. The
-	 * script finds the arguments of its own channels by the channel name and the argument name. An
-	 * argument can have more keys for that script.
+	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
 	 *
 	 * The channel has no IDs until a block gives it a value for each required argument.
 	 *
@@ -57,17 +50,14 @@ interface Channel {
 	public function args(): array;
 
 	/**
-	 * Names of the block context values that the channel reads.
-	 *
-	 * A block with the `wp-curate/channels` support has the `postId` and `postType` context of the
-	 * block around it, or else of the post. A REST API request gives the values as strings.
+	 * Names of the block context values that the channel reads in order to supply posts.
 	 *
 	 * @return string[]
 	 */
 	public function uses_context(): array;
 
 	/**
-	 * Whether a block with the context can select the channel.
+	 * Whether a block with the given context can use the channel.
 	 *
 	 * The editor lists only the channels that are available. A block can keep a channel after it
 	 * moves to where the channel is not available, so the channel must give IDs for any context,
@@ -81,30 +71,13 @@ interface Channel {
 	/**
 	 * Whether a user can read the channel.
 	 *
-	 * @param int $user_id User ID, or 0 for a visitor who is not logged in.
+	 * @param int $user_id User ID.
 	 * @return bool
 	 */
 	public function can_read( int $user_id ): bool;
 
 	/**
-	 * Human-readable name of the channel order, such as "Most recent article".
-	 *
-	 * @return string
-	 */
-	public function order_label(): string;
-
-	/**
-	 * Direction of the channel order: `asc` or `desc`.
-	 *
-	 * For example, a channel of the most recent articles first is in `desc` order.
-	 *
-	 * @return string
-	 */
-	public function order_direction(): string;
-
-	/**
-	 * IDs in the channel, in channel order, and the number of them. With a search, only the IDs
-	 * that match it, still in channel order.
+	 * IDs in the channel, in channel order, and the number of them.
 	 *
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.

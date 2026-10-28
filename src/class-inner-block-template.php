@@ -13,12 +13,7 @@ use Alley\WP\Blocks\Named_Block;
 use Alley\WP\Types\Serialized_Blocks;
 
 /**
- * A block template in the shape of the editor's `InnerBlockTemplate`: a list of
- * `[ name, attributes, inner template ]` items, where the attributes and the inner template are
- * optional.
- *
- * The template has no saved HTML. Dynamic blocks, such as Post Title, render as usual. Static
- * blocks, such as Group, render only their inner blocks, without their own markup.
+ * A block template in the shape of the editor's `InnerBlockTemplate`.
  */
 final readonly class Inner_Block_Template implements Serialized_Blocks {
 	/**

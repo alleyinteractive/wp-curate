@@ -130,8 +130,6 @@ function toChannelRecord(value: unknown): ChannelRecord {
     has_more: false,
     ids: [],
     label: '',
-    order: 'asc',
-    order_label: '',
     post_types: {},
     uses_context: [],
   };
@@ -152,14 +150,6 @@ function toChannelRecord(value: unknown): ChannelRecord {
 
   if (typeof response.label === 'string') {
     record.label = response.label;
-  }
-
-  if (response.order === 'asc' || response.order === 'desc') {
-    record.order = response.order;
-  }
-
-  if (typeof response.order_label === 'string') {
-    record.order_label = response.order_label;
   }
 
   // PHP encodes an empty associative array as a JSON array, so an array means no post types.
@@ -376,8 +366,6 @@ const loadChannel = (
   const {
     entity_kind: entityKind,
     label,
-    order,
-    order_label: orderLabel,
     uses_context: usesContext,
   } = pageRecords[0];
 
@@ -388,8 +376,6 @@ const loadChannel = (
     has_more: false,
     ids: [],
     label,
-    order,
-    order_label: orderLabel,
     post_types: {},
     uses_context: usesContext,
   };

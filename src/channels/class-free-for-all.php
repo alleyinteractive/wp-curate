@@ -130,24 +130,6 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * Human-readable name of the channel order.
-	 *
-	 * @return string
-	 */
-	public function order_label(): string {
-		return __( 'Most recent', 'wp-curate' );
-	}
-
-	/**
-	 * Direction of the channel order.
-	 *
-	 * @return string
-	 */
-	public function order_direction(): string {
-		return 'desc';
-	}
-
-	/**
 	 * IDs in the channel, in channel order, and the number of them.
 	 *
 	 * @param mixed[] $args    The block's arguments for the channel.
