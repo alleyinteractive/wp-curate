@@ -6,10 +6,10 @@
   "title": "Channel Loop",
   "category": "theme",
   "icon": "screenoptions",
-  "description": "Promotes posts from the channel of the Channel block around it. Each Single Post block inside shows a post from that channel, in this block's template.",
+  "description": "Promotes posts from the channel of the Channel Content block around it. Each Single Post block inside shows a post from that channel, in this block's template.",
   "textdomain": "wp-curate",
   "ancestor": [
-    "wp-curate/channel"
+    "wp-curate/channel-content"
   ],
   "editorScript": "file:index.ts",
   "render": "file:render.php",

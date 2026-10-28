@@ -8,7 +8,8 @@ import {
 } from '@wordpress/block-editor';
 import { InnerBlockTemplate } from '@wordpress/blocks';
 
-// The block that shows one post, which uses the channel of the Channel block around this one.
+// The block that shows one post, which uses the channel of the Channel Content block around this
+// one.
 const SINGLE_POST = {
   name: 'wp-curate/single-post',
 };
@@ -29,7 +30,7 @@ const ALLOWED_BLOCKS = [SINGLE_POST.name];
  * The inner blocks are Single Post blocks, which each show one post, so the number of them is the
  * number of posts. The block gives its `template` attribute to them as block context. Like core's
  * Post Template inside a Query block, it has no channel of its own: the Single Posts use the
- * channel of the Channel block around it.
+ * channel of the Channel Content block around it.
  *
  * A Single Post moved in from outside uses this block's template instead of its own inner blocks,
  * and keeps its pinned post.
