@@ -132,7 +132,8 @@ function argControl(
     );
   }
 
-  if ((id === 'categories' || id === 'tags') && typeof taxonomy === 'string') {
+  // Each taxonomy that the channel allows is an argument with a `taxonomy` key.
+  if (typeof taxonomy === 'string') {
     control = (
       <TermControl
         help={help}
@@ -145,14 +146,14 @@ function argControl(
     );
   }
 
-  if (id === 'tax_relation') {
+  if (id === 'tax_relation' || id === 'orderby' || id === 'meta_key' || id === 'order') {
     control = (
       <SelectControl
         __next40pxDefaultSize
         __nextHasNoMarginBottom
         help={help}
         label={label}
-        onChange={(next) => onChange(next)}
+        onChange={(next) => onChange(next !== '' ? next : undefined)}
         options={toFieldOptions(field)}
         value={typeof value === 'string' ? value : undefined}
       />
@@ -175,7 +176,8 @@ function argControl(
 
 /**
  * A panel item for each argument of the Free-For-All channel. A required argument always shows. The
- * others are in the panel's menu.
+ * others are in the panel's menu. Like the Query block, the meta key shows only when the posts are
+ * ordered by a meta value.
  */
 function FreeForAllArgItems({
   argFields,
@@ -207,9 +209,27 @@ function FreeForAllArgItems({
           help = __('The channel shows no posts until this is set.', 'wp-curate');
         }
 
-        const control = argControl(id, field, args[id], help, (next) => {
-          setArgs(next === undefined ? withoutArg(args, id) : { ...args, [id]: next });
-        });
+        if (id === 'meta_key' && args.orderby !== 'meta_value') {
+          return null;
+        }
+
+        /**
+         * Saves the arguments with this one changed, or without it when given undefined. A meta key
+         * applies only to ordering by a meta value, so another order removes it.
+         *
+         * @param next The argument.
+         */
+        const setArg = (next: unknown) => {
+          let nextArgs = next === undefined ? withoutArg(args, id) : { ...args, [id]: next };
+
+          if (id === 'orderby' && next !== 'meta_value') {
+            nextArgs = withoutArg(nextArgs, 'meta_key');
+          }
+
+          setArgs(nextArgs);
+        };
+
+        const control = argControl(id, field, args[id], help, setArg);
 
         if (control === null) {
           return null;
@@ -221,7 +241,7 @@ function FreeForAllArgItems({
             isShownByDefault={required}
             key={id}
             label={label}
-            onDeselect={() => setArgs(withoutArg(args, id))}
+            onDeselect={() => setArg(undefined)}
             panelId={clientId}
             resetAllFilter={(next: Record<string, unknown>) => withoutArg(next, id)}
           >
