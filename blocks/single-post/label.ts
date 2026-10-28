@@ -6,33 +6,7 @@ import { __, sprintf } from '@wordpress/i18n';
 
 // Plugin dependencies.
 import { channelQueueIds } from '../../hooks/useChannelQueue';
-
-/**
- * The name that the user gave the block with the "Rename" option, or an empty string.
- *
- * @param attributes Block attributes.
- */
-function toCustomName(attributes: Record<string, unknown>): string {
-  let name = '';
-
-  const {
-    metadata,
-  } = attributes;
-
-  if (typeof metadata !== 'object' || metadata === null) {
-    return name;
-  }
-
-  const {
-    name: metadataName,
-  } = metadata as Record<string, unknown>;
-
-  if (typeof metadataName === 'string') {
-    name = metadataName;
-  }
-
-  return name;
-}
+import customBlockName from '../../services/customBlockName';
 
 /**
  * The post type of the post that a block shows, or an empty string while it loads.
@@ -105,7 +79,7 @@ export default function label(
 ): string | undefined {
   let out: string | undefined;
 
-  const customName = toCustomName(attributes);
+  const customName = customBlockName(attributes);
 
   if ((context === 'list-view' || context === 'breadcrumb') && customName !== '') {
     return customName;
