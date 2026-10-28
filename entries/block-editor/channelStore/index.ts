@@ -36,12 +36,12 @@ export interface ChannelArgField {
 /**
  * A channel in the list of channels. `default` is true for the global default channel. `args`
  * describes the arguments that the channel reads, keyed by argument name, and `uses_context` lists
- * the block context that it reads. `available` tells whether a block with the context of the
+ * the block context that it reads. `eligible` tells whether a block with the context of the
  * list can select the channel.
  */
 export interface ChannelOption {
   args: Record<string, ChannelArgField>;
-  available: boolean;
+  eligible: boolean;
   default: boolean;
   label: string;
   name: string;
@@ -231,7 +231,7 @@ function toChannelOptions(value: unknown): ChannelOption[] {
 
     const {
       args,
-      available: isAvailable,
+      eligible: isEligible,
       default: isDefault,
       label,
       name,
@@ -247,7 +247,7 @@ function toChannelOptions(value: unknown): ChannelOption[] {
     if (typeof label === 'string' && typeof name === 'string') {
       options.push({
         args: toChannelArgFields(args),
-        available: isAvailable === true,
+        eligible: isEligible === true,
         default: isDefault === true,
         label,
         name,

@@ -18,7 +18,7 @@ jest.mock('@wordpress/data', () => ({
 const CHANNELS = [
   {
     args: {},
-    available: true,
+    eligible: true,
     default: false,
     label: 'Other',
     name: 'other',
@@ -26,7 +26,7 @@ const CHANNELS = [
   },
   {
     args: {},
-    available: true,
+    eligible: true,
     default: true,
     label: 'Global',
     name: 'global_default',
@@ -36,7 +36,7 @@ const CHANNELS = [
     args: {
       term: { label: 'Category', required: true },
     },
-    available: true,
+    eligible: true,
     default: false,
     label: 'In category',
     name: 'post_category_latest',
@@ -44,7 +44,7 @@ const CHANNELS = [
   },
   {
     args: {},
-    available: false,
+    eligible: false,
     default: false,
     label: 'In issue',
     name: 'in_issue',

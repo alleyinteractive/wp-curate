@@ -55,7 +55,7 @@ function fakeSelect(
       getChannels: () => [
         {
           args: {},
-          available: true,
+          eligible: true,
           default: true,
           label: 'Global',
           name: 'global_default',
@@ -63,7 +63,7 @@ function fakeSelect(
         },
         {
           args: {},
-          available: true,
+          eligible: true,
           default: false,
           label: 'Other',
           name: 'other',
@@ -73,7 +73,7 @@ function fakeSelect(
           args: {
             term: { label: 'Category', required: true },
           },
-          available: true,
+          eligible: true,
           default: false,
           label: 'In category',
           name: IN_CATEGORY,
@@ -81,7 +81,7 @@ function fakeSelect(
         },
         {
           args: {},
-          available: true,
+          eligible: true,
           default: false,
           label: 'In issue',
           name: IN_ISSUE,

@@ -83,7 +83,7 @@ final readonly class Latest_Posts implements Channel {
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return bool
 	 */
-	public function available( array $context ): bool {
+	public function eligible( array $context ): bool {
 		return true;
 	}
 

@@ -104,11 +104,11 @@ final readonly class Channels_REST_Route implements Feature {
 	public function channels( WP_REST_Request $request ): WP_REST_Response {
 		$out = [];
 
-		$available_context = $request->get_param( 'context' );
+		$requested_context = $request->get_param( 'context' );
 		$user_id           = get_current_user_id();
 
-		if ( ! is_array( $available_context ) ) {
-			$available_context = [];
+		if ( ! is_array( $requested_context ) ) {
+			$requested_context = [];
 		}
 
 		foreach ( $this->channels->all() as $channel ) {
@@ -119,7 +119,7 @@ final readonly class Channels_REST_Route implements Feature {
 			$out[] = [
 				// Cast to object, like the `args` of a route in the REST API index.
 				'args'         => (object) $channel->args(),
-				'available'    => $channel->available( array_intersect_key( $available_context, array_flip( $channel->uses_context() ) ) ),
+				'eligible'     => $channel->eligible( array_intersect_key( $requested_context, array_flip( $channel->uses_context() ) ) ),
 				'default'      => $channel->name() === $this->default_channel->name(),
 				'label'        => $channel->label(),
 				'name'         => $channel->name(),
@@ -140,7 +140,7 @@ final readonly class Channels_REST_Route implements Feature {
 		$response = new WP_Error( 'rest_channel_invalid_name', __( 'Invalid channel name.', 'wp-curate' ), [ 'status' => 404 ] );
 
 		$block_args         = $request->get_param( 'args' );
-		$available_context  = $request->get_param( 'context' );
+		$requested_context  = $request->get_param( 'context' );
 		$requested_page     = $request->get_param( 'page' );
 		$requested_per_page = $request->get_param( 'per_page' );
 		$requested_search   = $request->get_param( 'search' );
@@ -175,8 +175,8 @@ final readonly class Channels_REST_Route implements Feature {
 					$args = array_intersect_key( $block_args, $channel->args() );
 				}
 
-				if ( is_array( $available_context ) ) {
-					$context = array_intersect_key( $available_context, array_flip( $channel->uses_context() ) );
+				if ( is_array( $requested_context ) ) {
+					$context = array_intersect_key( $requested_context, array_flip( $channel->uses_context() ) );
 				}
 
 				$result     = $channel->ids( $args, $context, $search );

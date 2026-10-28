@@ -18,7 +18,7 @@ namespace Alley\WP\WP_Curate\Channels;
  * arguments, and the default applies to blocks in any context.
  *
  * With no channels registered, there is no default, and this channel is empty: its name and
- * labels are empty strings, it has no IDs, it is never available, and no user can read it. That
+ * labels are empty strings, it has no IDs, it is never eligible, and no user can read it. That
  * case will be handled later.
  */
 final readonly class Default_Channel implements Channel {
@@ -88,8 +88,8 @@ final readonly class Default_Channel implements Channel {
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return bool
 	 */
-	public function available( array $context ): bool {
-		return $this->channel()?->available( $context ) ?? false;
+	public function eligible( array $context ): bool {
+		return $this->channel()?->eligible( $context ) ?? false;
 	}
 
 	/**

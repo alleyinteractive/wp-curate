@@ -52,11 +52,11 @@ export default function ChannelSelectControl({
   }, [contextKey]);
 
   // The channels to choose from, or null while they load.
-  const available = useMemo(() => {
+  const eligible = useMemo(() => {
     let out: ChannelOption[] | null = null;
 
     if (channelsInContext !== null) {
-      out = channelsInContext.filter(({ available: isAvailable }) => isAvailable);
+      out = channelsInContext.filter(({ eligible: isEligible }) => isEligible);
     }
 
     return out;
@@ -65,24 +65,24 @@ export default function ChannelSelectControl({
   const options = useMemo(() => {
     const out: { label: string, value: string }[] = [];
 
-    if (available === null) {
+    if (eligible === null) {
       return out;
     }
 
     // With no channels registered, there is nothing to choose. That case will be handled later.
-    if (available.length === 0) {
+    if (eligible.length === 0) {
       out.push({ label: __('No channels are available', 'wp-curate'), value: '' });
     }
 
-    available.forEach(({ label, name }) => {
+    eligible.forEach(({ label, name }) => {
       out.push({ label, value: name });
     });
 
     /*
-     * Show a saved channel that is not available, so that the dropdown does not hide it, such as
+     * Show a saved channel that is not eligible, so that the dropdown does not hide it, such as
      * one that a block kept when it moved.
      */
-    if (value !== '' && !available.some(({ name }) => name === value)) {
+    if (value !== '' && !eligible.some(({ name }) => name === value)) {
       let label = value;
       let saved: ChannelOption | undefined;
 
@@ -98,13 +98,13 @@ export default function ChannelSelectControl({
     }
 
     return out;
-  }, [available, channels, value]);
+  }, [eligible, channels, value]);
 
   return (
     <SelectControl
       __next40pxDefaultSize
       __nextHasNoMarginBottom
-      disabled={available === null || available.length === 0}
+      disabled={eligible === null || eligible.length === 0}
       help={help}
       label={__('Channel', 'wp-curate')}
       onChange={onChange}

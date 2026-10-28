@@ -148,11 +148,11 @@ describe('wp-curate/channels store', () => {
     expect(decodeURIComponent(mockedApiFetch.mock.calls[1][0].path)).toContain('args[term]=8');
   });
 
-  it('loads a list of channels for each context, with whether each one is available', async () => {
+  it('loads a list of channels for each context, with whether each one is eligible', async () => {
     mockedApiFetch.mockImplementation(async ({ path }: { path: string }) => [
       {
         args: {},
-        available: path.includes('context%5BpostId%5D=7'),
+        eligible: path.includes('context%5BpostId%5D=7'),
         default: false,
         label: 'In issue',
         name: 'in_issue',
@@ -167,9 +167,9 @@ describe('wp-curate/channels store', () => {
     const [inIssue] = await getChannelsInContext({ postId: 7 });
     const [elsewhere] = await getChannelsInContext({ postId: 8 });
 
-    expect(inIssue.available).toBe(true);
+    expect(inIssue.eligible).toBe(true);
     expect(inIssue.uses_context).toEqual(['postId']);
-    expect(elsewhere.available).toBe(false);
+    expect(elsewhere.eligible).toBe(false);
   });
 
   it('reads the arguments of each channel, keyed by argument name', async () => {
@@ -179,7 +179,7 @@ describe('wp-curate/channels store', () => {
           no_label: { required: true },
           term: { label: 'Category', required: true, taxonomy: 'category' },
         },
-        available: true,
+        eligible: true,
         default: false,
         label: 'In category',
         name: 'post_category_latest',
@@ -187,7 +187,7 @@ describe('wp-curate/channels store', () => {
       },
       {
         args: [],
-        available: true,
+        eligible: true,
         default: true,
         label: 'Latest',
         name: 'post_latest',
