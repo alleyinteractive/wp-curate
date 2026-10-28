@@ -48,7 +48,7 @@ export function hasChannelSupport(blockType: unknown): boolean {
 }
 
 /**
- * Whether a block type gives its channel to the blocks inside it, like Channel Loop.
+ * Whether a block type gives its channel to the blocks inside it, like Channel.
  *
  * @param blockType Block type from the blocks store.
  */
@@ -107,7 +107,7 @@ export function defaultChannel(select: any): string | null {
  *
  * @param value The attribute or context.
  * @return The name, an empty string for the default channel, or null if the value is not a
- *         channel, such as the context of a block that is not inside a Channel Loop block.
+ *         channel, such as the context of a block that is not inside a Channel block.
  */
 export function toChannelName(value: unknown): string | null {
   let name: string | null = null;
@@ -157,14 +157,14 @@ export function toChannelArgs(value: unknown): Record<string, unknown> {
  * Get the channel that a block uses.
  *
  * Keep the rules matched with `Channel_Block_Support` in PHP. The block uses the channel in its
- * block context, which a Channel Loop block around it provides, even if the block has its own from
- * before it moved in. Otherwise it uses its own channel, or else the default channel.
+ * block context, which the nearest Channel block around it provides, even if the block has its own
+ * from before it moved in. Otherwise it uses its own channel, or else the default channel.
  *
  * @param select         The data registry's `select`.
  * @param ownName        The name in the block's `channel` attribute.
  * @param contextChannel The `wp-curate/channel` block context.
- * @return The channel, an empty string if no channels are registered or the Channel Loop block
- *         around the block has no channel, or null while the list of channels loads.
+ * @return The channel, an empty string if no channels are registered or the Channel block around
+ *         the block has no channel, or null while the list of channels loads.
  */
 export function toBlockChannel(
   select: any,
@@ -173,7 +173,7 @@ export function toBlockChannel(
 ): string | null {
   const contextName = toChannelName(contextChannel);
 
-  // A Channel Loop block without a channel is an error, so the blocks inside it get no channel.
+  // A Channel block without a channel is an error, so the blocks inside it get no channel.
   if (contextName !== null) {
     return contextName;
   }
@@ -190,8 +190,8 @@ export function toBlockChannel(
 /**
  * Get the arguments that a block gives its channel.
  *
- * Like the channel, the block uses the arguments in its block context, which a Channel Loop block
- * around it provides, even if the block has its own from before it moved in.
+ * Like the channel, the block uses the arguments in its block context, which the nearest Channel
+ * block around it provides, even if the block has its own from before it moved in.
  *
  * @param ownChannel     The block's `channel` attribute.
  * @param contextChannel The `wp-curate/channel` block context.

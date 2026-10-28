@@ -15,7 +15,7 @@
 
 /*
  * The inner blocks have rendered already, in document order. Each Single Post block took its post
- * from the queue of this block's channel, which the block gives them as context.
+ * from the queue of the channel of the Channel block around this one.
  */
 if ( '' === trim( $content ) ) {
 	return;
