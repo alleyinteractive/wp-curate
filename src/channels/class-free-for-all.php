@@ -115,7 +115,7 @@ final readonly class Free_For_All implements Channel {
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return bool
 	 */
-	public function available( array $context ): bool {
+	public function eligible( array $context ): bool {
 		return true;
 	}
 

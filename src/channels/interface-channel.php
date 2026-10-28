@@ -59,14 +59,14 @@ interface Channel {
 	/**
 	 * Whether a block with the given context can use the channel.
 	 *
-	 * The editor lists only the channels that are available. A block can keep a channel after it
-	 * moves to where the channel is not available, so the channel must give IDs for any context,
+	 * The editor lists only the channels that are eligible. A block can keep a channel after it
+	 * moves to where the channel is not eligible, so the channel must give IDs for any context,
 	 * such as none.
 	 *
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return bool
 	 */
-	public function available( array $context ): bool;
+	public function eligible( array $context ): bool;
 
 	/**
 	 * Whether a user can read the channel.
