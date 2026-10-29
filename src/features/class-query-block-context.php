@@ -68,14 +68,16 @@ final class Query_Block_Context implements Feature {
 	 *
 	 * @return bool
 	 */
-	function get_post_level_deduplication(): bool {
+	private function get_post_level_deduplication(): bool {
 		$post_id = null;
 		$post_level_deduplication = false;
 		$main_query = $this->main_query->query_object();
+
 		if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
 			$post_id                  = $main_query->get_queried_object_id();
 			$post_level_deduplication = (bool) get_post_meta( $post_id, 'wp_curate_deduplication', true );
 		}
+
 		/**
 		 * Filter to determine if post level deduplication is enabled.
 		 *
