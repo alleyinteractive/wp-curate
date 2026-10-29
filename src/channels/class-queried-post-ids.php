@@ -1,6 +1,6 @@
 <?php
 /**
- * Queried_Post_Ids class file
+ * Queried_Post_IDs class file
  *
  * @package wp-curate
  */
@@ -15,7 +15,7 @@ use WP_Query;
  *
  * The IDs and the number come from the same query arguments, so they agree.
  */
-final readonly class Queried_Post_Ids implements Results {
+final readonly class Queried_Post_IDs implements Results {
 	/**
 	 * Number of posts to query at a time.
 	 *
@@ -26,7 +26,9 @@ final readonly class Queried_Post_Ids implements Results {
 	/**
 	 * Constructor.
 	 *
-	 * @param array<string, mixed> $query_args Query arguments that select the posts, in order.
+	 * @phpstan-param array<string, mixed> $query_args
+	 *
+	 * @param mixed[] $query_args Query arguments that select the posts, in order.
 	 */
 	public function __construct(
 		private array $query_args,
