@@ -296,7 +296,7 @@ final readonly class Free_For_All implements Channel {
 		}
 
 		if ( [] !== $post_types ) {
-			$posts = new Queried_Post_Ids( $query_args );
+			$posts = new Queried_Post_IDs( $query_args );
 		}
 
 		return $posts;

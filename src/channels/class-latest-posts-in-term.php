@@ -182,7 +182,7 @@ final readonly class Latest_Posts_In_Term implements Channel {
 		}
 
 		if ( $term instanceof WP_Term ) {
-			$posts = new Queried_Post_Ids(
+			$posts = new Queried_Post_IDs(
 				array_merge(
 					$query_args,
 					[

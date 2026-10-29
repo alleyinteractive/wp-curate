@@ -115,16 +115,16 @@ final readonly class Latest_Posts implements Channel {
 	 * The query keeps its own `orderby`, so a search returns matches in channel order, not by relevance.
 	 *
 	 * @param string $search Search terms, or an empty string for every post.
-	 * @return Queried_Post_Ids
+	 * @return Queried_Post_IDs
 	 */
-	private function posts( string $search ): Queried_Post_Ids {
+	private function posts( string $search ): Queried_Post_IDs {
 		$query_args = [];
 
 		if ( '' !== $search ) {
 			$query_args['s'] = $search;
 		}
 
-		return new Queried_Post_Ids(
+		return new Queried_Post_IDs(
 			array_merge(
 				$query_args,
 				[
