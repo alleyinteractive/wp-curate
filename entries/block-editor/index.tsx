@@ -10,7 +10,7 @@ import { registerPlugin } from '@wordpress/plugins';
 import './channelStore';
 import './channelSupport';
 import Deduplication from './deduplication/deduplication';
-import FreeForAllArgs from './freeForAllArgs/free-for-all-args';
+import FreeForAllArgs from './freeForAllArgs/index';
 import LatestPostsInTermArgs from './latestPostsInTermArgs/latest-posts-in-term-args';
 
 /**
