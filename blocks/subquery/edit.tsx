@@ -7,6 +7,7 @@ import { useSelect, select } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
+import isShallowEqual from '@wordpress/is-shallow-equal';
 
 import { v4 as uuid } from 'uuid'; // eslint-disable-line import/no-unresolved
 
@@ -213,13 +214,23 @@ export default function Edit({
    */
   useEffect(() => {
     if (!isFirstPost) {
-      return;
+      return undefined;
     }
+
+    let superseded = false;
 
     const updateValidPosts = async () => {
       const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
 
       if (!postsToInclude) {
+        /*
+         * Nothing to validate, so return before deduplicating.
+         * `validPosts` has to be cleared or it keeps IDs that are no longer pinned.
+         */
+        if (validPosts.length > 0) {
+          setAttributes({ validPosts: [] });
+        }
+
         return;
       }
 
@@ -239,37 +250,71 @@ export default function Edit({
         ),
       });
 
+      /*
+       * A newer run started while this request was in flight; its response is stale.
+       * Writing it would drop the current pin.
+       */
+      if (superseded) {
+        return;
+      }
+
       const resultIds = Array.isArray(result)
         ? result
           .map((post: unknown) => {
-            if (post
+            if (
+              post
               && typeof post === 'object'
               && 'id' in post
-              && typeof post.id === 'number') {
+              && typeof post.id === 'number'
+            ) {
               return post.id;
             }
+
             return 0;
           })
           .filter((id) => id !== 0)
         : [];
+
+      /*
+       * Skip setting attributes and the dedupe pass when nothing changed.
+       * `resultIds` is always a fresh array, so an unguarded write counts as a
+       * change and causes redundant writes and re-fetches.
+       */
+      if (isShallowEqual(validPosts, resultIds)) {
+        return;
+      }
+
       setAttributes({ validPosts: resultIds });
+
+      /*
+       * Re-run deduplication now that validation has resolved.
+       *
+       * `mainDedupe` drops any pin missing from `validPosts`, so the pass
+       * triggered by the pin itself always runs against stale data and fills
+       * the slot from backfill instead. This is the pass that applies the pin.
+       */
+      mainDedupe();
     };
 
     updateValidPosts();
-  }, [includeFuturePosts, isFirstPost, manualPosts, postTypeString, setAttributes]);
 
-  /**
-   * Check if deduplication is needed when validPosts are available.
-   */
-  useEffect(() => {
-    if (!isFirstPost) {
-      return;
-    }
+    return () => {
+      superseded = true;
+    };
 
-    if (validPosts.length > 0) {
-      mainDedupe();
-    }
-  }, [isFirstPost, validPosts.length]);
+    /*
+     * `validPosts` is deliberately not a dependency: it is only read to compare
+     * against the validation result, and including it would re-run this effect
+     * — and refetch — on every write. The closure can only lag the store, so
+     * the comparison errs toward writing rather than skipping.
+     */
+  }, [ // eslint-disable-line react-hooks/exhaustive-deps
+    includeFuturePosts,
+    isFirstPost,
+    manualPosts,
+    postTypeString,
+    setAttributes,
+  ]);
 
   /**
    * Normalize manualPosts to ensure it has the correct length and no undefined values.
