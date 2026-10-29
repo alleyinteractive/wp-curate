@@ -64,16 +64,17 @@ final class Query_Block_Context implements Feature {
 	}
 
 	/**
-	 * Checks if deduplication is enabled for a block.
+	 * Checks if deduplication is enabled for a block or the parent post.
 	 *
 	 * @param array{attrs?: array<string, mixed>} $parsed_block The parsed block.
 	 * @return bool
 	 */
-	private function get_post_level_deduplication( array $parsed_block ): bool {
+	private function get_deduplication_enabled( array $parsed_block ): bool {
 		$post_id    = null;
 		$dedupe     = false;
 		$main_query = $this->main_query->query_object();
 
+		// Prefer the query block's attribute.
 		if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
 			$dedupe = false;
 		} elseif ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
@@ -82,7 +83,7 @@ final class Query_Block_Context implements Feature {
 		}
 
 		/**
-		 * Filter to determine if deduplication is enabled for a block.
+		 * Filter to determine if deduplication is enabled for a block or the parent post.
 		 *
 		 * This runs after the block's "never" attribute and the post meta are checked.
 		 *
@@ -90,7 +91,7 @@ final class Query_Block_Context implements Feature {
 		 * @param int|null                            $post_id      The ID of the post being checked.
 		 * @param array{attrs?: array<string, mixed>} $parsed_block The parsed block.
 		 */
-		return (bool) apply_filters( 'wp_curate_post_level_deduplication', $dedupe, $post_id, $parsed_block );
+		return (bool) apply_filters( 'wp_curate_deduplication_enabled', $dedupe, $post_id, $parsed_block );
 	}
 
 	/**
@@ -114,7 +115,7 @@ final class Query_Block_Context implements Feature {
 		) {
 			// Handles the decision to exclude (deduplicate) posts or not, based on a given input.
 			$variable_post_queries = new Variable_Post_Queries(
-				input: fn () => $this->get_post_level_deduplication( $parsed_block ),
+				input: fn () => $this->get_deduplication_enabled( $parsed_block ),
 				// Exclude posts that have already been used in this request.
 				test: new Comparison( [ 'compared' => true ] ),
 				is_true: new Exclude_Queries(
