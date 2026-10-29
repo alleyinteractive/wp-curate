@@ -64,27 +64,33 @@ final class Query_Block_Context implements Feature {
 	}
 
 	/**
-	 * Checks if post level deduplication is enabled.
+	 * Checks if deduplication is enabled for a block.
 	 *
+	 * @param array{attrs?: array<string, mixed>} $parsed_block The parsed block.
 	 * @return bool
 	 */
-	private function get_post_level_deduplication(): bool {
-		$post_id = null;
-		$post_level_deduplication = false;
+	private function get_post_level_deduplication( array $parsed_block ): bool {
+		$post_id    = null;
+		$dedupe     = false;
 		$main_query = $this->main_query->query_object();
 
-		if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
-			$post_id                  = $main_query->get_queried_object_id();
-			$post_level_deduplication = (bool) get_post_meta( $post_id, 'wp_curate_deduplication', true );
+		if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
+			$dedupe = false;
+		} elseif ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
+			$post_id = $main_query->get_queried_object_id();
+			$dedupe  = (bool) get_post_meta( $post_id, 'wp_curate_deduplication', true );
 		}
 
 		/**
-		 * Filter to determine if post level deduplication is enabled.
+		 * Filter to determine if deduplication is enabled for a block.
 		 *
-		 * @param bool      $post_level_deduplication Whether post level deduplication is enabled.
-		 * @param int|null  $post_id                  The ID of the post being checked.
+		 * This runs after the block's "never" attribute and the post meta are checked.
+		 *
+		 * @param bool                                $dedupe       Whether deduplication is enabled.
+		 * @param int|null                            $post_id      The ID of the post being checked.
+		 * @param array{attrs?: array<string, mixed>} $parsed_block The parsed block.
 		 */
-		return (bool) apply_filters( 'wp_curate_post_level_deduplication', $post_level_deduplication, $post_id );
+		return (bool) apply_filters( 'wp_curate_post_level_deduplication', $dedupe, $post_id, $parsed_block );
 	}
 
 	/**
@@ -108,12 +114,7 @@ final class Query_Block_Context implements Feature {
 		) {
 			// Handles the decision to exclude (deduplicate) posts or not, based on a given input.
 			$variable_post_queries = new Variable_Post_Queries(
-				input: function () use ( $parsed_block ) {
-					if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
-						return false;
-					}
-					return $this->get_post_level_deduplication();
-				},
+				input: fn () => $this->get_post_level_deduplication( $parsed_block ),
 				// Exclude posts that have already been used in this request.
 				test: new Comparison( [ 'compared' => true ] ),
 				is_true: new Exclude_Queries(
