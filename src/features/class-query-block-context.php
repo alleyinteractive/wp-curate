@@ -24,6 +24,8 @@ use WP_Block;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
 
+use function Mantle\Support\Helpers\post_meta;
+
 /**
  * Provides context to query blocks
  */
@@ -79,7 +81,7 @@ final class Query_Block_Context implements Feature {
 			$dedupe = false;
 		} elseif ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
 			$post_id = $main_query->get_queried_object_id();
-			$dedupe  = (bool) get_post_meta( $post_id, 'wp_curate_deduplication', true );
+			$dedupe  = post_meta( $post_id, 'wp_curate_deduplication' )->bool();
 		}
 
 		/**
