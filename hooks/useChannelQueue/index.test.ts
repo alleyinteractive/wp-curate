@@ -13,7 +13,7 @@ jest.mock('@wordpress/data', () => ({
   useSelect: jest.fn(),
 }));
 
-// A channel of the posts in a term, which reads a `term` argument.
+// A channel of the posts in a term, which accepts a `term` argument.
 const IN_CATEGORY = 'post_category_latest';
 
 // A channel of the articles in an issue, which reads the `postId` context.
@@ -23,7 +23,7 @@ const IN_ISSUE = 'articles_in_issue';
 const POST_ID = 5;
 
 /**
- * A `select` function with the given blocks and a channel record with the given IDs.
+ * A `select` function with the given blocks and channel results with the given IDs.
  *
  * @param blocks  Blocks in the editor.
  * @param ids     IDs in every channel.
@@ -34,7 +34,8 @@ function fakeSelect(
   ids: number[],
   loading: string[] = [],
 ) {
-  // Like the store, a record has the IDs through the count, or all of them at the channel's end.
+  // Like the store, the results have the IDs through the count, or all of them at the channel's
+  // end.
   const getChannel = jest.fn((
     name: string,
     args: object,
@@ -330,7 +331,7 @@ describe('channelQueueIds', () => {
     expect(getChannel).not.toHaveBeenCalledWith(IN_CATEGORY, { term: 6 }, {}, expect.anything());
   });
 
-  it('sends only the arguments that the channel reads', () => {
+  it('sends only the arguments that the channel accepts', () => {
     const blocks = [
       { ...singleBlock('stale'), attributes: { channel: { args: { term: 5 }, name: 'post_latest' }, ref: 0 } },
     ];

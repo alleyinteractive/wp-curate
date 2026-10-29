@@ -23,7 +23,7 @@ function toShownPostType(attributes: Record<string, unknown>): string {
   } = select(blockEditorStore) as any;
 
   const {
-    getChannelPostType,
+    getLoadedPostType,
   } = select('wp-curate/channels') as any;
 
   const {
@@ -53,7 +53,7 @@ function toShownPostType(attributes: Record<string, unknown>): string {
   }
 
   if (ids !== null && ids.length > 0) {
-    postType = getChannelPostType(ids[0]);
+    postType = getLoadedPostType(ids[0]);
   }
 
   return postType;

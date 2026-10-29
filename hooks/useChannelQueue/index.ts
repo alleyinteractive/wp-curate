@@ -14,7 +14,7 @@ import {
   toBlockChannelArgs,
   toChannelName,
 } from '../useBlockChannel';
-import { CHANNEL_PAGE_SIZE, type ChannelRecord } from '../useChannelRecord';
+import { CHANNEL_PAGE_SIZE, type ChannelResults } from '../useChannelResults';
 
 const NO_IDS: number[] = [];
 
@@ -88,9 +88,10 @@ function postContext(select: any): Record<string, unknown> {
  * - A block that provides the `wp-curate/channel` context, like Channel Content, takes nothing.
  *
  * A block without a channel of its own uses the channel that `toBlockChannel()` describes. A
- * channel has a separate queue for each set of arguments and context that it reads, and has no
- * posts until the block gives it each argument. The context of a block inside a block that takes a
- * post, like Single Post, has that post as `postId` and `postType`. Otherwise, it has the post.
+ * channel has a separate queue for each set of arguments that it accepts and context that it
+ * reads, and has no posts until the block gives it each argument. The context of a block inside a
+ * block that takes a post, like Single Post, has that post as `postId` and `postType`. Otherwise,
+ * it has the post.
  *
  * A block that takes the top of its queue skips the IDs that the blocks before it took from any
  * queue, so channel blocks never show the same post twice. A block always shows its own pin. A
@@ -225,13 +226,13 @@ function channelQueue(
 
     // Send and key the queue by only the context that the channel uses, like PHP does.
     const used = channelContext(select, name, context);
-    const record: ChannelRecord | null = getChannel(name, args, used, CHANNEL_PAGE_SIZE);
+    const results: ChannelResults | null = getChannel(name, args, used, CHANNEL_PAGE_SIZE);
 
-    if (record === null) {
+    if (results === null) {
       isLoading = true;
     }
 
-    if (record !== null) {
+    if (results !== null) {
       const key = JSON.stringify([name, args, used]);
 
       let previous = NO_IDS;
@@ -250,7 +251,7 @@ function channelQueue(
         let isSearching = true;
 
         while (isSearching) {
-          const loaded: ChannelRecord | null = getChannel(name, args, used, count);
+          const loaded: ChannelResults | null = getChannel(name, args, used, count);
 
           isSearching = false;
 
@@ -265,7 +266,7 @@ function channelQueue(
               taken = [top];
             }
 
-            // The store gives a record with fewer IDs than the count only at the channel's end.
+            // The store gives results with fewer IDs than the count only at the channel's end.
             if (top === undefined && loaded.has_more && loaded.ids.length >= count) {
               count += CHANNEL_PAGE_SIZE;
               isSearching = true;

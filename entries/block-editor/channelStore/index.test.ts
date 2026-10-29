@@ -58,9 +58,9 @@ describe('wp-curate/channels store', () => {
 
     expect(mockedApiFetch).not.toHaveBeenCalled();
 
-    const record = await getChannel('missing_count', {}, {}, 10);
+    const channelResults = await getChannel('missing_count', {}, {}, 10);
 
-    expect(record.ids).toHaveLength(10);
+    expect(channelResults.ids).toHaveLength(10);
   });
 
   it('loads a page of search results by itself, apart from the whole channel', async () => {
@@ -70,13 +70,13 @@ describe('wp-curate/channels store', () => {
     } = resolveSelect('wp-curate/channels') as any;
 
     const results = await getChannelPage('search', {}, {}, 'hello', 2, 20);
-    const record = await getChannel('search', {}, {}, 10);
+    const channelResults = await getChannel('search', {}, {}, 10);
 
     expect(results.ids).toEqual([3]);
     expect(results.total).toBe(21);
     expect(results.total_pages).toBe(2);
-    expect(record.ids).toHaveLength(10);
-    expect(record).not.toHaveProperty('total');
+    expect(channelResults.ids).toHaveLength(10);
+    expect(channelResults).not.toHaveProperty('total');
     expect(mockedApiFetch).toHaveBeenCalledTimes(2);
     expect(mockedApiFetch.mock.calls[0][0].path).toContain('page=2&per_page=20&search=hello');
     expect(mockedApiFetch.mock.calls[1][0].path).not.toContain('search=');
@@ -104,10 +104,10 @@ describe('wp-curate/channels store', () => {
       { 'X-WP-Total': '2', 'X-WP-TotalPages': '1' },
     ));
 
-    const record = await getChannel('short', {}, {}, 10);
+    const channelResults = await getChannel('short', {}, {}, 10);
 
-    expect(record.ids).toEqual([1, 2]);
-    expect(record.has_more).toBe(false);
+    expect(channelResults.ids).toEqual([1, 2]);
+    expect(channelResults.has_more).toBe(false);
   });
 
   it('counts a page without total headers as 0', async () => {
@@ -135,7 +135,7 @@ describe('wp-curate/channels store', () => {
     expect(mockedApiFetch).not.toHaveBeenCalled();
   });
 
-  it('sends the arguments, and keeps a separate record for each set of them', async () => {
+  it('sends the arguments, and keeps separate results for each set of them', async () => {
     const {
       getChannel,
     } = resolveSelect('wp-curate/channels') as any;
@@ -161,11 +161,11 @@ describe('wp-curate/channels store', () => {
     ]);
 
     const {
-      getChannelsInContext,
+      getChannels,
     } = resolveSelect('wp-curate/channels') as any;
 
-    const [inIssue] = await getChannelsInContext({ postId: 7 });
-    const [elsewhere] = await getChannelsInContext({ postId: 8 });
+    const [inIssue] = await getChannels({ postId: 7 });
+    const [elsewhere] = await getChannels({ postId: 8 });
 
     expect(inIssue.eligible).toBe(true);
     expect(inIssue.uses_context).toEqual(['postId']);
@@ -196,10 +196,10 @@ describe('wp-curate/channels store', () => {
     ]);
 
     const {
-      getChannelsInContext,
+      getChannels,
     } = resolveSelect('wp-curate/channels') as any;
 
-    const [inCategory, latest] = await getChannelsInContext({ postId: 9 });
+    const [inCategory, latest] = await getChannels({ postId: 9 });
 
     expect(inCategory.args).toEqual({
       term: { label: 'Category', required: true, taxonomy: 'category' },

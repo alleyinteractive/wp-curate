@@ -50,7 +50,7 @@ function LatestPostsInTermArgItems({
         let help = '';
 
         if (required && !(id in args)) {
-          help = __('The channel shows no posts until a term is selected.', 'wp-curate');
+          help = __('Select a term first.', 'wp-curate');
         }
 
         return (

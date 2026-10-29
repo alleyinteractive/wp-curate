@@ -58,7 +58,7 @@ final readonly class Latest_Posts implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
+	 * The arguments that the channel accepts, keyed by argument name, like the `args` of a REST API route.
 	 *
 	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *

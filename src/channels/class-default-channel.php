@@ -53,7 +53,7 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
+	 * The arguments that the channel accepts, keyed by argument name, like the `args` of a REST API route.
 	 *
 	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *
@@ -114,22 +114,11 @@ final readonly class Default_Channel implements Channel {
 		$match = null;
 		$first = null;
 
-		/**
-		 * Filters the name of the preferred default channel.
-		 *
-		 * @param string $preferred Name of the preferred default channel.
-		 */
-		$preferred = apply_filters( 'wp_curate_preferred_default_channel', $this->preferred );
-
-		if ( ! is_string( $preferred ) ) {
-			$preferred = $this->preferred;
-		}
-
 		foreach ( $this->channels->all() as $channel ) {
 			if ( [] === $channel->args() && [] === $channel->uses_context() ) {
 				$first ??= $channel;
 
-				if ( $channel->name() === $preferred ) {
+				if ( $channel->name() === $this->preferred ) {
 					$match = $channel;
 				}
 			}
