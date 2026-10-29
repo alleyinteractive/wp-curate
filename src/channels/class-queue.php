@@ -13,9 +13,10 @@ use Generator;
 /**
  * The queue of available IDs in a channel.
  *
- * The channel's IDs are read only as far as the blocks on a page need them, and kept, so that an
- * ID that one block skips stays available to the blocks after it. This class is mutable, one per
- * channel per request.
+ * The channel's IDs are loaded only to the extent that the blocks on a page need them. The IDs are maintained so that
+ * an ID that one block skips stays available to the blocks after it.
+ *
+ * This class is mutable, one per channel per request.
  */
 final class Queue {
 	/**
@@ -86,30 +87,7 @@ final class Queue {
 	}
 
 	/**
-	 * Takes every remaining ID and empties the queue.
-	 *
-	 * @return int[] Remaining IDs.
-	 */
-	public function take_rest(): array {
-		$taken = [];
-
-		// Read the whole channel.
-		do {
-			$has_more = $this->read_next();
-		} while ( $has_more );
-
-		foreach ( $this->read as $id ) {
-			if ( ! isset( $this->removed[ $id ] ) ) {
-				$taken[]              = $id;
-				$this->removed[ $id ] = true;
-			}
-		}
-
-		return $taken;
-	}
-
-	/**
-	 * Whether the IDs read so far reach a position, reading the next ID from the channel if needed.
+	 * Whether the IDs read so far reach a position in the list, reading the next ID from the channel if needed.
 	 *
 	 * @param int $index Position in the IDs read so far.
 	 * @return bool
@@ -119,7 +97,7 @@ final class Queue {
 	}
 
 	/**
-	 * Reads the channel's next ID that is a positive integer into the IDs read so far.
+	 * Reads the channel's next ID into the IDs read so far.
 	 *
 	 * @return bool Whether an ID was read.
 	 */
