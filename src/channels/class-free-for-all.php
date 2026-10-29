@@ -11,13 +11,7 @@ use WP_Post_Type;
 use WP_Taxonomy;
 
 /**
- * The published posts that match the block's query: the Free-For-All channel.
- *
- * The block gives the query as arguments, like the query parameters of the Query block: the post
- * types, the terms of each taxonomy, the relation between the taxonomies, a search term, and the
- * order. The post types, taxonomies, and order options are the ones that the Query block allows.
- * The channel needs at least one post type. A post matches the terms of a taxonomy if it has any of
- * them. Without an order, the most recent posts come first.
+ * Free-For-All channel that accepts many arguments similar to those of the Query block.
  */
 final readonly class Free_For_All implements Channel {
 	/**
@@ -25,17 +19,17 @@ final readonly class Free_For_All implements Channel {
 	 *
 	 * @var string[]
 	 */
-	private const FIXED_ARGS = [ 'meta_key', 'order', 'orderby', 'post_types', 'search', 'tax_relation' ];
+	private const RESERVED_ARGS = [ 'meta_key', 'order', 'orderby', 'post_types', 'search', 'tax_relation' ];
 
 	/**
 	 * Constructor.
 	 *
 	 * @phpstan-param array<string, string> $orderby_options
 	 *
-	 * @param string[] $post_types      The post types that a block can select.
-	 * @param string[] $taxonomies      The taxonomies whose terms a block can select.
+	 * @param string[] $post_types      The post types that can be selected.
+	 * @param string[] $taxonomies      The taxonomies whose terms can be selected.
 	 * @param string[] $orderby_options Names of the ways to order the posts, keyed by `orderby` value.
-	 * @param string[] $meta_keys       The meta keys whose values a block can order the posts by.
+	 * @param string[] $meta_keys       The meta keys whose values can order the posts by.
 	 */
 	public function __construct(
 		private array $post_types,
@@ -132,7 +126,7 @@ final readonly class Free_For_All implements Channel {
 			'options' => $orderby_options,
 		];
 
-		if ( [] !== $this->meta_keys ) {
+		if ( $this->meta_keys !== [] ) {
 			$args['meta_key'] = [
 				'label'   => __( 'Meta Key', 'wp-curate' ),
 				'options' => $this->meta_key_options(),
@@ -203,10 +197,6 @@ final readonly class Free_For_All implements Channel {
 	/**
 	 * The posts that match the block's query and a search, in channel order.
 	 *
-	 * The query keeps its own `orderby`, so a search returns matches in channel order, not by
-	 * relevance. A search of the picker adds to the block's own search term. Like the Query block,
-	 * ordering by a meta value leaves out the posts without that meta.
-	 *
 	 * @param mixed[] $args   The block's arguments for the channel.
 	 * @param string  $search Search terms, or an empty string.
 	 * @return Results The posts, or none without a post type.
@@ -261,10 +251,11 @@ final readonly class Free_For_All implements Channel {
 
 			if ( [] !== $term_ids ) {
 				$tax_query[] = [
-					'field'    => 'term_id',
-					'operator' => 'IN',
-					'taxonomy' => $taxonomy,
-					'terms'    => $term_ids,
+					'field'            => 'term_id',
+					'include_children' => false,
+					'operator'         => 'IN',
+					'taxonomy'         => $taxonomy,
+					'terms'            => $term_ids,
 				];
 			}
 		}
@@ -333,7 +324,7 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * The options of the post types field: each post type that a block can select, with its name.
+	 * The options of the post types field.
 	 *
 	 * @phpstan-return list<array{label: string, value: string}>
 	 *
@@ -360,8 +351,7 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * The options of the order field: each way that a block can order the posts, with its name. Like
-	 * the Query block, ordering by a meta value is an option only with meta keys to choose from.
+	 * The options of the order field.
 	 *
 	 * @phpstan-return array<string, string>
 	 *
@@ -378,8 +368,7 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * The options of the meta key field, as `label` and `value` pairs: an empty choice, then each
-	 * meta key.
+	 * The options of the meta key field.
 	 *
 	 * @phpstan-return list<array{label: string, value: string}>
 	 *
@@ -404,12 +393,12 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * The taxonomies whose terms a block can select, without any whose name another argument has.
+	 * The taxonomies whose terms a block can select.
 	 *
 	 * @return string[]
 	 */
 	private function taxonomies(): array {
-		return array_values( array_diff( $this->taxonomies, self::FIXED_ARGS ) );
+		return array_values( array_diff( $this->taxonomies, self::RESERVED_ARGS ) );
 	}
 
 	/**

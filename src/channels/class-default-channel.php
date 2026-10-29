@@ -8,18 +8,10 @@
 namespace Alley\WP\WP_Curate\Channels;
 
 /**
- * The channel that blocks use when nothing else gives them one.
+ * The channel that blocks fall back to.
  *
  * The preferred channel is the default while it is registered. Otherwise, the first registered
- * channel is. This channel passes each call to that channel, and has its name, so that a block
- * without a channel shares a queue with the blocks that name it.
- *
- * A channel that reads arguments or block context cannot be the default. Only a block can give it
- * arguments, and the default applies to blocks in any context.
- *
- * With no channels registered, there is no default, and this channel is empty: its name and
- * labels are empty strings, it has no IDs, it is never eligible, and no user can read it. That
- * case will be handled later.
+ * channel is. With no channels registered, there is no default, and the channel is empty.
  */
 final readonly class Default_Channel implements Channel {
 	/**
@@ -63,8 +55,6 @@ final readonly class Default_Channel implements Channel {
 	/**
 	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
 	 *
-	 * A channel that reads arguments cannot be the default, so this channel reads none.
-	 *
 	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *
 	 * @return array[]
@@ -75,8 +65,6 @@ final readonly class Default_Channel implements Channel {
 
 	/**
 	 * Names of the block context values that the channel reads in order to supply posts.
-	 *
-	 * A channel that reads block context cannot be the default, so this channel reads none.
 	 *
 	 * @return string[]
 	 */
@@ -123,19 +111,30 @@ final readonly class Default_Channel implements Channel {
 	 * @return Channel|null The channel, or null if no registered channel can be the default.
 	 */
 	private function channel(): ?Channel {
-		$preferred = null;
-		$first     = null;
+		$match = null;
+		$first = null;
+
+		/**
+		 * Filters the name of the preferred default channel.
+		 *
+		 * @param string $preferred Name of the preferred default channel.
+		 */
+		$preferred = apply_filters( 'wp_curate_preferred_default_channel', $this->preferred );
+
+		if ( ! is_string( $preferred ) ) {
+			$preferred = $this->preferred;
+		}
 
 		foreach ( $this->channels->all() as $channel ) {
 			if ( [] === $channel->args() && [] === $channel->uses_context() ) {
 				$first ??= $channel;
 
-				if ( $this->preferred === $channel->name() ) {
-					$preferred = $channel;
+				if ( $channel->name() === $preferred ) {
+					$match = $channel;
 				}
 			}
 		}
 
-		return $preferred ?? $first;
+		return $match ?? $first;
 	}
 }
