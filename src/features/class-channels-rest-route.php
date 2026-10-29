@@ -23,7 +23,7 @@ final readonly class Channels_REST_Route implements Feature {
 	 * Constructor.
 	 *
 	 * @param Available_Channels $channels        Available channels.
-	 * @param Channel            $default_channel The global default channel.
+	 * @param Channel            $default_channel The default channel.
 	 */
 	public function __construct(
 		private Available_Channels $channels,
