@@ -67,7 +67,7 @@ function fakeSelect(channels: object[] | null = CHANNELS) {
 
     if (storeName === 'wp-curate/channels') {
       selectors = {
-        getChannels: () => channels,
+        getAvailableChannels: () => channels,
       };
     }
 

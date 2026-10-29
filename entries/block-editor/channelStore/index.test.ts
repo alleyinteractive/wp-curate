@@ -51,26 +51,26 @@ describe('wp-curate/channels store', () => {
 
   it('ignores a call without a count, instead of storing an empty channel', async () => {
     const {
-      getChannel,
+      getChannelResults,
     } = resolveSelect('wp-curate/channels') as any;
 
-    await getChannel('missing_count', {}, {});
+    await getChannelResults('missing_count', {}, {});
 
     expect(mockedApiFetch).not.toHaveBeenCalled();
 
-    const channelResults = await getChannel('missing_count', {}, {}, 10);
+    const channelResults = await getChannelResults('missing_count', {}, {}, 10);
 
     expect(channelResults.ids).toHaveLength(10);
   });
 
   it('loads a page of search results by itself, apart from the whole channel', async () => {
     const {
-      getChannel,
-      getChannelPage,
+      getChannelResults,
+      getChannelResultsPage,
     } = resolveSelect('wp-curate/channels') as any;
 
-    const results = await getChannelPage('search', {}, {}, 'hello', 2, 20);
-    const channelResults = await getChannel('search', {}, {}, 10);
+    const results = await getChannelResultsPage('search', {}, {}, 'hello', 2, 20);
+    const channelResults = await getChannelResults('search', {}, {}, 10);
 
     expect(results.ids).toEqual([3]);
     expect(results.total).toBe(21);
@@ -84,11 +84,11 @@ describe('wp-curate/channels store', () => {
 
   it('reads whether more IDs remain from the page count', async () => {
     const {
-      getChannelPage,
+      getChannelResultsPage,
     } = resolveSelect('wp-curate/channels') as any;
 
-    const first = await getChannelPage('paged', {}, {}, '', 1, 10);
-    const last = await getChannelPage('paged', {}, {}, '', 3, 10);
+    const first = await getChannelResultsPage('paged', {}, {}, '', 1, 10);
+    const last = await getChannelResultsPage('paged', {}, {}, '', 3, 10);
 
     expect(first.has_more).toBe(true);
     expect(last.has_more).toBe(false);
@@ -96,7 +96,7 @@ describe('wp-curate/channels store', () => {
 
   it('stores a whole channel as complete when its only page is the last one', async () => {
     const {
-      getChannel,
+      getChannelResults,
     } = resolveSelect('wp-curate/channels') as any;
 
     mockedApiFetch.mockImplementation(async () => toResponse(
@@ -104,7 +104,7 @@ describe('wp-curate/channels store', () => {
       { 'X-WP-Total': '2', 'X-WP-TotalPages': '1' },
     ));
 
-    const channelResults = await getChannel('short', {}, {}, 10);
+    const channelResults = await getChannelResults('short', {}, {}, 10);
 
     expect(channelResults.ids).toEqual([1, 2]);
     expect(channelResults.has_more).toBe(false);
@@ -112,12 +112,12 @@ describe('wp-curate/channels store', () => {
 
   it('counts a page without total headers as 0', async () => {
     const {
-      getChannelPage,
+      getChannelResultsPage,
     } = resolveSelect('wp-curate/channels') as any;
 
     mockedApiFetch.mockImplementation(async () => toResponse(PAGE_BODY, {}));
 
-    const page = await getChannelPage('no_headers', {}, {}, '', 1, 10);
+    const page = await getChannelResultsPage('no_headers', {}, {}, '', 1, 10);
 
     expect(page.ids).toHaveLength(10);
     expect(page.total).toBe(0);
@@ -127,21 +127,21 @@ describe('wp-curate/channels store', () => {
 
   it('ignores a page size that the REST API rejects', async () => {
     const {
-      getChannelPage,
+      getChannelResultsPage,
     } = resolveSelect('wp-curate/channels') as any;
 
-    await getChannelPage('too_many', {}, {}, '', 1, 101);
+    await getChannelResultsPage('too_many', {}, {}, '', 1, 101);
 
     expect(mockedApiFetch).not.toHaveBeenCalled();
   });
 
   it('sends the arguments, and keeps separate results for each set of them', async () => {
     const {
-      getChannel,
+      getChannelResults,
     } = resolveSelect('wp-curate/channels') as any;
 
-    await getChannel('with_args', { term: 7 }, {}, 10);
-    await getChannel('with_args', { term: 8 }, {}, 10);
+    await getChannelResults('with_args', { term: 7 }, {}, 10);
+    await getChannelResults('with_args', { term: 8 }, {}, 10);
 
     expect(mockedApiFetch).toHaveBeenCalledTimes(2);
     expect(decodeURIComponent(mockedApiFetch.mock.calls[0][0].path)).toContain('args[term]=7');
@@ -161,11 +161,11 @@ describe('wp-curate/channels store', () => {
     ]);
 
     const {
-      getChannels,
+      getAvailableChannels,
     } = resolveSelect('wp-curate/channels') as any;
 
-    const [inIssue] = await getChannels({ postId: 7 });
-    const [elsewhere] = await getChannels({ postId: 8 });
+    const [inIssue] = await getAvailableChannels({ postId: 7 });
+    const [elsewhere] = await getAvailableChannels({ postId: 8 });
 
     expect(inIssue.eligible).toBe(true);
     expect(inIssue.uses_context).toEqual(['postId']);
@@ -196,10 +196,10 @@ describe('wp-curate/channels store', () => {
     ]);
 
     const {
-      getChannels,
+      getAvailableChannels,
     } = resolveSelect('wp-curate/channels') as any;
 
-    const [inCategory, latest] = await getChannels({ postId: 9 });
+    const [inCategory, latest] = await getAvailableChannels({ postId: 9 });
 
     expect(inCategory.args).toEqual({
       term: { label: 'Category', required: true, taxonomy: 'category' },

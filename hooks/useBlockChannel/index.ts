@@ -82,10 +82,10 @@ export function isChannelProvider(blockType: unknown): boolean {
  */
 export function defaultChannel(select: any): string | null {
   const {
-    getChannels,
+    getAvailableChannels,
   } = select('wp-curate/channels') as any;
 
-  const channels: AvailableChannel[] | null = getChannels({});
+  const channels: AvailableChannel[] | null = getAvailableChannels({});
 
   if (channels === null) {
     return null;
@@ -220,10 +220,10 @@ export function toBlockChannelArgs(
  */
 export function channelArgFields(select: any, name: string): Record<string, ChannelArgField> {
   const {
-    getChannels,
+    getAvailableChannels,
   } = select('wp-curate/channels') as any;
 
-  const channels: AvailableChannel[] | null = getChannels({});
+  const channels: AvailableChannel[] | null = getAvailableChannels({});
 
   let fields = NO_ARG_FIELDS;
 
@@ -275,10 +275,10 @@ export function channelContext(
   context: Record<string, unknown>,
 ): Record<string, unknown> {
   const {
-    getChannels,
+    getAvailableChannels,
   } = select('wp-curate/channels') as any;
 
-  const channels: AvailableChannel[] | null = getChannels({});
+  const channels: AvailableChannel[] | null = getAvailableChannels({});
 
   let keys: string[] = [];
 
@@ -308,10 +308,10 @@ export function channelsContext(
   context: Record<string, unknown>,
 ): Record<string, unknown> | null {
   const {
-    getChannels,
+    getAvailableChannels,
   } = select('wp-curate/channels') as any;
 
-  const channels: AvailableChannel[] | null = getChannels({});
+  const channels: AvailableChannel[] | null = getAvailableChannels({});
 
   if (channels === null) {
     return null;
