@@ -4,6 +4,9 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
+- Added: `wp_curate_deduplication_enabled` filter to customize whether deduplication is enabled for a Query or Subquery block. It runs after the block's `never` attribute and the post meta are checked.
+- Added: `wp_curate_history_seed` filter to customize the object that supplies the initial post IDs for the deduplication history.
+
 ## 3.4.1 - 2026-10-26
 
 - Changed: Relabel the Post block's "Backfill Post" button to "Unpin Post", the inverse of "Pin a Post".
