@@ -10,8 +10,8 @@ import { registerPlugin } from '@wordpress/plugins';
 import './channelStore';
 import './channelSupport';
 import Deduplication from './deduplication/deduplication';
-import FreeForAllArgs from './freeForAllArgs/index';
-import LatestPostsInTermArgs from './latestPostsInTermArgs/latest-posts-in-term-args';
+import FreeForAllArgs from './freeForAllArgs';
+import LatestPostsInTermArgs from './latestPostsInTermArgs';
 
 /**
  * The Deduplication panel, where the Query block is registered.
