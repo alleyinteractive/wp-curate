@@ -173,7 +173,7 @@ function ChannelControls({
  *
  * `postId` is null while the channel loads, and 0 when the channel has no posts left.
  */
-function ChannelPostEdit({
+function BlockEditWithPostFromChannel({
   BlockEdit,
   clientId,
   context: blockContext,
@@ -186,19 +186,19 @@ function ChannelPostEdit({
   pinnedPostType: string;
   props: Record<string, unknown>;
 }) {
-  const queuedIds = useChannelQueue(clientId);
+  const shownIds = useChannelQueue(clientId);
 
   let postId: number | null = null;
 
-  if (queuedIds !== null) {
+  if (shownIds !== null) {
     postId = 0;
   }
 
-  if (queuedIds !== null && queuedIds.length > 0) {
-    [postId] = queuedIds;
+  if (shownIds !== null && shownIds.length > 0) {
+    [postId] = shownIds;
   }
 
-  const queuedPostType: string = useSelect((select) => {
+  const postTypeFromChannel: string = useSelect((select) => {
     const {
       getTypeOfPostInChannel,
     } = select('wp-curate/channels') as any;
@@ -212,7 +212,7 @@ function ChannelPostEdit({
     return out;
   }, [postId]);
 
-  let postType = queuedPostType;
+  let postType = postTypeFromChannel;
 
   // A pinned post can be not in the IDs that have loaded, so the block saves its post type.
   if (pinnedPostType !== '') {
@@ -286,7 +286,7 @@ const withChannelSupport = createHigherOrderComponent(
         {isProvider ? (
           <BlockEdit {...props} />
         ) : (
-          <ChannelPostEdit
+          <BlockEditWithPostFromChannel
             BlockEdit={BlockEdit}
             clientId={clientId}
             context={context}
