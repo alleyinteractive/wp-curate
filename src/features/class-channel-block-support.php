@@ -15,18 +15,18 @@ use WP_Block_Type_Registry;
 use WP_Post;
 
 /**
- * The `wp-curate/channels` block support, for blocks that have a channel.
+ * The `wp-curate/channels` block support.
  *
- * A block with the support gets a `channel` attribute, the channel context, and the `postId` and `postType` context for
- * channels that read it.
+ * A block that supports `wp-curate/channels` gets a `channel` attribute and the channel context, including
+ * `postId` and `postType` for channels that read it.
  *
- * Like a block binding, the `channel` attribute is an object with the channel `name` and the `args` that the block
- * gives the channel, such as `{"name":"post_category_latest","args":{"term":7}}`.
+ * Like a block binding, the `channel` attribute is an object with the channel `name` and the `args` to pass to
+ * the channel, such as `{"name":"post_category_latest","args":{"term":7}}`.
  *
  * A block that also provides the `wp-curate/channel` context, like Channel Content, passes its channel to its inner
- * blocks. Any other block takes a post from its channel's queue, skipping the posts that blocks before it took, and
- * gets that post as the `postId` and `postType` context, which is 0 and an empty string when the channel has no posts
- * left. Blocks can pin a post with an integer `ref` attribute.
+ * blocks. Any other block takes a post from its channel's queue and gets that post as the `postId` and `postType` context.
+ *
+ * Blocks can pin a post with an integer `ref` attribute.
  *
  * Keep the rules matched with the `channelSupport` editor script.
  */
@@ -34,7 +34,7 @@ final readonly class Channel_Block_Support implements Feature {
 	/**
 	 * Constructor.
 	 *
-	 * @param Channel                $default_channel     The channel of a block without its own.
+	 * @param Channel                $default_channel     The default channel.
 	 * @param WP_Block_Type_Registry $block_type_registry Core block type registry.
 	 */
 	public function __construct(
@@ -47,9 +47,7 @@ final readonly class Channel_Block_Support implements Feature {
 	 */
 	public function boot(): void {
 		add_filter( 'register_block_type_args', [ $this, 'filter_register_block_type_args' ] );
-
-		// After `Queues_Block_Context` adds its context.
-		add_filter( 'render_block_context', [ $this, 'filter_render_block_context' ], 20, 2 );
+		add_filter( 'render_block_context', [ $this, 'filter_render_block_context' ], 10, 2 );
 	}
 
 	/**

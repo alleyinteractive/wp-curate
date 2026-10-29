@@ -8,6 +8,7 @@
 namespace Alley\WP\WP_Curate;
 
 use Alley\WP\Features\Group;
+use Alley\WP\Features\Ordered;
 use Alley\WP\Post_IDs\Empty_Post_IDs;
 use Alley\WP\Post_Queries\Default_Post_Queries;
 use Alley\WP\Post_Query\Global_Post_Query;
@@ -60,17 +61,19 @@ function main(): void {
 			channels: $channels,
 			default_channel: $default_channel,
 		),
-		new Features\Queues_Block_Context(
-			queues: new Channels\Queues(
-				channels: $channels,
-				taken: new History(
-					seed: new Empty_Post_IDs(),
+		new Ordered(
+			first: new Features\Queues_Block_Context(
+				queues: new Channels\Queues(
+					channels: $channels,
+					taken: new History(
+						seed: new Empty_Post_IDs(),
+					),
 				),
 			),
-		),
-		new Features\Channel_Block_Support(
-			default_channel: $default_channel,
-			block_type_registry: WP_Block_Type_Registry::get_instance(),
+			then: new Features\Channel_Block_Support(
+				default_channel: $default_channel,
+				block_type_registry: WP_Block_Type_Registry::get_instance(),
+			),
 		),
 	);
 	// phpcs:enable
