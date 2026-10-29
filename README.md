@@ -38,7 +38,7 @@ doAction( 'wp-curate.dedupe' );
 
 #### The `wp_curate_deduplication_enabled` filter
 
-Filters whether deduplication is enabled for a Query or Subquery block. The default value is `false`, unless the current post or page has the `wp_curate_deduplication` post meta set. A block with its deduplication attribute set to `never` also starts as `false`. The filter runs after those checks, so its return value always takes precedence.
+Filters whether deduplication is enabled for a Query or Subquery block. The default value is `false`, unless the current post or page has the `wp_curate_deduplication` post meta enabled. A block with its deduplication attribute set to `never` also starts as `false`. The filter runs after those checks, so its return value always takes precedence.
 
 Parameters:
 

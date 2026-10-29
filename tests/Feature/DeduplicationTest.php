@@ -193,4 +193,40 @@ class DeduplicationTest extends TestCase {
 			// Ensure the "never" block still skips posts used by the first block.
 			->assertSeeInOrder( $posts->pluck( 'post_title' )->all() );
 	}
+
+	/**
+	 * Test that the filter receives the queried post ID for a "never" block.
+	 */
+	public function test_filter_receives_post_id_for_never_block(): void {
+		$received = [];
+
+		static::create_ordered_set( 10 );
+
+		add_filter(
+			'wp_curate_deduplication_enabled',
+			function ( $dedupe, $post_id ) use ( &$received ) {
+				$received[] = $post_id;
+
+				return $dedupe;
+			},
+			10,
+			2,
+		);
+
+		$this->set_front_page( $page = static::factory()->page->with_meta( 'wp_curate_deduplication', '1' )->create_and_get( [
+			'post_content' => block_factory()->preset( 'wp-curate/query', [
+				'attributes' => [
+					'deduplication' => 'never',
+					'numberOfPosts' => 5,
+				],
+			] ),
+		] ) );
+
+		$this->get( '/' )
+			->assertOk()
+			->assertQueriedObjectId( $page->ID );
+
+		$this->assertNotEmpty( $received );
+		$this->assertSame( [ $page->ID ], array_values( array_unique( $received ) ) );
+	}
 }

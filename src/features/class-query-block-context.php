@@ -76,12 +76,18 @@ final class Query_Block_Context implements Feature {
 		$dedupe     = false;
 		$main_query = $this->main_query->query_object();
 
-		// Prefer the query block's attribute.
-		if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
-			$dedupe = false;
-		} elseif ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
+		if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
 			$post_id = $main_query->get_queried_object_id();
-			$dedupe  = post_meta( $post_id, 'wp_curate_deduplication' )->bool();
+
+			$is_never = (
+				isset( $parsed_block['attrs']['deduplication'] )
+				&& 'never' === $parsed_block['attrs']['deduplication']
+			);
+
+			// Prefer the query block's attribute.
+			if ( ! $is_never ) {
+				$dedupe = post_meta( $post_id, 'wp_curate_deduplication' )->bool();
+			}
 		}
 
 		/**
