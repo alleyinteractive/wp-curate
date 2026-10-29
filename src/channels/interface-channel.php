@@ -37,7 +37,7 @@ interface Channel {
 	public function entity_kind(): string;
 
 	/**
-	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
+	 * The arguments that the channel accepts, keyed by argument name, like the `args` of a REST API route.
 	 *
 	 * The channel has no IDs until a block gives it a value for each required argument.
 	 *

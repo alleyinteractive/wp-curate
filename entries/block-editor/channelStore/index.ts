@@ -4,28 +4,26 @@ import { createReduxStore, register } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 // Plugin dependencies.
-import type { ChannelPage, ChannelRecord } from '../../../hooks/useChannelRecord';
+import type { ChannelResultsPage, ChannelResults } from '../../../hooks/useChannelResults';
 
 /*
- * The list of channels, alone and for each block context, the channels by name, arguments, and
- * context, and the pages of them that pickers show.
- * Blocks read it by the store name, `wp-curate/channels`, so that it is registered only once, here.
+ * The lists of channels for each block context, the channels by name, arguments, and context, and
+ * the pages of them that pickers show.
  *
  * core-data is not used because it stores an entity record by its key alone, so the same channel
  * name with different arguments or context would overwrite itself.
  *
- * A channel record holds only as many IDs as blocks have asked for. Asking for more loads the
+ * Channel results hold only as many IDs as blocks have asked for. Asking for more loads the
  * channel again from its start, through the new count, so that the queue reads the IDs in one
- * order. A page record holds one page, which a picker can load by itself, and the channel's totals.
+ * order. A results page holds one page, which a picker can load by itself, and the channel's
+ * totals.
  */
 
 // The most IDs that the REST API returns in one page.
 const MAX_PER_PAGE = 100;
 
 /**
- * The description of an argument that a channel reads. `required` is true for an argument that the
- * channel needs. The fill of the Channel panel for the channel reads the other keys, such as the
- * `taxonomy` of a term argument. See `Channel::args()` in PHP.
+ * The description of an argument that is passed to a channel.
  */
 export interface ChannelArgField {
   [key: string]: unknown;
@@ -34,29 +32,34 @@ export interface ChannelArgField {
 }
 
 /**
- * A channel in the list of channels. `default` is true for the global default channel. `args`
- * describes the arguments that the channel reads, keyed by argument name, and `uses_context` lists
- * the block context that it reads. `eligible` tells whether a block with the context of the
- * list can select the channel.
+ * A channel in the list of channels.
+ *
+ * In PHP, `Available_Channels` is every channel from the `wp_curate_channels` filter. Here, the
+ * list holds only the channels that the current user can read, as `Channel::can_read()` says.
+ * `eligible` depends on the block context of the request, and `default` on the other registered
+ * channels, so neither describes the channel by itself.
  */
-export interface ChannelOption {
+export interface AvailableChannel {
+  /** The descriptions of the arguments that the channel accepts, keyed by argument name. */
   args: Record<string, ChannelArgField>;
-  eligible: boolean;
+  /** Whether the channel is the global default channel. */
   default: boolean;
+  /** Whether a block with the context of the list can select the channel. */
+  eligible: boolean;
   label: string;
   name: string;
+  /** The block context that the channel reads. */
   uses_context: string[];
 }
 
 interface ChannelState {
-  channels: Record<string, ChannelRecord>;
-  list: ChannelOption[] | null;
-  listsInContext: Record<string, ChannelOption[]>;
-  pages: Record<string, ChannelPage>;
+  channels: Record<string, ChannelResults>;
+  lists: Record<string, AvailableChannel[]>;
+  pages: Record<string, ChannelResultsPage>;
 }
 
 /**
- * The key of a stored channel record.
+ * The key of stored channel results.
  *
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
@@ -69,7 +72,7 @@ const channelKey = (
 ) => JSON.stringify([name, args, context]);
 
 /**
- * The key of a stored page record.
+ * The key of a stored results page.
  *
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
@@ -88,44 +91,44 @@ const pageKey = (
 ) => JSON.stringify([name, args, context, search, page, perPage]);
 
 /**
- * Reads a stored record, if it has at least the number of IDs, or if the channel has no more IDs
+ * Reads stored results, if they have at least the number of IDs, or if the channel has no more IDs
  * to load.
  *
  * @param state Store state.
- * @param key   Key of the record.
+ * @param key   Key of the results.
  * @param count Number of IDs.
  */
 function toLoadedChannel(
-  state: Record<string, ChannelRecord>,
+  state: Record<string, ChannelResults>,
   key: string,
   count: number,
-): ChannelRecord | null {
-  let stored: ChannelRecord | null = null;
-  let record: ChannelRecord | null = null;
+): ChannelResults | null {
+  let stored: ChannelResults | null = null;
+  let results: ChannelResults | null = null;
 
   if (key in state) {
     stored = state[key];
   }
 
   if (stored !== null && stored.ids.length >= count) {
-    record = stored;
+    results = stored;
   }
 
   if (stored !== null && !stored.has_more) {
-    record = stored;
+    results = stored;
   }
 
-  return record;
+  return results;
 }
 
 /**
- * Reads a channel record from a REST API response, which can be another type when the
+ * Reads channel results from a REST API response, which can be another type when the
  * request fails.
  *
  * @param value The response.
  */
-function toChannelRecord(value: unknown): ChannelRecord {
-  const record: ChannelRecord = {
+function toChannelResults(value: unknown): ChannelResults {
+  const results: ChannelResults = {
     entity_kind: '',
     has_more: false,
     ids: [],
@@ -135,21 +138,21 @@ function toChannelRecord(value: unknown): ChannelRecord {
   };
 
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return record;
+    return results;
   }
 
   const response = value as Record<string, unknown>;
 
   if (typeof response.entity_kind === 'string') {
-    record.entity_kind = response.entity_kind;
+    results.entity_kind = response.entity_kind;
   }
 
   if (Array.isArray(response.ids)) {
-    record.ids = response.ids.filter((id: unknown): id is number => Number.isInteger(id));
+    results.ids = response.ids.filter((id: unknown): id is number => Number.isInteger(id));
   }
 
   if (typeof response.label === 'string') {
-    record.label = response.label;
+    results.label = response.label;
   }
 
   // PHP encodes an empty associative array as a JSON array, so an array means no post types.
@@ -160,27 +163,27 @@ function toChannelRecord(value: unknown): ChannelRecord {
   ) {
     Object.entries(response.post_types).forEach(([slug, postTypeLabel]) => {
       if (typeof postTypeLabel === 'string') {
-        record.post_types[slug] = postTypeLabel;
+        results.post_types[slug] = postTypeLabel;
       }
     });
   }
 
   if (Array.isArray(response.uses_context)) {
-    record.uses_context = response.uses_context.filter(
+    results.uses_context = response.uses_context.filter(
       (usedKey: unknown): usedKey is string => typeof usedKey === 'string',
     );
   }
 
-  return record;
+  return results;
 }
 
 /**
- * Reads the arguments of a channel from a REST API response, keyed by argument name. An argument
- * without a string `label` is left out.
+ * Reads the descriptions of a channel's arguments from a REST API response, keyed by argument
+ * name. A description without a string `label` is left out.
  *
  * @param value The `args` value of the response.
  */
-function toChannelArgFields(value: unknown): Record<string, ChannelArgField> {
+function toFieldsForChannelArgs(value: unknown): Record<string, ChannelArgField> {
   const fields: Record<string, ChannelArgField> = {};
 
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -217,11 +220,11 @@ function toChannelArgFields(value: unknown): Record<string, ChannelArgField> {
  *
  * @param value The response.
  */
-function toChannelOptions(value: unknown): ChannelOption[] {
-  const options: ChannelOption[] = [];
+function toAvailableChannels(value: unknown): AvailableChannel[] {
+  const channels: AvailableChannel[] = [];
 
   if (!Array.isArray(value)) {
-    return options;
+    return channels;
   }
 
   value.forEach((item: unknown) => {
@@ -245,8 +248,8 @@ function toChannelOptions(value: unknown): ChannelOption[] {
     }
 
     if (typeof label === 'string' && typeof name === 'string') {
-      options.push({
-        args: toChannelArgFields(args),
+      channels.push({
+        args: toFieldsForChannelArgs(args),
         eligible: isEligible === true,
         default: isDefault === true,
         label,
@@ -256,7 +259,7 @@ function toChannelOptions(value: unknown): ChannelOption[] {
     }
   });
 
-  return options;
+  return channels;
 }
 
 /**
@@ -276,7 +279,7 @@ function toHeaderInteger(value: string | null): number {
 }
 
 /**
- * Fetches one page of a channel, or of its matches for a search.
+ * Fetches one page of a channel.
  *
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
@@ -292,7 +295,7 @@ async function fetchChannelPage(
   search: string,
   page: number,
   perPage: number,
-): Promise<ChannelPage> {
+): Promise<ChannelResultsPage> {
   const queryArgs: Record<string, unknown> = {
     args,
     context,
@@ -324,7 +327,7 @@ async function fetchChannelPage(
 
   // The channel counts the same IDs that it gives, so the page count tells whether more remain.
   return {
-    ...toChannelRecord(body),
+    ...toChannelResults(body),
     has_more: page < totalPages,
     total,
     total_pages: totalPages,
@@ -332,7 +335,7 @@ async function fetchChannelPage(
 }
 
 /**
- * Loads the first IDs of a channel through the count, in pages of up to `MAX_PER_PAGE`.
+ * Loads the first IDs of a channel up to the given `count`, in pages of up to `MAX_PER_PAGE`.
  *
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
@@ -351,7 +354,7 @@ const loadChannel = (
     receiveChannel,
   } = dispatch;
 
-  // Without a count, no pages would load, and the empty record would look like a complete channel.
+  // Without a count, no pages would load, the channel would appear to use them.
   if (!Number.isInteger(count) || count < 1) {
     return;
   }
@@ -359,7 +362,7 @@ const loadChannel = (
   const perPage = Math.min(count, MAX_PER_PAGE);
   const pages = Array.from({ length: Math.ceil(count / perPage) }, (_, index) => index + 1);
 
-  const pageRecords = await Promise.all(
+  const resultsPages = await Promise.all(
     pages.map((page) => fetchChannelPage(name, args, context, '', page, perPage)),
   );
 
@@ -367,11 +370,10 @@ const loadChannel = (
     entity_kind: entityKind,
     label,
     uses_context: usesContext,
-  } = pageRecords[0];
+  } = resultsPages[0];
 
-  // Join the pages through the first page that has no more IDs after it. The record has no totals,
-  // because the queue does not use them.
-  const record: ChannelRecord = {
+  // No totals, because the queue does not use them.
+  const results: ChannelResults = {
     entity_kind: entityKind,
     has_more: false,
     ids: [],
@@ -380,22 +382,23 @@ const loadChannel = (
     uses_context: usesContext,
   };
 
+  // Join the pages, and stop after the channel's last page.
   let isComplete = false;
 
-  pageRecords.forEach((pageRecord) => {
+  resultsPages.forEach((resultsPage) => {
     if (!isComplete) {
-      record.has_more = pageRecord.has_more;
-      record.ids = [...record.ids, ...pageRecord.ids];
-      record.post_types = { ...record.post_types, ...pageRecord.post_types };
-      isComplete = !pageRecord.has_more;
+      results.has_more = resultsPage.has_more;
+      results.ids = [...results.ids, ...resultsPage.ids];
+      results.post_types = { ...results.post_types, ...resultsPage.post_types };
+      isComplete = !resultsPage.has_more;
     }
   });
 
-  receiveChannel(channelKey(name, args, context), record);
+  receiveChannel(channelKey(name, args, context), results);
 };
 
 /**
- * Loads one page of a channel, or of its matches for a search.
+ * Loads one page of a channel.
  *
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
@@ -440,7 +443,7 @@ const loadChannelPage = (
  *
  * @param context Block context, which tells whether a block can select each channel.
  */
-async function fetchChannels(context: object): Promise<ChannelOption[]> {
+async function fetchChannels(context: object): Promise<AvailableChannel[]> {
   let response: unknown = null;
 
   try {
@@ -449,41 +452,28 @@ async function fetchChannels(context: object): Promise<ChannelOption[]> {
     // A list that fails to load counts as empty.
   }
 
-  return toChannelOptions(response);
+  return toAvailableChannels(response);
 }
-
-/**
- * Loads the list of channels.
- */
-const loadChannels = () => async ({
-  dispatch,
-}: any) => {
-  const {
-    receiveChannels,
-  } = dispatch;
-
-  receiveChannels(await fetchChannels({}));
-};
 
 /**
  * Loads the list of channels for a block context.
  *
  * @param context Block context.
  */
-const loadChannelsInContext = (context: object) => async ({
+const loadChannels = (context: object) => async ({
   dispatch,
 }: any) => {
   const {
-    receiveChannelsInContext,
+    receiveChannels,
   } = dispatch;
 
-  receiveChannelsInContext(JSON.stringify(context), await fetchChannels(context));
+  receiveChannels(JSON.stringify(context), await fetchChannels(context));
 };
 
 /**
- * Get the record of a channel.
+ * Get the results of a channel.
  *
- * The arguments have no defaults, so that callers pass all of them. The data registry keys each
+ * The arguments have no defaults so that callers pass all of them. The data registry keys each
  * resolution by its exact arguments, so a call that left one out would send a second request
  * for the same IDs.
  *
@@ -492,7 +482,7 @@ const loadChannelsInContext = (context: object) => async ({
  * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  * @param count   Number of IDs, as a multiple of `CHANNEL_PAGE_SIZE`.
- * @return The record, or null until it has the number of IDs.
+ * @return The results, or null until they have the number of IDs.
  */
 const getChannel = (
   state: ChannelState,
@@ -503,9 +493,9 @@ const getChannel = (
 ) => toLoadedChannel(state.channels, channelKey(name, args, context), count);
 
 /**
- * Get one page of a channel, or of its matches for a search.
+ * Get one page of a channel.
  *
- * Like `getChannel()`, the arguments have no defaults, so that callers pass all of them.
+ * Like `getChannel()`, the arguments have no defaults so that callers pass all of them.
  *
  * @param state   Store state.
  * @param name    Channel name.
@@ -526,25 +516,26 @@ const getChannelPage = (
   perPage: number,
 ) => {
   const key = pageKey(name, args, context, search, page, perPage);
-  let record: ChannelPage | null = null;
+  let resultsPage: ChannelResultsPage | null = null;
 
   if (key in state.pages) {
-    record = state.pages[key];
+    resultsPage = state.pages[key];
   }
 
-  return record;
+  return resultsPage;
 };
 
 /**
- * Get the post type of a post in any channel or page that has loaded.
+ * Get the type of a post that came with any channel results that the store has loaded.
  *
- * It loads nothing.
+ * The REST API gives each post's type with the IDs, because a channel can mix post types. This
+ * loads nothing.
  *
  * @param state Store state.
  * @param id    Post ID.
- * @return The post type, or an empty string if no channel or page has the post.
+ * @return The post type, or an empty string if no loaded results have the post.
  */
-const getChannelPostType = (
+const getLoadedPostType = (
   state: ChannelState,
   id: number,
 ) => {
@@ -562,29 +553,22 @@ const getChannelPostType = (
 };
 
 /**
- * Get the name and label of each channel.
+ * Get the channels, each marked as eligible or not for a block context.
  *
- * @param state Store state.
- * @return The channels, or null until they load.
- */
-const getChannels = (state: ChannelState) => state.list;
-
-/**
- * Get the channels, with whether a block with the context can select each one.
- *
- * Pass only the context that the channels use, so that blocks with the same context share one
- * request.
+ * Pass `{}` for the list without a block context. Like `getChannel()`, the context has no default,
+ * so that callers pass it. Pass only the context that the channels use, so that blocks with the
+ * same context share one request.
  *
  * @param state   Store state.
  * @param context Block context.
  * @return The channels, or null until they load.
  */
-const getChannelsInContext = (state: ChannelState, context: object) => {
+const getChannels = (state: ChannelState, context: object) => {
   const key = JSON.stringify(context);
-  let list: ChannelOption[] | null = null;
+  let list: AvailableChannel[] | null = null;
 
-  if (key in state.listsInContext) {
-    list = state.listsInContext[key];
+  if (key in state.lists) {
+    list = state.lists[key];
   }
 
   return list;
@@ -629,8 +613,7 @@ const store = createReduxStore('wp-curate/channels', {
   reducer(state: ChannelState | undefined, action: any) {
     let out: ChannelState = {
       channels: {},
-      list: null,
-      listsInContext: {},
+      lists: {},
       pages: {},
     };
 
@@ -640,29 +623,22 @@ const store = createReduxStore('wp-curate/channels', {
 
     let isLonger = true;
 
-    // Requests for different counts can finish in any order, so keep the record with more IDs.
+    // Requests for different counts can finish in any order, so keep the results with more IDs.
     if (action.type === 'RECEIVE_CHANNEL' && action.key in out.channels) {
-      isLonger = action.record.ids.length >= out.channels[action.key].ids.length;
+      isLonger = action.results.ids.length >= out.channels[action.key].ids.length;
     }
 
     if (action.type === 'RECEIVE_CHANNEL' && isLonger) {
       out = {
         ...out,
-        channels: { ...out.channels, [action.key]: action.record },
+        channels: { ...out.channels, [action.key]: action.results },
       };
     }
 
     if (action.type === 'RECEIVE_CHANNELS') {
       out = {
         ...out,
-        list: action.list,
-      };
-    }
-
-    if (action.type === 'RECEIVE_CHANNELS_IN_CONTEXT') {
-      out = {
-        ...out,
-        listsInContext: { ...out.listsInContext, [action.key]: action.list },
+        lists: { ...out.lists, [action.key]: action.list },
       };
     }
 
@@ -676,31 +652,26 @@ const store = createReduxStore('wp-curate/channels', {
     return out;
   },
   actions: {
-    receiveChannel(key: string, record: ChannelRecord) {
-      return { key, record, type: 'RECEIVE_CHANNEL' };
+    receiveChannel(key: string, results: ChannelResults) {
+      return { key, results, type: 'RECEIVE_CHANNEL' };
     },
-    receiveChannelPage(key: string, page: ChannelPage) {
+    receiveChannelPage(key: string, page: ChannelResultsPage) {
       return { key, page, type: 'RECEIVE_CHANNEL_PAGE' };
     },
-    receiveChannels(list: ChannelOption[]) {
-      return { list, type: 'RECEIVE_CHANNELS' };
-    },
-    receiveChannelsInContext(key: string, list: ChannelOption[]) {
-      return { key, list, type: 'RECEIVE_CHANNELS_IN_CONTEXT' };
+    receiveChannels(key: string, list: AvailableChannel[]) {
+      return { key, list, type: 'RECEIVE_CHANNELS' };
     },
   },
   selectors: {
     getChannel,
     getChannelPage,
-    getChannelPostType,
+    getLoadedPostType,
     getChannels,
-    getChannelsInContext,
   },
   resolvers: {
     getChannel: getChannelResolver,
     getChannelPage: getChannelPageResolver,
     getChannels: loadChannels,
-    getChannelsInContext: loadChannelsInContext,
   },
 });
 

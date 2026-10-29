@@ -85,7 +85,7 @@ final class Queues {
 		foreach ( $this->channels->all() as $channel ) {
 			if ( $channel->name() === $name ) {
 				/*
-				 * A block's arguments can include keys that this channel does not read, such as from
+				 * A block's arguments can include keys that this channel does not accept, such as from
 				 * handwritten markup or an argument that the channel no longer has. Leaving them out gives
 				 * every block that uses the same arguments the same queue.
 				 */

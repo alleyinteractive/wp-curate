@@ -12,7 +12,7 @@ import { __ } from '@wordpress/i18n';
 // Plugin dependencies.
 import { channelContext } from '../../../hooks/useBlockChannel';
 import { channelQueueContext } from '../../../hooks/useChannelQueue';
-import useChannelRecord, { CHANNEL_PAGE_SIZE, type ChannelPage } from '../../../hooks/useChannelRecord';
+import useChannelResults, { CHANNEL_PAGE_SIZE, type ChannelResultsPage } from '../../../hooks/useChannelResults';
 
 interface PickerItem {
   id: number;
@@ -234,29 +234,29 @@ export default function PostPicker({
     [contextKey],
   );
 
-  let recordChannel = '';
-  let recordContext: Record<string, unknown> = {};
+  let resultsChannel = '';
+  let resultsContext: Record<string, unknown> = {};
 
   // Without its context, the channel is not requested.
   if (context !== null) {
-    recordChannel = channel;
-    recordContext = context;
+    resultsChannel = channel;
+    resultsContext = context;
   }
 
   // The whole channel, for its label, which stays the same while a page loads.
-  const channelRecord = useChannelRecord(recordChannel, args, recordContext);
+  const channelResults = useChannelResults(resultsChannel, args, resultsContext);
 
   const {
-    getChannelPostType,
+    getLoadedPostType,
   } = useSelect((select) => select('wp-curate/channels') as any, []);
 
   // The current page, or null while it loads.
-  const pageRecord: ChannelPage | null = useSelect((select) => {
+  const resultsPage: ChannelResultsPage | null = useSelect((select) => {
     const {
       getChannelPage,
     } = select('wp-curate/channels') as any;
 
-    let out: ChannelPage | null = null;
+    let out: ChannelResultsPage | null = null;
 
     if (context !== null) {
       out = getChannelPage(channel, args, context, search, page, perPage);
@@ -269,38 +269,38 @@ export default function PostPicker({
   const [paginationInfo, setPaginationInfo] = useState({ totalItems: 0, totalPages: 0 });
 
   if (
-    pageRecord !== null
+    resultsPage !== null
     && (
-      pageRecord.total !== paginationInfo.totalItems
-      || pageRecord.total_pages !== paginationInfo.totalPages
+      resultsPage.total !== paginationInfo.totalItems
+      || resultsPage.total_pages !== paginationInfo.totalPages
     )
   ) {
     setPaginationInfo({
-      totalItems: pageRecord.total,
-      totalPages: pageRecord.total_pages,
+      totalItems: resultsPage.total,
+      totalPages: resultsPage.total_pages,
     });
   }
 
   let title: string = __('Select a post', 'wp-curate');
 
-  if (channelRecord !== null && channelRecord.label !== '') {
-    title = channelRecord.label;
+  if (channelResults !== null && channelResults.label !== '') {
+    title = channelResults.label;
   }
 
   let pageIds = NO_IDS;
 
-  if (pageRecord !== null) {
-    pageIds = pageRecord.ids;
+  if (resultsPage !== null) {
+    pageIds = resultsPage.ids;
   }
 
   // A channel can mix post types, so make one query for the posts of each type on the page.
   const queries = useMemo(() => {
     const idsByPostType: Record<string, number[]> = {};
 
-    if (pageRecord !== null) {
+    if (resultsPage !== null) {
       pageIds.forEach((id) => {
-        if (id in pageRecord.post_types) {
-          const postType = pageRecord.post_types[id];
+        if (id in resultsPage.post_types) {
+          const postType = resultsPage.post_types[id];
 
           if (!(postType in idsByPostType)) {
             idsByPostType[postType] = [];
@@ -318,7 +318,7 @@ export default function PostPicker({
         per_page: ids.length,
       },
     }));
-  }, [pageIds, pageRecord]);
+  }, [pageIds, resultsPage]);
 
   /*
    * Each item is the array that core-data holds for a query, so the result is stable between
@@ -332,7 +332,7 @@ export default function PostPicker({
     return queries.map(({ postType, query }) => getEntityRecords('postType', postType, query));
   }, [queries]);
 
-  let isLoading = pageRecord === null;
+  let isLoading = resultsPage === null;
 
   recordLists.forEach((records: unknown) => {
     if (records === null) {
@@ -441,7 +441,7 @@ export default function PostPicker({
 
               // The selected post can be on a page that the picker showed before.
               if (Number.isInteger(id) && id > 0) {
-                onSelect(id, getChannelPostType(id));
+                onSelect(id, getLoadedPostType(id));
               }
             },
             id: 'select',

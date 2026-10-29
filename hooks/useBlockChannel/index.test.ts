@@ -179,7 +179,7 @@ describe('toBlockChannelArgs', () => {
 });
 
 describe('pickChannelArgs', () => {
-  it('keeps only the arguments that the channel reads', () => {
+  it('keeps only the arguments that the channel accepts', () => {
     expect(pickChannelArgs(TERM_FIELDS, { stale: 1, term: 5 })).toEqual({ term: 5 });
   });
 });
@@ -193,7 +193,7 @@ describe('hasEveryChannelArg', () => {
     expect(hasEveryChannelArg(TERM_FIELDS, {})).toBe(false);
   });
 
-  it('is true for a channel that reads no arguments', () => {
+  it('is true for a channel that accepts no arguments', () => {
     expect(hasEveryChannelArg({}, {})).toBe(true);
   });
 

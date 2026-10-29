@@ -58,7 +58,7 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
+	 * The arguments that the channel accepts, keyed by argument name, like the `args` of a REST API route.
 	 *
 	 * The editor script `entries/block-editor/latestPostsInTermArgs` adds a term picker for the
 	 * `term` argument of a channel whose name ends with the argument's `taxonomy` and `_latest`.

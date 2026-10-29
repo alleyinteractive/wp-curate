@@ -66,7 +66,7 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
+	 * The arguments that the channel accepts, keyed by argument name, like the `args` of a REST API route.
 	 *
 	 * The editor script `entries/block-editor/freeForAllArgs` adds the controls of this channel by
 	 * argument name, and reads the `options`, `taxonomy`, and `help` keys.

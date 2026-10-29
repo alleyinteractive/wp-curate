@@ -2,7 +2,7 @@
 import { useSelect } from '@wordpress/data';
 
 // Plugin dependencies.
-import type { ChannelArgField, ChannelOption } from '../../entries/block-editor/channelStore';
+import type { ChannelArgField, AvailableChannel } from '../../entries/block-editor/channelStore';
 
 /*
  * The block support of a block that has a channel. wp-curate gives the block a `channel` attribute
@@ -85,7 +85,7 @@ export function defaultChannel(select: any): string | null {
     getChannels,
   } = select('wp-curate/channels') as any;
 
-  const channels: ChannelOption[] | null = getChannels();
+  const channels: AvailableChannel[] | null = getChannels({});
 
   if (channels === null) {
     return null;
@@ -211,11 +211,11 @@ export function toBlockChannelArgs(
 }
 
 /**
- * Get the descriptions of the arguments that a channel reads, keyed by argument name.
+ * Get the descriptions of the arguments that a channel accepts, keyed by argument name.
  *
  * @param select The data registry's `select`.
  * @param name   Channel name.
- * @return The descriptions, or none for a channel that reads no arguments or while the list of
+ * @return The descriptions, or none for a channel that accepts no arguments or while the list of
  *         channels loads.
  */
 export function channelArgFields(select: any, name: string): Record<string, ChannelArgField> {
@@ -223,7 +223,7 @@ export function channelArgFields(select: any, name: string): Record<string, Chan
     getChannels,
   } = select('wp-curate/channels') as any;
 
-  const channels: ChannelOption[] | null = getChannels();
+  const channels: AvailableChannel[] | null = getChannels({});
 
   let fields = NO_ARG_FIELDS;
 
@@ -278,7 +278,7 @@ export function channelContext(
     getChannels,
   } = select('wp-curate/channels') as any;
 
-  const channels: ChannelOption[] | null = getChannels();
+  const channels: AvailableChannel[] | null = getChannels({});
 
   let keys: string[] = [];
 
@@ -311,7 +311,7 @@ export function channelsContext(
     getChannels,
   } = select('wp-curate/channels') as any;
 
-  const channels: ChannelOption[] | null = getChannels();
+  const channels: AvailableChannel[] | null = getChannels({});
 
   if (channels === null) {
     return null;
@@ -327,13 +327,13 @@ export function channelsContext(
 }
 
 /**
- * Get only the arguments that a channel reads, in the order of its descriptions.
+ * Get only the arguments that a channel accepts, in the order of its descriptions.
  *
- * A block's arguments can include keys that the channel does not read, such as from hand-written
+ * A block's arguments can include keys that the channel does not accept, such as from hand-written
  * markup or an argument that the channel no longer has. Leaving them out gives every block that
  * uses the same arguments the same request and queue, like the queues in PHP.
  *
- * @param fields The descriptions of the arguments that the channel reads.
+ * @param fields The descriptions of the arguments that the channel accepts.
  * @param args   The block's arguments.
  */
 export function pickChannelArgs(
@@ -355,7 +355,7 @@ export function pickChannelArgs(
  * Whether a block gives its channel a value for each argument that the channel needs. Without
  * them, the channel has no posts. An empty string or an empty list is no value.
  *
- * @param fields The descriptions of the arguments that the channel reads.
+ * @param fields The descriptions of the arguments that the channel accepts.
  * @param args   The block's arguments.
  */
 export function hasEveryChannelArg(

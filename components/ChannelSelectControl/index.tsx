@@ -8,7 +8,7 @@ import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
-import type { ChannelOption } from '../../entries/block-editor/channelStore';
+import type { AvailableChannel } from '../../entries/block-editor/channelStore';
 import { channelsContext } from '../../hooks/useBlockChannel';
 
 /**
@@ -28,39 +28,32 @@ export default function ChannelSelectControl({
   // Compare the context by value, since callers can pass a new object on each render.
   const contextKey = JSON.stringify(context);
 
-  const {
-    channels,
-    channelsInContext,
-  } = useSelect((select) => {
+  const channels: AvailableChannel[] | null = useSelect((select) => {
     const {
       getChannels,
-      getChannelsInContext,
     } = select('wp-curate/channels') as any;
 
-    let inContext: ChannelOption[] | null = null;
+    let out: AvailableChannel[] | null = null;
 
     const used = channelsContext(select, JSON.parse(contextKey));
 
     if (used !== null) {
-      inContext = getChannelsInContext(used);
+      out = getChannels(used);
     }
 
-    return {
-      channels: getChannels() as ChannelOption[] | null,
-      channelsInContext: inContext,
-    };
+    return out;
   }, [contextKey]);
 
   // The channels to choose from, or null while they load.
   const eligible = useMemo(() => {
-    let out: ChannelOption[] | null = null;
+    let out: AvailableChannel[] | null = null;
 
-    if (channelsInContext !== null) {
-      out = channelsInContext.filter(({ eligible: isEligible }) => isEligible);
+    if (channels !== null) {
+      out = channels.filter(({ eligible: isEligible }) => isEligible);
     }
 
     return out;
-  }, [channelsInContext]);
+  }, [channels]);
 
   const options = useMemo(() => {
     const out: { label: string, value: string }[] = [];
@@ -84,7 +77,7 @@ export default function ChannelSelectControl({
      */
     if (value !== '' && !eligible.some(({ name }) => name === value)) {
       let label = value;
-      let saved: ChannelOption | undefined;
+      let saved: AvailableChannel | undefined;
 
       if (channels !== null) {
         saved = channels.find(({ name }) => name === value);
