@@ -12,7 +12,7 @@ namespace Alley\WP\WP_Curate\Channels;
  */
 final readonly class Empty_Results implements Results {
 	/**
-	 * IDs: none.
+	 * IDs in channel order.
 	 *
 	 * @phpstan-return iterable<int>
 	 *
@@ -23,7 +23,7 @@ final readonly class Empty_Results implements Results {
 	}
 
 	/**
-	 * Number of IDs: 0.
+	 * Total number of IDs in the results.
 	 *
 	 * @return int
 	 */

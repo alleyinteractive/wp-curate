@@ -10,7 +10,7 @@ namespace Alley\WP\WP_Curate\Channels;
 use WP_Post_Type;
 
 /**
- * The latest published posts of one post type, most recent first.
+ * The latest published posts of one post type.
  */
 final readonly class Latest_Posts implements Channel {
 	/**
@@ -32,7 +32,7 @@ final readonly class Latest_Posts implements Channel {
 	}
 
 	/**
-	 * Human-readable name of the channel, such as "Latest Posts".
+	 * Human-readable name of the channel, such as "All Topics".
 	 *
 	 * @return string
 	 */
@@ -49,7 +49,7 @@ final readonly class Latest_Posts implements Channel {
 	}
 
 	/**
-	 * The core-data entity kind of the channel's IDs.
+	 * The core-data entity kind of the channel's IDs, e.g. `postType` for posts or `taxonomy` for terms.
 	 *
 	 * @return string
 	 */
@@ -58,7 +58,7 @@ final readonly class Latest_Posts implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads: none.
+	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
 	 *
 	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *
@@ -69,7 +69,7 @@ final readonly class Latest_Posts implements Channel {
 	}
 
 	/**
-	 * Names of the block context values that the channel reads.
+	 * Names of the block context values that the channel reads in order to supply posts.
 	 *
 	 * @return string[]
 	 */
@@ -78,7 +78,7 @@ final readonly class Latest_Posts implements Channel {
 	}
 
 	/**
-	 * Whether a block with the context can select the channel.
+	 * Whether a block with the given context can use the channel.
 	 *
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return bool
@@ -90,7 +90,7 @@ final readonly class Latest_Posts implements Channel {
 	/**
 	 * Whether a user can read the channel.
 	 *
-	 * @param int $user_id User ID, or 0 for a visitor who is not logged in.
+	 * @param int $user_id User ID.
 	 * @return bool
 	 */
 	public function can_read( int $user_id ): bool {
@@ -103,7 +103,7 @@ final readonly class Latest_Posts implements Channel {
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @param string  $search  Search terms, or an empty string for every ID.
-	 * @return Results
+	 * @return Results No IDs if the arguments and context do not make a channel.
 	 */
 	public function results( array $args, array $context, string $search ): Results {
 		return $this->posts( $search );

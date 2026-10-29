@@ -7,13 +7,10 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
-use Generator;
 use WP_Query;
 
 /**
- * The IDs of the posts that query arguments select, and the number of them.
- *
- * The IDs and the number come from the same query arguments, so they agree.
+ * The IDs and count from the given query arguments.
  */
 final readonly class Queried_Post_IDs implements Results {
 	/**
@@ -35,15 +32,15 @@ final readonly class Queried_Post_IDs implements Results {
 	) {}
 
 	/**
-	 * IDs of the posts, in query order.
+	 * IDs in channel order.
 	 *
 	 * Posts are queried in batches, so a caller that stops early does not query every post.
 	 *
-	 * @phpstan-return Generator<int, int>
+	 * @phpstan-return iterable<int>
 	 *
-	 * @return Generator
+	 * @return iterable Integer IDs.
 	 */
-	public function ids(): Generator {
+	public function ids(): iterable {
 		$page       = 1;
 		$batch_size = self::BATCH_SIZE;
 
@@ -80,7 +77,7 @@ final readonly class Queried_Post_IDs implements Results {
 	}
 
 	/**
-	 * Number of the posts.
+	 * Total number of IDs in the results.
 	 *
 	 * @return int
 	 */

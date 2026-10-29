@@ -34,7 +34,7 @@ final readonly class Default_Channel implements Channel {
 	) {}
 
 	/**
-	 * Machine name of the default channel.
+	 * Machine name that blocks use to name the channel.
 	 *
 	 * @return string
 	 */
@@ -43,7 +43,7 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * Human-readable name of the default channel.
+	 * Human-readable name of the channel, such as "All Topics".
 	 *
 	 * @return string
 	 */
@@ -52,7 +52,7 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * The core-data entity kind of the default channel's IDs.
+	 * The core-data entity kind of the channel's IDs, e.g. `postType` for posts or `taxonomy` for terms.
 	 *
 	 * @return string
 	 */
@@ -61,8 +61,9 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * The arguments that the default channel reads: none, because a channel that reads arguments
-	 * cannot be the default.
+	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
+	 *
+	 * A channel that reads arguments cannot be the default, so this channel reads none.
 	 *
 	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *
@@ -73,8 +74,9 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * Names of the block context values that the default channel reads: none, because a channel
-	 * that reads block context cannot be the default.
+	 * Names of the block context values that the channel reads in order to supply posts.
+	 *
+	 * A channel that reads block context cannot be the default, so this channel reads none.
 	 *
 	 * @return string[]
 	 */
@@ -83,7 +85,7 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * Whether a block with the context can select the default channel.
+	 * Whether a block with the given context can use the channel.
 	 *
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return bool
@@ -93,9 +95,9 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * Whether a user can read the default channel.
+	 * Whether a user can read the channel.
 	 *
-	 * @param int $user_id User ID, or 0 for a visitor who is not logged in.
+	 * @param int $user_id User ID.
 	 * @return bool
 	 */
 	public function can_read( int $user_id ): bool {
@@ -103,12 +105,12 @@ final readonly class Default_Channel implements Channel {
 	}
 
 	/**
-	 * IDs in the default channel, in channel order, and the number of them.
+	 * IDs in the channel, in channel order, and the number of them.
 	 *
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @param string  $search  Search terms, or an empty string for every ID.
-	 * @return Results
+	 * @return Results No IDs if the arguments and context do not make a channel.
 	 */
 	public function results( array $args, array $context, string $search ): Results {
 		return $this->channel()?->results( $args, $context, $search ) ?? new Empty_Results();
