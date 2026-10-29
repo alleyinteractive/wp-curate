@@ -12,10 +12,7 @@ import {
 } from '@wordpress/element';
 
 /**
- * The control of the search argument of the Free-For-All channel.
- *
- * Each change of an argument loads the channel again, so the control saves the text only after
- * typing stops.
+ * A text control that saves the text only after typing stops.
  */
 export default function DebouncedTextControl({
   help,

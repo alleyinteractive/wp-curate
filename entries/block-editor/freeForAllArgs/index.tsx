@@ -12,11 +12,9 @@ import { __ } from '@wordpress/i18n';
 // Plugin dependencies.
 import { ChannelPanelFill } from '../../../components/ChannelPanelSlotFill';
 import type { ChannelPanelFillProps } from '../../../components/ChannelPanelSlotFill';
+import DebouncedTextControl from '../../../components/DebouncedTextControl';
 import TermControl from '../../../components/TermControl';
 import type { ChannelArgField } from '../channelStore';
-
-// Internal dependencies.
-import DebouncedTextControl from './text-control';
 
 interface FieldOption {
   label: string;
@@ -223,7 +221,7 @@ function FreeForAllArgItems({
         );
       })}
     </>
-  ): null;
+  ) : null;
 }
 
 /**
