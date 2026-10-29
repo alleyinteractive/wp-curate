@@ -247,7 +247,7 @@ export default function PostPicker({
   const channelResults = useChannelResults(resultsChannel, args, resultsContext);
 
   const {
-    getLoadedPostType,
+    getTypeOfPostInChannel,
   } = useSelect((select) => select('wp-curate/channels') as any, []);
 
   // The current page, or null while it loads.
@@ -441,7 +441,7 @@ export default function PostPicker({
 
               // The selected post can be on a page that the picker showed before.
               if (Number.isInteger(id) && id > 0) {
-                onSelect(id, getLoadedPostType(id));
+                onSelect(id, getTypeOfPostInChannel(id));
               }
             },
             id: 'select',
