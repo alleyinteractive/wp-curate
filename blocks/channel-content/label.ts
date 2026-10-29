@@ -37,10 +37,10 @@ export default function label(
   }
 
   const {
-    getChannels,
+    getAvailableChannels,
   } = select('wp-curate/channels') as any;
 
-  const channels: AvailableChannel[] | null = getChannels({});
+  const channels: AvailableChannel[] | null = getAvailableChannels({});
 
   let name: string | null = toChannelName(attributes.channel);
 

@@ -36,7 +36,7 @@ function fakeSelect(
 ) {
   // Like the store, the results have the IDs through the count, or all of them at the channel's
   // end.
-  const getChannel = jest.fn((
+  const getChannelResults = jest.fn((
     name: string,
     args: object,
     context: object,
@@ -52,8 +52,8 @@ function fakeSelect(
 
   const select = jest.fn((storeName: string) => {
     let selectors: object = {
-      getChannel,
-      getChannels: () => [
+      getChannelResults,
+      getAvailableChannels: () => [
         {
           args: {},
           eligible: true,
@@ -119,7 +119,7 @@ function fakeSelect(
   });
 
   return {
-    getChannel,
+    getChannelResults,
     select,
   };
 }
@@ -159,16 +159,16 @@ function parentBlock(name: string, attributes: object, innerBlocks: object[]) {
 }
 
 describe('channelQueueIds', () => {
-  it('passes every argument to getChannel, so that calls for the same IDs share a request', () => {
+  it('passes every argument to getChannelResults, so that calls for the same IDs share a request', () => {
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect([singleBlock('a'), singleBlock('b')], [11, 12, 13]);
 
     expect(channelQueueIds(select, 'b')).toEqual([12]);
-    expect(getChannel.mock.calls.length).toBeGreaterThan(0);
+    expect(getChannelResults.mock.calls.length).toBeGreaterThan(0);
 
-    getChannel.mock.calls.forEach((args: unknown[]) => {
+    getChannelResults.mock.calls.forEach((args: unknown[]) => {
       expect(args).toEqual(['post_latest', {}, {}, 10]);
     });
   });
@@ -176,12 +176,12 @@ describe('channelQueueIds', () => {
   it('asks for the next page when the blocks need more IDs than the first page has', () => {
     const blocks = Array.from({ length: 11 }, (_, index) => singleBlock(String(index)));
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
 
     expect(channelQueueIds(select, '10')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('post_latest', {}, {}, 20);
+    expect(getChannelResults).toHaveBeenCalledWith('post_latest', {}, {}, 20);
   });
 
   it('gives a Channel Content block channel to the blocks without one inside it, in document order', () => {
@@ -211,14 +211,14 @@ describe('channelQueueIds', () => {
       ]),
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11, 99, 12]);
 
     expect(channelQueueIds(select, 'moved')).toEqual([11]);
     expect(channelQueueIds(select, 'pinned')).toEqual([99]);
     expect(channelQueueIds(select, 'last')).toEqual([12]);
-    expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
+    expect(getChannelResults).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
   it('gives no channel to the blocks inside a Channel Content block that has none', () => {
@@ -228,22 +228,22 @@ describe('channelQueueIds', () => {
       ]),
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11]);
 
     expect(channelQueueIds(select, 'inner')).toEqual([]);
-    expect(getChannel).not.toHaveBeenCalled();
+    expect(getChannelResults).not.toHaveBeenCalled();
   });
 
   it('gives the default channel to a block without a channel or an ancestor with one', () => {
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect([singleBlock('alone', '')], [11]);
 
     expect(channelQueueIds(select, 'alone')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('global_default', {}, {}, 10);
+    expect(getChannelResults).toHaveBeenCalledWith('global_default', {}, {}, 10);
   });
 
   it('makes a loading block and every block after it wait, in any channel', () => {
@@ -268,12 +268,12 @@ describe('channelQueueIds', () => {
       ]),
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11], ['page_latest']);
 
     expect(channelQueueIds(select, 'inside')).toBeNull();
-    expect(getChannel).not.toHaveBeenCalledWith(
+    expect(getChannelResults).not.toHaveBeenCalledWith(
       'post_latest',
       expect.anything(),
       expect.anything(),
@@ -288,15 +288,15 @@ describe('channelQueueIds', () => {
       { ...singleBlock('five_again'), attributes: { channel: { args: { term: 5 }, name: IN_CATEGORY }, ref: 0 } },
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11, 12, 13]);
 
     expect(channelQueueIds(select, 'five')).toEqual([11]);
     expect(channelQueueIds(select, 'six')).toEqual([12]);
     expect(channelQueueIds(select, 'five_again')).toEqual([13]);
-    expect(getChannel).toHaveBeenCalledWith(IN_CATEGORY, { term: 5 }, {}, 10);
-    expect(getChannel).toHaveBeenCalledWith(IN_CATEGORY, { term: 6 }, {}, 10);
+    expect(getChannelResults).toHaveBeenCalledWith(IN_CATEGORY, { term: 5 }, {}, 10);
+    expect(getChannelResults).toHaveBeenCalledWith(IN_CATEGORY, { term: 6 }, {}, 10);
   });
 
   it('takes nothing from a channel without each of its arguments, but keeps a pin', () => {
@@ -305,13 +305,13 @@ describe('channelQueueIds', () => {
       { ...singleBlock('pinned'), attributes: { channel: { name: IN_CATEGORY }, ref: 99 } },
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11]);
 
     expect(channelQueueIds(select, 'none')).toEqual([]);
     expect(channelQueueIds(select, 'pinned')).toEqual([99]);
-    expect(getChannel).not.toHaveBeenCalled();
+    expect(getChannelResults).not.toHaveBeenCalled();
   });
 
   it('gives Channel Content block arguments to the blocks inside it, even if they have their own', () => {
@@ -322,13 +322,18 @@ describe('channelQueueIds', () => {
       ]),
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11, 12]);
 
     expect(channelQueueIds(select, 'first')).toEqual([11]);
     expect(channelQueueIds(select, 'moved')).toEqual([12]);
-    expect(getChannel).not.toHaveBeenCalledWith(IN_CATEGORY, { term: 6 }, {}, expect.anything());
+    expect(getChannelResults).not.toHaveBeenCalledWith(
+      IN_CATEGORY,
+      { term: 6 },
+      {},
+      expect.anything(),
+    );
   });
 
   it('sends only the arguments that the channel accepts', () => {
@@ -336,22 +341,22 @@ describe('channelQueueIds', () => {
       { ...singleBlock('stale'), attributes: { channel: { args: { term: 5 }, name: 'post_latest' }, ref: 0 } },
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11]);
 
     expect(channelQueueIds(select, 'stale')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('post_latest', {}, {}, 10);
+    expect(getChannelResults).toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
   it('sends a channel the post as context at the top of the post', () => {
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect([singleBlock('top', IN_ISSUE)], [11]);
 
     expect(channelQueueIds(select, 'top')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: POST_ID }, 10);
+    expect(getChannelResults).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: POST_ID }, 10);
   });
 
   it('sends a channel the post of the Single Post around it, with a queue for each post', () => {
@@ -373,16 +378,16 @@ describe('channelQueueIds', () => {
     });
 
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect([issueBlock('first', 0), issueBlock('second', 30)], [11, 12, 13]);
 
     // The first issue takes 11, so its articles skip it.
     expect(channelQueueIds(select, 'first-article')).toEqual([12]);
     expect(channelQueueIds(select, 'second-article')).toEqual([13]);
-    expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 11 }, 10);
-    expect(getChannel).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 30 }, 10);
-    expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, { postId: POST_ID }, 10);
+    expect(getChannelResults).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 11 }, 10);
+    expect(getChannelResults).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 30 }, 10);
+    expect(getChannelResults).not.toHaveBeenCalledWith('post_latest', {}, { postId: POST_ID }, 10);
     expect(channelQueueContext(select, 'first-article')).toEqual({
       postId: 11,
       postType: 'magazine_issue',
@@ -404,14 +409,14 @@ describe('channelQueueIds', () => {
       ]),
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11, 12, 13]);
 
     expect(channelQueueIds(select, 'featured')).toEqual([11]);
     expect(channelQueueIds(select, 'second')).toEqual([12]);
     expect(channelQueueIds(select, 'third')).toEqual([13]);
-    expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
+    expect(getChannelResults).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
   it('gives the blocks inside a Channel Content block inside another one the inner channel', () => {
@@ -423,13 +428,13 @@ describe('channelQueueIds', () => {
       ]),
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11]);
 
     expect(channelQueueIds(select, 'inner')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('page_latest', {}, {}, 10);
-    expect(getChannel).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
+    expect(getChannelResults).toHaveBeenCalledWith('page_latest', {}, {}, 10);
+    expect(getChannelResults).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
   it('lets the blocks in a Channel Loop outside a Channel Content block use their own channels', () => {
@@ -437,12 +442,12 @@ describe('channelQueueIds', () => {
       parentBlock('wp-curate/channel-loop', {}, [singleBlock('own', 'page_latest')]),
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, [11]);
 
     expect(channelQueueIds(select, 'own')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('page_latest', {}, {}, 10);
+    expect(getChannelResults).toHaveBeenCalledWith('page_latest', {}, {}, 10);
   });
 
   it('gives a block at the top of the post the post as its context', () => {
@@ -509,11 +514,11 @@ describe('channelQueueIds deduplication', () => {
       singleBlock('b', 'other'),
     ];
     const {
-      getChannel,
+      getChannelResults,
       select,
     } = fakeSelect(blocks, ids);
 
     expect(channelQueueIds(select, 'b')).toEqual([11]);
-    expect(getChannel).toHaveBeenCalledWith('other', {}, {}, 20);
+    expect(getChannelResults).toHaveBeenCalledWith('other', {}, {}, 20);
   });
 });

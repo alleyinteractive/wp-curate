@@ -54,14 +54,14 @@ export default function useChannelResults(
 
   return useSelect((select) => {
     const {
-      getChannel,
+      getChannelResults,
     } = select('wp-curate/channels') as any;
 
     let results: ChannelResults | null = null;
 
     // Without a channel, there is nothing to request.
     if (name !== '') {
-      results = getChannel(name, JSON.parse(argsKey), JSON.parse(contextKey), count);
+      results = getChannelResults(name, JSON.parse(argsKey), JSON.parse(contextKey), count);
     }
 
     return results;

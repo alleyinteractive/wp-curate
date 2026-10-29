@@ -118,7 +118,7 @@ function channelQueue(
   } = select(blocksStore);
 
   const {
-    getChannel,
+    getChannelResults,
   } = select('wp-curate/channels') as any;
 
   const globalChannel = defaultChannel(select);
@@ -226,7 +226,7 @@ function channelQueue(
 
     // Send and key the queue by only the context that the channel uses, like PHP does.
     const used = channelContext(select, name, context);
-    const results: ChannelResults | null = getChannel(name, args, used, CHANNEL_PAGE_SIZE);
+    const results: ChannelResults | null = getChannelResults(name, args, used, CHANNEL_PAGE_SIZE);
 
     if (results === null) {
       isLoading = true;
@@ -251,7 +251,7 @@ function channelQueue(
         let isSearching = true;
 
         while (isSearching) {
-          const loaded: ChannelResults | null = getChannel(name, args, used, count);
+          const loaded: ChannelResults | null = getChannelResults(name, args, used, count);
 
           isSearching = false;
 

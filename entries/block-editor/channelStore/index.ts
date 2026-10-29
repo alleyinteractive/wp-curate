@@ -53,9 +53,9 @@ export interface AvailableChannel {
 }
 
 interface ChannelState {
-  channels: Record<string, ChannelResults>;
-  lists: Record<string, AvailableChannel[]>;
-  pages: Record<string, ChannelResultsPage>;
+  availableChannels: Record<string, AvailableChannel[]>;
+  results: Record<string, ChannelResults>;
+  resultsPages: Record<string, ChannelResultsPage>;
 }
 
 /**
@@ -65,7 +65,7 @@ interface ChannelState {
  * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  */
-const channelKey = (
+const resultsKey = (
   name: string,
   args: object,
   context: object,
@@ -81,7 +81,7 @@ const channelKey = (
  * @param page    Page number.
  * @param perPage Number of IDs in a page.
  */
-const pageKey = (
+const resultsPageKey = (
   name: string,
   args: object,
   context: object,
@@ -98,7 +98,7 @@ const pageKey = (
  * @param key   Key of the results.
  * @param count Number of IDs.
  */
-function toLoadedChannel(
+function toLoadedResults(
   state: Record<string, ChannelResults>,
   key: string,
   count: number,
@@ -288,7 +288,7 @@ function toHeaderInteger(value: string | null): number {
  * @param page    Page number.
  * @param perPage Number of IDs in a page.
  */
-async function fetchChannelPage(
+async function fetchChannelResultsPage(
   name: string,
   args: object,
   context: object,
@@ -335,14 +335,15 @@ async function fetchChannelPage(
 }
 
 /**
- * Loads the first IDs of a channel up to the given `count`, in pages of up to `MAX_PER_PAGE`.
+ * Resolves `getChannelResults()` by loading the first IDs of a channel up to the given `count`, in
+ * pages of up to `MAX_PER_PAGE`.
  *
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
  * @param count   Number of IDs.
  */
-const loadChannel = (
+const resolveChannelResults = (
   name: string,
   args: object,
   context: object,
@@ -351,7 +352,7 @@ const loadChannel = (
   dispatch,
 }: any) => {
   const {
-    receiveChannel,
+    receiveChannelResults,
   } = dispatch;
 
   // Without a count, no pages would load, the channel would appear to use them.
@@ -362,15 +363,15 @@ const loadChannel = (
   const perPage = Math.min(count, MAX_PER_PAGE);
   const pages = Array.from({ length: Math.ceil(count / perPage) }, (_, index) => index + 1);
 
-  const resultsPages = await Promise.all(
-    pages.map((page) => fetchChannelPage(name, args, context, '', page, perPage)),
+  const fetchedPages = await Promise.all(
+    pages.map((page) => fetchChannelResultsPage(name, args, context, '', page, perPage)),
   );
 
   const {
     entity_kind: entityKind,
     label,
     uses_context: usesContext,
-  } = resultsPages[0];
+  } = fetchedPages[0];
 
   // No totals, because the queue does not use them.
   const results: ChannelResults = {
@@ -385,20 +386,20 @@ const loadChannel = (
   // Join the pages, and stop after the channel's last page.
   let isComplete = false;
 
-  resultsPages.forEach((resultsPage) => {
+  fetchedPages.forEach((fetchedPage) => {
     if (!isComplete) {
-      results.has_more = resultsPage.has_more;
-      results.ids = [...results.ids, ...resultsPage.ids];
-      results.post_types = { ...results.post_types, ...resultsPage.post_types };
-      isComplete = !resultsPage.has_more;
+      results.has_more = fetchedPage.has_more;
+      results.ids = [...results.ids, ...fetchedPage.ids];
+      results.post_types = { ...results.post_types, ...fetchedPage.post_types };
+      isComplete = !fetchedPage.has_more;
     }
   });
 
-  receiveChannel(channelKey(name, args, context), results);
+  receiveChannelResults(resultsKey(name, args, context), results);
 };
 
 /**
- * Loads one page of a channel.
+ * Resolves `getChannelResultsPage()` by loading one page of a channel.
  *
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
@@ -407,7 +408,7 @@ const loadChannel = (
  * @param page    Page number.
  * @param perPage Number of IDs in a page, up to `MAX_PER_PAGE`.
  */
-const loadChannelPage = (
+const resolveChannelResultsPage = (
   name: string,
   args: object,
   context: object,
@@ -418,7 +419,7 @@ const loadChannelPage = (
   dispatch,
 }: any) => {
   const {
-    receiveChannelPage,
+    receiveChannelResultsPage,
   } = dispatch;
 
   // The REST API rejects these, so skip the request.
@@ -432,9 +433,9 @@ const loadChannelPage = (
     return;
   }
 
-  receiveChannelPage(
-    pageKey(name, args, context, search, page, perPage),
-    await fetchChannelPage(name, args, context, search, page, perPage),
+  receiveChannelResultsPage(
+    resultsPageKey(name, args, context, search, page, perPage),
+    await fetchChannelResultsPage(name, args, context, search, page, perPage),
   );
 };
 
@@ -443,7 +444,7 @@ const loadChannelPage = (
  *
  * @param context Block context, which tells whether a block can select each channel.
  */
-async function fetchChannels(context: object): Promise<AvailableChannel[]> {
+async function fetchAvailableChannels(context: object): Promise<AvailableChannel[]> {
   let response: unknown = null;
 
   try {
@@ -456,18 +457,18 @@ async function fetchChannels(context: object): Promise<AvailableChannel[]> {
 }
 
 /**
- * Loads the list of channels for a block context.
+ * Resolves `getAvailableChannels()` by loading the list of channels for a block context.
  *
  * @param context Block context.
  */
-const loadChannels = (context: object) => async ({
+const resolveAvailableChannels = (context: object) => async ({
   dispatch,
 }: any) => {
   const {
-    receiveChannels,
+    receiveAvailableChannels,
   } = dispatch;
 
-  receiveChannels(JSON.stringify(context), await fetchChannels(context));
+  receiveAvailableChannels(JSON.stringify(context), await fetchAvailableChannels(context));
 };
 
 /**
@@ -484,18 +485,18 @@ const loadChannels = (context: object) => async ({
  * @param count   Number of IDs, as a multiple of `CHANNEL_PAGE_SIZE`.
  * @return The results, or null until they have the number of IDs.
  */
-const getChannel = (
+const getChannelResults = (
   state: ChannelState,
   name: string,
   args: object,
   context: object,
   count: number,
-) => toLoadedChannel(state.channels, channelKey(name, args, context), count);
+) => toLoadedResults(state.results, resultsKey(name, args, context), count);
 
 /**
  * Get one page of a channel.
  *
- * Like `getChannel()`, the arguments have no defaults so that callers pass all of them.
+ * Like `getChannelResults()`, the arguments have no defaults so that callers pass all of them.
  *
  * @param state   Store state.
  * @param name    Channel name.
@@ -506,7 +507,7 @@ const getChannel = (
  * @param perPage Number of IDs in a page, up to `MAX_PER_PAGE`.
  * @return The page, or null until it loads.
  */
-const getChannelPage = (
+const getChannelResultsPage = (
   state: ChannelState,
   name: string,
   args: object,
@@ -515,11 +516,11 @@ const getChannelPage = (
   page: number,
   perPage: number,
 ) => {
-  const key = pageKey(name, args, context, search, page, perPage);
+  const key = resultsPageKey(name, args, context, search, page, perPage);
   let resultsPage: ChannelResultsPage | null = null;
 
-  if (key in state.pages) {
-    resultsPage = state.pages[key];
+  if (key in state.resultsPages) {
+    resultsPage = state.resultsPages[key];
   }
 
   return resultsPage;
@@ -541,7 +542,7 @@ const getTypeOfPostInChannel = (
 ) => {
   let postType = '';
 
-  [...Object.values(state.channels), ...Object.values(state.pages)].forEach(({
+  [...Object.values(state.results), ...Object.values(state.resultsPages)].forEach(({
     post_types: postTypes,
   }) => {
     if (id in postTypes) {
@@ -555,51 +556,35 @@ const getTypeOfPostInChannel = (
 /**
  * Get the channels, each marked as eligible or not for a block context.
  *
- * Pass `{}` for the list without a block context. Like `getChannel()`, the context has no default,
- * so that callers pass it. Pass only the context that the channels use, so that blocks with the
- * same context share one request.
+ * Pass `{}` for the list without a block context. Like `getChannelResults()`, the context has no
+ * default, so that callers pass it. Pass only the context that the channels use, so that blocks
+ * with the same context share one request.
  *
  * @param state   Store state.
  * @param context Block context.
  * @return The channels, or null until they load.
  */
-const getChannels = (state: ChannelState, context: object) => {
+const getAvailableChannels = (state: ChannelState, context: object) => {
   const key = JSON.stringify(context);
   let list: AvailableChannel[] | null = null;
 
-  if (key in state.lists) {
-    list = state.lists[key];
+  if (key in state.availableChannels) {
+    list = state.availableChannels[key];
   }
 
   return list;
 };
 
-const getChannelResolver = (
-  name: string,
-  args: object,
-  context: object,
-  count: number,
-) => loadChannel(name, args, context, count);
-
-const getChannelPageResolver = (
-  name: string,
-  args: object,
-  context: object,
-  search: string,
-  page: number,
-  perPage: number,
-) => loadChannelPage(name, args, context, search, page, perPage);
-
 // Skip the request when the store already has enough IDs.
-getChannelResolver.isFulfilled = (
+resolveChannelResults.isFulfilled = (
   state: ChannelState,
   name: string,
   args: object,
   context: object,
   count: number,
-) => getChannel(state, name, args, context, count) !== null;
+) => getChannelResults(state, name, args, context, count) !== null;
 
-getChannelPageResolver.isFulfilled = (
+resolveChannelResultsPage.isFulfilled = (
   state: ChannelState,
   name: string,
   args: object,
@@ -607,14 +592,14 @@ getChannelPageResolver.isFulfilled = (
   search: string,
   page: number,
   perPage: number,
-) => getChannelPage(state, name, args, context, search, page, perPage) !== null;
+) => getChannelResultsPage(state, name, args, context, search, page, perPage) !== null;
 
 const store = createReduxStore('wp-curate/channels', {
   reducer(state: ChannelState | undefined, action: any) {
     let out: ChannelState = {
-      channels: {},
-      lists: {},
-      pages: {},
+      availableChannels: {},
+      results: {},
+      resultsPages: {},
     };
 
     if (state !== undefined) {
@@ -624,54 +609,54 @@ const store = createReduxStore('wp-curate/channels', {
     let isLonger = true;
 
     // Requests for different counts can finish in any order, so keep the results with more IDs.
-    if (action.type === 'RECEIVE_CHANNEL' && action.key in out.channels) {
-      isLonger = action.results.ids.length >= out.channels[action.key].ids.length;
+    if (action.type === 'RECEIVE_CHANNEL_RESULTS' && action.key in out.results) {
+      isLonger = action.results.ids.length >= out.results[action.key].ids.length;
     }
 
-    if (action.type === 'RECEIVE_CHANNEL' && isLonger) {
+    if (action.type === 'RECEIVE_CHANNEL_RESULTS' && isLonger) {
       out = {
         ...out,
-        channels: { ...out.channels, [action.key]: action.results },
+        results: { ...out.results, [action.key]: action.results },
       };
     }
 
-    if (action.type === 'RECEIVE_CHANNELS') {
+    if (action.type === 'RECEIVE_AVAILABLE_CHANNELS') {
       out = {
         ...out,
-        lists: { ...out.lists, [action.key]: action.list },
+        availableChannels: { ...out.availableChannels, [action.key]: action.list },
       };
     }
 
-    if (action.type === 'RECEIVE_CHANNEL_PAGE') {
+    if (action.type === 'RECEIVE_CHANNEL_RESULTS_PAGE') {
       out = {
         ...out,
-        pages: { ...out.pages, [action.key]: action.page },
+        resultsPages: { ...out.resultsPages, [action.key]: action.page },
       };
     }
 
     return out;
   },
   actions: {
-    receiveChannel(key: string, results: ChannelResults) {
-      return { key, results, type: 'RECEIVE_CHANNEL' };
+    receiveChannelResults(key: string, results: ChannelResults) {
+      return { key, results, type: 'RECEIVE_CHANNEL_RESULTS' };
     },
-    receiveChannelPage(key: string, page: ChannelResultsPage) {
-      return { key, page, type: 'RECEIVE_CHANNEL_PAGE' };
+    receiveChannelResultsPage(key: string, page: ChannelResultsPage) {
+      return { key, page, type: 'RECEIVE_CHANNEL_RESULTS_PAGE' };
     },
-    receiveChannels(key: string, list: AvailableChannel[]) {
-      return { key, list, type: 'RECEIVE_CHANNELS' };
+    receiveAvailableChannels(key: string, list: AvailableChannel[]) {
+      return { key, list, type: 'RECEIVE_AVAILABLE_CHANNELS' };
     },
   },
   selectors: {
-    getChannel,
-    getChannelPage,
+    getChannelResults,
+    getChannelResultsPage,
     getTypeOfPostInChannel,
-    getChannels,
+    getAvailableChannels,
   },
   resolvers: {
-    getChannel: getChannelResolver,
-    getChannelPage: getChannelPageResolver,
-    getChannels: loadChannels,
+    getChannelResults: resolveChannelResults,
+    getChannelResultsPage: resolveChannelResultsPage,
+    getAvailableChannels: resolveAvailableChannels,
   },
 });
 

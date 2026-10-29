@@ -253,13 +253,13 @@ export default function PostPicker({
   // The current page, or null while it loads.
   const resultsPage: ChannelResultsPage | null = useSelect((select) => {
     const {
-      getChannelPage,
+      getChannelResultsPage,
     } = select('wp-curate/channels') as any;
 
     let out: ChannelResultsPage | null = null;
 
     if (context !== null) {
-      out = getChannelPage(channel, args, context, search, page, perPage);
+      out = getChannelResultsPage(channel, args, context, search, page, perPage);
     }
 
     return out;

@@ -38,7 +38,7 @@ const CHANNELS = [
  */
 function withChannels(channels: object[] | null) {
   mockedSelect.mockImplementation(() => ({
-    getChannels: () => channels,
+    getAvailableChannels: () => channels,
   }));
 }
 

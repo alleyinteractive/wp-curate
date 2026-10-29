@@ -30,7 +30,7 @@ export default function ChannelSelectControl({
 
   const channels: AvailableChannel[] | null = useSelect((select) => {
     const {
-      getChannels,
+      getAvailableChannels,
     } = select('wp-curate/channels') as any;
 
     let out: AvailableChannel[] | null = null;
@@ -38,7 +38,7 @@ export default function ChannelSelectControl({
     const used = channelsContext(select, JSON.parse(contextKey));
 
     if (used !== null) {
-      out = getChannels(used);
+      out = getAvailableChannels(used);
     }
 
     return out;
