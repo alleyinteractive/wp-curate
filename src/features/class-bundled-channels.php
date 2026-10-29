@@ -39,7 +39,7 @@ final readonly class Bundled_Channels implements Feature {
 	public function filter_wp_curate_channels( $channels ) {
 		if ( is_array( $channels ) ) {
 			$bundled    = [];
-			$post_types = array_values( array_unique( ( new Supported_Post_Types() )->get_supported_post_types() ) );
+			$post_types = $this->allowed_post_types();
 
 			foreach ( $post_types as $post_type ) {
 				$bundled[] = new Latest_Posts( $post_type );
@@ -50,7 +50,7 @@ final readonly class Bundled_Channels implements Feature {
 			}
 
 			$bundled[] = new Free_For_All(
-				post_types: $this->allowed_post_types(),
+				post_types: $post_types,
 				taxonomies: $this->allowed_taxonomies(),
 				orderby_options: $this->orderby_options(),
 				meta_keys: $this->order_by_meta_keys(),
@@ -63,7 +63,7 @@ final readonly class Bundled_Channels implements Feature {
 	}
 
 	/**
-	 * The registered post types that the Query block allows.
+	 * The same registered post types that the Query block allows.
 	 *
 	 * @return string[]
 	 */
@@ -75,11 +75,15 @@ final readonly class Bundled_Channels implements Feature {
 			$filtered = [];
 		}
 
-		return array_values( array_unique( array_filter( array_filter( $filtered, 'is_string' ), 'post_type_exists' ) ) );
+		$strings    = array_filter( $filtered, 'is_string' );
+		$registered = array_filter( $strings, 'post_type_exists' );
+		$unique     = array_unique( $registered );
+
+		return array_values( $unique );
 	}
 
 	/**
-	 * The registered taxonomies that the Query block allows.
+	 * The same registered taxonomies that the Query block allows.
 	 *
 	 * @return string[]
 	 */
@@ -91,11 +95,15 @@ final readonly class Bundled_Channels implements Feature {
 			$filtered = [];
 		}
 
-		return array_values( array_unique( array_filter( array_filter( $filtered, 'is_string' ), 'taxonomy_exists' ) ) );
+		$strings    = array_filter( $filtered, 'is_string' );
+		$registered = array_filter( $strings, 'taxonomy_exists' );
+		$unique     = array_unique( $registered );
+
+		return array_values( $unique );
 	}
 
 	/**
-	 * The ways to order posts that the Query block offers, with their names.
+	 * The same ways to order posts that the Query block offers, with their names.
 	 *
 	 * @phpstan-return array<string, string>
 	 *
@@ -127,7 +135,7 @@ final readonly class Bundled_Channels implements Feature {
 	}
 
 	/**
-	 * The meta keys whose values the Query block can order posts by.
+	 * The same meta keys whose values the Query block can order posts by.
 	 *
 	 * @return string[]
 	 */
@@ -139,6 +147,9 @@ final readonly class Bundled_Channels implements Feature {
 			$filtered = [];
 		}
 
-		return array_values( array_unique( array_filter( $filtered, 'is_string' ) ) );
+		$strings = array_filter( $filtered, 'is_string' );
+		$unique  = array_unique( $strings );
+
+		return array_values( $unique );
 	}
 }

@@ -219,7 +219,9 @@ final readonly class Free_For_All implements Channel {
 		$meta_key   = '';
 
 		if ( isset( $args['post_types'] ) && is_array( $args['post_types'] ) ) {
-			$post_types = array_values( array_intersect( $this->post_types, array_filter( $args['post_types'], 'is_string' ) ) );
+			$requested  = array_filter( $args['post_types'], 'is_string' );
+			$allowed    = array_intersect( $this->post_types, $requested );
+			$post_types = array_values( $allowed );
 		}
 
 		if ( isset( $args['tax_relation'] ) && 'OR' === $args['tax_relation'] ) {
