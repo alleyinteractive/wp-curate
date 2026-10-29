@@ -12,11 +12,12 @@ use Alley\WP\WP_Curate\Post_IDs\History;
 /**
  * The queues that blocks share during a request.
  *
- * A block names its channel. Each channel gets a separate queue for each set of arguments and
+ * Blocks specify their own channel. Each channel gets a separate queue for each set of arguments and
  * context values that it uses. Blocks take IDs in render order. A block that takes the top of its
  * queue skips the IDs that blocks took from any queue before it, so channel blocks never show the
- * same post twice. A block always shows its own pin. Keep these rules matched with
- * `useChannelQueue()`.
+ * same post twice. A block always shows its own pin.
+ *
+ * Keep these rules matched with `useChannelQueue()`.
  */
 final class Queues {
 	/**
@@ -30,9 +31,7 @@ final class Queues {
 	 * Constructor.
 	 *
 	 * @param Available_Channels $channels Available channels.
-	 * @param History            $taken    The record of the IDs that blocks take from any queue. It is
-	 *                                     apart from the history of the Query blocks, because channel
-	 *                                     blocks deduplicate only among themselves.
+	 * @param History            $taken    The record of the IDs that blocks take from any queue.
 	 */
 	public function __construct(
 		private readonly Available_Channels $channels,
@@ -73,27 +72,6 @@ final class Queues {
 	}
 
 	/**
-	 * Takes every remaining ID.
-	 *
-	 * @param string  $name    Channel name that the block uses.
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context Block context.
-	 * @return int[] Remaining IDs.
-	 */
-	public function take_rest( string $name, array $args, array $context ): array {
-		$queue = $this->queue( $name, $args, $context );
-		$taken = [];
-
-		if ( $queue instanceof Queue ) {
-			$taken = $queue->take_rest();
-		}
-
-		$this->taken->record( $taken );
-
-		return $taken;
-	}
-
-	/**
 	 * Finds or creates the queue that matches the channel and the arguments and context that it uses.
 	 *
 	 * @param string  $name    Channel name.
@@ -108,7 +86,7 @@ final class Queues {
 			if ( $channel->name() === $name ) {
 				/*
 				 * A block's arguments can include keys that this channel does not read, such as from
-				 * hand-written markup or an argument that the channel no longer has. Leaving them out gives
+				 * handwritten markup or an argument that the channel no longer has. Leaving them out gives
 				 * every block that uses the same arguments the same queue.
 				 */
 				$used_args = array_intersect_key( $args, $channel->args() );
