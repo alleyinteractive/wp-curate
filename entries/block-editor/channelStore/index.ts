@@ -535,7 +535,7 @@ const getChannelPage = (
  * @param id    Post ID.
  * @return The post type, or an empty string if no loaded results have the post.
  */
-const getLoadedPostType = (
+const getTypeOfPostInChannel = (
   state: ChannelState,
   id: number,
 ) => {
@@ -665,7 +665,7 @@ const store = createReduxStore('wp-curate/channels', {
   selectors: {
     getChannel,
     getChannelPage,
-    getLoadedPostType,
+    getTypeOfPostInChannel,
     getChannels,
   },
   resolvers: {

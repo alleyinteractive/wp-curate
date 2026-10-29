@@ -195,13 +195,13 @@ function ChannelPostEdit({
 
   const queuedPostType: string = useSelect((select) => {
     const {
-      getLoadedPostType,
+      getTypeOfPostInChannel,
     } = select('wp-curate/channels') as any;
 
     let out = '';
 
     if (postId !== null && postId > 0) {
-      out = getLoadedPostType(postId);
+      out = getTypeOfPostInChannel(postId);
     }
 
     return out;
