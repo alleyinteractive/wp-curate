@@ -6,6 +6,7 @@ import {
   // @ts-expect-error BlockContextProvider not available in types yet.
   BlockContextProvider,
   InspectorControls,
+  store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { getBlockType } from '@wordpress/blocks';
 import {
@@ -13,7 +14,7 @@ import {
   __experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { createHigherOrderComponent } from '@wordpress/compose';
-import { useSelect } from '@wordpress/data';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { useCallback, useEffect, useMemo } from '@wordpress/element';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
@@ -45,7 +46,7 @@ import useChannelQueue from '../../../hooks/useChannelQueue';
  */
 
 /**
- * The Channel panel of a block with the support, which also sets the channel of a new block.
+ * The Channel panel of a block with channel support.
  *
  * A block that takes a post inside a block that provides a channel, like a Single Post in a
  * Channel Content block, always uses that channel, so it has no panel. A Channel Content block
@@ -73,8 +74,7 @@ function ChannelControls({
   isProvider: boolean;
   setAttributes: (attributes: Record<string, unknown>) => void;
 }) {
-  // The channel that the block would use without its own: a Channel Content block's, or the
-  // default.
+  // The channel the block would use if it didn't have one: inherited from context or the default.
   const inheritedChannel = useBlockChannel('', contextChannel);
 
   const argFields = useSelect(
@@ -82,21 +82,26 @@ function ChannelControls({
     [channel],
   );
 
-  // Only a block that provides the channel context, like Channel Content, gives the editor a
-  // channel.
+  // The channel context has a value only inside a block that provides it, like Channel Content.
   const isInProvider = toChannelName(contextChannel) !== null;
 
-  const inherits = !isProvider && isInProvider;
+  const inheritsChannel = isInProvider && !isProvider;
+
+  const {
+    __unstableMarkNextChangeAsNotPersistent: markNextChangeAsNotPersistent,
+  } = useDispatch(blockEditorStore) as any;
 
   useEffect(() => {
-    /*
-     * Any other new block gets the channel that it would inherit, so that it keeps that channel if
-     * the channel above it changes later.
-     */
-    if (!inherits && channel === '' && inheritedChannel !== null && inheritedChannel !== '') {
+    // Ensure that new blocks get a channel attribute if they're not inheriting one.
+    if (!inheritsChannel && channel === '' && inheritedChannel !== null && inheritedChannel !== '') {
+      /*
+       * Add the channel to the undo step of the insert or move that caused it. As its own step,
+       * undoing it would clear the channel, and this effect would set it again.
+       */
+      markNextChangeAsNotPersistent();
       setAttributes({ channel: { name: inheritedChannel } });
     }
-  }, [channel, inheritedChannel, inherits, setAttributes]);
+  }, [channel, inheritedChannel, inheritsChannel, markNextChangeAsNotPersistent, setAttributes]);
 
   const setArgs = useCallback((args: Record<string, unknown>) => {
     setAttributes({ channel: { args, name: channel } });
@@ -111,7 +116,7 @@ function ChannelControls({
     setArgs,
   }), [argFields, blockName, channel, channelArgs, clientId, setArgs]);
 
-  if (inherits) {
+  if (inheritsChannel) {
     return null;
   }
 
@@ -149,7 +154,7 @@ function ChannelControls({
           panelId={clientId}
         >
           <ChannelSelectControl
-            // The block's context, from the block around it, tells which channels it can select.
+            // The block's context, from the ancestor block, tells which channels it can select.
             context={context}
             help={help}
             // The arguments of one channel are not the arguments of another.
