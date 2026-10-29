@@ -16,8 +16,7 @@ import LatestPostsInTermArgs from './latestPostsInTermArgs/latest-posts-in-term-
 /**
  * The Deduplication panel, where the Query block is registered.
  *
- * The Query block registers only where `Supported_Post_Types::should_register_block()` allows,
- * which is where the panel's script loaded before the block editor script included it.
+ * The Query block registers only where `Supported_Post_Types::should_register_block()` allows.
  */
 registerPlugin(
   'wp-curate-deduplication',
@@ -39,7 +38,7 @@ registerPlugin(
 );
 
 /**
- * The controls of the bundled channels' arguments, which fill the Channel panel of blocks.
+ * The controls for the bundled channels' arguments.
  */
 registerPlugin(
   'wp-curate-channels',

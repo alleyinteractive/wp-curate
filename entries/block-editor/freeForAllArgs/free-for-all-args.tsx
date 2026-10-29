@@ -34,7 +34,7 @@ function withoutArg(args: Record<string, unknown>, id: string): Record<string, u
 }
 
 /**
- * Whether an argument has a value. An empty string or an empty list is no value.
+ * Whether an argument has a nonempty value.
  *
  * @param value The argument.
  */
@@ -95,89 +95,8 @@ function toStrings(value: unknown): string[] {
 }
 
 /**
- * The control of an argument of the Free-For-All channel, by its name, or null for an argument
- * that the channel does not have.
- *
- * @param id       The argument's name.
- * @param field    The argument's description.
- * @param value    The argument.
- * @param help     Help text.
- * @param onChange Saves the argument, or removes it when given undefined.
- */
-function argControl(
-  id: string,
-  field: ChannelArgField,
-  value: unknown,
-  help: string,
-  onChange: (next: unknown) => void,
-): React.ReactElement | null {
-  const {
-    label,
-    taxonomy,
-  } = field;
-
-  let control: React.ReactElement | null = null;
-
-  if (id === 'post_types') {
-    control = (
-      <>
-        <Checkboxes
-          label={label}
-          onChange={(next: string[]) => onChange(next.length > 0 ? next : undefined)}
-          options={toFieldOptions(field)}
-          value={toStrings(value)}
-        />
-        {help !== '' ? <p className="components-base-control__help">{help}</p> : null}
-      </>
-    );
-  }
-
-  // Each taxonomy that the channel allows is an argument with a `taxonomy` key.
-  if (typeof taxonomy === 'string') {
-    control = (
-      <TermControl
-        help={help}
-        label={label}
-        multiple
-        onChange={(ids) => onChange(ids.length > 0 ? ids : undefined)}
-        taxonomy={taxonomy}
-        value={value}
-      />
-    );
-  }
-
-  if (id === 'tax_relation' || id === 'orderby' || id === 'meta_key' || id === 'order') {
-    control = (
-      <SelectControl
-        __next40pxDefaultSize
-        __nextHasNoMarginBottom
-        help={help}
-        label={label}
-        onChange={(next) => onChange(next !== '' ? next : undefined)}
-        options={toFieldOptions(field)}
-        value={typeof value === 'string' ? value : undefined}
-      />
-    );
-  }
-
-  if (id === 'search') {
-    control = (
-      <DebouncedTextControl
-        help={help}
-        label={label}
-        onChange={(next) => onChange(next !== '' ? next : undefined)}
-        value={value}
-      />
-    );
-  }
-
-  return control;
-}
-
-/**
- * A panel item for each argument of the Free-For-All channel. A required argument always shows. The
- * others are in the panel's menu. Like the Query block, the meta key shows only when the posts are
- * ordered by a meta value.
+ * A panel item for each argument of the Free-For-All channel.
+ * A required argument always displays. The others are in the panel's menu.
  */
 function FreeForAllArgItems({
   argFields,
@@ -186,18 +105,17 @@ function FreeForAllArgItems({
   clientId,
   setArgs,
 }: ChannelPanelFillProps) {
-  if (channel !== 'free_for_all') {
-    return null;
-  }
-
-  return (
+  return channel === 'free_for_all' ? (
     <>
       {Object.entries(argFields).map(([id, field]) => {
         const {
           help: fieldHelp,
           label,
           required,
+          taxonomy,
         } = field;
+
+        const value = args[id];
 
         let help = '';
 
@@ -205,8 +123,8 @@ function FreeForAllArgItems({
           help = fieldHelp;
         }
 
-        if (required && !hasArgValue(args[id])) {
-          help = __('The channel shows no posts until this is set.', 'wp-curate');
+        if (required && !hasArgValue(value)) {
+          help = __('This field is required.', 'wp-curate');
         }
 
         if (id === 'meta_key' && args.orderby !== 'meta_value') {
@@ -229,7 +147,62 @@ function FreeForAllArgItems({
           setArgs(nextArgs);
         };
 
-        const control = argControl(id, field, args[id], help, setArg);
+        // The control of the argument, by its name, or null for an argument that the channel does
+        // not have.
+        let control: React.ReactElement | null = null;
+
+        if (id === 'post_types') {
+          control = (
+            <>
+              <Checkboxes
+                label={label}
+                onChange={(next: string[]) => setArg(next.length > 0 ? next : undefined)}
+                options={toFieldOptions(field)}
+                value={toStrings(value)}
+              />
+              {help !== '' ? <p className="components-base-control__help">{help}</p> : null}
+            </>
+          );
+        }
+
+        // Each taxonomy that the channel allows is an argument with a `taxonomy` key.
+        if (typeof taxonomy === 'string') {
+          control = (
+            <TermControl
+              help={help}
+              label={label}
+              multiple
+              onChange={(ids) => setArg(ids.length > 0 ? ids : undefined)}
+              taxonomy={taxonomy}
+              value={value}
+            />
+          );
+        }
+
+        if (id === 'tax_relation' || id === 'orderby' || id === 'meta_key' || id === 'order') {
+          control = (
+            <SelectControl
+              __next40pxDefaultSize
+              __nextHasNoMarginBottom
+              help={help}
+              label={label}
+              onChange={(next) => setArg(next !== '' ? next : undefined)}
+              options={toFieldOptions(field)}
+              value={typeof value === 'string' ? value : undefined}
+            />
+          );
+        }
+
+        if (id === 'search') {
+          control = (
+            <DebouncedTextControl
+              help={help}
+              label={label}
+              onChange={(next) => setArg(next !== '' ? next : undefined)}
+              value={value}
+            />
+          );
+        }
 
         if (control === null) {
           return null;
@@ -237,7 +210,7 @@ function FreeForAllArgItems({
 
         return (
           <ToolsPanelItem
-            hasValue={() => hasArgValue(args[id])}
+            hasValue={() => hasArgValue(value)}
             isShownByDefault={required}
             key={id}
             label={label}
@@ -250,7 +223,7 @@ function FreeForAllArgItems({
         );
       })}
     </>
-  );
+  ): null;
 }
 
 /**
