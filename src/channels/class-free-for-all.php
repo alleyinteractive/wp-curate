@@ -54,7 +54,7 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * Human-readable name of the channel.
+	 * Human-readable name of the channel, such as "All Topics".
 	 *
 	 * @return string
 	 */
@@ -63,7 +63,7 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * The core-data entity kind of the channel's IDs.
+	 * The core-data entity kind of the channel's IDs, e.g. `postType` for posts or `taxonomy` for terms.
 	 *
 	 * @return string
 	 */
@@ -72,9 +72,10 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * The arguments that the channel reads. The editor script `entries/block-editor/freeForAllArgs`
-	 * adds the controls of this channel by argument name, and reads the `options`, `taxonomy`, and
-	 * `help` keys.
+	 * The arguments that the channel reads, keyed by argument name, like the `args` of a REST API route.
+	 *
+	 * The editor script `entries/block-editor/freeForAllArgs` adds the controls of this channel by
+	 * argument name, and reads the `options`, `taxonomy`, and `help` keys.
 	 *
 	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *
@@ -157,7 +158,7 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * Names of the block context values that the channel reads.
+	 * Names of the block context values that the channel reads in order to supply posts.
 	 *
 	 * @return string[]
 	 */
@@ -166,7 +167,7 @@ final readonly class Free_For_All implements Channel {
 	}
 
 	/**
-	 * Whether a block with the context can select the channel.
+	 * Whether a block with the given context can use the channel.
 	 *
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @return bool
@@ -178,7 +179,7 @@ final readonly class Free_For_All implements Channel {
 	/**
 	 * Whether a user can read the channel.
 	 *
-	 * @param int $user_id User ID, or 0 for a visitor who is not logged in.
+	 * @param int $user_id User ID.
 	 * @return bool
 	 */
 	public function can_read( int $user_id ): bool {
@@ -188,10 +189,12 @@ final readonly class Free_For_All implements Channel {
 	/**
 	 * IDs in the channel, in channel order, and the number of them.
 	 *
+	 * There are no IDs without a post type.
+	 *
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context The block context values in `uses_context()`.
 	 * @param string  $search  Search terms, or an empty string for every ID.
-	 * @return Results No IDs without a post type.
+	 * @return Results No IDs if the arguments and context do not make a channel.
 	 */
 	public function results( array $args, array $context, string $search ): Results {
 		return $this->posts( $args, $search );
