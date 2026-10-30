@@ -20,11 +20,11 @@ const POPOVER_PROPS = {
 } as const;
 
 /**
- * A dropdown in the block toolbar with "Pin this post", "Edit Post", and "View Post", for the post
+ * A dropdown in the block toolbar with "Pin this post", "Edit post", and "View post", for the post
  * that the block shows. It follows the "More" dropdown of the rich text formatting toolbar.
  *
- * "Pin this post" shows only if `onPin` is a function. "Edit Post" and "View Post" open in a new
- * tab, so that the post that the user is editing stays open. "Edit Post" shows only if the user can
+ * "Pin this post" shows only if `onPin` is a function. "Edit post" and "View post" open in a new
+ * tab, so that the post that the user is editing stays open. "Edit post" shows only if the user can
  * edit the post. The dropdown shows only while the block shows a post.
  */
 export default function PostToolsDropdown({
@@ -112,7 +112,7 @@ export default function PostToolsDropdown({
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    {__('Edit Post', 'wp-curate')}
+                    {__('Edit post', 'wp-curate')}
                     {opensInNewTab}
                   </MenuItem>
                 ) : null}
@@ -126,7 +126,7 @@ export default function PostToolsDropdown({
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    {__('View Post', 'wp-curate')}
+                    {__('View post', 'wp-curate')}
                     {opensInNewTab}
                   </MenuItem>
                 ) : null}
