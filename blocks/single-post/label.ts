@@ -44,7 +44,9 @@ function toShownPostType(attributes: Record<string, unknown>): string {
   }
 
   if (post !== null) {
-    ({ postType } = post);
+    ({
+      postType,
+    } = post);
   }
 
   return postType;

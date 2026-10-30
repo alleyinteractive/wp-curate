@@ -27,13 +27,17 @@ const FIELDS = [
     enableSorting: false,
     id: 'media',
     label: __('Featured image', 'wp-curate'),
-    render: ({ item }: { item: PickerItem }) => (item.imageUrl !== '' ? <img src={item.imageUrl} alt="" /> : null),
+    render: ({
+      item,
+    }: { item: PickerItem }) => (item.imageUrl !== '' ? <img src={item.imageUrl} alt="" /> : null),
     type: 'media' as const,
   },
   {
     enableHiding: false,
     enableSorting: false,
-    getValue: ({ item }: { item: PickerItem }) => item.title,
+    getValue: ({
+      item,
+    }: { item: PickerItem }) => item.title,
     id: 'title',
     label: __('Title', 'wp-curate'),
   },
@@ -264,7 +268,10 @@ export default function PostPicker({
       getEntityRecords,
     } = select(coreStore);
 
-    return queries.map(({ postType, query }) => getEntityRecords('postType', postType, query));
+    return queries.map(({
+      postType,
+      query,
+    }) => getEntityRecords('postType', postType, query));
   }, [queries]);
 
   let isLoading = resultsPage === null;

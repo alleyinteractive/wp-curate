@@ -13,6 +13,7 @@ import {
   BlockInstance,
   InnerBlockTemplate,
   createBlocksFromInnerBlocksTemplate,
+  store as blocksStore,
 } from '@wordpress/blocks';
 import {
   Placeholder,
@@ -53,12 +54,16 @@ const BASIC_TEMPLATE: InnerBlockTemplate[] = [
 /**
  * The editable inner blocks of a block outside a Channel Loop block.
  */
-function StandaloneInnerBlocks({ blockProps }: { blockProps: Record<string, unknown> }) {
-  const innerBlocksProps = useInnerBlocksProps(blockProps, {
+function StandaloneInnerBlocks({
+  blockProps,
+}: {
+  blockProps: Record<string, unknown>;
+}) {
+  const combinedBlockProps = useInnerBlocksProps(blockProps, {
     template: BASIC_TEMPLATE,
   });
 
-  return <div {...innerBlocksProps} />;
+  return <div {...combinedBlockProps} />;
 }
 
 /**
@@ -102,7 +107,9 @@ function TemplateInnerBlocks({
     let blocks: BlockInstance[] = [];
 
     if (sent.current !== null && sent.current.template === template) {
-      ({ blocks } = sent.current);
+      ({
+        blocks,
+      } = sent.current);
     } else {
       blocks = createBlocksFromInnerBlocksTemplate(template);
     }
@@ -121,14 +128,14 @@ function TemplateInnerBlocks({
     updateBlockAttributes(channelLoopClientId, { template: next });
   }, [channelLoopClientId, updateBlockAttributes]);
 
-  const innerBlocksProps = useInnerBlocksProps(blockProps, {
+  const combinedBlockProps = useInnerBlocksProps(blockProps, {
     // @ts-expect-error value, onChange, and onInput not available in types yet.
     onChange,
     onInput: onChange,
     value,
   });
 
-  return <div {...innerBlocksProps} />;
+  return <div {...combinedBlockProps} />;
 }
 
 /**
@@ -152,6 +159,7 @@ export default function Edit({
     'wp-curate/channel': contextChannel,
     'wp-curate/loopTemplate': loopTemplate,
   },
+  name,
   setAttributes,
 }: BlockEditProps<{
   channel: { args?: Record<string, unknown>, name: string };
@@ -160,9 +168,17 @@ export default function Edit({
 }> & {
   clientId: string;
   context: Record<string, unknown>;
+  name: string;
 }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const blockProps = useBlockProps();
+
+  // The block type, for the title and icon of the placeholders.
+  const blockType = useSelect(
+    (select) => (select(blocksStore) as any).getBlockType(name),
+    [name],
+  );
+
   let ownName = toChannelName(ownChannel);
 
   if (ownName === null) {
@@ -237,7 +253,8 @@ export default function Edit({
     preview = (
       <div {...blockProps}>
         <Placeholder
-          label={__('Single Post', 'wp-curate')}
+          label={blockType.title}
+          icon={blockType.icon.src}
           instructions={__('No channels are available.', 'wp-curate')}
         />
       </div>
@@ -246,7 +263,8 @@ export default function Edit({
     preview = (
       <div {...blockProps}>
         <Placeholder
-          label={__('Single Post', 'wp-curate')}
+          label={blockType.title}
+          icon={blockType.icon.src}
           instructions={__('Complete the channel settings first.', 'wp-curate')}
         />
       </div>
@@ -261,7 +279,8 @@ export default function Edit({
     preview = (
       <div {...blockProps}>
         <Placeholder
-          label={__('Single Post', 'wp-curate')}
+          label={blockType.title}
+          icon={blockType.icon.src}
           instructions={__('No posts remaining in the channel.', 'wp-curate')}
         />
       </div>

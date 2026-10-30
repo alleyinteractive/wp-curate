@@ -20,9 +20,9 @@ const TEMPLATE: InnerBlockTemplate[] = [
  */
 export default function Edit() {
   const blockProps = useBlockProps();
-  const innerBlocksProps = useInnerBlocksProps(blockProps, {
+  const combinedBlockProps = useInnerBlocksProps(blockProps, {
     template: TEMPLATE,
   });
 
-  return <div {...innerBlocksProps} />;
+  return <div {...combinedBlockProps} />;
 }

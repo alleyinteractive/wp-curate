@@ -33,7 +33,7 @@ const TEMPLATE: InnerBlockTemplate[] = [
  */
 export default function Edit() {
   const blockProps = useBlockProps();
-  const innerBlocksProps = useInnerBlocksProps(blockProps, {
+  const combinedBlockProps = useInnerBlocksProps(blockProps, {
     allowedBlocks: ALLOWED_BLOCKS,
     // The appender adds another post.
     // @ts-expect-error defaultBlock and directInsert not available in types yet.
@@ -42,5 +42,5 @@ export default function Edit() {
     template: TEMPLATE,
   });
 
-  return <div {...innerBlocksProps} />;
+  return <div {...combinedBlockProps} />;
 }
