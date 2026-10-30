@@ -113,10 +113,7 @@ function toTaxonomyLabel(taxonomyObject: unknown, key: string): string {
 }
 
 /**
- * Modal for picking one term of a taxonomy, or with `multiple`, any number of them.
- *
- * The picker loads one page at a time, of the terms or of the terms that match a search. The
- * selection can include terms on pages that the picker showed before.
+ * Modal for picking terms of a taxonomy.
  */
 export default function TermPicker({
   multiple,
