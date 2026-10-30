@@ -19,7 +19,7 @@ final readonly class Free_For_All implements Channel {
 	 *
 	 * @var string[]
 	 */
-	private const RESERVED_ARGS = [ 'meta_key', 'order', 'orderby', 'post_types', 'search', 'tax_relation' ];
+	private const RESERVED_ARGS = [ 'meta_key', 'order', 'orderby', 'post_types', 'search', 'tax_relation', 'term_relations' ];
 
 	/**
 	 * Constructor.
@@ -90,6 +90,21 @@ final readonly class Free_For_All implements Channel {
 				'taxonomy' => $taxonomy,
 			];
 		}
+
+		// An object keyed by taxonomy, like the `termRelations` attribute of the Query block.
+		$args['term_relations'] = [
+			'label'   => __( 'Term Relations', 'wp-curate' ),
+			'options' => [
+				[
+					'label' => __( 'Match any selected term', 'wp-curate' ),
+					'value' => 'OR',
+				],
+				[
+					'label' => __( 'Match all selected terms', 'wp-curate' ),
+					'value' => 'AND',
+				],
+			],
+		];
 
 		if ( count( $this->taxonomies() ) > 1 ) {
 			$args['tax_relation'] = [
@@ -253,7 +268,7 @@ final readonly class Free_For_All implements Channel {
 				$tax_query[] = [
 					'field'            => 'term_id',
 					'include_children' => false,
-					'operator'         => 'IN',
+					'operator'         => $this->term_operator( $args, $taxonomy ),
 					'taxonomy'         => $taxonomy,
 					'terms'            => $term_ids,
 				];
@@ -294,6 +309,29 @@ final readonly class Free_For_All implements Channel {
 		}
 
 		return $posts;
+	}
+
+	/**
+	 * The `tax_query` operator for the terms of a taxonomy: `AND` if the block's term relation for the
+	 * taxonomy is "AND", or else `IN`.
+	 *
+	 * @param mixed[] $args     The block's arguments for the channel.
+	 * @param string  $taxonomy Taxonomy slug.
+	 * @return string
+	 */
+	private function term_operator( array $args, string $taxonomy ): string {
+		$operator = 'IN';
+
+		if (
+			isset( $args['term_relations'] )
+			&& is_array( $args['term_relations'] )
+			&& isset( $args['term_relations'][ $taxonomy ] )
+			&& 'AND' === $args['term_relations'][ $taxonomy ]
+		) {
+			$operator = 'AND';
+		}
+
+		return $operator;
 	}
 
 	/**
