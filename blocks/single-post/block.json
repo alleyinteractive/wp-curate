@@ -8,6 +8,7 @@
   "description": "Displays a single post from a channel.",
   "textdomain": "wp-curate",
   "editorScript": "file:index.ts",
+  "editorStyle": "file:index.css",
   "render": "file:render.php",
   "supports": {
     "html": false,
