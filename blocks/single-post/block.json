@@ -17,11 +17,13 @@
   "attributes": {
     "postType": {
       "type": "string",
-      "default": ""
+      "default": "",
+      "role": "content"
     },
     "ref": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "role": "content"
     }
   },
   "usesContext": [
