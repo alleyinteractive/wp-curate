@@ -61,8 +61,7 @@ function toTermName(term: unknown): string {
 }
 
 /**
- * The control of a channel argument with one term or a list of terms: the selected terms, each with
- * a button that removes it, and a button that opens the term picker.
+ * Control for a channel argument with one term or a list of terms.
  */
 export default function TermControl({
   help,
@@ -138,7 +137,7 @@ export default function TermControl({
       >
         {termIds.length === 0 ? <p>{__('None selected', 'wp-curate')}</p> : null}
 
-        {/* Each selected term, with a button that removes it. The picker cannot save no terms. */}
+        {/* Include a "Remove" button since the picker requires a selection in order to save. */}
         {termIds.length > 0 ? (
           <ul>
             {termIds.map((termId) => {
