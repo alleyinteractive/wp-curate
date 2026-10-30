@@ -36,6 +36,7 @@ function main(): void {
 		new Features\Block_Index(),
 		new Features\Query_Block_Context(
 			post_queries: new Default_Post_Queries(),
+			// The history applies the `wp_curate_history_seed` filter when it is first used.
 			history: new History(
 				seed: new Pinned_In_Post_Content( $main_query ),
 			),

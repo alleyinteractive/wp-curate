@@ -24,6 +24,8 @@ use WP_Block;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
 
+use function Mantle\Support\Helpers\post_meta;
+
 /**
  * Provides context to query blocks
  */
@@ -64,6 +66,43 @@ final class Query_Block_Context implements Feature {
 	}
 
 	/**
+	 * Checks if deduplication is enabled for a block or the parent post.
+	 *
+	 * @param array{attrs?: array<string, mixed>} $parsed_block The parsed block.
+	 * @return bool
+	 */
+	private function get_deduplication_enabled( array $parsed_block ): bool {
+		$post_id    = null;
+		$dedupe     = false;
+		$main_query = $this->main_query->query_object();
+
+		if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
+			$post_id = $main_query->get_queried_object_id();
+
+			$is_never = (
+				isset( $parsed_block['attrs']['deduplication'] )
+				&& 'never' === $parsed_block['attrs']['deduplication']
+			);
+
+			// Prefer the query block's attribute.
+			if ( ! $is_never ) {
+				$dedupe = post_meta( $post_id, 'wp_curate_deduplication' )->bool();
+			}
+		}
+
+		/**
+		 * Filter to determine if deduplication is enabled for a block or the parent post.
+		 *
+		 * This runs after the block's "never" attribute and the post meta are checked.
+		 *
+		 * @param bool                                $dedupe       Whether deduplication is enabled.
+		 * @param int|null                            $post_id      The ID of the post being checked.
+		 * @param array{attrs?: array<string, mixed>} $parsed_block The parsed block.
+		 */
+		return (bool) apply_filters( 'wp_curate_deduplication_enabled', $dedupe, $post_id, $parsed_block );
+	}
+
+	/**
 	 * Filters the context provided to a query block to determine the definitive list of backfilled posts.
 	 *
 	 * @param array<string, mixed>                 $context Default context.
@@ -84,23 +123,7 @@ final class Query_Block_Context implements Feature {
 		) {
 			// Handles the decision to exclude (deduplicate) posts or not, based on a given input.
 			$variable_post_queries = new Variable_Post_Queries(
-				input: function () use ( $parsed_block ) {
-					$main_query = $this->main_query->query_object();
-
-					if ( isset( $parsed_block['attrs']['deduplication'] ) && 'never' === $parsed_block['attrs']['deduplication'] ) {
-						return false;
-					}
-
-					if ( true === $main_query->is_singular() || true === $main_query->is_posts_page ) {
-						$post_level_deduplication = get_post_meta( $main_query->get_queried_object_id(), 'wp_curate_deduplication', true );
-
-						if ( true === (bool) $post_level_deduplication ) {
-							return true;
-						}
-					}
-
-					return false;
-				},
+				input: fn () => $this->get_deduplication_enabled( $parsed_block ),
 				// Exclude posts that have already been used in this request.
 				test: new Comparison( [ 'compared' => true ] ),
 				is_true: new Exclude_Queries(
