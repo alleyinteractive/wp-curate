@@ -5,7 +5,7 @@ import { select } from '@wordpress/data';
 import { __, sprintf } from '@wordpress/i18n';
 
 // Plugin dependencies.
-import { channelQueueIds } from '../../hooks/useChannelQueue';
+import { type ChannelQueuePost, channelQueuePost } from '../../hooks/useChannelQueue';
 import customBlockName from '../../services/customBlockName';
 
 /**
@@ -23,37 +23,28 @@ function toShownPostType(attributes: Record<string, unknown>): string {
   } = select(blockEditorStore) as any;
 
   const {
-    getTypeOfPostInChannel,
-  } = select('wp-curate/channels') as any;
-
-  const {
     postType: pinnedPostType,
     ref,
   } = attributes;
 
+  let post: ChannelQueuePost | null = null;
   let postType = '';
 
-  // A pinned post can be past the IDs that have loaded, so the block saves its post type.
+  // Pinned posts save their post type as an attribute, so get it here.
   if (Number.isInteger(ref) && (ref as number) > 0 && typeof pinnedPostType === 'string') {
-    postType = pinnedPostType;
-  }
-
-  if (postType !== '') {
-    return postType;
+    return pinnedPostType;
   }
 
   const clientId = getBlocksByName('wp-curate/single-post').find(
     (candidate: string) => getBlockAttributes(candidate) === attributes,
   );
 
-  let ids: number[] | null = null;
-
   if (typeof clientId === 'string') {
-    ids = channelQueueIds(select, clientId);
+    post = channelQueuePost(select, clientId);
   }
 
-  if (ids !== null && ids.length > 0) {
-    postType = getTypeOfPostInChannel(ids[0]);
+  if (post !== null) {
+    ({ postType } = post);
   }
 
   return postType;

@@ -1,5 +1,5 @@
 // Internal dependencies.
-import { channelQueueContext, channelQueueIds } from './index';
+import { channelQueueContext, channelQueueIds, channelQueuePost } from './index';
 
 jest.mock('@wordpress/block-editor', () => ({
   store: 'core/block-editor',
@@ -25,14 +25,16 @@ const POST_ID = 5;
 /**
  * A `select` function with the given blocks and channel results with the given IDs.
  *
- * @param blocks  Blocks in the editor.
- * @param ids     IDs in every channel.
- * @param loading Channels that have not loaded.
+ * @param blocks   Blocks in the editor.
+ * @param ids      IDs in every channel.
+ * @param loading  Channels that have not loaded.
+ * @param postType The type of every post in the channel results.
  */
 function fakeSelect(
   blocks: object[],
   ids: number[],
   loading: string[] = [],
+  postType = 'post',
 ) {
   // Like the store, the results have the IDs through the count, or all of them at the channel's
   // end.
@@ -53,6 +55,7 @@ function fakeSelect(
   const select = jest.fn((storeName: string) => {
     let selectors: object = {
       getChannelResults,
+      getTypeOfPostInChannel: () => postType,
       getAvailableChannels: () => [
         {
           args: {},
@@ -367,7 +370,7 @@ describe('channelQueueIds', () => {
      * @param ref      The pinned post.
      */
     const issueBlock = (clientId: string, ref: number) => ({
-      attributes: { channel: { name: 'post_latest' }, postType: 'magazine_issue', ref },
+      attributes: { channel: { name: 'post_latest' }, postType: ref > 0 ? 'magazine_issue' : '', ref },
       clientId,
       innerBlocks: [
         parentBlock('wp-curate/channel-content', { channel: { name: IN_ISSUE } }, [
@@ -380,7 +383,7 @@ describe('channelQueueIds', () => {
     const {
       getChannelResults,
       select,
-    } = fakeSelect([issueBlock('first', 0), issueBlock('second', 30)], [11, 12, 13]);
+    } = fakeSelect([issueBlock('first', 0), issueBlock('second', 30)], [11, 12, 13], [], 'magazine_issue');
 
     // The first issue takes 11, so its articles skip it.
     expect(channelQueueIds(select, 'first-article')).toEqual([12]);
@@ -470,6 +473,57 @@ describe('channelQueueIds', () => {
     } = fakeSelect(blocks, [11], ['loading']);
 
     expect(channelQueueContext(select, 'inner')).toBeNull();
+  });
+});
+
+describe('channelQueuePost', () => {
+  it('gives the top of the queue with its type from the channel results', () => {
+    const {
+      select,
+    } = fakeSelect([singleBlock('top')], [11], [], 'magazine_issue');
+
+    expect(channelQueuePost(select, 'top')).toEqual({ postId: 11, postType: 'magazine_issue' });
+  });
+
+  it('gives a pin with the type that the block saved', () => {
+    const blocks = [
+      { ...singleBlock('pinned'), attributes: { channel: { name: 'post_latest' }, postType: 'page', ref: 99 } },
+    ];
+    const {
+      select,
+    } = fakeSelect(blocks, [11]);
+
+    expect(channelQueuePost(select, 'pinned')).toEqual({ postId: 99, postType: 'page' });
+  });
+
+  it('gives no post when the channel has no posts left', () => {
+    const {
+      select,
+    } = fakeSelect([singleBlock('first'), singleBlock('second')], [11]);
+
+    expect(channelQueuePost(select, 'second')).toEqual({ postId: 0, postType: '' });
+  });
+
+  it('gives null while the channel loads', () => {
+    const {
+      select,
+    } = fakeSelect([singleBlock('waiting', 'loading')], [11], ['loading']);
+
+    expect(channelQueuePost(select, 'waiting')).toBeNull();
+  });
+
+  it('gives no post as the context of the blocks inside a block without a post', () => {
+    const blocks = [
+      {
+        ...singleBlock('empty', IN_CATEGORY),
+        innerBlocks: [singleBlock('inner')],
+      },
+    ];
+    const {
+      select,
+    } = fakeSelect(blocks, [11]);
+
+    expect(channelQueueContext(select, 'inner')).toEqual({ postId: 0, postType: '' });
   });
 });
 

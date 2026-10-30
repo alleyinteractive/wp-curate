@@ -19,6 +19,33 @@ import { CHANNEL_PAGE_SIZE, type ChannelResults } from '../useChannelResults';
 const NO_IDS: number[] = [];
 
 /**
+ * A post that a block takes from its channel.
+ */
+export interface ChannelQueuePost {
+  /** Post ID. */
+  postId: number;
+  /** Post type. */
+  postType: string;
+}
+
+const NO_POST: ChannelQueuePost = {
+  postId: 0,
+  postType: '',
+};
+
+/**
+ * The context that tells the block its channel and the data the block takes from the channel.
+ */
+interface ChannelQueue {
+  /** The context, or null while the block above it that gives it its context loads. */
+  context: Record<string, unknown> | null;
+  /** The IDs, or null while channels load. */
+  ids: number[] | null;
+  /** The post, or null while channels load. */
+  post: ChannelQueuePost | null;
+}
+
+/**
  * The `channel` attribute of a block, or undefined if it has none.
  *
  * @param block Block.
@@ -90,8 +117,8 @@ function postContext(select: any): Record<string, unknown> {
  * A block without a channel of its own uses the channel that `toBlockChannel()` describes. A
  * channel has a separate queue for each set of arguments that it accepts and context that it
  * reads, and has no posts until the block gives it each argument. The context of a block inside a
- * block that takes a post, like Single Post, has that post as `postId` and `postType`. Otherwise,
- * it has the post.
+ * block that takes a post, like Single Post, has that post as `postId` and `postType`, the way
+ * that `Channel_Block_Support` gives it in PHP. Otherwise, it has the post.
  *
  * A block that takes the top of its queue skips the IDs that the blocks before it took from any
  * queue, so channel blocks never show the same post twice. A block always shows its own pin. A
@@ -100,14 +127,12 @@ function postContext(select: any): Record<string, unknown> {
  * @param select         The data registry's `select`.
  * @param clientId       Client ID of the block.
  * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
- * @return The IDs, or null while channels load, and the context, or null while the block above it
- *         that gives it its context loads.
  */
 function channelQueue(
   select: any,
   clientId: string,
   previewContext: Record<string, unknown>,
-): { context: Record<string, unknown> | null, ids: number[] | null } {
+): ChannelQueue {
   const {
     getBlocks,
     getSettings,
@@ -119,6 +144,7 @@ function channelQueue(
 
   const {
     getChannelResults,
+    getTypeOfPostInChannel,
   } = select('wp-curate/channels') as any;
 
   const globalChannel = defaultChannel(select);
@@ -128,6 +154,7 @@ function channelQueue(
     return {
       context: null,
       ids: null,
+      post: null,
     };
   }
 
@@ -153,6 +180,7 @@ function channelQueue(
   let isOutLoading = false;
   let out = NO_IDS;
   let outContext: Record<string, unknown> | null = null;
+  let outPost = NO_POST;
 
   /*
    * Take the IDs that a block renders from its queue. The block is loading if its channel is
@@ -171,6 +199,7 @@ function channelQueue(
 
     let isLoading = false;
     let name = toChannelName(channelAttribute(block));
+    let postType = '';
     let ref = 0;
     let taken = NO_IDS;
 
@@ -191,10 +220,16 @@ function channelQueue(
       taken = [ref];
     }
 
+    // A pinned post can be past the IDs that have loaded, so the block saves its post type.
+    if (ref > 0 && typeof block.attributes.postType === 'string') {
+      ({ postType } = block.attributes);
+    }
+
     // Without a channel, there is nothing to take.
     if (name === null || name === '') {
       return {
         isLoading,
+        postType,
         taken,
       };
     }
@@ -210,6 +245,7 @@ function channelQueue(
     if (!hasEveryChannelArg(fields, args)) {
       return {
         isLoading,
+        postType,
         taken,
       };
     }
@@ -220,6 +256,7 @@ function channelQueue(
 
       return {
         isLoading: true,
+        postType,
         taken,
       };
     }
@@ -263,6 +300,7 @@ function channelQueue(
             const top = loaded.ids.find((id) => !usedIds.has(id));
 
             if (top !== undefined) {
+              postType = getTypeOfPostInChannel(top);
               taken = [top];
             }
 
@@ -284,6 +322,7 @@ function channelQueue(
 
     return {
       isLoading,
+      postType,
       taken,
     };
   };
@@ -322,15 +361,26 @@ function channelQueue(
       if (!isProvider && name !== null) {
         const {
           isLoading: isChannelLoading,
+          postType,
           taken,
         } = take(block, context, providerChannel, isContextLoading);
 
         // A block skips the IDs of the blocks before it, so it waits for them.
         const isLoading = isChannelLoading || isEarlierLoading;
 
+        let post = NO_POST;
+
+        if (taken.length > 0) {
+          post = {
+            postId: taken[0],
+            postType,
+          };
+        }
+
         if (block.clientId === clientId) {
           isOutLoading = isLoading;
           out = taken;
+          outPost = post;
         }
 
         if (isLoading) {
@@ -344,13 +394,8 @@ function channelQueue(
           isChildContextLoading = true;
         }
 
-        // A Single Post gives its post to the blocks inside it.
-        if (taken.length > 0) {
-          childContext = {
-            postId: taken[0],
-            postType: block.attributes.postType,
-          };
-        }
+        // A Single Post gives its post to the blocks inside it, or no post if it has none.
+        childContext = { ...post };
       }
 
       walk(block.innerBlocks, childContext, childChannel, isChildContextLoading);
@@ -374,14 +419,17 @@ function channelQueue(
   walk(getBlocks(), startContext, undefined, false);
 
   let ids: number[] | null = out;
+  let post: ChannelQueuePost | null = outPost;
 
   if (isOutLoading) {
     ids = null;
+    post = null;
   }
 
   return {
     context: outContext,
     ids,
+    post,
   };
 }
 
@@ -389,7 +437,7 @@ function channelQueue(
  * Get the IDs that a block with a channel shows, given the blocks before it in the editor.
  *
  * This is a plain function of `select`, so that a block bindings source's `getValues()`, which
- * cannot call hooks, can use it. `useChannelQueue()` wraps it for components.
+ * cannot call hooks, can use it.
  *
  * @param select         The data registry's `select`.
  * @param clientId       Client ID of the block.
@@ -402,6 +450,26 @@ export function channelQueueIds(
   previewContext: Record<string, unknown> = {},
 ): number[] | null {
   return channelQueue(select, clientId, previewContext).ids;
+}
+
+/**
+ * Get the post that a block takes from its channel, given the blocks before it in the editor, as
+ * the `postId` and `postType` context that the block gives the blocks inside it.
+ *
+ * This is a plain function of `select`, so that a label callback, which cannot call hooks, can use
+ * it. `useChannelQueuePost()` wraps it for components.
+ *
+ * @param select         The data registry's `select`.
+ * @param clientId       Client ID of the block.
+ * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
+ * @return The post, or null while channels load.
+ */
+export function channelQueuePost(
+  select: any,
+  clientId: string,
+  previewContext: Record<string, unknown> = {},
+): ChannelQueuePost | null {
+  return channelQueue(select, clientId, previewContext).post;
 }
 
 /**
@@ -426,21 +494,24 @@ export function channelQueueContext(
 }
 
 /**
- * Get the IDs that a block with a channel shows, given the blocks before it in the editor.
+ * Get the post that a block takes from its channel, given the blocks before it in the editor.
+ *
+ * `useSelect()` gives back the same object until the ID or the type changes, because it compares
+ * the result shallowly.
  *
  * @param clientId       Client ID of the block.
  * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
- * @return The IDs, or null while channels load.
+ * @return The post, or null while channels load.
  */
-export default function useChannelQueue(
+export default function useChannelQueuePost(
   clientId: string,
   previewContext: Record<string, unknown> = {},
-): number[] | null {
+): ChannelQueuePost | null {
   // Compare the context by value, since callers pass a new object on each render.
   const contextKey = JSON.stringify(previewContext);
 
   return useSelect(
-    (select) => channelQueueIds(select, clientId, JSON.parse(contextKey)),
+    (select) => channelQueuePost(select, clientId, JSON.parse(contextKey)),
     [clientId, contextKey],
   );
 }
