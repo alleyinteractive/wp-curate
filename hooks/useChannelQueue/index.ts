@@ -39,8 +39,6 @@ const NO_POST: ChannelQueuePost = {
 interface ChannelQueue {
   /** The context, or null while the block above it that gives it its context loads. */
   context: Record<string, unknown> | null;
-  /** The IDs, or null while channels load. */
-  ids: number[] | null;
   /** The post, or null while channels load. */
   post: ChannelQueuePost | null;
 }
@@ -104,14 +102,13 @@ function postContext(select: any): Record<string, unknown> {
 }
 
 /**
- * Get the IDs that a block with a channel shows, given the blocks before it in the editor, and the
- * context that the block gives its channel.
+ * Get the post that a block with a channel takes, given the blocks before it in the editor, and
+ * the context that the block gives its channel.
  *
  * Keep the rules in sync with `Queues` in PHP. Blocks take IDs in document order:
  *
  * - A single-item block shows its ref, or else the top of its channel's queue. That ID is then
  *   removed from the queue.
- * - A list block takes every ID that is left in its channel's queue.
  * - A block that provides the `wp-curate/channel` context, like Channel Content, takes nothing.
  *
  * A block without a channel of its own uses the channel that `toBlockChannel()` describes. A
@@ -150,7 +147,6 @@ function channelQueue(
   if (globalChannel === null) {
     return {
       context: null,
-      ids: null,
       post: null,
     };
   }
@@ -175,7 +171,6 @@ function channelQueue(
   let isEarlierLoading = false;
 
   let isOutLoading = false;
-  let out = NO_IDS;
   let outContext: Record<string, unknown> | null = null;
   let outPost = NO_POST;
 
@@ -376,7 +371,6 @@ function channelQueue(
 
         if (block.clientId === clientId) {
           isOutLoading = isLoading;
-          out = taken;
           outPost = post;
         }
 
@@ -401,33 +395,16 @@ function channelQueue(
 
   walk(getBlocks(), postContext(select), undefined, false);
 
-  let ids: number[] | null = out;
   let post: ChannelQueuePost | null = outPost;
 
   if (isOutLoading) {
-    ids = null;
     post = null;
   }
 
   return {
     context: outContext,
-    ids,
     post,
   };
-}
-
-/**
- * Get the IDs that a block with a channel shows, given the blocks before it in the editor.
- *
- * This is a plain function of `select`, so that a block bindings source's `getValues()`, which
- * cannot call hooks, can use it.
- *
- * @param select   The data registry's `select`.
- * @param clientId Client ID of the block.
- * @return The IDs, or null while channels load.
- */
-export function channelQueueIds(select: any, clientId: string): number[] | null {
-  return channelQueue(select, clientId).ids;
 }
 
 /**

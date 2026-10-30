@@ -1,5 +1,5 @@
 // Internal dependencies.
-import { channelQueueContext, channelQueueIds, channelQueuePost } from './index';
+import { channelQueueContext, channelQueuePost } from './index';
 
 jest.mock('@wordpress/block-editor', () => ({
   store: 'core/block-editor',
@@ -161,14 +161,32 @@ function parentBlock(name: string, attributes: object, innerBlocks: object[]) {
   };
 }
 
-describe('channelQueueIds', () => {
+/**
+ * The ID of the post that a block takes, 0 if it takes none, or null while channels load.
+ *
+ * @param select   The data registry's `select`.
+ * @param clientId Client ID of the block.
+ */
+function takenId(select: any, clientId: string): number | null {
+  const post = channelQueuePost(select, clientId);
+
+  let id: number | null = null;
+
+  if (post !== null) {
+    id = post.postId;
+  }
+
+  return id;
+}
+
+describe('channelQueuePost IDs', () => {
   it('passes every argument to getChannelResults, so that calls for the same IDs share a request', () => {
     const {
       getChannelResults,
       select,
     } = fakeSelect([singleBlock('a'), singleBlock('b')], [11, 12, 13]);
 
-    expect(channelQueueIds(select, 'b')).toEqual([12]);
+    expect(takenId(select, 'b')).toBe(12);
     expect(getChannelResults.mock.calls.length).toBeGreaterThan(0);
 
     getChannelResults.mock.calls.forEach((args: unknown[]) => {
@@ -183,7 +201,7 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
 
-    expect(channelQueueIds(select, '10')).toEqual([11]);
+    expect(takenId(select, '10')).toBe(11);
     expect(getChannelResults).toHaveBeenCalledWith('post_latest', {}, {}, 20);
   });
 
@@ -200,9 +218,9 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11, 12, 13, 14]);
 
-    expect(channelQueueIds(select, 'first')).toEqual([12]);
-    expect(channelQueueIds(select, 'nested')).toEqual([13]);
-    expect(channelQueueIds(select, 'after')).toEqual([14]);
+    expect(takenId(select, 'first')).toBe(12);
+    expect(takenId(select, 'nested')).toBe(13);
+    expect(takenId(select, 'after')).toBe(14);
   });
 
   it('gives a Channel Content block channel to a block inside it that has its own, and keeps its pin', () => {
@@ -218,9 +236,9 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11, 99, 12]);
 
-    expect(channelQueueIds(select, 'moved')).toEqual([11]);
-    expect(channelQueueIds(select, 'pinned')).toEqual([99]);
-    expect(channelQueueIds(select, 'last')).toEqual([12]);
+    expect(takenId(select, 'moved')).toBe(11);
+    expect(takenId(select, 'pinned')).toBe(99);
+    expect(takenId(select, 'last')).toBe(12);
     expect(getChannelResults).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
@@ -235,7 +253,7 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11]);
 
-    expect(channelQueueIds(select, 'inner')).toEqual([]);
+    expect(takenId(select, 'inner')).toBe(0);
     expect(getChannelResults).not.toHaveBeenCalled();
   });
 
@@ -245,7 +263,7 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect([singleBlock('alone', '')], [11]);
 
-    expect(channelQueueIds(select, 'alone')).toEqual([11]);
+    expect(takenId(select, 'alone')).toBe(11);
     expect(getChannelResults).toHaveBeenCalledWith('global_default', {}, {}, 10);
   });
 
@@ -259,9 +277,9 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11, 12, 13], ['page_latest']);
 
-    expect(channelQueueIds(select, 'first')).toEqual([11]);
-    expect(channelQueueIds(select, 'switched')).toBeNull();
-    expect(channelQueueIds(select, 'second')).toBeNull();
+    expect(takenId(select, 'first')).toBe(11);
+    expect(takenId(select, 'switched')).toBeNull();
+    expect(takenId(select, 'second')).toBeNull();
   });
 
   it('makes the blocks inside a loading block wait, without requesting their channel', () => {
@@ -275,7 +293,7 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11], ['page_latest']);
 
-    expect(channelQueueIds(select, 'inside')).toBeNull();
+    expect(takenId(select, 'inside')).toBeNull();
     expect(getChannelResults).not.toHaveBeenCalledWith(
       'post_latest',
       expect.anything(),
@@ -295,9 +313,9 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11, 12, 13]);
 
-    expect(channelQueueIds(select, 'five')).toEqual([11]);
-    expect(channelQueueIds(select, 'six')).toEqual([12]);
-    expect(channelQueueIds(select, 'five_again')).toEqual([13]);
+    expect(takenId(select, 'five')).toBe(11);
+    expect(takenId(select, 'six')).toBe(12);
+    expect(takenId(select, 'five_again')).toBe(13);
     expect(getChannelResults).toHaveBeenCalledWith(IN_CATEGORY, { term: 5 }, {}, 10);
     expect(getChannelResults).toHaveBeenCalledWith(IN_CATEGORY, { term: 6 }, {}, 10);
   });
@@ -312,8 +330,8 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11]);
 
-    expect(channelQueueIds(select, 'none')).toEqual([]);
-    expect(channelQueueIds(select, 'pinned')).toEqual([99]);
+    expect(takenId(select, 'none')).toBe(0);
+    expect(takenId(select, 'pinned')).toBe(99);
     expect(getChannelResults).not.toHaveBeenCalled();
   });
 
@@ -329,8 +347,8 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11, 12]);
 
-    expect(channelQueueIds(select, 'first')).toEqual([11]);
-    expect(channelQueueIds(select, 'moved')).toEqual([12]);
+    expect(takenId(select, 'first')).toBe(11);
+    expect(takenId(select, 'moved')).toBe(12);
     expect(getChannelResults).not.toHaveBeenCalledWith(
       IN_CATEGORY,
       { term: 6 },
@@ -348,7 +366,7 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11]);
 
-    expect(channelQueueIds(select, 'stale')).toEqual([11]);
+    expect(takenId(select, 'stale')).toBe(11);
     expect(getChannelResults).toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
@@ -358,7 +376,7 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect([singleBlock('top', IN_ISSUE)], [11]);
 
-    expect(channelQueueIds(select, 'top')).toEqual([11]);
+    expect(takenId(select, 'top')).toBe(11);
     expect(getChannelResults).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: POST_ID }, 10);
   });
 
@@ -386,8 +404,8 @@ describe('channelQueueIds', () => {
     } = fakeSelect([issueBlock('first', 0), issueBlock('second', 30)], [11, 12, 13], [], 'magazine_issue');
 
     // The first issue takes 11, so its articles skip it.
-    expect(channelQueueIds(select, 'first-article')).toEqual([12]);
-    expect(channelQueueIds(select, 'second-article')).toEqual([13]);
+    expect(takenId(select, 'first-article')).toBe(12);
+    expect(takenId(select, 'second-article')).toBe(13);
     expect(getChannelResults).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 11 }, 10);
     expect(getChannelResults).toHaveBeenCalledWith(IN_ISSUE, {}, { postId: 30 }, 10);
     expect(getChannelResults).not.toHaveBeenCalledWith('post_latest', {}, { postId: POST_ID }, 10);
@@ -416,9 +434,9 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11, 12, 13]);
 
-    expect(channelQueueIds(select, 'featured')).toEqual([11]);
-    expect(channelQueueIds(select, 'second')).toEqual([12]);
-    expect(channelQueueIds(select, 'third')).toEqual([13]);
+    expect(takenId(select, 'featured')).toBe(11);
+    expect(takenId(select, 'second')).toBe(12);
+    expect(takenId(select, 'third')).toBe(13);
     expect(getChannelResults).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
 
@@ -435,7 +453,7 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11]);
 
-    expect(channelQueueIds(select, 'inner')).toEqual([11]);
+    expect(takenId(select, 'inner')).toBe(11);
     expect(getChannelResults).toHaveBeenCalledWith('page_latest', {}, {}, 10);
     expect(getChannelResults).not.toHaveBeenCalledWith('post_latest', {}, {}, 10);
   });
@@ -449,7 +467,7 @@ describe('channelQueueIds', () => {
       select,
     } = fakeSelect(blocks, [11]);
 
-    expect(channelQueueIds(select, 'own')).toEqual([11]);
+    expect(takenId(select, 'own')).toBe(11);
     expect(getChannelResults).toHaveBeenCalledWith('page_latest', {}, {}, 10);
   });
 
@@ -527,14 +545,14 @@ describe('channelQueuePost', () => {
   });
 });
 
-describe('channelQueueIds deduplication', () => {
+describe('channelQueuePost deduplication', () => {
   it('skips the posts that blocks before it took from any channel', () => {
     const {
       select,
     } = fakeSelect([singleBlock('a'), singleBlock('b', 'other')], [11, 12]);
 
-    expect(channelQueueIds(select, 'a')).toEqual([11]);
-    expect(channelQueueIds(select, 'b')).toEqual([12]);
+    expect(takenId(select, 'a')).toBe(11);
+    expect(takenId(select, 'b')).toBe(12);
   });
 
   it('always shows a pin, even one that a block before it took', () => {
@@ -546,7 +564,7 @@ describe('channelQueueIds deduplication', () => {
       select,
     } = fakeSelect(blocks, [11, 12]);
 
-    expect(channelQueueIds(select, 'b')).toEqual([11]);
+    expect(takenId(select, 'b')).toBe(11);
   });
 
   it('does not skip a post that a block after it pins', () => {
@@ -558,7 +576,7 @@ describe('channelQueueIds deduplication', () => {
       select,
     } = fakeSelect(blocks, [11, 12]);
 
-    expect(channelQueueIds(select, 'a')).toEqual([11]);
+    expect(takenId(select, 'a')).toBe(11);
   });
 
   it('loads the next page when every loaded post is skipped', () => {
@@ -572,7 +590,7 @@ describe('channelQueueIds deduplication', () => {
       select,
     } = fakeSelect(blocks, ids);
 
-    expect(channelQueueIds(select, 'b')).toEqual([11]);
+    expect(takenId(select, 'b')).toBe(11);
     expect(getChannelResults).toHaveBeenCalledWith('other', {}, {}, 20);
   });
 });
