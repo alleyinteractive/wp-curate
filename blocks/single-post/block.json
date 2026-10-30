@@ -5,7 +5,6 @@
   "version": "0.1.0",
   "title": "Single Post",
   "category": "theme",
-  "icon": "admin-post",
   "description": "Displays a single post from a channel.",
   "textdomain": "wp-curate",
   "editorScript": "file:index.ts",
