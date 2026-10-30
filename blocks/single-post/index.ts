@@ -2,6 +2,9 @@
 import { registerBlockType } from '@wordpress/blocks';
 import { post as icon } from '@wordpress/icons';
 
+// Plugin dependencies.
+import SINGLE_POST_LAYOUTS from '../../services/singlePostLayouts';
+
 // Internal dependencies.
 import metadata from './block.json';
 import edit from './edit';
@@ -17,5 +20,17 @@ registerBlockType(
     edit,
     icon,
     save,
+    variations: SINGLE_POST_LAYOUTS.map(({
+      blocks,
+      icon: layoutIcon,
+      name,
+      title,
+    }) => ({
+      icon: layoutIcon,
+      innerBlocks: blocks,
+      name,
+      scope: ['block'],
+      title,
+    })),
   },
 );

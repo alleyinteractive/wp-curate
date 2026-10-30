@@ -13,7 +13,8 @@
   "editorScript": "file:index.ts",
   "render": "file:render.php",
   "supports": {
-    "html": false
+    "html": false,
+    "layout": true
   },
   "attributes": {
     "template": {
