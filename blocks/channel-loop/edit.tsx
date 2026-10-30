@@ -8,21 +8,17 @@ import {
 } from '@wordpress/block-editor';
 import { InnerBlockTemplate } from '@wordpress/blocks';
 
-// The block that shows one post, which uses the channel of the Channel Content block around this
-// one.
-const SINGLE_POST = {
+const ALLOWED_BLOCKS = ['wp-curate/single-post'];
+
+const DEFAULT_BLOCK = {
   name: 'wp-curate/single-post',
 };
 
-// The inner blocks of a new block.
-const NEW_BLOCK_TEMPLATE: InnerBlockTemplate[] = [
-  [SINGLE_POST.name],
-  [SINGLE_POST.name],
-  [SINGLE_POST.name],
+const TEMPLATE: InnerBlockTemplate[] = [
+  ['wp-curate/single-post'],
+  ['wp-curate/single-post'],
+  ['wp-curate/single-post'],
 ];
-
-// The blocks allowed inside: only posts.
-const ALLOWED_BLOCKS = [SINGLE_POST.name];
 
 /**
  * The wp-curate/channel-loop block edit function.
@@ -41,9 +37,9 @@ export default function Edit() {
     allowedBlocks: ALLOWED_BLOCKS,
     // The appender adds another post.
     // @ts-expect-error defaultBlock and directInsert not available in types yet.
-    defaultBlock: SINGLE_POST,
+    defaultBlock: DEFAULT_BLOCK,
     directInsert: true,
-    template: NEW_BLOCK_TEMPLATE,
+    template: TEMPLATE,
   });
 
   return <div {...innerBlocksProps} />;

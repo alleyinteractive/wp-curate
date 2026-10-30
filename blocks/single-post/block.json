@@ -6,7 +6,7 @@
   "title": "Single Post",
   "category": "theme",
   "icon": "admin-post",
-  "description": "Promotes a single post from a channel.",
+  "description": "Displays a single post from a channel.",
   "textdomain": "wp-curate",
   "editorScript": "file:index.ts",
   "render": "file:render.php",
