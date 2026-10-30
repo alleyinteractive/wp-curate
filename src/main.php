@@ -9,6 +9,7 @@ namespace Alley\WP\WP_Curate;
 
 use Alley\WP\Features\Group;
 use Alley\WP\Features\Ordered;
+use Alley\WP\Post_IDs\Empty_Post_IDs;
 use Alley\WP\Post_Queries\Default_Post_Queries;
 use Alley\WP\Post_Query\Global_Post_Query;
 use Alley\WP\WP_Curate\Post_IDs\History;
@@ -65,6 +66,9 @@ function main(): void {
 			first: new Features\Queues_Block_Context(
 				queues: new Channels\Queues(
 					channels: $channels,
+					taken: new History(
+						seed: new Empty_Post_IDs(),
+					),
 				),
 			),
 			then: new Features\Channel_Block_Support(
