@@ -30,6 +30,6 @@
     }
   },
   "providesContext": {
-    "wp-curate/postTemplate": "template"
+    "wp-curate/loopTemplate": "template"
   }
 }

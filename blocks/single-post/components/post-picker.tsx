@@ -2,6 +2,7 @@
 import React from 'react';
 
 // WordPress dependencies.
+import { getMediaUrl } from '@alleyinteractive/block-editor-tools';
 import { Modal } from '@wordpress/components';
 import { store as coreStore } from '@wordpress/core-data';
 import { useSelect } from '@wordpress/data';
@@ -44,9 +45,6 @@ const FIELDS = [
  */
 const CHANNEL_ORDER = 'channelOrder';
 
-// Image sizes for the picker, in order of preference. A grid shows images larger than a thumbnail.
-const PICKER_IMAGE_SIZES = ['medium', 'thumbnail'];
-
 /**
  * Reads the featured image ID of a post record, or 0 if it has none.
  *
@@ -68,63 +66,6 @@ function toFeaturedMediaId(post: unknown): number {
   }
 
   return id;
-}
-
-/**
- * Reads the URL of an attachment record at the first picker size it has, or at full size if it
- * has none of them.
- *
- * @param image Attachment record from core-data.
- */
-function toPickerImageUrl(image: unknown): string {
-  let url = '';
-
-  if (typeof image !== 'object' || image === null) {
-    return url;
-  }
-
-  const {
-    media_details: mediaDetails,
-    source_url: sourceUrl,
-  } = image as Record<string, unknown>;
-
-  if (typeof sourceUrl === 'string') {
-    url = sourceUrl;
-  }
-
-  if (typeof mediaDetails !== 'object' || mediaDetails === null) {
-    return url;
-  }
-
-  const {
-    sizes,
-  } = mediaDetails as Record<string, unknown>;
-
-  if (typeof sizes !== 'object' || sizes === null) {
-    return url;
-  }
-
-  const sizeName = PICKER_IMAGE_SIZES.find((name) => name in sizes);
-
-  if (sizeName === undefined) {
-    return url;
-  }
-
-  const size = (sizes as Record<string, unknown>)[sizeName];
-
-  if (typeof size !== 'object' || size === null) {
-    return url;
-  }
-
-  const {
-    source_url: sizeUrl,
-  } = size as Record<string, unknown>;
-
-  if (typeof sizeUrl === 'string') {
-    url = sizeUrl;
-  }
-
-  return url;
 }
 
 const NO_IDS: number[] = [];
@@ -162,9 +103,6 @@ function toPostTitle(post: unknown): string {
 
 /**
  * Modal for picking one post from a block's channel.
- *
- * The picker loads one page at a time, of the posts or of the posts that match a search, in
- * channel order. It gives the channel the same arguments that the block's queue does.
  */
 export default function PostPicker({
   args,
@@ -213,10 +151,7 @@ export default function PostPicker({
     search = view.search.trim();
   }
 
-  /*
-   * The context that the block's queue gives the channel, which the picker gives it too, or null
-   * while the block above it that gives it its context loads.
-   */
+  // The context that the block's queue gives the channel, which the picker gives it too.
   const contextKey: string = useSelect((select) => {
     const blockContext = channelQueueContext(select, clientId);
 
@@ -237,7 +172,7 @@ export default function PostPicker({
   let resultsChannel = '';
   let resultsContext: Record<string, unknown> = {};
 
-  // Without its context, the channel is not requested.
+  // Context is required.
   if (context !== null) {
     resultsChannel = channel;
     resultsContext = context;
@@ -265,7 +200,7 @@ export default function PostPicker({
     return out;
   }, [args, channel, context, page, perPage, search]);
 
-  // The totals of the last page that loaded, so that the pagination stays while the next one loads.
+  // The totals of the last page, so that the pagination doesn't change while the next page loads.
   const [paginationInfo, setPaginationInfo] = useState({ totalItems: 0, totalPages: 0 });
 
   if (
@@ -398,7 +333,8 @@ export default function PostPicker({
 
     if (Array.isArray(images)) {
       images.forEach((image: any) => {
-        imageUrls[image.id] = toPickerImageUrl(image);
+        // A grid shows images larger than a thumbnail.
+        imageUrls[image.id] = getMediaUrl(image, 'medium');
       });
     }
 

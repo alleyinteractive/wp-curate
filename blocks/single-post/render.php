@@ -33,8 +33,8 @@ if ( ! $promoted_post instanceof WP_Post ) {
 $parsed_block = $block->parsed_block;
 
 // Inside a Channel Loop block, the block renders that block's template, not inner blocks of its own.
-if ( isset( $block->context['wp-curate/postTemplate'] ) && is_array( $block->context['wp-curate/postTemplate'] ) ) {
-	$template        = new Inner_Block_Template( $block->context['wp-curate/postTemplate'] );
+if ( isset( $block->context['wp-curate/loopTemplate'] ) && is_array( $block->context['wp-curate/loopTemplate'] ) ) {
+	$template        = new Inner_Block_Template( $block->context['wp-curate/loopTemplate'] );
 	$template_blocks = parse_blocks( $template->serialized_blocks() );
 
 	$parsed_block['innerBlocks']  = $template_blocks;
@@ -68,9 +68,9 @@ setup_postdata( $post );
 add_filter( 'render_block_context', $filter_block_context, 1 );
 ?>
 
-<div <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
+<article <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
 	<?php echo $inner->render( [ 'dynamic' => false ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-</div>
+</article>
 
 <?php
 remove_filter( 'render_block_context', $filter_block_context, 1 );
