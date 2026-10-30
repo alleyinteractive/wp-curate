@@ -4,6 +4,8 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
+- Bug fix: Fix issue where posts nested in a subquery inherited the backfill opacity of their parent Post block and rendered at 25% opacity in the editor.
+
 ## 3.4.1 - 2026-10-26
 
 - Changed: Relabel the Post block's "Backfill Post" button to "Unpin Post", the inverse of "Pin a Post".
