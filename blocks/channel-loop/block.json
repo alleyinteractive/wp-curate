@@ -6,7 +6,7 @@
   "title": "Channel Loop",
   "category": "theme",
   "icon": "screenoptions",
-  "description": "Promotes posts from the channel of the Channel Content block around it. Each Single Post block inside shows a post from that channel, in this block's template.",
+  "description": "Displays posts from the surrounding channel using the same template.",
   "textdomain": "wp-curate",
   "ancestor": [
     "wp-curate/channel-content"
