@@ -3,26 +3,26 @@
   container-name: wp-curate-block;
   container-type: inline-size;
 
-  &--selected {
-    outline: 1px dashed #ccc;
-    outline-offset: 0.5rem;
-  }
-
-  &--backfill > .block-editor-inner-blocks {
-    opacity: 0.5;
-  }
-
-  &__actions {
-    align-items: flex-end;
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-    margin-top: 0.5rem;
-  }
-
   .wp-block-post-excerpt__more-text {
     display: none;
   }
+}
+
+.wp-curate-post-block--selected {
+  outline: 1px dashed #ccc;
+  outline-offset: 0.5rem;
+}
+
+.wp-curate-post-block--backfill > .block-editor-inner-blocks {
+  opacity: 0.5;
+}
+
+.wp-curate-post-block__actions {
+  align-items: flex-end;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
 }
 
 .wp-curate-query-block--move .wp-block-post:hover,
