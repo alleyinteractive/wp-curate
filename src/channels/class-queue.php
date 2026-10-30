@@ -7,32 +7,16 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
-use Alley\WP\Types\Post_IDs;
 use Generator;
 
 /**
- * The queue of available IDs in a channel.
+ * The queue of IDs in a channel, which blocks take from the top in order.
  *
- * The channel's IDs are loaded only to the extent that the blocks on a page need them. The IDs are maintained so that
- * an ID that one block skips stays available to the blocks after it.
+ * The channel's IDs are loaded only to the extent that the blocks on a page need them.
  *
  * This class is mutable, one per channel per request.
  */
 final class Queue {
-	/**
-	 * Removed IDs, as keys.
-	 *
-	 * @var bool[]
-	 */
-	private array $removed = [];
-
-	/**
-	 * The IDs read from the channel so far, in channel order.
-	 *
-	 * @var int[]
-	 */
-	private array $read = [];
-
 	/**
 	 * The channel's IDs, or null before they are needed.
 	 *
@@ -54,69 +38,25 @@ final class Queue {
 	) {}
 
 	/**
-	 * Returns the next ID and keeps it in the queue.
+	 * Removes the next ID from the queue and returns it.
 	 *
-	 * @param Post_IDs $skipped IDs to pass over, which stay in the queue.
 	 * @return int|null The ID, or null when no IDs remain.
 	 */
-	public function top( Post_IDs $skipped ): ?int {
-		$skipped = array_flip( $skipped->post_ids() );
-		$index   = 0;
-		$top     = null;
+	public function take(): ?int {
+		$ids = $this->ids();
+		$top = null;
 
-		while ( null === $top && $this->has_read( $index ) ) {
-			$id = $this->read[ $index ];
-
-			if ( ! isset( $this->removed[ $id ] ) && ! isset( $skipped[ $id ] ) ) {
-				$top = $id;
-			}
-
-			++$index;
-		}
-
-		return $top;
-	}
-
-	/**
-	 * Removes an ID wherever it sits. This does not read the channel.
-	 *
-	 * @param int $id Post or term ID.
-	 */
-	public function remove( int $id ): void {
-		$this->removed[ $id ] = true;
-	}
-
-	/**
-	 * Whether the IDs read so far reach a position in the list, reading the next ID from the channel if needed.
-	 *
-	 * @param int $index Position in the IDs read so far.
-	 * @return bool
-	 */
-	private function has_read( int $index ): bool {
-		return $index < count( $this->read ) || $this->read_next();
-	}
-
-	/**
-	 * Reads the channel's next ID into the IDs read so far.
-	 *
-	 * @return bool Whether an ID was read.
-	 */
-	private function read_next(): bool {
-		$ids  = $this->ids();
-		$read = false;
-
-		while ( ! $read && $ids->valid() ) {
+		while ( null === $top && $ids->valid() ) {
 			$current = $ids->current();
 
 			if ( is_int( $current ) && $current > 0 ) {
-				$this->read[] = $current;
-				$read         = true;
+				$top = $current;
 			}
 
 			$ids->next();
 		}
 
-		return $read;
+		return $top;
 	}
 
 	/**
