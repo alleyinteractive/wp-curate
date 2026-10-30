@@ -389,7 +389,12 @@ function channelQueue(
         childContext = { ...post };
       }
 
-      walk(block.innerBlocks, childContext, childChannel, isChildContextLoading);
+      /*
+       * Read the inner blocks from the store, not from `block.innerBlocks`. A block with
+       * controlled inner blocks, like Post Content in "Show template" mode or a synced pattern,
+       * keeps them only under its own client ID in the store.
+       */
+      walk(getBlocks(block.clientId), childContext, childChannel, isChildContextLoading);
     });
   };
 

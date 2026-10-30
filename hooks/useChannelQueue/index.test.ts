@@ -29,13 +29,55 @@ const POST_ID = 5;
  * @param ids      IDs in every channel.
  * @param loading  Channels that have not loaded.
  * @param postType The type of every post in the channel results.
+ * @param controlled Controlled inner blocks, keyed by the client ID of the block that has them.
  */
 function fakeSelect(
   blocks: object[],
   ids: number[],
   loading: string[] = [],
   postType = 'post',
+  controlled: Record<string, object[]> = {},
 ) {
+  /**
+   * Like the store, the inner blocks of a block, or the top-level blocks without a client ID. The
+   * store keeps controlled inner blocks apart from the block's `innerBlocks`.
+   *
+   * @param rootClientId Client ID of the block.
+   */
+  const getBlocks = (rootClientId = ''): object[] => {
+    let out: object[] = [];
+
+    if (rootClientId === '') {
+      out = blocks;
+    } else if (rootClientId in controlled) {
+      out = controlled[rootClientId];
+    } else {
+      const find = (list: any[]): any => {
+        let found: any;
+
+        list.forEach((block) => {
+          if (found === undefined && block.clientId === rootClientId) {
+            found = block;
+          }
+
+          if (found === undefined) {
+            found = find(block.innerBlocks);
+          }
+        });
+
+        return found;
+      };
+
+      const block = find(blocks);
+
+      if (block !== undefined) {
+        out = block.innerBlocks;
+      }
+    }
+
+    return out;
+  };
+
   // Like the store, the results have the IDs through the count, or all of them at the channel's
   // end.
   const getChannelResults = jest.fn((
@@ -96,7 +138,7 @@ function fakeSelect(
 
     if (storeName === 'core/block-editor') {
       selectors = {
-        getBlocks: () => blocks,
+        getBlocks,
         getSettings: () => ({}),
       };
     }
@@ -145,6 +187,9 @@ function singleBlock(clientId: string, channel = 'post_latest') {
   };
 }
 
+// The number of blocks that `parentBlock()` has made, for their client IDs.
+let parentCount = 0;
+
 /**
  * A block that holds other blocks.
  *
@@ -153,9 +198,12 @@ function singleBlock(clientId: string, channel = 'post_latest') {
  * @param innerBlocks Inner blocks.
  */
 function parentBlock(name: string, attributes: object, innerBlocks: object[]) {
+  parentCount += 1;
+
   return {
     attributes,
-    clientId: name,
+    // Unique, like in the store, so that `getBlocks()` finds this block's inner blocks.
+    clientId: `${name}-${parentCount}`,
     innerBlocks,
     name,
   };
@@ -469,6 +517,26 @@ describe('channelQueuePost IDs', () => {
 
     expect(takenId(select, 'own')).toBe(11);
     expect(getChannelResults).toHaveBeenCalledWith('page_latest', {}, {}, 10);
+  });
+
+  it('reaches the controlled inner blocks of a block, like Post Content in a template', () => {
+    const blocks = [
+      singleBlock('in-template'),
+      {
+        attributes: {},
+        clientId: 'post-content',
+        innerBlocks: [],
+        name: 'core/post-content',
+      },
+    ];
+    const {
+      select,
+    } = fakeSelect(blocks, [11, 12], [], 'post', {
+      'post-content': [singleBlock('in-post')],
+    });
+
+    expect(takenId(select, 'in-template')).toBe(11);
+    expect(takenId(select, 'in-post')).toBe(12);
   });
 
   it('gives a block at the top of the post the post as its context', () => {
