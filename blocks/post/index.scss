@@ -13,7 +13,9 @@
   outline-offset: 0.5rem;
 }
 
-.wp-curate-post-block--backfill > .block-editor-inner-blocks {
+// Specificity necessary to prevent compound opacity in nested posts.
+// stylelint-disable-next-line selector-max-compound-selectors
+.wp-curate-post-block--backfill > .block-editor-inner-blocks > .block-editor-block-list__layout > :not(.wp-block-wp-curate-subquery) {
   opacity: 0.5;
 }
 
