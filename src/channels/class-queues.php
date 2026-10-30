@@ -7,13 +7,15 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
+use Alley\WP\WP_Curate\Post_IDs\History;
+
 /**
  * The queues that blocks share during a request.
  *
  * Blocks specify their own channel. Each channel gets a separate queue for each set of arguments and
- * context values that it uses. Blocks take IDs in render order. A block with a pin shows the pin and
- * leaves every queue as it is. Any other block takes the next ID off the top of its queue. Queues
- * do not know about each other, so blocks in different queues can show the same post.
+ * context values that it uses. Blocks take IDs in render order. A block that takes the top of its
+ * queue skips the IDs that blocks took from any queue before it, so channel blocks never show the
+ * same post twice. A block always shows its own pin.
  *
  * Keep these rules matched with `useChannelQueue()`.
  */
@@ -29,13 +31,16 @@ final class Queues {
 	 * Constructor.
 	 *
 	 * @param Available_Channels $channels Available channels.
+	 * @param History            $taken    The record of the IDs that blocks take from any queue.
 	 */
 	public function __construct(
 		private readonly Available_Channels $channels,
+		private readonly History $taken,
 	) {}
 
 	/**
-	 * Takes the ref from a block, or else the next ID off the top of the block's queue.
+	 * Takes the ref from a block or else the next queued ID that the block does not skip. Then
+	 * removes the ID from the queue.
 	 *
 	 * @param string  $name    Channel name that the block uses.
 	 * @param int     $ref     Pinned ID, or 0.
@@ -44,14 +49,23 @@ final class Queues {
 	 * @return int|null The ID, or null when none remains.
 	 */
 	public function take_one( string $name, int $ref, array $args, array $context ): ?int {
+		$queue = $this->queue( $name, $args, $context );
 		$taken = null;
 
 		if ( $ref > 0 ) {
 			$taken = $ref;
 		}
 
-		if ( null === $taken ) {
-			$taken = $this->queue( $name, $args, $context )?->take();
+		if ( null === $taken && $queue instanceof Queue ) {
+			$taken = $queue->top( $this->taken );
+		}
+
+		if ( null !== $taken && $queue instanceof Queue ) {
+			$queue->remove( $taken );
+		}
+
+		if ( null !== $taken ) {
+			$this->taken->record( $taken );
 		}
 
 		return $taken;

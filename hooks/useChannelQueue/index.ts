@@ -107,8 +107,8 @@ function postContext(select: any): Record<string, unknown> {
  *
  * Keep the rules in sync with `Queues` in PHP. Blocks take IDs in document order:
  *
- * - A single-item block with a ref shows its ref and leaves every queue as it is.
- * - Any other single-item block takes the next ID off the top of its channel's queue.
+ * - A single-item block shows its ref, or else the top of its channel's queue. That ID is then
+ *   removed from the queue.
  * - A block that provides the `wp-curate/channel` context, like Channel Content, takes nothing.
  *
  * A block without a channel of its own uses the channel that `toBlockChannel()` describes. A
@@ -117,7 +117,9 @@ function postContext(select: any): Record<string, unknown> {
  * block that takes a post, like Single Post, has that post as `postId` and `postType`, the way
  * that `Channel_Block_Support` gives it in PHP. Otherwise, it has the post.
  *
- * Queues do not know about each other, so blocks in different queues can show the same post.
+ * A block that takes the top of its queue skips the IDs that the blocks before it took from any
+ * queue, so channel blocks never show the same post twice. A block always shows its own pin. A
+ * block waits for every block before it, whose IDs it skips.
  *
  * @param select   The data registry's `select`.
  * @param clientId Client ID of the block.
@@ -150,10 +152,10 @@ function channelQueue(
   }
 
   /*
-   * The number of IDs taken so far from each queue, keyed by the channel and the arguments and
-   * context that it uses.
+   * The IDs taken so far from each queue, keyed by the channel and the arguments and context that
+   * it uses.
    */
-  const takenCounts = new Map<string, number>();
+  const takenFromQueues = new Map<string, number[]>();
 
   /*
    * The channels that are loading for a block, with their arguments. The blocks after it in the
@@ -161,6 +163,12 @@ function channelQueue(
    * others can.
    */
   const loadingChannels = new Set<string>();
+
+  // The IDs taken so far from any queue, which the blocks after them skip.
+  const usedIds = new Set<number>();
+
+  // Whether a block before the current one is loading.
+  let isEarlierLoading = false;
 
   let isOutLoading = false;
   let outContext: Record<string, unknown> | null = null;
@@ -199,22 +207,14 @@ function channelQueue(
       ref = block.attributes.ref;
     }
 
-    /*
-     * A single-item block with a ref takes the ref and nothing from its queue. A pinned post can
-     * be past the IDs that have loaded, so the block saves its post type.
-     */
+    // A single-item block takes its ref, if it has one.
     if (ref > 0) {
       taken = [ref];
+    }
 
-      if (typeof block.attributes.postType === 'string') {
-        ({ postType } = block.attributes);
-      }
-
-      return {
-        isLoading,
-        postType,
-        taken,
-      };
+    // A pinned post can be past the IDs that have loaded, so the block saves its post type.
+    if (ref > 0 && typeof block.attributes.postType === 'string') {
+      ({ postType } = block.attributes);
     }
 
     // Without a channel, there is nothing to take.
@@ -255,33 +255,57 @@ function channelQueue(
 
     // Send and key the queue by only the context that the channel uses, like PHP does.
     const used = channelContext(select, name, context);
-    const key = JSON.stringify([name, args, used]);
-
-    // The position of the top of the queue, after the IDs that the blocks before took.
-    let index = 0;
-
-    if (takenCounts.has(key)) {
-      index = takenCounts.get(key) as number;
-    }
-
-    // Load the IDs through the top, in whole pages.
-    const count = Math.ceil((index + 1) / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
-    const results: ChannelResults | null = getChannelResults(name, args, used, count);
+    const results: ChannelResults | null = getChannelResults(name, args, used, CHANNEL_PAGE_SIZE);
 
     if (results === null) {
       isLoading = true;
     }
 
-    // The store gives results with fewer IDs than the count only at the channel's end.
-    if (results !== null && index < results.ids.length) {
-      const top = results.ids[index];
-
-      postType = getTypeOfPostInChannel(top);
-      taken = [top];
-    }
-
     if (results !== null) {
-      takenCounts.set(key, index + 1);
+      const key = JSON.stringify([name, args, used]);
+
+      let previous = NO_IDS;
+
+      if (takenFromQueues.has(key)) {
+        previous = takenFromQueues.get(key) as number[];
+      }
+
+      /*
+       * Without a ref, the block takes the top of the queue that it does not skip. Every ID taken
+       * before can be in the queue, so load that many IDs plus one, in whole pages, and then a
+       * page more each time that every loaded ID is skipped.
+       */
+      if (ref === 0) {
+        let count = Math.ceil((previous.length + 1) / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
+        let isSearching = true;
+
+        while (isSearching) {
+          const loaded: ChannelResults | null = getChannelResults(name, args, used, count);
+
+          isSearching = false;
+
+          if (loaded === null) {
+            isLoading = true;
+          }
+
+          if (loaded !== null) {
+            const top = loaded.ids.find((id) => !usedIds.has(id));
+
+            if (top !== undefined) {
+              postType = getTypeOfPostInChannel(top);
+              taken = [top];
+            }
+
+            // The store gives results with fewer IDs than the count only at the channel's end.
+            if (top === undefined && loaded.has_more && loaded.ids.length >= count) {
+              count += CHANNEL_PAGE_SIZE;
+              isSearching = true;
+            }
+          }
+        }
+      }
+
+      takenFromQueues.set(key, [...previous, ...taken]);
     }
 
     if (isLoading) {
@@ -328,10 +352,13 @@ function channelQueue(
 
       if (!isProvider && name !== null) {
         const {
-          isLoading,
+          isLoading: isChannelLoading,
           postType,
           taken,
         } = take(block, context, providerChannel, isContextLoading);
+
+        // A block skips the IDs of the blocks before it, so it waits for them.
+        const isLoading = isChannelLoading || isEarlierLoading;
 
         let post = NO_POST;
 
@@ -346,6 +373,12 @@ function channelQueue(
           isOutLoading = isLoading;
           outPost = post;
         }
+
+        if (isLoading) {
+          isEarlierLoading = true;
+        }
+
+        taken.forEach((id) => usedIds.add(id));
 
         // Until the block's post is known, the blocks inside it do not know their context.
         if (isLoading) {
