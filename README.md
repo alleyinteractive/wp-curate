@@ -55,13 +55,24 @@ add_filter( 'wp_curate_deduplication_enabled', '__return_true' );
 
 #### The `wp_curate_history_seed` filter
 
-Filters the object that supplies the initial post IDs for the deduplication history. By default, this is a `Pinned_In_Post_Content` object, which implements the `Alley\WP\Types\Post_IDs` interface. A filter callback must return an object that implements the same interface.
+Filters the object that supplies the initial post IDs for the deduplication history. Posts in the seed count as already used, so Query and Subquery blocks with deduplication enabled exclude them. The filter runs once per request.
 
-The default object supplies the IDs of posts pinned in the content of the queried post. It returns IDs only when the post is a single post and has both the `wp_curate_deduplication` and `wp_curate_unique_pinned_posts` post meta set.
+By default, the seed is a `Pinned_In_Post_Content` object, which implements the `Alley\WP\Types\Post_IDs` interface. It supplies the IDs of posts pinned in the content of the queried post. It returns IDs only when the post is a single post and has both the `wp_curate_deduplication` and `wp_curate_unique_pinned_posts` post meta enabled.
+
+The object's `post_ids()` method can be called many times in a request. Do any expensive work inside that method, and cache or memoize the result so the work happens once.
 
 Parameters:
 
-- `$seed` (`Pinned_In_Post_Content`) - The seed for the history of post IDs.
+- `$seed` (`Post_IDs`) - The seed for the history of post IDs.
+
+A filter callback must return an object that implements `Alley\WP\Types\Post_IDs`. For a fixed list of IDs, `Post_IDs_Envelope` is an easy way to build one.
+
+```php
+use Alley\WP\Post_IDs\Post_IDs_Envelope;
+
+// Treat these posts as already used, so blocks with deduplication enabled skip them.
+add_filter( 'wp_curate_history_seed', fn () => new Post_IDs_Envelope( [ 123, 456 ] ) );
+```
 
 ### Flexible Templates
 
