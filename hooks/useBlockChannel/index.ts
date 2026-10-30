@@ -192,7 +192,7 @@ export function toBlockChannel(
  * Get the arguments that a block gives its channel.
  *
  * Like the channel, the block uses the arguments in its block context, which the nearest Channel
- * block around it provides, even if the block has its own from before it moved in.
+ * Content block around it provides, even if the block has its own from before it moved in.
  *
  * @param ownChannel     The block's `channel` attribute.
  * @param contextChannel The `wp-curate/channel` block context.

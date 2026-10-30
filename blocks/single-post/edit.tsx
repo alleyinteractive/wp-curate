@@ -97,10 +97,7 @@ function TemplateInnerBlocks({
   // The last blocks that this block sent to the template, and the template made from them.
   const sent = useRef<{ blocks: BlockInstance[], template: InnerBlockTemplate[] } | null>(null);
 
-  /*
-   * Give back the blocks that this block sent when the template is the one made from them, so that
-   * the editor does not replace the blocks that the user is editing.
-   */
+  // If this block made the template, reuse its blocks, so that new ones do not replace them.
   const value = useMemo(() => {
     let blocks: BlockInstance[] = [];
 
@@ -141,9 +138,8 @@ function TemplateInnerBlocks({
  * as the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
  * after the blocks before this one. The support also gives that post to the inner blocks.
  *
- * Inside a Channel Content block, directly or in a Channel Loop, the block uses the Channel Content
- * block's channel instead of its own. Inside a Channel Loop block, its inner blocks edit that
- * block's template instead of its own. A block moved in from outside keeps its pinned post.
+ * Inside a Channel Loop block, the inner blocks edit the loop's template, which every Single Post
+ * in the loop shares, instead of their own.
  */
 export default function Edit({
   attributes: {
@@ -154,7 +150,7 @@ export default function Edit({
   context: {
     postId: contextPostId,
     'wp-curate/channel': contextChannel,
-    'wp-curate/postTemplate': postTemplate,
+    'wp-curate/loopTemplate': loopTemplate,
   },
   setAttributes,
 }: BlockEditProps<{
@@ -186,7 +182,7 @@ export default function Edit({
     [channel],
   );
 
-  // The arguments that the queue gives the channel, which the picker gives it too.
+  // The block's channel arguments, found as the queue finds them, so the picker shows its posts.
   const args = useMemo(
     () => pickChannelArgs(argFields, toBlockChannelArgs(ownChannel, contextChannel)),
     [argFields, contextChannel, ownChannel],
@@ -220,7 +216,7 @@ export default function Edit({
   }, [clientId]);
 
   // Only a Channel Loop block provides a template.
-  const isInChannelLoop = Array.isArray(postTemplate) && channelLoopClientId !== '';
+  const isInChannelLoop = Array.isArray(loopTemplate) && channelLoopClientId !== '';
 
   let preview = (
     <StandaloneInnerBlocks blockProps={blockProps} />
@@ -231,12 +227,12 @@ export default function Edit({
       <TemplateInnerBlocks
         blockProps={blockProps}
         channelLoopClientId={channelLoopClientId}
-        template={postTemplate as InnerBlockTemplate[]}
+        template={loopTemplate as InnerBlockTemplate[]}
       />
     );
   }
 
-  // There is always a channel unless none are registered, which will be handled later.
+  // There is always a channel unless none is registered, which will be handled later.
   if (channel === '' && ref === 0 && blockChannel !== null) {
     preview = (
       <div {...blockProps}>
@@ -251,7 +247,7 @@ export default function Edit({
       <div {...blockProps}>
         <Placeholder
           label={__('Single Post', 'wp-curate')}
-          instructions={__('Complete the channel settings to show its posts.', 'wp-curate')}
+          instructions={__('Complete the channel settings first.', 'wp-curate')}
         />
       </div>
     );
@@ -266,7 +262,7 @@ export default function Edit({
       <div {...blockProps}>
         <Placeholder
           label={__('Single Post', 'wp-curate')}
-          instructions={__('No posts remaining.', 'wp-curate')}
+          instructions={__('No posts remaining in the channel.', 'wp-curate')}
         />
       </div>
     );
