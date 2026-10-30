@@ -12,7 +12,7 @@ use Alley\WP\WP_Curate\Channels\Channel;
 use Alley\WP\WP_Curate\Channels\Free_For_All;
 use Alley\WP\WP_Curate\Channels\Latest_Posts;
 use Alley\WP\WP_Curate\Channels\Latest_Posts_In_Term;
-use Alley\WP\WP_Curate\Supported_Post_Types;
+use Alley\WP\WP_Curate\Channels\Parsely_Trending_Posts;
 
 /**
  * Adds the channels that come with WP Curate.
@@ -49,6 +49,15 @@ final readonly class Bundled_Channels implements Feature {
 				}
 			}
 
+			if ( $this->uses_parsely() ) {
+				// 50 posts is enough for several blocks on a page, with room for posts that the channel removes.
+				$bundled[] = new Parsely_Trending_Posts(
+					parsely: new Parsely_Support(),
+					limit: 50,
+					post_types: $post_types,
+				);
+			}
+
 			$bundled[] = new Free_For_All(
 				post_types: $post_types,
 				taxonomies: $this->allowed_taxonomies(),
@@ -60,6 +69,19 @@ final readonly class Bundled_Channels implements Feature {
 		}
 
 		return $channels;
+	}
+
+	/**
+	 * Whether the Query block can order posts by trending, which `Parsely_Support` allows when
+	 * Parse.ly is active and set up.
+	 *
+	 * @return bool
+	 */
+	private function uses_parsely(): bool {
+		/** This filter is documented in blocks/query/index.php */
+		$filtered = apply_filters( 'wp_curate_use_parsely', false );
+
+		return true === $filtered;
 	}
 
 	/**
