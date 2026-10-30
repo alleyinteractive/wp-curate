@@ -1,6 +1,6 @@
 // WordPress dependencies.
 import { registerBlockType } from '@wordpress/blocks';
-import { stack as icon } from '@wordpress/icons';
+import { postList as icon } from '@wordpress/icons';
 
 // Internal dependencies.
 import metadata from './block.json';
