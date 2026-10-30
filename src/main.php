@@ -56,6 +56,7 @@ function main(): void {
 		new Features\GraphQL(),
 		new Features\Block_Variations(),
 		new Features\Block_Patterns(),
+		new Features\Channel_Content_Patterns(),
 		new Features\Bundled_Channels(),
 		new Features\Channels_REST_Route(
 			channels: $channels,
