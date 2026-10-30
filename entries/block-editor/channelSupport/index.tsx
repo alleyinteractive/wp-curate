@@ -31,7 +31,13 @@ import useBlockChannel, {
   toChannelArgs,
   toChannelName,
 } from '../../../hooks/useBlockChannel';
-import useChannelQueue from '../../../hooks/useChannelQueue';
+import useChannelQueuePost from '../../../hooks/useChannelQueue';
+
+// The post context while the channel loads.
+const LOADING_POST = {
+  postId: null,
+  postType: '',
+};
 
 /*
  * Blocks with the `wp-curate/channels` block support get a Channel panel. A block that provides the
@@ -157,11 +163,12 @@ function ChannelControls({
             // The block's context, from the ancestor block, tells which channels it can select.
             context={context}
             help={help}
-            // The arguments of one channel are not the arguments of another.
+            // Reset args when the channel changes.
             onChange={(next) => setAttributes({ channel: { name: next } })}
             value={channel}
           />
         </ToolsPanelItem>
+
         <ChannelPanelSlot fillProps={fillProps} />
       </ToolsPanel>
     </InspectorControls>
@@ -177,53 +184,21 @@ function BlockEditWithPostFromChannel({
   BlockEdit,
   clientId,
   context: blockContext,
-  pinnedPostType,
   props,
 }: {
   BlockEdit: React.ComponentType<any>;
   clientId: string;
   context: Record<string, unknown>;
-  pinnedPostType: string;
   props: Record<string, unknown>;
 }) {
-  const shownIds = useChannelQueue(clientId);
+  const post = useChannelQueuePost(clientId);
 
-  let postId: number | null = null;
+  // The post context for the inner blocks. Both values keep their identity between renders.
+  let innerContext: { postId: number | null, postType: string } = LOADING_POST;
 
-  if (shownIds !== null) {
-    postId = 0;
+  if (post !== null) {
+    innerContext = post;
   }
-
-  if (shownIds !== null && shownIds.length > 0) {
-    [postId] = shownIds;
-  }
-
-  const postTypeFromChannel: string = useSelect((select) => {
-    const {
-      getTypeOfPostInChannel,
-    } = select('wp-curate/channels') as any;
-
-    let out = '';
-
-    if (postId !== null && postId > 0) {
-      out = getTypeOfPostInChannel(postId);
-    }
-
-    return out;
-  }, [postId]);
-
-  let postType = postTypeFromChannel;
-
-  // A pinned post can be not in the IDs that have loaded, so the block saves its post type.
-  if (pinnedPostType !== '') {
-    postType = pinnedPostType;
-  }
-
-  // The post for the blocks inside this one, the way that `render_block_context` gives it in PHP.
-  const innerContext = useMemo(() => ({
-    postId,
-    postType,
-  }), [postId, postType]);
 
   // The block's own context comes from its props, which the editor has already filtered.
   const context = useMemo(() => ({
@@ -243,17 +218,14 @@ const withChannelSupport = createHigherOrderComponent(
     const {
       attributes: {
         channel,
-        postType,
-        ref,
       },
       clientId,
       context,
-      context: {
-        [CHANNEL_CONTEXT]: contextChannel,
-      },
       name,
       setAttributes,
     } = props;
+
+    const contextChannel = context[CHANNEL_CONTEXT];
 
     const blockType = getBlockType(name);
 
@@ -264,12 +236,6 @@ const withChannelSupport = createHigherOrderComponent(
     }
 
     const isProvider = isChannelProvider(blockType);
-
-    let pinnedPostType = '';
-
-    if (Number.isInteger(ref) && ref > 0 && typeof postType === 'string') {
-      pinnedPostType = postType;
-    }
 
     return (
       <>
@@ -290,7 +256,6 @@ const withChannelSupport = createHigherOrderComponent(
             BlockEdit={BlockEdit}
             clientId={clientId}
             context={context}
-            pinnedPostType={pinnedPostType}
             props={props}
           />
         )}
