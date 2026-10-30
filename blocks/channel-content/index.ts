@@ -1,5 +1,6 @@
 // WordPress dependencies.
 import { registerBlockType } from '@wordpress/blocks';
+import { inbox as icon } from '@wordpress/icons';
 
 // Internal dependencies.
 import metadata from './block.json';
@@ -14,6 +15,7 @@ registerBlockType(
     // The name in List View shows the label of the block's channel.
     __experimentalLabel: label,
     edit,
+    icon,
     save,
   },
 );

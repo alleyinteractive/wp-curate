@@ -5,7 +5,6 @@
   "version": "0.1.0",
   "title": "Channel Loop",
   "category": "theme",
-  "icon": "screenoptions",
   "description": "Displays posts from the surrounding channel using the same template.",
   "textdomain": "wp-curate",
   "ancestor": [

@@ -1,5 +1,6 @@
 // WordPress dependencies.
 import { registerBlockType } from '@wordpress/blocks';
+import { post as icon } from '@wordpress/icons';
 
 // Internal dependencies.
 import metadata from './block.json';
@@ -14,6 +15,7 @@ registerBlockType(
     // The name in List View shows the type of the post that the block shows.
     __experimentalLabel: label,
     edit,
+    icon,
     save,
   },
 );

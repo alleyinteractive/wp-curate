@@ -124,18 +124,15 @@ function postContext(select: any): Record<string, unknown> {
  * queue, so channel blocks never show the same post twice. A block always shows its own pin. A
  * block waits for every block before it, whose IDs it skips.
  *
- * @param select         The data registry's `select`.
- * @param clientId       Client ID of the block.
- * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
+ * @param select   The data registry's `select`.
+ * @param clientId Client ID of the block.
  */
 function channelQueue(
   select: any,
   clientId: string,
-  previewContext: Record<string, unknown>,
 ): ChannelQueue {
   const {
     getBlocks,
-    getSettings,
   } = select(blockEditorStore);
 
   const {
@@ -402,21 +399,7 @@ function channelQueue(
     });
   };
 
-  /*
-   * A preview, such as one term of a Many Terms block, has its own block editor store that holds
-   * only the preview's blocks. Their term comes from the preview's context, not from a parent.
-   */
-  const {
-    isPreviewMode,
-  } = getSettings();
-
-  let startContext = postContext(select);
-
-  if (isPreviewMode === true) {
-    startContext = previewContext;
-  }
-
-  walk(getBlocks(), startContext, undefined, false);
+  walk(getBlocks(), postContext(select), undefined, false);
 
   let ids: number[] | null = out;
   let post: ChannelQueuePost | null = outPost;
@@ -439,17 +422,12 @@ function channelQueue(
  * This is a plain function of `select`, so that a block bindings source's `getValues()`, which
  * cannot call hooks, can use it.
  *
- * @param select         The data registry's `select`.
- * @param clientId       Client ID of the block.
- * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
+ * @param select   The data registry's `select`.
+ * @param clientId Client ID of the block.
  * @return The IDs, or null while channels load.
  */
-export function channelQueueIds(
-  select: any,
-  clientId: string,
-  previewContext: Record<string, unknown> = {},
-): number[] | null {
-  return channelQueue(select, clientId, previewContext).ids;
+export function channelQueueIds(select: any, clientId: string): number[] | null {
+  return channelQueue(select, clientId).ids;
 }
 
 /**
@@ -459,17 +437,12 @@ export function channelQueueIds(
  * This is a plain function of `select`, so that a label callback, which cannot call hooks, can use
  * it. `useChannelQueuePost()` wraps it for components.
  *
- * @param select         The data registry's `select`.
- * @param clientId       Client ID of the block.
- * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
+ * @param select   The data registry's `select`.
+ * @param clientId Client ID of the block.
  * @return The post, or null while channels load.
  */
-export function channelQueuePost(
-  select: any,
-  clientId: string,
-  previewContext: Record<string, unknown> = {},
-): ChannelQueuePost | null {
-  return channelQueue(select, clientId, previewContext).post;
+export function channelQueuePost(select: any, clientId: string): ChannelQueuePost | null {
+  return channelQueue(select, clientId).post;
 }
 
 /**
@@ -480,17 +453,12 @@ export function channelQueuePost(
  * Each block builds as a separate script, so a React context that one script provides is not
  * the one that another script reads. This function reads only the stores, which are shared.
  *
- * @param select         The data registry's `select`.
- * @param clientId       Client ID of the block.
- * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
+ * @param select   The data registry's `select`.
+ * @param clientId Client ID of the block.
  * @return The context, or null while the block above it that gives it its context loads.
  */
-export function channelQueueContext(
-  select: any,
-  clientId: string,
-  previewContext: Record<string, unknown> = {},
-): Record<string, unknown> | null {
-  return channelQueue(select, clientId, previewContext).context;
+export function channelQueueContext(select: any, clientId: string): Record<string, unknown> | null {
+  return channelQueue(select, clientId).context;
 }
 
 /**
@@ -499,19 +467,12 @@ export function channelQueueContext(
  * `useSelect()` gives back the same object until the ID or the type changes, because it compares
  * the result shallowly.
  *
- * @param clientId       Client ID of the block.
- * @param previewContext Context for a block shown as a preview, which includes only its own blocks.
+ * @param clientId Client ID of the block.
  * @return The post, or null while channels load.
  */
-export default function useChannelQueuePost(
-  clientId: string,
-  previewContext: Record<string, unknown> = {},
-): ChannelQueuePost | null {
-  // Compare the context by value, since callers pass a new object on each render.
-  const contextKey = JSON.stringify(previewContext);
-
+export default function useChannelQueuePost(clientId: string): ChannelQueuePost | null {
   return useSelect(
-    (select) => channelQueuePost(select, clientId, JSON.parse(contextKey)),
-    [clientId, contextKey],
+    (select) => channelQueuePost(select, clientId),
+    [clientId],
   );
 }
