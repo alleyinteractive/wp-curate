@@ -170,7 +170,7 @@ export default function TermControl({
           <Button
             id={id}
             onClick={() => setIsPickerOpen(true)}
-            variant="secondary"
+            variant="link"
           >
             {buttonLabel}
           </Button>

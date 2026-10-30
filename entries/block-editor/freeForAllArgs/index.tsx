@@ -5,9 +5,10 @@ import React from 'react';
 import { Checkboxes } from '@alleyinteractive/block-editor-tools';
 import {
   __experimentalToolsPanelItem as ToolsPanelItem,
+  RadioControl,
   SelectControl,
 } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 
 // Plugin dependencies.
 import { ChannelPanelFill } from '../../../components/ChannelPanelSlotFill';
@@ -93,6 +94,48 @@ function toStrings(value: unknown): string[] {
 }
 
 /**
+ * Reads the `term_relations` argument: "AND" or "OR" for each taxonomy, keyed by taxonomy.
+ *
+ * @param value The argument.
+ */
+function toTermRelations(value: unknown): Record<string, string> {
+  const relations: Record<string, string> = {};
+
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return relations;
+  }
+
+  Object.entries(value).forEach(([taxonomy, relation]: [string, unknown]) => {
+    if (typeof relation === 'string') {
+      relations[taxonomy] = relation;
+    }
+  });
+
+  return relations;
+}
+
+/**
+ * Get the arguments without a taxonomy's terms and its term relation.
+ *
+ * @param args     The arguments.
+ * @param taxonomy The taxonomy, which is also the key of its terms.
+ */
+function withoutTaxonomy(args: Record<string, unknown>, taxonomy: string): Record<string, unknown> {
+  const relations = toTermRelations(args.term_relations);
+  const otherRelations = withoutArg(relations, taxonomy);
+
+  let out = withoutArg(args, taxonomy);
+
+  out = withoutArg(out, 'term_relations');
+
+  if (Object.keys(otherRelations).length > 0) {
+    out = { ...out, term_relations: otherRelations };
+  }
+
+  return out;
+}
+
+/**
  * A panel item for each argument of the Free-For-All channel.
  * A required argument always displays. The others are in the panel's menu.
  */
@@ -138,6 +181,11 @@ function FreeForAllArgItems({
         const setArg = (next: unknown) => {
           let nextArgs = next === undefined ? withoutArg(args, id) : { ...args, [id]: next };
 
+          // A taxonomy without terms has no term relation.
+          if (typeof taxonomy === 'string' && next === undefined) {
+            nextArgs = withoutTaxonomy(args, id);
+          }
+
           if (id === 'orderby' && next !== 'meta_value') {
             nextArgs = withoutArg(nextArgs, 'meta_key');
           }
@@ -163,17 +211,49 @@ function FreeForAllArgItems({
           );
         }
 
-        // Each taxonomy that the channel allows is an argument with a `taxonomy` key.
+        /*
+         * Each taxonomy that the channel allows is an argument with a `taxonomy` key. With more
+         * than one term, the item also has the taxonomy's term relation.
+         */
         if (typeof taxonomy === 'string') {
+          const relationField = argFields.term_relations;
+          const relations = toTermRelations(args.term_relations);
+
+          let relation = 'OR';
+
+          if (taxonomy in relations) {
+            relation = relations[taxonomy];
+          }
+
+          // The gap between the controls is the gap between the panel's items.
           control = (
-            <TermControl
-              help={help}
-              label={label}
-              multiple
-              onChange={(ids) => setArg(ids.length > 0 ? ids : undefined)}
-              taxonomy={taxonomy}
-              value={value}
-            />
+            <div style={{ display: 'grid', gap: '16px' }}>
+              <TermControl
+                help={help}
+                label={label}
+                multiple
+                onChange={(ids) => setArg(ids.length > 0 ? ids : undefined)}
+                taxonomy={taxonomy}
+                value={value}
+              />
+
+              {relationField !== undefined && Array.isArray(value) && value.length > 1 ? (
+                <RadioControl
+                  hideLabelFromVision
+                  label={sprintf(
+                    /* translators: %s: taxonomy name */
+                    __('%s relation', 'wp-curate'),
+                    label,
+                  )}
+                  onChange={(next) => setArgs({
+                    ...args,
+                    term_relations: { ...relations, [taxonomy]: next },
+                  })}
+                  options={toFieldOptions(relationField)}
+                  selected={relation}
+                />
+              ) : null}
+            </div>
           );
         }
 
@@ -214,7 +294,9 @@ function FreeForAllArgItems({
             label={label}
             onDeselect={() => setArg(undefined)}
             panelId={clientId}
-            resetAllFilter={(next: Record<string, unknown>) => withoutArg(next, id)}
+            resetAllFilter={(next: Record<string, unknown>) => (
+              typeof taxonomy === 'string' ? withoutTaxonomy(next, id) : withoutArg(next, id)
+            )}
           >
             {control}
           </ToolsPanelItem>
