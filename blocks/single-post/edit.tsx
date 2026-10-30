@@ -29,9 +29,10 @@ import {
   useState,
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { cancelCircleFilled, pencil } from '@wordpress/icons';
+import { closeSmall, pin } from '@wordpress/icons';
 
 // Plugin dependencies.
+import LayoutVariationPicker from '../../components/LayoutVariationPicker';
 import useBlockChannel, {
   channelArgFields,
   hasEveryChannelArg,
@@ -42,14 +43,8 @@ import useBlockChannel, {
 
 // Internal dependencies.
 import PostPicker from './components/post-picker';
-
-/*
- * The inner blocks of a new block outside a Channel Loop block, until a layout modal like the one
- * in Single Term is available.
- */
-const BASIC_TEMPLATE: InnerBlockTemplate[] = [
-  ['core/post-title', { isLink: true }],
-];
+import PostToolsDropdown from './components/post-tools-dropdown';
+import './index.scss';
 
 /**
  * The editable inner blocks of a block outside a Channel Loop block.
@@ -59,9 +54,7 @@ function StandaloneInnerBlocks({
 }: {
   blockProps: Record<string, unknown>;
 }) {
-  const combinedBlockProps = useInnerBlocksProps(blockProps, {
-    template: BASIC_TEMPLATE,
-  });
+  const combinedBlockProps = useInnerBlocksProps(blockProps);
 
   return <div {...combinedBlockProps} />;
 }
@@ -146,7 +139,8 @@ function TemplateInnerBlocks({
  * after the blocks before this one. The support also gives that post to the inner blocks.
  *
  * Inside a Channel Loop block, the inner blocks edit the loop's template, which every Single Post
- * in the loop shares, instead of their own.
+ * in the loop shares, instead of their own. Outside one, a block without inner blocks shows a
+ * picker of layouts.
  */
 export default function Edit({
   attributes: {
@@ -156,6 +150,7 @@ export default function Edit({
   clientId,
   context: {
     postId: contextPostId,
+    postType: contextPostType,
     'wp-curate/channel': contextChannel,
     'wp-curate/loopTemplate': loopTemplate,
   },
@@ -171,13 +166,28 @@ export default function Edit({
   name: string;
 }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const blockProps = useBlockProps();
+  const blockProps = useBlockProps({
+    className: ref > 0 ? 'is-pinned' : undefined,
+  });
 
-  // The block type, for the title and icon of the placeholders.
-  const blockType = useSelect(
-    (select) => (select(blocksStore) as any).getBlockType(name),
-    [name],
-  );
+  const {
+    blockType,
+    hasInnerBlocks,
+  } = useSelect((select) => {
+    const {
+      getBlockCount,
+    } = select(blockEditorStore) as any;
+
+    const {
+      getBlockType,
+    } = select(blocksStore) as any;
+
+    return {
+      // The block type, for the title and icon of the placeholders.
+      blockType: getBlockType(name),
+      hasInnerBlocks: getBlockCount(clientId) > 0,
+    };
+  }, [clientId, name]);
 
   let ownName = toChannelName(ownChannel);
 
@@ -209,9 +219,14 @@ export default function Edit({
 
   // The post, null while the channel loads, or 0 when there is no post to show.
   let postId: number | null = null;
+  let postType = '';
 
   if (typeof contextPostId === 'number') {
     postId = contextPostId;
+  }
+
+  if (typeof contextPostType === 'string') {
+    postType = contextPostType;
   }
 
   // The nearest Channel Loop block, whose template the block edits, or an empty string.
@@ -248,8 +263,30 @@ export default function Edit({
     );
   }
 
-  // There is always a channel unless none is registered, which will be handled later.
-  if (channel === '' && ref === 0 && blockChannel !== null) {
+  const isLayoutPickerShown = !isInChannelLoop && !hasInnerBlocks;
+
+  // Pins the post that the block currently displays.
+  let onPinThisPost = null;
+
+  if (ref === 0) {
+    onPinThisPost = (pinPostId: number, pinPostType: string) => {
+      setAttributes({ postType: pinPostType, ref: pinPostId });
+    };
+  }
+
+  if (isLayoutPickerShown) {
+    preview = (
+      <LayoutVariationPicker
+        blockProps={blockProps}
+        clientId={clientId}
+        icon={blockType.icon.src}
+        instructions={__('Choose a layout for the post.', 'wp-curate')}
+        label={blockType.title}
+        name={name}
+      />
+    );
+  } else if (channel === '' && ref === 0 && blockChannel !== null) {
+    // There is always a channel unless none is registered, which will be handled later.
     preview = (
       <div {...blockProps}>
         <Placeholder
@@ -289,23 +326,30 @@ export default function Edit({
 
   return (
     <>
-      <BlockControls>
-        <ToolbarGroup>
-          {hasPosts ? (
-            <ToolbarButton icon={pencil} onClick={() => setIsPickerOpen(true)}>
-              {ref > 0 ? __('Replace post', 'wp-curate') : __('Select post', 'wp-curate')}
-            </ToolbarButton>
-          ) : null}
-          {ref > 0 ? (
-            <ToolbarButton
-              icon={cancelCircleFilled}
-              onClick={() => setAttributes({ postType: '', ref: 0 })}
-            >
-              {__('Clear', 'wp-curate')}
-            </ToolbarButton>
-          ) : null}
-        </ToolbarGroup>
-      </BlockControls>
+      {!isLayoutPickerShown ? (
+        <BlockControls>
+          <ToolbarGroup>
+            {hasPosts ? (
+              <ToolbarButton icon={pin} onClick={() => setIsPickerOpen(true)}>
+                {ref > 0 ? __('Replace post', 'wp-curate') : __('Select post', 'wp-curate')}
+              </ToolbarButton>
+            ) : null}
+            {ref > 0 ? (
+              <ToolbarButton
+                icon={closeSmall}
+                onClick={() => setAttributes({ postType: '', ref: 0 })}
+              >
+                {__('Unpin', 'wp-curate')}
+              </ToolbarButton>
+            ) : null}
+            <PostToolsDropdown
+              onPin={onPinThisPost}
+              postId={postId}
+              postType={postType}
+            />
+          </ToolbarGroup>
+        </BlockControls>
+      ) : null}
 
       {preview}
 
