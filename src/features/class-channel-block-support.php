@@ -167,7 +167,7 @@ final readonly class Channel_Block_Support implements Feature {
 			$ref = $attrs['ref'];
 		}
 
-		// Take the ref, or else the top of the channel's queue, and remove that ID from the queue.
+		// Take the ref, or else the next ID off the top of the channel's queue.
 		if ( isset( $context['wp-curate/queues'] ) && $context['wp-curate/queues'] instanceof Queues ) {
 			$post_id = $context['wp-curate/queues']->take_one( $channel, $ref, $channel_args, $context );
 		}
