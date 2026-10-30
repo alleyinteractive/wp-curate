@@ -2,7 +2,7 @@
 import React from 'react';
 
 // WordPress dependencies.
-import { SelectControl } from '@wordpress/components';
+import { ComboboxControl } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -56,15 +56,10 @@ export default function ChannelSelectControl({
   }, [channels]);
 
   const options = useMemo(() => {
-    const out: { label: string, value: string }[] = [];
+    const out: { disabled?: boolean, label: string, value: string }[] = [];
 
     if (eligible === null) {
       return out;
-    }
-
-    // With no channels registered, there is nothing to choose. That case will be handled later.
-    if (eligible.length === 0) {
-      out.push({ label: __('No channels are available', 'wp-curate'), value: '' });
     }
 
     eligible.forEach(({ label, name }) => {
@@ -72,8 +67,8 @@ export default function ChannelSelectControl({
     });
 
     /*
-     * Show a saved channel that is not eligible, so that the dropdown does not hide it, such as
-     * one that a block kept when it moved.
+     * Show the label of a saved channel that is not eligible, such as one that a block kept when
+     * it moved. The option is disabled, so that it cannot be chosen again once the block leaves it.
      */
     if (value !== '' && !eligible.some(({ name }) => name === value)) {
       let label = value;
@@ -87,21 +82,36 @@ export default function ChannelSelectControl({
         ({ label } = saved);
       }
 
-      out.push({ label, value });
+      out.push({ disabled: true, label, value });
     }
 
     return out;
   }, [eligible, channels, value]);
 
+  // With no channels registered, there is nothing to choose. That case will be handled later.
+  let placeholder: string | undefined;
+
+  if (eligible !== null && eligible.length === 0) {
+    placeholder = __('No channels are available', 'wp-curate');
+  }
+
   return (
-    <SelectControl
+    <ComboboxControl
       __next40pxDefaultSize
       __nextHasNoMarginBottom
-      disabled={eligible === null || eligible.length === 0}
+      // A block always has a channel, so there is nothing to reset to.
+      allowReset={false}
       help={help}
+      isLoading={eligible === null}
       label={__('Channel', 'wp-curate')}
-      onChange={onChange}
+      onChange={(next) => {
+        // The control gives null only from its reset button, which is off.
+        if (typeof next === 'string' && next !== '') {
+          onChange(next);
+        }
+      }}
       options={options}
+      placeholder={placeholder}
       value={value}
     />
   );
