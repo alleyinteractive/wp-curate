@@ -47,6 +47,12 @@ function LatestPostsInTermArgItems({
           return null;
         }
 
+        let help = '';
+
+        if (required && !(id in args)) {
+          help = __('Select a term first.', 'wp-curate');
+        }
+
         return (
           <ToolsPanelItem
             hasValue={() => id in args}
@@ -58,6 +64,7 @@ function LatestPostsInTermArgItems({
             resetAllFilter={(next: Record<string, unknown>) => withoutArg(next, id)}
           >
             <TermControl
+              help={help}
               label={label}
               multiple={false}
               onChange={(ids) => {
