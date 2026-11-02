@@ -4,6 +4,8 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
+## 3.5.0 - 2026-11-02
+
 - Added: `wp_curate_deduplication_enabled` filter to customize whether deduplication is enabled for a Query or Subquery block. It runs after the block's `never` attribute and the post meta are checked.
 - Added: `wp_curate_history_seed` filter to customize the object that supplies the initial post IDs for the deduplication history.
 - Bug fix: Fix issue where posts nested in a subquery inherited the backfill opacity of their parent Post block and rendered at 25% opacity in the editor.
