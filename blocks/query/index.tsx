@@ -6,8 +6,6 @@ import { listView } from '@wordpress/icons';
 import edit from './edit';
 import metadata from './block.json';
 
-import './style.scss';
-
 // PHP-registered block variations use the 'list-view' dashicon string which doesn't
 // load inside the apiVersion 3 iframe. Override with the equivalent SVG from @wordpress/icons.
 addFilter(
