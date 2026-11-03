@@ -14,6 +14,7 @@ import { addQueryArgs } from '@wordpress/url';
 
 import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 import apiFetch from '@wordpress/api-fetch';
+import isShallowEqual from '@wordpress/is-shallow-equal';
 import { __ } from '@wordpress/i18n';
 
 import type {
@@ -323,12 +324,17 @@ export default function Edit({
         }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
       }
 
-      setAttributes({ validPosts });
+      // An unchanged write still edits the post. In template previews, that remounts every other
+      // preview's blocks, which write again on mount.
+      if (!isShallowEqual(attributes.validPosts ?? [], validPosts)) {
+        setAttributes({ validPosts });
+      }
 
       mainDedupe();
     };
     updateValidPosts();
-  }, [
+  // `attributes.validPosts` is read only to skip an equal write; a change to it shouldn't refetch.
+  }, [ // eslint-disable-line react-hooks/exhaustive-deps
     manualPosts,
     setAttributes,
     postTypeString,
