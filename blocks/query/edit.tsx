@@ -324,8 +324,7 @@ export default function Edit({
         }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
       }
 
-      // An unchanged write still edits the post. In template previews, that remounts every other
-      // preview's blocks, which write again on mount.
+      // An equal write still edits the post, which remounts every other template preview.
       if (!isShallowEqual(attributes.validPosts ?? [], validPosts)) {
         setAttributes({ validPosts });
       }
@@ -333,7 +332,7 @@ export default function Edit({
       mainDedupe();
     };
     updateValidPosts();
-  // `attributes.validPosts` is read only to skip an equal write; a change to it shouldn't refetch.
+  // `validPosts` is read only to skip an equal write, not to refetch.
   }, [ // eslint-disable-line react-hooks/exhaustive-deps
     manualPosts,
     setAttributes,

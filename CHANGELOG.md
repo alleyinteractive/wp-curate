@@ -4,7 +4,7 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
-- Bug fix: Stop query blocks from refetching in a loop in the Change template previews. The block no longer writes an unchanged `validPosts`.
+- Bug fix: Stop query blocks refetching in a loop in template previews.
 
 ## 3.5.1 - 2026-11-03
 
