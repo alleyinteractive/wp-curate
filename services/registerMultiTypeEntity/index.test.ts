@@ -46,6 +46,7 @@ describe('registerMultiTypeEntity', () => {
         name: 'post,page',
         baseURL: '/wp/v2/posts',
         baseURLParams: { context: 'edit' },
+        rawAttributes: ['title', 'excerpt', 'content'],
       }),
     ]);
   });
