@@ -161,19 +161,15 @@ export default function Edit({
     pinBadgeText = pinStatusLabel;
   }
 
-  const blockProps = useBlockProps({
-    className: classnames({
-      'has-unpublished-pin': isPinUnpublished,
-      'is-pinned': ref > 0,
-    }),
-  });
-
   const {
     blockType,
     hasInnerBlocks,
+    isInSelection,
   } = useSelect((select) => {
     const {
       getBlockCount,
+      hasSelectedInnerBlock,
+      isBlockSelected,
     } = select(blockEditorStore) as any;
 
     const {
@@ -184,8 +180,23 @@ export default function Edit({
       // The block type, for the title and icon of the placeholders.
       blockType: getBlockType(name),
       hasInnerBlocks: getBlockCount(clientId) > 0,
+      isInSelection: isBlockSelected(clientId) || hasSelectedInnerBlock(clientId, true),
     };
   }, [clientId, name]);
+
+  /*
+   * The `has-block-overlay` class stops the inner blocks from taking clicks, like the block
+   * overlay that core gives template parts.
+   */
+  const hasOverlay = hasInnerBlocks && !isInSelection;
+
+  const blockProps = useBlockProps({
+    className: classnames({
+      'has-unpublished-pin': isPinUnpublished,
+      'has-block-overlay': hasOverlay,
+      'is-pinned': ref > 0,
+    }),
+  });
 
   let ownName = toChannelName(ownChannel);
 

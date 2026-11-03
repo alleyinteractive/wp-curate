@@ -18,6 +18,16 @@
   }
 }
 
+// Like the block overlay of core, the inner blocks of a locked block take no clicks, so a click
+// selects the block.
+.wp-block-wp-curate-single-post.has-block-overlay {
+  cursor: default;
+
+  .block-editor-block-list__block {
+    pointer-events: none;
+  }
+}
+
 .wp-block-wp-curate-single-post.is-pinned:not(.is-selected):not(.has-child-selected) {
   outline: 1px dashed var(--wp-curate-single-post-pin-color);
 }
