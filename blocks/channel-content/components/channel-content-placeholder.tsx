@@ -3,21 +3,26 @@ import React from 'react';
 
 // WordPress dependencies.
 import { store as blockEditorStore } from '@wordpress/block-editor';
-import { Button, Placeholder } from '@wordpress/components';
-import { useSelect } from '@wordpress/data';
-import { useMemo, useState } from '@wordpress/element';
+import { BlockInstance, createBlock } from '@wordpress/blocks';
+import { Button, Placeholder, Spinner } from '@wordpress/components';
+import { store as coreStore } from '@wordpress/core-data';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { useEffect, useMemo, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
-import LayoutVariationPicker from '../../../components/LayoutVariationPicker';
 import type { BlockPattern } from '../../query/types';
 
 // Internal dependencies.
+import toPatternBlocks from '../pattern-blocks';
 import PatternSelectionModal from './pattern-selection-modal';
 
 /**
  * The placeholder of a block without inner blocks, like the one of core's Query block. The user
- * chooses a pattern for the block, or starts blank with a picker of layouts for each post.
+ * chooses a pattern for the block, or starts blank with a Channel Loop block, which shows a picker
+ * of layouts.
+ *
+ * A block that was just inserted uses its pattern without asking, if it has only one.
  *
  * Only patterns whose first block is a Channel Content block show, so that the block is always
  * replaced by another Channel Content block.
@@ -37,17 +42,45 @@ export default function ChannelContentPlaceholder({
   label: string;
   name: string;
 }) {
-  const [isStartingBlank, setIsStartingBlank] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const allPatterns: BlockPattern[] = useSelect((select) => {
+  const {
+    allPatterns,
+    isLoadingPatterns,
+    wasJustInserted,
+  }: {
+    allPatterns: BlockPattern[];
+    isLoadingPatterns: boolean;
+    wasJustInserted: boolean;
+  } = useSelect((select) => {
     const {
       getBlockRootClientId,
       getPatternsByBlockTypes,
+      wasBlockJustInserted,
     } = select(blockEditorStore) as any;
 
-    return getPatternsByBlockTypes(name, getBlockRootClientId(clientId));
+    const {
+      getBlockPatterns,
+      hasFinishedResolution,
+    } = select(coreStore) as any;
+
+    // Start loading the patterns, if nothing else has.
+    getBlockPatterns();
+
+    return {
+      allPatterns: getPatternsByBlockTypes(name, getBlockRootClientId(clientId)),
+      // The editor gives no patterns until it loads them.
+      isLoadingPatterns: !hasFinishedResolution('getBlockPatterns'),
+      wasJustInserted: wasBlockJustInserted(clientId),
+    };
   }, [clientId, name]);
+
+  const {
+    __unstableMarkNextChangeAsNotPersistent: markNextChangeAsNotPersistent,
+    replaceBlock,
+    replaceInnerBlocks,
+    selectBlock,
+  } = useDispatch(blockEditorStore) as any;
 
   const patterns = useMemo(
     () => allPatterns.filter(({
@@ -55,6 +88,28 @@ export default function ChannelContentPlaceholder({
     }) => Array.isArray(blocks) && blocks.length > 0 && blocks[0].name === name),
     [allPatterns, name],
   );
+
+  const isUsingOnlyPattern = wasJustInserted && !isLoadingPatterns && patterns.length === 1;
+
+  useEffect(() => {
+    if (isUsingOnlyPattern) {
+      // The editor gives each pattern its parsed blocks.
+      const newBlocks = toPatternBlocks(patterns[0].blocks as unknown as BlockInstance[], channel);
+
+      // Part of the undo step of the insert.
+      markNextChangeAsNotPersistent();
+      replaceBlock(clientId, newBlocks);
+      selectBlock(newBlocks[0].clientId);
+    }
+  }, [
+    channel,
+    clientId,
+    isUsingOnlyPattern,
+    markNextChangeAsNotPersistent,
+    patterns,
+    replaceBlock,
+    selectBlock,
+  ]);
 
   let out = (
     <div {...blockProps}>
@@ -77,7 +132,7 @@ export default function ChannelContentPlaceholder({
 
         <Button
           __next40pxDefaultSize
-          onClick={() => setIsStartingBlank(true)}
+          onClick={() => replaceInnerBlocks(clientId, [createBlock('wp-curate/channel-loop')], true)}
           variant="secondary"
         >
           {__('Start blank', 'wp-curate')}
@@ -95,16 +150,12 @@ export default function ChannelContentPlaceholder({
     </div>
   );
 
-  if (isStartingBlank) {
+  // A block that was just inserted waits until it knows whether to use its only pattern.
+  if (isUsingOnlyPattern || (wasJustInserted && isLoadingPatterns)) {
     out = (
-      <LayoutVariationPicker
-        blockProps={blockProps}
-        clientId={clientId}
-        icon={icon}
-        instructions={__('Choose a layout for each post.', 'wp-curate')}
-        label={label}
-        name={name}
-      />
+      <div {...blockProps}>
+        <Spinner />
+      </div>
     );
   }
 

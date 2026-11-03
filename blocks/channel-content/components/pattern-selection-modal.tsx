@@ -7,7 +7,7 @@ import {
   __experimentalBlockPatternsList as BlockPatternsList,
   store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { BlockInstance, cloneBlock } from '@wordpress/blocks';
+import { BlockInstance } from '@wordpress/blocks';
 import { Modal, SearchControl } from '@wordpress/components';
 import { useDispatch } from '@wordpress/data';
 import { useMemo, useState } from '@wordpress/element';
@@ -16,7 +16,9 @@ import { __ } from '@wordpress/i18n';
 // Plugin dependencies.
 import type { BlockPattern } from '../../query/types';
 import { searchPatterns } from '../../../components/PatternSelectionModal/searchPatterns';
-import { toChannelName } from '../../../hooks/useBlockChannel';
+
+// Internal dependencies.
+import toPatternBlocks from '../pattern-blocks';
 
 /**
  * A modal of the block's patterns, like the one of core's Query block. The chosen pattern replaces
@@ -55,17 +57,7 @@ export default function PatternSelectionModal({
    * @param blocks  The blocks of the pattern.
    */
   const onClickPattern = (pattern: BlockPattern, blocks: BlockInstance[]) => {
-    const newBlocks = blocks.map((block, index) => {
-      const patternChannel = toChannelName(block.attributes.channel);
-
-      let out = cloneBlock(block);
-
-      if (index === 0 && (patternChannel === null || patternChannel === '')) {
-        out = cloneBlock(block, { channel });
-      }
-
-      return out;
-    });
+    const newBlocks = toPatternBlocks(blocks, channel);
 
     replaceBlock(clientId, newBlocks);
     selectBlock(newBlocks[0].clientId);

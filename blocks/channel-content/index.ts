@@ -1,9 +1,7 @@
 // WordPress dependencies.
 import { registerBlockType } from '@wordpress/blocks';
-import { inbox as icon } from '@wordpress/icons';
-
-// Plugin dependencies.
-import SINGLE_POST_LAYOUTS from '../../services/singlePostLayouts';
+import { __ } from '@wordpress/i18n';
+import { inbox as icon, postList } from '@wordpress/icons';
 
 // Internal dependencies.
 import metadata from './block.json';
@@ -20,27 +18,26 @@ registerBlockType(
     edit,
     icon,
     save,
-    variations: SINGLE_POST_LAYOUTS.map(({
-      blocks,
-      icon: layoutIcon,
-      name,
-      title,
-    }) => ({
-      icon: layoutIcon,
-      innerBlocks: [
-        [
-          'wp-curate/channel-loop',
-          {},
-          [
-            ['wp-curate/single-post', {}, blocks],
-            ['wp-curate/single-post', {}, blocks],
-            ['wp-curate/single-post', {}, blocks],
-          ],
+    variations: [
+      /*
+       * The Channel Loop block can be only inside a Channel Content block, so the inserter offers
+       * it as a Channel Content block with an empty Channel Loop block, which shows a picker of
+       * layouts.
+       */
+      {
+        description: __('Displays posts from a channel using the same layout.', 'wp-curate'),
+        icon: postList,
+        innerBlocks: [
+          ['wp-curate/channel-loop'],
         ],
-      ],
-      name,
-      scope: ['block'],
-      title,
-    })),
+        keywords: [
+          __('loop', 'wp-curate'),
+          __('posts', 'wp-curate'),
+        ],
+        name: 'channel-loop',
+        scope: ['inserter'],
+        title: __('Channel Loop', 'wp-curate'),
+      },
+    ],
   },
 );
