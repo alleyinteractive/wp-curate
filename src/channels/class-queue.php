@@ -126,8 +126,8 @@ final class Queue {
 	 */
 	private function ids(): Generator {
 		if ( null === $this->ids ) {
-			// Wrap the iterable so that arrays and generators behave alike.
-			$this->ids = ( fn () => yield from $this->channel->results( $this->args, $this->context, '' )->ids() )();
+			// Wrap the iterable so that arrays and generators behave alike. Blocks get only published posts.
+			$this->ids = ( fn () => yield from $this->channel->results( $this->args, $this->context, '', [ 'publish' ] )->ids() )();
 		}
 
 		return $this->ids;

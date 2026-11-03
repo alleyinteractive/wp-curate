@@ -103,13 +103,16 @@ final readonly class Latest_Posts implements Channel {
 	/**
 	 * IDs in the channel, in channel order, and the number of them.
 	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @param mixed[]  $args          The block's arguments for the channel.
+	 * @param mixed[]  $context       The block context values in `uses_context()`.
+	 * @param string   $search        Search terms, or an empty string for every ID.
+	 * @param string[] $post_statuses Post statuses to give, such as `publish`. Blocks get only published posts,
+	 *                                and the post picker can also ask for scheduled posts. A channel whose IDs
+	 *                                are not posts can ignore this.
 	 * @return Results No IDs if the arguments and context do not make a channel.
 	 */
-	public function results( array $args, array $context, string $search ): Results {
-		return $this->posts( $search );
+	public function results( array $args, array $context, string $search, array $post_statuses ): Results {
+		return $this->posts( $search, $post_statuses );
 	}
 
 	/**
@@ -117,10 +120,11 @@ final readonly class Latest_Posts implements Channel {
 	 *
 	 * The query keeps its own `orderby`, so a search returns matches in channel order, not by relevance.
 	 *
-	 * @param string $search Search terms, or an empty string for every post.
+	 * @param string   $search        Search terms, or an empty string for every post.
+	 * @param string[] $post_statuses Post statuses to give.
 	 * @return Queried_Post_IDs
 	 */
-	private function posts( string $search ): Queried_Post_IDs {
+	private function posts( string $search, array $post_statuses ): Queried_Post_IDs {
 		$query_args = [];
 
 		if ( '' !== $search ) {
@@ -134,7 +138,7 @@ final readonly class Latest_Posts implements Channel {
 					'ignore_sticky_posts' => true,
 					'order'               => 'DESC',
 					'orderby'             => 'date',
-					'post_status'         => 'publish',
+					'post_status'         => $post_statuses,
 					'post_type'           => $this->post_type,
 				],
 			),

@@ -90,6 +90,7 @@ function fakeSelect(
     has_more: ids.length > count,
     ids: ids.slice(0, count),
     label: 'Test',
+    post_statuses: ['publish'],
     post_types: {},
     uses_context: [],
   }));

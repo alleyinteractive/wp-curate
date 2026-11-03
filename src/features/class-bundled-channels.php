@@ -35,6 +35,7 @@ final readonly class Bundled_Channels implements Feature {
 	 */
 	public function boot(): void {
 		add_filter( 'wp_curate_channels', [ $this, 'filter_wp_curate_channels' ] );
+		add_filter( 'wp_curate_channel_include_future_posts', [ $this, 'filter_wp_curate_channel_include_future_posts' ], 100, 2 );
 	}
 
 	/**
@@ -83,6 +84,25 @@ final readonly class Bundled_Channels implements Feature {
 		}
 
 		return $channels;
+	}
+
+	/**
+	 * Filters whether the post picker can include the scheduled posts of a channel to exclude them from the
+	 * trending posts.
+	 *
+	 * Parse.ly counts views of published posts, so a scheduled post cannot trend. The priority is late, so a
+	 * site can include scheduled posts in every channel with one callback at the default priority.
+	 *
+	 * @param bool    $include_future_posts Whether the post picker can include scheduled posts. Default false.
+	 * @param Channel $channel              The channel.
+	 * @return mixed
+	 */
+	public function filter_wp_curate_channel_include_future_posts( $include_future_posts, $channel ) {
+		if ( $channel instanceof Parsely_Trending_Posts ) {
+			$include_future_posts = false;
+		}
+
+		return $include_future_posts;
 	}
 
 	/**

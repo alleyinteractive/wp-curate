@@ -107,20 +107,23 @@ final readonly class Parsely_Trending_Posts implements Channel {
 	/**
 	 * IDs in the channel, in channel order, and the number of them.
 	 *
-	 * Only the trending posts that are published and of a supported post type are in the channel.
+	 * Only the trending posts that have one of the given statuses and a supported post type are in the channel.
 	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @param mixed[]  $args          The block's arguments for the channel.
+	 * @param mixed[]  $context       The block context values in `uses_context()`.
+	 * @param string   $search        Search terms, or an empty string for every ID.
+	 * @param string[] $post_statuses Post statuses to give, such as `publish`. Blocks get only published posts,
+	 *                                and the post picker can also ask for scheduled posts. A channel whose IDs
+	 *                                are not posts can ignore this.
 	 * @return Results No IDs if the arguments and context do not make a channel.
 	 */
-	public function results( array $args, array $context, string $search ): Results {
+	public function results( array $args, array $context, string $search, array $post_statuses ): Results {
 		$post_ids = $this->trending_post_ids();
 		$results  = new Empty_Results();
 
 		// An empty `post__in` does not limit a query, so the channel has no posts without IDs.
 		if ( [] !== $post_ids && [] !== $this->post_types ) {
-			$results = $this->posts( $post_ids, $search );
+			$results = $this->posts( $post_ids, $search, $post_statuses );
 		}
 
 		return $results;
@@ -152,11 +155,12 @@ final readonly class Parsely_Trending_Posts implements Channel {
 	/**
 	 * The given posts, in the given order.
 	 *
-	 * @param int[]  $post_ids Post IDs, in order.
-	 * @param string $search   Search terms, or an empty string for every post.
+	 * @param int[]    $post_ids      Post IDs, in order.
+	 * @param string   $search        Search terms, or an empty string for every post.
+	 * @param string[] $post_statuses Post statuses to give.
 	 * @return Queried_Post_IDs
 	 */
-	private function posts( array $post_ids, string $search ): Queried_Post_IDs {
+	private function posts( array $post_ids, string $search, array $post_statuses ): Queried_Post_IDs {
 		$query_args = [];
 
 		if ( '' !== $search ) {
@@ -170,7 +174,7 @@ final readonly class Parsely_Trending_Posts implements Channel {
 					'ignore_sticky_posts' => true,
 					'orderby'             => 'post__in',
 					'post__in'            => $post_ids,
-					'post_status'         => 'publish',
+					'post_status'         => $post_statuses,
 					'post_type'           => $this->post_types,
 				],
 			),

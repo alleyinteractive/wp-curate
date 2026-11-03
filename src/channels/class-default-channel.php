@@ -95,13 +95,16 @@ final readonly class Default_Channel implements Channel {
 	/**
 	 * IDs in the channel, in channel order, and the number of them.
 	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @param mixed[]  $args          The block's arguments for the channel.
+	 * @param mixed[]  $context       The block context values in `uses_context()`.
+	 * @param string   $search        Search terms, or an empty string for every ID.
+	 * @param string[] $post_statuses Post statuses to give, such as `publish`. Blocks get only published posts,
+	 *                                and the post picker can also ask for scheduled posts. A channel whose IDs
+	 *                                are not posts can ignore this.
 	 * @return Results No IDs if the arguments and context do not make a channel.
 	 */
-	public function results( array $args, array $context, string $search ): Results {
-		return $this->channel()?->results( $args, $context, $search ) ?? new Empty_Results();
+	public function results( array $args, array $context, string $search, array $post_statuses ): Results {
+		return $this->channel()?->results( $args, $context, $search, $post_statuses ) ?? new Empty_Results();
 	}
 
 	/**

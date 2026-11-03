@@ -18,6 +18,7 @@ import {
   ToolbarButton,
   ToolbarGroup,
 } from '@wordpress/components';
+import { store as coreStore } from '@wordpress/core-data';
 import { useSelect } from '@wordpress/data';
 import {
   useMemo,
@@ -37,21 +38,33 @@ import useBlockChannel, {
 } from '../../hooks/useBlockChannel';
 
 // Internal dependencies.
+import PinBadge from './components/pin-badge';
 import PostPicker from './components/post-picker';
 import PostToolsDropdown from './components/post-tools-dropdown';
 import './index.scss';
 
 /**
- * The editable inner blocks of the block, which show its post.
+ * The editable inner blocks of the block, which show its post, and the mark of a pinned post after
+ * them.
  */
 function PostInnerBlocks({
+  badge,
   blockProps,
 }: {
+  badge: React.ReactNode;
   blockProps: Record<string, unknown>;
 }) {
-  const combinedBlockProps = useInnerBlocksProps(blockProps);
+  const {
+    children,
+    ...combinedBlockProps
+  } = useInnerBlocksProps(blockProps);
 
-  return <div {...combinedBlockProps} />;
+  return (
+    <div {...combinedBlockProps}>
+      {children}
+      {badge}
+    </div>
+  );
 }
 
 /**
@@ -67,6 +80,7 @@ function PostInnerBlocks({
 export default function Edit({
   attributes: {
     channel: ownChannel,
+    postType: pinnedPostType,
     ref,
   },
   clientId,
@@ -150,8 +164,30 @@ export default function Edit({
     postType = contextPostType;
   }
 
+  // Whether the pinned post is scheduled, which its mark shows.
+  const isPinnedPostScheduled: boolean = useSelect((select) => {
+    const {
+      getEntityRecord,
+    } = select(coreStore) as any;
+
+    let out = false;
+
+    if (ref > 0 && typeof pinnedPostType === 'string' && pinnedPostType !== '') {
+      const record = getEntityRecord('postType', pinnedPostType, ref);
+
+      out = typeof record === 'object' && record !== null && record.status === 'future';
+    }
+
+    return out;
+  }, [pinnedPostType, ref]);
+
   let preview = (
-    <PostInnerBlocks blockProps={blockProps} />
+    <PostInnerBlocks
+      badge={ref > 0 ? (
+        <PinBadge isScheduled={isPinnedPostScheduled} />
+      ) : null}
+      blockProps={blockProps}
+    />
   );
 
   const isLayoutPickerShown = !hasInnerBlocks;

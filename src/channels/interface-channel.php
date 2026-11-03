@@ -77,10 +77,11 @@ interface Channel {
 	/**
 	 * IDs in the channel, in channel order, and the number of them.
 	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @param mixed[]  $args          The block's arguments for the channel.
+	 * @param mixed[]  $context       The block context values in `uses_context()`.
+	 * @param string   $search        Search terms, or an empty string for every ID.
+	 * @param string[] $post_statuses Post statuses to query for.
 	 * @return Results No IDs if the arguments and context do not make a channel.
 	 */
-	public function results( array $args, array $context, string $search ): Results;
+	public function results( array $args, array $context, string $search, array $post_statuses ): Results;
 }

@@ -7,7 +7,13 @@ import { Modal } from '@wordpress/components';
 import { store as coreStore } from '@wordpress/core-data';
 import { useSelect } from '@wordpress/data';
 import { DataViewsPicker } from '@wordpress/dataviews';
-import { useMemo, useState } from '@wordpress/element';
+import { dateI18n, getSettings as getDateSettings } from '@wordpress/date';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
@@ -16,10 +22,20 @@ import { channelQueueContext } from '../../../hooks/useChannelQueue';
 import useChannelResults, { CHANNEL_PAGE_SIZE, type ChannelResultsPage } from '../../../hooks/useChannelResults';
 
 interface PickerItem {
+  /** Publish date in the site's time zone, or an empty string. */
+  date: string;
   id: number;
   imageUrl: string;
+  /** Post status, such as `publish` or `future`. */
+  status: string;
   title: string;
 }
+
+const PUBLISHED: string[] = ['publish'];
+
+const SCHEDULED: string[] = ['future'];
+
+const PUBLISHED_AND_SCHEDULED: string[] = ['publish', 'future'];
 
 const FIELDS = [
   {
@@ -41,7 +57,121 @@ const FIELDS = [
     id: 'title',
     label: __('Title', 'wp-curate'),
   },
+  {
+    enableHiding: false,
+    enableSorting: false,
+    getValue: ({
+      item,
+    }: { item: PickerItem }) => item.date,
+    id: 'date',
+    label: __('Date', 'wp-curate'),
+    render: ({
+      item,
+    }: { item: PickerItem }) => (item.date !== '' ? dateI18n(getDateSettings().formats.datetime, item.date, undefined) : ''),
+  },
 ];
+
+/**
+ * The status field. When the site lets the picker include scheduled posts, the field is also a
+ * filter.
+ *
+ * @param canFilter Whether the field is a filter.
+ */
+function toStatusField(canFilter: boolean) {
+  const elements = [
+    { label: __('Published', 'wp-curate'), value: 'publish' },
+    { label: __('Scheduled', 'wp-curate'), value: 'future' },
+  ];
+
+  return {
+    elements,
+    enableHiding: false,
+    enableSorting: false,
+    filterBy: canFilter ? {
+      isPrimary: true,
+      operators: ['isAny' as const],
+    } : false as const,
+    getValue: ({
+      item,
+    }: { item: PickerItem }) => item.status,
+    id: 'status',
+    label: __('Status', 'wp-curate'),
+    render: ({
+      item,
+    }: { item: PickerItem }) => {
+      const element = elements.find(({ value }) => value === item.status);
+
+      let out = item.status;
+
+      if (element !== undefined) {
+        out = element.label;
+      }
+
+      return out;
+    },
+  };
+}
+
+/**
+ * The post statuses that a view's status filter asks for. Without a filter, or with no statuses
+ * in it, the picker shows every status that it can.
+ *
+ * @param view      DataViews view.
+ * @param canFilter Whether the picker can include scheduled posts.
+ */
+function toPostStatuses(view: any, canFilter: boolean): string[] {
+  let out = PUBLISHED;
+
+  if (!canFilter) {
+    return out;
+  }
+
+  out = PUBLISHED_AND_SCHEDULED;
+
+  if (!Array.isArray(view.filters)) {
+    return out;
+  }
+
+  const statusFilter = view.filters.find((filter: any) => filter.field === 'status');
+
+  if (statusFilter === undefined || !Array.isArray(statusFilter.value)) {
+    return out;
+  }
+
+  const hasPublished = statusFilter.value.includes('publish');
+  const hasScheduled = statusFilter.value.includes('future');
+
+  // The same arrays each time, so that requests for the same statuses match.
+  if (hasPublished && !hasScheduled) {
+    out = PUBLISHED;
+  } else if (hasScheduled && !hasPublished) {
+    out = SCHEDULED;
+  }
+
+  return out;
+}
+
+/**
+ * Reads a string property of a post record, or an empty string if it has none.
+ *
+ * @param post Post record from core-data.
+ * @param key  Property name.
+ */
+function toPostString(post: unknown, key: string): string {
+  let out = '';
+
+  if (typeof post !== 'object' || post === null) {
+    return out;
+  }
+
+  const value = (post as Record<string, unknown>)[key];
+
+  if (typeof value === 'string') {
+    out = value;
+  }
+
+  return out;
+}
 
 /*
  * The view sorts by this ID, which no field has, because the channel sets the order. DataViews
@@ -125,7 +255,7 @@ export default function PostPicker({
 }) {
   const [selection, setSelection] = useState<string[]>(selectedId > 0 ? [String(selectedId)] : []);
   const [view, setView] = useState<any>({
-    fields: [],
+    fields: ['status', 'date'],
     filters: [],
     mediaField: 'media',
     page: 1,
@@ -185,6 +315,28 @@ export default function PostPicker({
   // The whole channel, for its label, which stays the same while a page loads.
   const channelResults = useChannelResults(resultsChannel, args, resultsContext);
 
+  // Whether to include scheduled posts is a per-channel setting.
+  const canFilterByStatus = channelResults !== null && channelResults.post_statuses.includes('future');
+  const fields = useMemo(() => [...FIELDS, toStatusField(canFilterByStatus)], [canFilterByStatus]);
+  const postStatuses = toPostStatuses(view, canFilterByStatus);
+
+  // Select every status in the filter by default.
+  const hasStatusFilter = useRef(false);
+
+  useEffect(() => {
+    if (canFilterByStatus && !hasStatusFilter.current) {
+      hasStatusFilter.current = true;
+
+      setView((current: any) => ({
+        ...current,
+        filters: [
+          ...current.filters,
+          { field: 'status', operator: 'isAny', value: PUBLISHED_AND_SCHEDULED },
+        ],
+      }));
+    }
+  }, [canFilterByStatus]);
+
   const {
     getTypeOfPostInChannel,
   } = useSelect((select) => select('wp-curate/channels') as any, []);
@@ -198,11 +350,11 @@ export default function PostPicker({
     let out: ChannelResultsPage | null = null;
 
     if (context !== null) {
-      out = getChannelResultsPage(channel, args, context, search, page, perPage);
+      out = getChannelResultsPage(channel, args, context, search, postStatuses, page, perPage);
     }
 
     return out;
-  }, [args, channel, context, page, perPage, search]);
+  }, [args, channel, context, page, perPage, postStatuses, search]);
 
   // The totals of the last page, so that the pagination doesn't change while the next page loads.
   const [paginationInfo, setPaginationInfo] = useState({ totalItems: 0, totalPages: 0 });
@@ -250,14 +402,16 @@ export default function PostPicker({
       });
     }
 
+    // The REST API returns only published posts by default.
     return Object.entries(idsByPostType).map(([postType, ids]) => ({
       postType,
       query: {
         include: ids.join(','),
         per_page: ids.length,
+        status: postStatuses.join(','),
       },
     }));
-  }, [pageIds, resultsPage]);
+  }, [pageIds, postStatuses, resultsPage]);
 
   /*
    * Each item is the array that core-data holds for a query, so the result is stable between
@@ -348,6 +502,8 @@ export default function PostPicker({
     pageIds.forEach((id) => {
       let itemTitle: string = __('(no title)', 'wp-curate');
       let imageUrl = '';
+      let status = '';
+      let date = '';
 
       if (id in postsById && toPostTitle(postsById[id]) !== '') {
         itemTitle = toPostTitle(postsById[id]);
@@ -358,9 +514,16 @@ export default function PostPicker({
       }
 
       if (id in postsById) {
+        status = toPostString(postsById[id], 'status');
+        date = toPostString(postsById[id], 'date');
+      }
+
+      if (id in postsById) {
         items.push({
+          date,
           id,
           imageUrl,
+          status,
           title: itemTitle,
         });
       }
@@ -395,7 +558,7 @@ export default function PostPicker({
         ]}
         data={data}
         defaultLayouts={{ pickerGrid: {}, pickerTable: {} }}
-        fields={FIELDS}
+        fields={fields}
         getItemId={(item: PickerItem) => String(item.id)}
         isLoading={isLoading}
         itemListLabel={__('Posts', 'wp-curate')}

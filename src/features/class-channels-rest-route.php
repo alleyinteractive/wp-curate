@@ -86,6 +86,14 @@ final readonly class Channels_REST_Route implements Feature {
 						'default' => '',
 						'type'    => 'string',
 					],
+					'status'   => [
+						'default' => [ 'publish' ],
+						'items'   => [
+							'enum' => [ 'future', 'publish' ],
+							'type' => 'string',
+						],
+						'type'    => 'array',
+					],
 				],
 				'callback'            => [ $this, 'channel' ],
 				'methods'             => WP_REST_Server::READABLE,
@@ -144,10 +152,12 @@ final readonly class Channels_REST_Route implements Feature {
 		$requested_page     = $request->get_param( 'page' );
 		$requested_per_page = $request->get_param( 'per_page' );
 		$requested_search   = $request->get_param( 'search' );
+		$requested_statuses = $request->get_param( 'status' );
 
-		$page     = 1;
-		$per_page = 10;
-		$search   = '';
+		$page          = 1;
+		$per_page      = 10;
+		$search        = '';
+		$post_statuses = [ 'publish' ];
 
 		if ( is_int( $requested_page ) ) {
 			$page = $requested_page;
@@ -161,10 +171,21 @@ final readonly class Channels_REST_Route implements Feature {
 			$search = trim( $requested_search );
 		}
 
+		if ( is_array( $requested_statuses ) ) {
+			$post_statuses = array_values( array_filter( $requested_statuses, 'is_string' ) );
+		}
+
 		foreach ( $this->channels->all() as $channel ) {
 			if ( $channel->name() === $request->get_param( 'name' ) ) {
 				if ( ! $channel->can_read( get_current_user_id() ) ) {
 					$response = new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to read this channel.', 'wp-curate' ), [ 'status' => rest_authorization_required_code() ] );
+					break;
+				}
+
+				$allowed_statuses = $this->allowed_post_statuses( $channel );
+
+				if ( [] !== array_diff( $post_statuses, $allowed_statuses ) ) {
+					$response = new WP_Error( 'rest_channel_invalid_status', __( 'The channel does not include posts with this status.', 'wp-curate' ), [ 'status' => 400 ] );
 					break;
 				}
 
@@ -179,7 +200,7 @@ final readonly class Channels_REST_Route implements Feature {
 					$context = array_intersect_key( $requested_context, array_flip( $channel->uses_context() ) );
 				}
 
-				$result     = $channel->results( $args, $context, $search );
+				$result     = $channel->results( $args, $context, $search, $post_statuses );
 				$total      = $result->total();
 				$ids        = [];
 				$post_types = [];
@@ -225,11 +246,13 @@ final readonly class Channels_REST_Route implements Feature {
 
 				$response = rest_ensure_response(
 					[
-						'entity_kind'  => $channel->entity_kind(),
-						'ids'          => $ids,
-						'label'        => $channel->label(),
-						'post_types'   => (object) $post_types,
-						'uses_context' => $channel->uses_context(),
+						'entity_kind'   => $channel->entity_kind(),
+						'ids'           => $ids,
+						'label'         => $channel->label(),
+						// The statuses that the post picker can request.
+						'post_statuses' => $allowed_statuses,
+						'post_types'    => (object) $post_types,
+						'uses_context'  => $channel->uses_context(),
 					],
 				);
 
@@ -241,5 +264,29 @@ final readonly class Channels_REST_Route implements Feature {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * The post statuses that the post picker can request from a channel.
+	 *
+	 * @param Channel $channel The channel.
+	 * @return string[]
+	 */
+	private function allowed_post_statuses( Channel $channel ): array {
+		$statuses = [ 'publish' ];
+
+		/**
+		 * Filters whether the post picker can include the scheduled posts of a channel.
+		 *
+		 * @param bool    $include_future_posts Whether the post picker can include scheduled posts. Default false.
+		 * @param Channel $channel              The channel.
+		 */
+		$include_future_posts = apply_filters( 'wp_curate_channel_include_future_posts', false, $channel );
+
+		if ( true === $include_future_posts ) {
+			$statuses[] = 'future';
+		}
+
+		return $statuses;
 	}
 }

@@ -19,6 +19,11 @@ export interface ChannelResults {
   /** The IDs that have loaded so far, in channel order. */
   ids: number[];
   label: string;
+  /**
+   * The post statuses that the post picker can ask the channel for, from the
+   * `wp_curate_channel_include_future_posts` filter. Blocks get only published posts.
+   */
+  post_statuses: string[];
   post_types: Record<string, string>;
   uses_context: string[];
 }

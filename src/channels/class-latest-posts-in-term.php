@@ -114,13 +114,16 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	 *
 	 * There are no IDs without a term.
 	 *
-	 * @param mixed[] $args    The block's arguments for the channel.
-	 * @param mixed[] $context The block context values in `uses_context()`.
-	 * @param string  $search  Search terms, or an empty string for every ID.
+	 * @param mixed[]  $args          The block's arguments for the channel.
+	 * @param mixed[]  $context       The block context values in `uses_context()`.
+	 * @param string   $search        Search terms, or an empty string for every ID.
+	 * @param string[] $post_statuses Post statuses to give, such as `publish`. Blocks get only published posts,
+	 *                                and the post picker can also ask for scheduled posts. A channel whose IDs
+	 *                                are not posts can ignore this.
 	 * @return Results No IDs if the arguments and context do not make a channel.
 	 */
-	public function results( array $args, array $context, string $search ): Results {
-		return $this->posts( $args, $search );
+	public function results( array $args, array $context, string $search, array $post_statuses ): Results {
+		return $this->posts( $args, $search, $post_statuses );
 	}
 
 	/**
@@ -160,11 +163,12 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	 *
 	 * The query keeps its own `orderby`, so a search returns matches in channel order, not by relevance.
 	 *
-	 * @param mixed[] $args   The block's arguments for the channel.
-	 * @param string  $search Search terms, or an empty string for every post.
+	 * @param mixed[]  $args          The block's arguments for the channel.
+	 * @param string   $search        Search terms, or an empty string for every post.
+	 * @param string[] $post_statuses Post statuses to give.
 	 * @return Results The posts, or none without a term in the taxonomy.
 	 */
-	private function posts( array $args, string $search ): Results {
+	private function posts( array $args, string $search, array $post_statuses ): Results {
 		$term_id    = 0;
 		$term       = null;
 		$posts      = new Empty_Results();
@@ -195,7 +199,7 @@ final readonly class Latest_Posts_In_Term implements Channel {
 						'ignore_sticky_posts' => true,
 						'order'               => 'DESC',
 						'orderby'             => 'date',
-						'post_status'         => 'publish',
+						'post_status'         => $post_statuses,
 						'post_type'           => $this->post_type,
 						// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 						'tax_query'           => [

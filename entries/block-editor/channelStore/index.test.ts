@@ -13,6 +13,7 @@ const PAGE_BODY = {
   entity_kind: 'postType',
   ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   label: 'Test',
+  post_statuses: ['publish'],
   post_types: {},
   uses_context: [],
 };
@@ -69,7 +70,7 @@ describe('wp-curate/channels store', () => {
       getChannelResultsPage,
     } = resolveSelect('wp-curate/channels') as any;
 
-    const results = await getChannelResultsPage('search', {}, {}, 'hello', 2, 20);
+    const results = await getChannelResultsPage('search', {}, {}, 'hello', ['publish'], 2, 20);
     const channelResults = await getChannelResults('search', {}, {}, 10);
 
     expect(results.ids).toEqual([3]);
@@ -78,7 +79,8 @@ describe('wp-curate/channels store', () => {
     expect(channelResults.ids).toHaveLength(10);
     expect(channelResults).not.toHaveProperty('total');
     expect(mockedApiFetch).toHaveBeenCalledTimes(2);
-    expect(mockedApiFetch.mock.calls[0][0].path).toContain('page=2&per_page=20&search=hello');
+    expect(mockedApiFetch.mock.calls[0][0].path).toContain('page=2&per_page=20');
+    expect(mockedApiFetch.mock.calls[0][0].path).toContain('search=hello');
     expect(mockedApiFetch.mock.calls[1][0].path).not.toContain('search=');
   });
 
@@ -87,8 +89,8 @@ describe('wp-curate/channels store', () => {
       getChannelResultsPage,
     } = resolveSelect('wp-curate/channels') as any;
 
-    const first = await getChannelResultsPage('paged', {}, {}, '', 1, 10);
-    const last = await getChannelResultsPage('paged', {}, {}, '', 3, 10);
+    const first = await getChannelResultsPage('paged', {}, {}, '', ['publish'], 1, 10);
+    const last = await getChannelResultsPage('paged', {}, {}, '', ['publish'], 3, 10);
 
     expect(first.has_more).toBe(true);
     expect(last.has_more).toBe(false);
@@ -117,7 +119,7 @@ describe('wp-curate/channels store', () => {
 
     mockedApiFetch.mockImplementation(async () => toResponse(PAGE_BODY, {}));
 
-    const page = await getChannelResultsPage('no_headers', {}, {}, '', 1, 10);
+    const page = await getChannelResultsPage('no_headers', {}, {}, '', ['publish'], 1, 10);
 
     expect(page.ids).toHaveLength(10);
     expect(page.total).toBe(0);
@@ -130,9 +132,27 @@ describe('wp-curate/channels store', () => {
       getChannelResultsPage,
     } = resolveSelect('wp-curate/channels') as any;
 
-    await getChannelResultsPage('too_many', {}, {}, '', 1, 101);
+    await getChannelResultsPage('too_many', {}, {}, '', ['publish'], 1, 101);
 
     expect(mockedApiFetch).not.toHaveBeenCalled();
+  });
+
+  it('sends the post statuses, and keeps separate pages for each set of them', async () => {
+    const {
+      getChannelResults,
+      getChannelResultsPage,
+    } = resolveSelect('wp-curate/channels') as any;
+
+    await getChannelResultsPage('statuses', {}, {}, '', ['publish'], 1, 10);
+    await getChannelResultsPage('statuses', {}, {}, '', ['publish', 'future'], 1, 10);
+    await getChannelResults('statuses', {}, {}, 10);
+
+    expect(mockedApiFetch).toHaveBeenCalledTimes(3);
+    expect(decodeURIComponent(mockedApiFetch.mock.calls[0][0].path)).toContain('status[0]=publish');
+    expect(decodeURIComponent(mockedApiFetch.mock.calls[0][0].path)).not.toContain('future');
+    expect(decodeURIComponent(mockedApiFetch.mock.calls[1][0].path)).toContain('status[0]=publish&status[1]=future');
+    // Blocks get only published posts.
+    expect(decodeURIComponent(mockedApiFetch.mock.calls[2][0].path)).not.toContain('future');
   });
 
   it('sends the arguments, and keeps separate results for each set of them', async () => {

@@ -77,18 +77,20 @@ const resultsKey = (
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
- * @param search  Search terms, or an empty string for the whole channel.
- * @param page    Page number.
- * @param perPage Number of IDs in a page.
+ * @param search       Search terms, or an empty string for the whole channel.
+ * @param postStatuses Post statuses to include.
+ * @param page         Page number.
+ * @param perPage      Number of IDs in a page.
  */
 const resultsPageKey = (
   name: string,
   args: object,
   context: object,
   search: string,
+  postStatuses: string[],
   page: number,
   perPage: number,
-) => JSON.stringify([name, args, context, search, page, perPage]);
+) => JSON.stringify([name, args, context, search, postStatuses, page, perPage]);
 
 /**
  * Reads stored results, if they have at least the number of IDs, or if the channel has no more IDs
@@ -133,6 +135,7 @@ function toChannelResults(value: unknown): ChannelResults {
     has_more: false,
     ids: [],
     label: '',
+    post_statuses: ['publish'],
     post_types: {},
     uses_context: [],
   };
@@ -153,6 +156,12 @@ function toChannelResults(value: unknown): ChannelResults {
 
   if (typeof response.label === 'string') {
     results.label = response.label;
+  }
+
+  if (Array.isArray(response.post_statuses)) {
+    results.post_statuses = response.post_statuses.filter(
+      (status: unknown): status is string => typeof status === 'string',
+    );
   }
 
   // PHP encodes an empty associative array as a JSON array, so an array means no post types.
@@ -284,15 +293,17 @@ function toHeaderInteger(value: string | null): number {
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
- * @param search  Search terms, or an empty string for the whole channel.
- * @param page    Page number.
- * @param perPage Number of IDs in a page.
+ * @param search       Search terms, or an empty string for the whole channel.
+ * @param postStatuses Post statuses to include. Blocks get only published posts.
+ * @param page         Page number.
+ * @param perPage      Number of IDs in a page.
  */
 async function fetchChannelResultsPage(
   name: string,
   args: object,
   context: object,
   search: string,
+  postStatuses: string[],
   page: number,
   perPage: number,
 ): Promise<ChannelResultsPage> {
@@ -301,6 +312,7 @@ async function fetchChannelResultsPage(
     context,
     page,
     per_page: perPage,
+    status: postStatuses,
   };
 
   let body: unknown = null;
@@ -364,12 +376,13 @@ const resolveChannelResults = (
   const pages = Array.from({ length: Math.ceil(count / perPage) }, (_, index) => index + 1);
 
   const fetchedPages = await Promise.all(
-    pages.map((page) => fetchChannelResultsPage(name, args, context, '', page, perPage)),
+    pages.map((page) => fetchChannelResultsPage(name, args, context, '', ['publish'], page, perPage)),
   );
 
   const {
     entity_kind: entityKind,
     label,
+    post_statuses: postStatuses,
     uses_context: usesContext,
   } = fetchedPages[0];
 
@@ -379,6 +392,7 @@ const resolveChannelResults = (
     has_more: false,
     ids: [],
     label,
+    post_statuses: postStatuses,
     post_types: {},
     uses_context: usesContext,
   };
@@ -404,15 +418,17 @@ const resolveChannelResults = (
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
- * @param search  Search terms, or an empty string for the whole channel.
- * @param page    Page number.
- * @param perPage Number of IDs in a page, up to `MAX_PER_PAGE`.
+ * @param search       Search terms, or an empty string for the whole channel.
+ * @param postStatuses Post statuses to include.
+ * @param page         Page number.
+ * @param perPage      Number of IDs in a page, up to `MAX_PER_PAGE`.
  */
 const resolveChannelResultsPage = (
   name: string,
   args: object,
   context: object,
   search: string,
+  postStatuses: string[],
   page: number,
   perPage: number,
 ) => async ({
@@ -434,8 +450,8 @@ const resolveChannelResultsPage = (
   }
 
   receiveChannelResultsPage(
-    resultsPageKey(name, args, context, search, page, perPage),
-    await fetchChannelResultsPage(name, args, context, search, page, perPage),
+    resultsPageKey(name, args, context, search, postStatuses, page, perPage),
+    await fetchChannelResultsPage(name, args, context, search, postStatuses, page, perPage),
   );
 };
 
@@ -502,9 +518,10 @@ const getChannelResults = (
  * @param name    Channel name.
  * @param args    Block arguments sent to the channel.
  * @param context Block context sent to the channel.
- * @param search  Search terms, or an empty string for the whole channel.
- * @param page    Page number.
- * @param perPage Number of IDs in a page, up to `MAX_PER_PAGE`.
+ * @param search       Search terms, or an empty string for the whole channel.
+ * @param postStatuses Post statuses to include, such as `publish` and `future`.
+ * @param page         Page number.
+ * @param perPage      Number of IDs in a page, up to `MAX_PER_PAGE`.
  * @return The page, or null until it loads.
  */
 const getChannelResultsPage = (
@@ -513,10 +530,11 @@ const getChannelResultsPage = (
   args: object,
   context: object,
   search: string,
+  postStatuses: string[],
   page: number,
   perPage: number,
 ) => {
-  const key = resultsPageKey(name, args, context, search, page, perPage);
+  const key = resultsPageKey(name, args, context, search, postStatuses, page, perPage);
   let resultsPage: ChannelResultsPage | null = null;
 
   if (key in state.resultsPages) {
@@ -590,9 +608,12 @@ resolveChannelResultsPage.isFulfilled = (
   args: object,
   context: object,
   search: string,
+  postStatuses: string[],
   page: number,
   perPage: number,
-) => getChannelResultsPage(state, name, args, context, search, page, perPage) !== null;
+) => (
+  getChannelResultsPage(state, name, args, context, search, postStatuses, page, perPage) !== null
+);
 
 const store = createReduxStore('wp-curate/channels', {
   reducer(state: ChannelState | undefined, action: any) {
