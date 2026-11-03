@@ -15,7 +15,7 @@ interface UpdateValidPostsArgs {
 }
 
 /**
- * Store which pinned posts still exist and are published, then deduplicate.
+ * Store which pinned posts still exist and are published, and deduplicate when they change.
  */
 export default async function updateValidPosts({
   manualPosts,
@@ -52,9 +52,12 @@ export default async function updateValidPosts({
   }
 
   // An equal write still edits the post, which remounts every other template preview.
-  if (!isShallowEqual(validPosts, newValidPosts)) {
-    setAttributes({ validPosts: newValidPosts });
+  if (isShallowEqual(validPosts, newValidPosts)) {
+    return;
   }
 
+  setAttributes({ validPosts: newValidPosts });
+
+  // `mainDedupe` drops pins missing from `validPosts`, so this pass applies a new pin.
   mainDedupe();
 }

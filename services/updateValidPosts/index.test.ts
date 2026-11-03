@@ -33,11 +33,11 @@ describe('updateValidPosts', () => {
     expect(mainDedupe).toHaveBeenCalled();
   });
 
-  it('skips the write when valid posts are unchanged', async () => {
+  it('skips the write and deduplication when valid posts are unchanged', async () => {
     await run({ validPosts: [1, 2] });
 
     expect(setAttributes).not.toHaveBeenCalled();
-    expect(mainDedupe).toHaveBeenCalled();
+    expect(mainDedupe).not.toHaveBeenCalled();
   });
 
   it('writes an empty list without fetching when nothing is pinned', async () => {
