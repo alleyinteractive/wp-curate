@@ -10,11 +10,7 @@ import {
   useSelect,
   select,
 } from '@wordpress/data';
-import { addQueryArgs } from '@wordpress/url';
 
-import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
-import apiFetch from '@wordpress/api-fetch';
-import isShallowEqual from '@wordpress/is-shallow-equal';
 import { __ } from '@wordpress/i18n';
 
 import type {
@@ -29,6 +25,7 @@ import buildTermQueryArgs from '../../services/buildTermQueryArgs';
 import queryBlockPostFetcher from '../../services/queryBlockPostFetcher';
 import recursivelyFindBlocksByName from '../../services/recursivelyFindBlocksByName';
 import registerMultiTypeEntity from '../../services/registerMultiTypeEntity';
+import updateValidPosts from '../../services/updateValidPosts';
 
 import QueryControls from '../../components/QueryControls';
 import QueryPlaceholder from '../../components/QueryPlaceholder';
@@ -302,36 +299,20 @@ export default function Edit({
 
   // Make sure all the manual posts are still valid.
   useEffect(() => {
-    const updateValidPosts = async () => {
-      const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
-      let validPosts: Number[] = [];
+    let superseded = false;
 
-      if (postsToInclude.length > 0) {
-        validPosts = await apiFetch({
-          path: addQueryArgs(
-            '/wp/v2/posts',
-            {
-              offset: 0,
-              orderby: 'include',
-              per_page: postsToInclude.length,
-              type: postTypeString,
-              include: postsToInclude,
-              status: includeFuturePosts ? ['publish', 'future'] : 'publish',
-              _locale: 'user',
-              context: 'edit',
-            },
-          ),
-        }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
-      }
+    updateValidPosts({
+      manualPosts,
+      postTypeString,
+      includeFuturePosts,
+      validPosts: attributes.validPosts ?? [],
+      setAttributes,
+      isSuperseded: () => superseded,
+    });
 
-      // An equal write still edits the post, which remounts every other template preview.
-      if (!isShallowEqual(attributes.validPosts ?? [], validPosts)) {
-        setAttributes({ validPosts });
-      }
-
-      mainDedupe();
+    return () => {
+      superseded = true;
     };
-    updateValidPosts();
   // `validPosts` is read only to skip an equal write, not to refetch.
   }, [ // eslint-disable-line react-hooks/exhaustive-deps
     manualPosts,
