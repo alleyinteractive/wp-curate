@@ -1,4 +1,5 @@
 // Global dependencies.
+import classnames from 'classnames';
 import React from 'react';
 
 // WordPress dependencies.
@@ -101,8 +102,70 @@ export default function Edit({
   name: string;
 }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+  /*
+   * The status of the pinned post and its label, or empty strings while the post loads. A pinned
+   * post that cannot be found, such as a deleted post, has no status.
+   */
+  const {
+    pinStatus,
+    pinStatusLabel,
+  } = useSelect((select) => {
+    const {
+      getEntityRecord,
+      hasFinishedResolution,
+    } = select(coreStore) as any;
+
+    let status = '';
+    let statusLabel = '';
+
+    if (ref > 0 && typeof pinnedPostType === 'string' && pinnedPostType !== '') {
+      const record = getEntityRecord('postType', pinnedPostType, ref);
+
+      if (typeof record === 'object' && record !== null && typeof record.status === 'string') {
+        status = record.status;
+        statusLabel = status;
+      } else if (hasFinishedResolution('getEntityRecord', ['postType', pinnedPostType, ref])) {
+        statusLabel = __('Not found', 'wp-curate');
+      }
+    }
+
+    // Use the name of the status, such as "Draft", if the user can read it.
+    if (status !== '') {
+      const statusObject = getEntityRecord('root', 'status', status);
+
+      if (typeof statusObject === 'object' && statusObject !== null && typeof statusObject.name === 'string') {
+        statusLabel = statusObject.name;
+      }
+    }
+
+    return {
+      pinStatus: status,
+      pinStatusLabel: statusLabel,
+    };
+  }, [pinnedPostType, ref]);
+
+  /*
+   * On the page, a block whose pinned post is not published shows the top of its channel's queue,
+   * so the mark warns that visitors do not see the pin. A scheduled pin shows when it is published.
+   */
+  const isPinUnpublished = pinStatusLabel !== '' && pinStatus !== 'publish' && pinStatus !== 'future';
+
+  let pinBadgeText = '';
+
+  if (pinStatus === 'future') {
+    pinBadgeText = __('Scheduled', 'wp-curate');
+  }
+
+  if (isPinUnpublished) {
+    pinBadgeText = pinStatusLabel;
+  }
+
   const blockProps = useBlockProps({
-    className: ref > 0 ? 'is-pinned' : undefined,
+    className: classnames({
+      'has-unpublished-pin': isPinUnpublished,
+      'is-pinned': ref > 0,
+    }),
   });
 
   const {
@@ -164,27 +227,10 @@ export default function Edit({
     postType = contextPostType;
   }
 
-  // Whether the pinned post is scheduled, which its mark shows.
-  const isPinnedPostScheduled: boolean = useSelect((select) => {
-    const {
-      getEntityRecord,
-    } = select(coreStore) as any;
-
-    let out = false;
-
-    if (ref > 0 && typeof pinnedPostType === 'string' && pinnedPostType !== '') {
-      const record = getEntityRecord('postType', pinnedPostType, ref);
-
-      out = typeof record === 'object' && record !== null && record.status === 'future';
-    }
-
-    return out;
-  }, [pinnedPostType, ref]);
-
   let preview = (
     <PostInnerBlocks
       badge={ref > 0 ? (
-        <PinBadge isScheduled={isPinnedPostScheduled} />
+        <PinBadge text={pinBadgeText} />
       ) : null}
       blockProps={blockProps}
     />
