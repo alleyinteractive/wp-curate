@@ -16,7 +16,7 @@
 /*
  * The inner blocks have rendered already, in document order. They are the Single Post blocks from
  * the `posts` attribute, with the saved template as their inner blocks. See
- * `\Alley\WP\WP_Curate\Features\Channel_Loop_Single_Posts`. Each Single Post block took its post
+ * `wp_curate_channel_loop_single_posts()` in `index.php`. Each Single Post block took its post
  * from the queue of the channel of the Channel Content block around this one.
  */
 if ( '' === trim( $content ) ) {

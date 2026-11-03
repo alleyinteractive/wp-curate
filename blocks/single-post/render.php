@@ -30,7 +30,7 @@ if ( ! $promoted_post instanceof WP_Post ) {
 
 /*
  * Inside a Channel Loop block, the inner blocks are that block's template. See
- * `\Alley\WP\WP_Curate\Features\Channel_Loop_Single_Posts`.
+ * `wp_curate_channel_loop_single_posts()` in the Channel Loop block's `index.php`.
  *
  * Assume that the parsed block has the correct shape.
  */
