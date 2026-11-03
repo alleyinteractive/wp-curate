@@ -276,7 +276,7 @@ final readonly class Channels_REST_Route implements Feature {
 		$statuses = [ 'publish' ];
 
 		/**
-		 * Filters whether the post picker can include the scheduled posts of a channel.
+		 * Filters whether the post picker can include the scheduled posts in a channel.
 		 *
 		 * @param bool    $include_future_posts Whether the post picker can include scheduled posts. Default false.
 		 * @param Channel $channel              The channel.
