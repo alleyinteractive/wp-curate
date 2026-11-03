@@ -26,7 +26,8 @@ use WP_Post;
  * A block that also provides the `wp-curate/channel` context, like Channel Content, passes its channel to its inner
  * blocks. Any other block takes a post from its channel's queue and gets that post as the `postId` and `postType` context.
  *
- * Blocks can pin a post with an integer `ref` attribute.
+ * Blocks can pin a post with an integer `ref` attribute. A block whose pinned post is not published, such as a
+ * scheduled post, takes the top of the queue instead.
  *
  * Keep the rules matched with the `channelSupport` editor script.
  */
@@ -163,7 +164,8 @@ final readonly class Channel_Block_Support implements Feature {
 			$channel_args = $this->channel_args( $context['wp-curate/channel'] );
 		}
 
-		if ( isset( $attrs['ref'] ) && is_int( $attrs['ref'] ) && $attrs['ref'] > 0 ) {
+		// A pinned post that is not published, such as a scheduled post, gives its place to the top of the queue.
+		if ( isset( $attrs['ref'] ) && is_int( $attrs['ref'] ) && $attrs['ref'] > 0 && 'publish' === get_post_status( $attrs['ref'] ) ) {
 			$ref = $attrs['ref'];
 		}
 
@@ -181,7 +183,7 @@ final readonly class Channel_Block_Support implements Feature {
 		$context['postId']   = 0;
 		$context['postType'] = '';
 
-		// A ref can be a post that visitors cannot see, such as a draft, so the block gets no post.
+		// A published post can still be one that visitors cannot see, such as of a post type that is not public.
 		if ( $taken instanceof WP_Post && is_post_publicly_viewable( $taken ) ) {
 			$context['postId']   = $taken->ID;
 			$context['postType'] = $taken->post_type;

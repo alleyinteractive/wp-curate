@@ -90,6 +90,8 @@ final readonly class Bundled_Channels implements Feature {
 	 * Filters whether the post picker can include the scheduled posts in a channel to exclude the Parse.ly
 	 * channel, since scheduled posts can't be trending.
 	 *
+	 * @phpstan-param mixed $channel
+	 *
 	 * @param bool    $include_future_posts Whether the post picker can include scheduled posts. Default false.
 	 * @param Channel $channel              The channel.
 	 * @return mixed
