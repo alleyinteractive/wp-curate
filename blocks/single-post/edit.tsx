@@ -186,7 +186,8 @@ export default function Edit({
 
   /*
    * The `has-block-overlay` class stops the inner blocks from taking clicks, like the block
-   * overlay that core gives template parts.
+   * overlay that core gives template parts. The style comes from core's block editor content
+   * styles, which set `pointer-events: none` on the inner blocks of a block with this class.
    */
   const hasOverlay = hasInnerBlocks && !isInSelection;
 
