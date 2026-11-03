@@ -11,9 +11,11 @@ use Alley\WP\Features\Group;
 use Alley\WP\Features\Ordered;
 use Alley\WP\Post_IDs\Empty_Post_IDs;
 use Alley\WP\Post_Queries\Default_Post_Queries;
+use Alley\WP\Post_Queries\Optimistic_Date_Queries;
 use Alley\WP\Post_Query\Global_Post_Query;
 use Alley\WP\WP_Curate\Post_IDs\History;
 use Alley\WP\WP_Curate\Post_IDs\Pinned_In_Post_Content;
+use DateTimeImmutable;
 use WP_Block_Type_Registry;
 
 /**
@@ -27,6 +29,13 @@ function main(): void {
 		channels: $channels,
 		preferred: 'post_latest',
 	);
+
+	$posts_per_page        = 10;
+	$posts_per_page_option = get_option( 'posts_per_page' );
+
+	if ( is_numeric( $posts_per_page_option ) ) {
+		$posts_per_page = (int) $posts_per_page_option;
+	}
 
 	// phpcs:disable Squiz.Commenting.BlockComment.NoEmptyLineBefore
 	$plugin = new Group(
@@ -48,7 +57,7 @@ function main(): void {
 				seed: new Pinned_In_Post_Content( $main_query ),
 			),
 			main_query: $main_query,
-			default_per_page: (int) get_option( 'posts_per_page', 10 ), // @phpstan-ignore-line
+			default_per_page: $posts_per_page,
 			stop_queries_var: $stop_queries_var,
 			block_type_registry: WP_Block_Type_Registry::get_instance(),
 		),
@@ -58,7 +67,17 @@ function main(): void {
 		new Features\Block_Variations(),
 		new Features\Block_Patterns(),
 		new Features\Channel_Content_Patterns(),
-		new Features\Bundled_Channels(),
+		new Features\Bundled_Channels(
+			latest_post_queries: new Optimistic_Date_Queries(
+				after: [
+					new DateTimeImmutable( '-30 days', wp_timezone() ),
+					new DateTimeImmutable( '-365 days', wp_timezone() ),
+				],
+				posts_per_page: $posts_per_page,
+				origin: new Default_Post_Queries(),
+			),
+			post_queries: new Default_Post_Queries(),
+		),
 		new Features\Channels_REST_Route(
 			channels: $channels,
 			default_channel: $default_channel,

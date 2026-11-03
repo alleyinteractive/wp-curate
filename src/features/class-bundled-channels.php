@@ -8,6 +8,7 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
+use Alley\WP\Types\Post_Queries;
 use Alley\WP\WP_Curate\Channels\Channel;
 use Alley\WP\WP_Curate\Channels\Free_For_All;
 use Alley\WP\WP_Curate\Channels\Latest_Posts;
@@ -18,6 +19,17 @@ use Alley\WP\WP_Curate\Channels\Parsely_Trending_Posts;
  * Adds the channels that come with WP Curate.
  */
 final readonly class Bundled_Channels implements Feature {
+	/**
+	 * Constructor.
+	 *
+	 * @param Post_Queries $latest_post_queries Queries for the channels of the latest posts, which are in date order.
+	 * @param Post_Queries $post_queries        Queries for the other channels, which can be in any order.
+	 */
+	public function __construct(
+		private Post_Queries $latest_post_queries,
+		private Post_Queries $post_queries,
+	) {}
+
 	/**
 	 * Boot the feature.
 	 */
@@ -42,10 +54,10 @@ final readonly class Bundled_Channels implements Feature {
 			$post_types = $this->allowed_post_types();
 
 			foreach ( $post_types as $post_type ) {
-				$bundled[] = new Latest_Posts( $post_type );
+				$bundled[] = new Latest_Posts( $post_type, $this->latest_post_queries );
 
 				if ( is_object_in_taxonomy( $post_type, 'category' ) ) {
-					$bundled[] = new Latest_Posts_In_Term( $post_type, 'category' );
+					$bundled[] = new Latest_Posts_In_Term( $post_type, 'category', $this->latest_post_queries );
 				}
 			}
 
@@ -55,6 +67,7 @@ final readonly class Bundled_Channels implements Feature {
 					parsely: new Parsely_Support(),
 					limit: 50,
 					post_types: $post_types,
+					post_queries: $this->post_queries,
 				);
 			}
 
@@ -63,6 +76,7 @@ final readonly class Bundled_Channels implements Feature {
 				taxonomies: $this->allowed_taxonomies(),
 				orderby_options: $this->orderby_options(),
 				meta_keys: $this->order_by_meta_keys(),
+				post_queries: $this->post_queries,
 			);
 
 			$channels = array_merge( $bundled, $channels );

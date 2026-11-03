@@ -7,6 +7,7 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
+use Alley\WP\Types\Post_Queries;
 use WP_Query;
 
 /**
@@ -25,10 +26,12 @@ final readonly class Queried_Post_IDs implements Results {
 	 *
 	 * @phpstan-param array<string, mixed> $query_args
 	 *
-	 * @param mixed[] $query_args Query arguments that select the posts, in order.
+	 * @param mixed[]      $query_args   Query arguments that select the posts, in order.
+	 * @param Post_Queries $post_queries Queries for each batch of IDs.
 	 */
 	public function __construct(
 		private array $query_args,
+		private Post_Queries $post_queries,
 	) {}
 
 	/**
@@ -46,7 +49,7 @@ final readonly class Queried_Post_IDs implements Results {
 
 		// A batch that is smaller than the batch size is the last one.
 		while ( self::BATCH_SIZE === $batch_size ) {
-			$query = new WP_Query(
+			$query = $this->post_queries->query(
 				array_merge(
 					$this->query_args,
 					[
@@ -58,18 +61,11 @@ final readonly class Queried_Post_IDs implements Results {
 				),
 			);
 
-			$post_ids = [];
-
-			if ( is_array( $query->posts ) ) {
-				$post_ids = $query->posts;
-			}
-
+			$post_ids   = $query->post_ids();
 			$batch_size = count( $post_ids );
 
 			foreach ( $post_ids as $post_id ) {
-				if ( is_int( $post_id ) ) {
-					yield $post_id;
-				}
+				yield $post_id;
 			}
 
 			++$page;
@@ -78,6 +74,9 @@ final readonly class Queried_Post_IDs implements Results {
 
 	/**
 	 * Total number of IDs in the results.
+	 *
+	 * The count does not use the queries for each batch, which can limit a query to some of the posts, such
+	 * as to recent ones.
 	 *
 	 * @return int
 	 */

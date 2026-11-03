@@ -7,6 +7,7 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
+use Alley\WP\Types\Post_Queries;
 use WP_Post_Type;
 
 /**
@@ -16,10 +17,12 @@ final readonly class Latest_Posts implements Channel {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $post_type Post type slug.
+	 * @param string       $post_type    Post type slug.
+	 * @param Post_Queries $post_queries Queries for the posts, which are in date order.
 	 */
 	public function __construct(
 		private string $post_type,
+		private Post_Queries $post_queries,
 	) {}
 
 	/**
@@ -135,6 +138,7 @@ final readonly class Latest_Posts implements Channel {
 					'post_type'           => $this->post_type,
 				],
 			),
+			$this->post_queries,
 		);
 	}
 }

@@ -7,6 +7,7 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
+use Alley\WP\Types\Post_Queries;
 use WP_Post_Type;
 use WP_Taxonomy;
 
@@ -26,16 +27,18 @@ final readonly class Free_For_All implements Channel {
 	 *
 	 * @phpstan-param array<string, string> $orderby_options
 	 *
-	 * @param string[] $post_types      The post types that can be selected.
-	 * @param string[] $taxonomies      The taxonomies whose terms can be selected.
-	 * @param string[] $orderby_options Names of the ways to order the posts, keyed by `orderby` value.
-	 * @param string[] $meta_keys       The meta keys whose values can order the posts by.
+	 * @param string[]     $post_types      The post types that can be selected.
+	 * @param string[]     $taxonomies      The taxonomies whose terms can be selected.
+	 * @param string[]     $orderby_options Names of the ways to order the posts, keyed by `orderby` value.
+	 * @param string[]     $meta_keys       The meta keys whose values can order the posts by.
+	 * @param Post_Queries $post_queries    Queries for the posts, which are in the block's order.
 	 */
 	public function __construct(
 		private array $post_types,
 		private array $taxonomies,
 		private array $orderby_options,
 		private array $meta_keys,
+		private Post_Queries $post_queries,
 	) {}
 
 	/**
@@ -305,7 +308,7 @@ final readonly class Free_For_All implements Channel {
 		}
 
 		if ( [] !== $post_types ) {
-			$posts = new Queried_Post_IDs( $query_args );
+			$posts = new Queried_Post_IDs( $query_args, $this->post_queries );
 		}
 
 		return $posts;

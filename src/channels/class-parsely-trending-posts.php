@@ -7,6 +7,7 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
+use Alley\WP\Types\Post_Queries;
 use Alley\WP\WP_Curate\Features\Parsely_Support;
 
 /**
@@ -20,18 +21,20 @@ final readonly class Parsely_Trending_Posts implements Channel {
 	/**
 	 * Constructor.
 	 *
-	 * @param Parsely_Support $parsely    Parse.ly support, which requests and caches the trending posts.
-	 * @param int             $limit      Number of posts to request from Parse.ly. This is the most
-	 *                                    posts that the channel can give to all of the blocks on a
-	 *                                    page and to the picker. Posts that are not published or not
-	 *                                    of a supported post type are removed after the request, so
-	 *                                    the channel can give fewer.
-	 * @param string[]        $post_types Post type slugs that the channel can give.
+	 * @param Parsely_Support $parsely      Parse.ly support, which requests and caches the trending posts.
+	 * @param int             $limit        Number of posts to request from Parse.ly. This is the most
+	 *                                      posts that the channel can give to all of the blocks on a
+	 *                                      page and to the picker. Posts that are not published or not
+	 *                                      of a supported post type are removed after the request, so
+	 *                                      the channel can give fewer.
+	 * @param string[]        $post_types   Post type slugs that the channel can give.
+	 * @param Post_Queries    $post_queries Queries for the posts, which are in Parse.ly order.
 	 */
 	public function __construct(
 		private Parsely_Support $parsely,
 		private int $limit,
 		private array $post_types,
+		private Post_Queries $post_queries,
 	) {}
 
 	/**
@@ -171,6 +174,7 @@ final readonly class Parsely_Trending_Posts implements Channel {
 					'post_type'           => $this->post_types,
 				],
 			),
+			$this->post_queries,
 		);
 	}
 }
