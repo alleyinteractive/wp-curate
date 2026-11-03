@@ -10,9 +10,6 @@
     "textdomain": "wp-curate",
     "editorScript": "file:index.tsx",
     "editorStyle": "file:index.css",
-    "style": [
-        "file:style-index.css"
-    ],
     "usesContext": [
         "allPostIds",
         "query",

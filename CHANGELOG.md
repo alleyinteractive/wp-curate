@@ -4,9 +4,15 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
-## 3.4.2 - 2026-10-28
+## 3.5.1 - 2026-11-03
 
 - Bug fix: Fix editor crash when moving a pinned post in a multi-post-type query. The registered multi-type entity now declares `rawAttributes` so titles are strings.
+
+## 3.5.0 - 2026-11-02
+
+- Added: `wp_curate_deduplication_enabled` filter to customize whether deduplication is enabled for a Query or Subquery block. It runs after the block's `never` attribute and the post meta are checked.
+- Added: `wp_curate_history_seed` filter to customize the object that supplies the initial post IDs for the deduplication history.
+- Bug fix: Fix issue where posts nested in a subquery inherited the backfill opacity of their parent Post block and rendered at 25% opacity in the editor.
 
 ## 3.4.1 - 2026-10-26
 
