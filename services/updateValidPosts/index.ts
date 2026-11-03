@@ -1,4 +1,3 @@
-import type { WP_REST_API_Posts as WpRestApiPosts } from 'wp-types'; // eslint-disable-line camelcase
 import apiFetch from '@wordpress/api-fetch';
 import isShallowEqual from '@wordpress/is-shallow-equal';
 import { addQueryArgs } from '@wordpress/url';
@@ -29,7 +28,7 @@ export default async function updateValidPosts({
   let newValidPosts: number[] = [];
 
   if (postsToInclude.length > 0) {
-    newValidPosts = await apiFetch({
+    const result = await apiFetch<unknown>({
       path: addQueryArgs(
         '/wp/v2/posts',
         {
@@ -43,21 +42,45 @@ export default async function updateValidPosts({
           context: 'edit',
         },
       ),
-    }).then((response) => (response as any as WpRestApiPosts).map((post) => post.id));
+    });
+
+    newValidPosts = Array.isArray(result)
+      ? result
+        .map((post: unknown) => {
+          if (
+            post
+            && typeof post === 'object'
+            && 'id' in post
+            && typeof post.id === 'number'
+          ) {
+            return post.id;
+          }
+
+          return 0;
+        })
+        .filter((id) => id !== 0)
+      : [];
   }
 
-  // A newer run started while this request was in flight, and `validPosts` may be stale.
+  // A newer run started while this request was in flight. Writing it would drop the current pin.
   if (isSuperseded()) {
     return;
   }
 
-  // An equal write still edits the post, which remounts every other template preview.
+  /*
+   * An equal write still edits the post, which remounts every other template preview.
+   * The block editor compares attributes by identity, so an equal array counts as a change.
+   */
   if (isShallowEqual(validPosts, newValidPosts)) {
     return;
   }
 
   setAttributes({ validPosts: newValidPosts });
 
-  // `mainDedupe` drops pins missing from `validPosts`, so this pass applies a new pin.
+  /*
+   * `mainDedupe` drops any pin missing from `validPosts`, so the pass
+   * triggered by the pin itself runs against stale data and fills
+   * the slot from backfill instead. This is the pass that applies the pin.
+   */
   mainDedupe();
 }

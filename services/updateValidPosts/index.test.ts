@@ -40,6 +40,14 @@ describe('updateValidPosts', () => {
     expect(mainDedupe).not.toHaveBeenCalled();
   });
 
+  it('ignores entries without a numeric id', async () => {
+    (apiFetch as unknown as jest.Mock).mockResolvedValue([{ id: 1 }, { id: '2' }, null]);
+
+    await run();
+
+    expect(setAttributes).toHaveBeenCalledWith({ validPosts: [1] });
+  });
+
   it('writes an empty list without fetching when nothing is pinned', async () => {
     await run({ manualPosts: [null], validPosts: [1] });
 
