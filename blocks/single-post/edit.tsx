@@ -10,9 +10,6 @@ import {
 } from '@wordpress/block-editor';
 import {
   BlockEditProps,
-  BlockInstance,
-  InnerBlockTemplate,
-  createBlocksFromInnerBlocksTemplate,
   store as blocksStore,
 } from '@wordpress/blocks';
 import {
@@ -21,12 +18,9 @@ import {
   ToolbarButton,
   ToolbarGroup,
 } from '@wordpress/components';
-import { useDispatch, useRegistry, useSelect } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
 import {
-  useCallback,
-  useEffect,
   useMemo,
-  useRef,
   useState,
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -41,7 +35,6 @@ import useBlockChannel, {
   toBlockChannelArgs,
   toChannelName,
 } from '../../hooks/useBlockChannel';
-import toInnerBlockTemplate from '../../services/innerBlockTemplate';
 
 // Internal dependencies.
 import PostPicker from './components/post-picker';
@@ -49,127 +42,14 @@ import PostToolsDropdown from './components/post-tools-dropdown';
 import './index.scss';
 
 /**
- * The editable inner blocks of a block outside a Channel Loop block.
+ * The editable inner blocks of the block, which show its post.
  */
-function StandaloneInnerBlocks({
+function PostInnerBlocks({
   blockProps,
 }: {
   blockProps: Record<string, unknown>;
 }) {
   const combinedBlockProps = useInnerBlocksProps(blockProps);
-
-  return <div {...combinedBlockProps} />;
-}
-
-/**
- * The inner blocks of a block inside a Channel Loop block, which edit that block's template.
- *
- * The inner blocks are controlled: they come from the template, and each change goes back to the
- * template. The editor does not save controlled inner blocks with the block itself. Every Single
- * Post block in the Channel Loop block edits the same template, which the Channel Loop block saves
- * as its inner blocks.
- */
-function TemplateInnerBlocks({
-  blockProps,
-  channelLoopClientId,
-  template,
-}: {
-  blockProps: Record<string, unknown>;
-  channelLoopClientId: string;
-  template: InnerBlockTemplate[];
-}) {
-  const {
-    __unstableMarkNextChangeAsNotPersistent: markNextChangeAsNotPersistent,
-    updateBlockAttributes,
-  } = useDispatch(blockEditorStore) as any;
-
-  // The last blocks that this block sent to the template, and the template made from them.
-  const sent = useRef<{ blocks: BlockInstance[], template: InnerBlockTemplate[] } | null>(null);
-
-  // If this block made the template, reuse its blocks, so that new ones do not replace them.
-  const value = useMemo(() => {
-    let blocks: BlockInstance[] = [];
-
-    if (sent.current !== null && sent.current.template === template) {
-      ({
-        blocks,
-      } = sent.current);
-    } else {
-      blocks = createBlocksFromInnerBlocksTemplate(template);
-    }
-
-    return blocks;
-  }, [template]);
-
-  // The template that the inner blocks match: the one they came from, or the last sent.
-  const matched = useRef(template);
-
-  useEffect(() => {
-    matched.current = template;
-  }, [template]);
-
-  // `useRegistry` is typed as returning `Function`.
-  const registry = useRegistry() as unknown as { select: (store: unknown) => unknown };
-
-  /*
-   * Sends the inner blocks to the template. A change to the inner blocks that is not persistent,
-   * such as typing, makes a change to the template that is not persistent.
-   */
-  const send = useCallback((blocks: BlockInstance[], isPersistent: boolean) => {
-    const {
-      getBlockAttributes,
-    } = registry.select(blockEditorStore) as any;
-
-    const current = getBlockAttributes(channelLoopClientId).template;
-
-    /*
-     * When the template changes outside this block, such as by undo or by another Single Post,
-     * the editor can report the inner blocks from before the change. Skip them: the inner blocks
-     * are about to follow the template.
-     */
-    if (current !== matched.current) {
-      return;
-    }
-
-    const next = toInnerBlockTemplate(blocks);
-
-    /*
-     * A change that does not change the template would still make the post dirty, or clear the
-     * redo history. Compare both in the same form: the blocks have every attribute, and the
-     * template may have only some, as a variation gives it.
-     */
-    let currentBlocks: BlockInstance[] = [];
-
-    if (Array.isArray(current)) {
-      currentBlocks = createBlocksFromInnerBlocksTemplate(current);
-    }
-
-    if (JSON.stringify(next) === JSON.stringify(toInnerBlockTemplate(currentBlocks))) {
-      return;
-    }
-
-    sent.current = {
-      blocks,
-      template: next,
-    };
-    matched.current = next;
-
-    if (!isPersistent) {
-      markNextChangeAsNotPersistent();
-    }
-
-    updateBlockAttributes(channelLoopClientId, { template: next });
-  }, [channelLoopClientId, markNextChangeAsNotPersistent, registry, updateBlockAttributes]);
-
-  const onChange = useCallback((blocks: BlockInstance[]) => send(blocks, true), [send]);
-  const onInput = useCallback((blocks: BlockInstance[]) => send(blocks, false), [send]);
-
-  const combinedBlockProps = useInnerBlocksProps(blockProps, {
-    // @ts-expect-error value, onChange, and onInput not available in types yet.
-    onChange,
-    onInput,
-    value,
-  });
 
   return <div {...combinedBlockProps} />;
 }
@@ -181,9 +61,8 @@ function TemplateInnerBlocks({
  * as the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
  * after the blocks before this one. The support also gives that post to the inner blocks.
  *
- * Inside a Channel Loop block, the inner blocks edit the loop's template, which every Single Post
- * in the loop shares, instead of their own. Outside one, a block without inner blocks shows a
- * picker of layouts.
+ * A block without inner blocks shows a picker of layouts. Inside a Channel Loop block, the loop
+ * keeps the inner blocks of its Single Posts the same.
  */
 export default function Edit({
   attributes: {
@@ -271,60 +150,11 @@ export default function Edit({
     postType = contextPostType;
   }
 
-  /*
-   * The Channel Loop block that the block is directly inside, or an empty string, and that block's
-   * template, which the block edits.
-   */
-  const {
-    channelLoopClientId,
-    loopTemplate,
-  } = useSelect((select) => {
-    const {
-      getBlockAttributes,
-      getBlockName,
-      getBlockRootClientId,
-    } = select(blockEditorStore) as any;
-
-    const parentClientId = getBlockRootClientId(clientId);
-
-    let outClientId = '';
-    let outTemplate: InnerBlockTemplate[] = [];
-
-    if (typeof parentClientId === 'string' && getBlockName(parentClientId) === 'wp-curate/channel-loop') {
-      const {
-        template,
-      } = getBlockAttributes(parentClientId);
-
-      outClientId = parentClientId;
-
-      if (Array.isArray(template)) {
-        outTemplate = template;
-      }
-    }
-
-    return {
-      channelLoopClientId: outClientId,
-      loopTemplate: outTemplate,
-    };
-  }, [clientId]);
-
-  const isInChannelLoop = channelLoopClientId !== '';
-
   let preview = (
-    <StandaloneInnerBlocks blockProps={blockProps} />
+    <PostInnerBlocks blockProps={blockProps} />
   );
 
-  if (isInChannelLoop) {
-    preview = (
-      <TemplateInnerBlocks
-        blockProps={blockProps}
-        channelLoopClientId={channelLoopClientId}
-        template={loopTemplate}
-      />
-    );
-  }
-
-  const isLayoutPickerShown = !isInChannelLoop && !hasInnerBlocks;
+  const isLayoutPickerShown = !hasInnerBlocks;
 
   // Pins the post that the block currently displays.
   let onPinThisPost = null;

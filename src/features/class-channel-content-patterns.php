@@ -189,16 +189,19 @@ final class Channel_Content_Patterns implements Feature {
 	}
 
 	/**
-	 * A Channel Loop block with Single Post blocks.
+	 * A Channel Loop block with Single Post blocks, which each have their own copy of the template.
 	 *
-	 * @param mixed[] $attrs    Attributes of the Channel Loop other than its posts.
+	 * @param mixed[] $attrs    Attributes of the Channel Loop.
 	 * @param string  $template Serialized template of the Single Post blocks.
 	 * @param int     $count    The number of Single Post blocks.
 	 * @return string
 	 */
 	private function channel_loop( array $attrs, string $template, int $count ): string {
-		$attrs['posts'] = array_fill( 0, $count, [ 'wp-curate/single-post' ] );
+		$single_posts = str_repeat(
+			get_comment_delimited_block_content( 'wp-curate/single-post', [], $template ),
+			$count,
+		);
 
-		return get_comment_delimited_block_content( 'wp-curate/channel-loop', $attrs, $template );
+		return get_comment_delimited_block_content( 'wp-curate/channel-loop', $attrs, $single_posts );
 	}
 }

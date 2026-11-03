@@ -15,26 +15,5 @@
   "supports": {
     "html": false,
     "layout": true
-  },
-  "attributes": {
-    "posts": {
-      "type": "array",
-      "default": [
-        [
-          "wp-curate/single-post"
-        ],
-        [
-          "wp-curate/single-post"
-        ],
-        [
-          "wp-curate/single-post"
-        ]
-      ]
-    },
-    "template": {
-      "type": "array",
-      "default": [],
-      "role": "local"
-    }
   }
 }

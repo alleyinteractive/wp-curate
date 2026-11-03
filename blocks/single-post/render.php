@@ -28,12 +28,7 @@ if ( ! $promoted_post instanceof WP_Post ) {
 	return;
 }
 
-/*
- * Inside a Channel Loop block, the inner blocks are that block's template. See
- * `wp_curate_channel_loop_single_posts()` in the Channel Loop block's `index.php`.
- *
- * Assume that the parsed block has the correct shape.
- */
+// Assume that the parsed block has the correct shape.
 $inner = new WP_Block( $block->parsed_block ); // @phpstan-ignore-line argument.type
 
 // Give the post to the inner blocks, the way that a Query Loop gives each post to its template.
