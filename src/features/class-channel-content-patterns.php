@@ -35,19 +35,11 @@ final class Channel_Content_Patterns implements Feature {
 				'content'    => $this->channel_content(
 					$this->channel_loop(
 						[],
-						[
-							[ 'core/post-title', [ 'isLink' => true ] ],
-							[
-								'core/post-featured-image',
-								[
-									'align'  => 'wide',
-									'isLink' => true,
-								],
-							],
-							[ 'core/post-excerpt' ],
-							[ 'core/separator' ],
-							[ 'core/post-date' ],
-						],
+						'<!-- wp:post-title {"isLink":true} /-->'
+						. '<!-- wp:post-featured-image {"isLink":true,"align":"wide"} /-->'
+						. '<!-- wp:post-excerpt /-->'
+						. '<!-- wp:separator --><hr class="wp-block-separator has-alpha-channel-opacity"/><!-- /wp:separator -->'
+						. '<!-- wp:post-date /-->',
 						3,
 					),
 				),
@@ -63,29 +55,15 @@ final class Channel_Content_Patterns implements Feature {
 				'content'    => $this->channel_content(
 					$this->channel_loop(
 						[],
-						[
-							[
-								'core/columns',
-								[ 'align' => 'wide' ],
-								[
-									[
-										'core/column',
-										[ 'width' => '66.66%' ],
-										[
-											[ 'core/post-featured-image', [ 'isLink' => true ] ],
-										],
-									],
-									[
-										'core/column',
-										[ 'width' => '33.33%' ],
-										[
-											[ 'core/post-title', [ 'isLink' => true ] ],
-											[ 'core/post-excerpt' ],
-										],
-									],
-								],
-							],
-						],
+						'<!-- wp:columns {"align":"wide"} --><div class="wp-block-columns alignwide">'
+						. '<!-- wp:column {"width":"66.66%"} --><div class="wp-block-column" style="flex-basis:66.66%">'
+						. '<!-- wp:post-featured-image {"isLink":true} /-->'
+						. '</div><!-- /wp:column -->'
+						. '<!-- wp:column {"width":"33.33%"} --><div class="wp-block-column" style="flex-basis:33.33%">'
+						. '<!-- wp:post-title {"isLink":true} /-->'
+						. '<!-- wp:post-excerpt /-->'
+						. '</div><!-- /wp:column -->'
+						. '</div><!-- /wp:columns -->',
 						3,
 					),
 				),
@@ -101,34 +79,14 @@ final class Channel_Content_Patterns implements Feature {
 				'content'    => $this->channel_content(
 					$this->channel_loop(
 						[],
-						[
-							[
-								'core/columns',
-								[ 'verticalAlignment' => 'center' ],
-								[
-									[
-										'core/column',
-										[
-											'verticalAlignment' => 'center',
-											'width' => '25%',
-										],
-										[
-											[ 'core/post-featured-image', [ 'isLink' => true ] ],
-										],
-									],
-									[
-										'core/column',
-										[
-											'verticalAlignment' => 'center',
-											'width' => '75%',
-										],
-										[
-											[ 'core/post-title', [ 'isLink' => true ] ],
-										],
-									],
-								],
-							],
-						],
+						'<!-- wp:columns {"verticalAlignment":"center"} --><div class="wp-block-columns are-vertically-aligned-center">'
+						. '<!-- wp:column {"verticalAlignment":"center","width":"25%"} --><div class="wp-block-column is-vertically-aligned-center" style="flex-basis:25%">'
+						. '<!-- wp:post-featured-image {"isLink":true} /-->'
+						. '</div><!-- /wp:column -->'
+						. '<!-- wp:column {"verticalAlignment":"center","width":"75%"} --><div class="wp-block-column is-vertically-aligned-center" style="flex-basis:75%">'
+						. '<!-- wp:post-title {"isLink":true} /-->'
+						. '</div><!-- /wp:column -->'
+						. '</div><!-- /wp:columns -->',
 						3,
 					),
 				),
@@ -149,28 +107,12 @@ final class Channel_Content_Patterns implements Feature {
 								'type'        => 'grid',
 							],
 						],
-						[
-							[
-								'core/group',
-								[
-									'style' => [
-										'spacing' => [
-											'padding' => [
-												'bottom' => '30px',
-												'left'   => '30px',
-												'right'  => '30px',
-												'top'    => '30px',
-											],
-										],
-									],
-								],
-								[
-									[ 'core/post-title', [ 'isLink' => true ] ],
-									[ 'core/post-excerpt' ],
-									[ 'core/post-date' ],
-								],
-							],
-						],
+						'<!-- wp:group {"style":{"spacing":{"padding":{"bottom":"30px","left":"30px","right":"30px","top":"30px"}}}} -->'
+						. '<div class="wp-block-group" style="padding-top:30px;padding-right:30px;padding-bottom:30px;padding-left:30px">'
+						. '<!-- wp:post-title {"isLink":true} /-->'
+						. '<!-- wp:post-excerpt /-->'
+						. '<!-- wp:post-date /-->'
+						. '</div><!-- /wp:group -->',
 						6,
 					),
 				),
@@ -188,80 +130,17 @@ final class Channel_Content_Patterns implements Feature {
 					. '<div class="wp-block-group alignfull has-text-color has-background" style="background-color:#000000;color:#ffffff;padding-top:100px;padding-right:100px;padding-bottom:100px;padding-left:100px">'
 					. $this->channel_loop(
 						[],
-						[
-							[
-								'core/separator',
-								[
-									'align'     => 'wide',
-									'className' => 'is-style-wide',
-									'style'     => [
-										'color' => [
-											'background' => '#ffffff',
-										],
-									],
-								],
-							],
-							[
-								'core/columns',
-								[
-									'align'             => 'wide',
-									'verticalAlignment' => 'center',
-								],
-								[
-									[
-										'core/column',
-										[
-											'verticalAlignment' => 'center',
-											'width' => '20%',
-										],
-										[
-											[
-												'core/post-date',
-												[
-													'fontSize' => 'extra-small',
-													'style'    => [
-														'color' => [
-															'text' => '#ffffff',
-														],
-													],
-												],
-											],
-										],
-									],
-									[
-										'core/column',
-										[
-											'verticalAlignment' => 'center',
-											'width' => '80%',
-										],
-										[
-											[
-												'core/post-title',
-												[
-													'isLink' => true,
-													'style'  => [
-														'color'      => [
-															'text' => '#ffffff',
-														],
-														'elements'   => [
-															'link' => [
-																'color' => [
-																	'text' => '#ffffff',
-																],
-															],
-														],
-														'typography' => [
-															'fontSize'   => '72px',
-															'lineHeight' => '1.1',
-														],
-													],
-												],
-											],
-										],
-									],
-								],
-							],
-						],
+						'<!-- wp:separator {"align":"wide","className":"is-style-wide","style":{"color":{"background":"#ffffff"}}} -->'
+						. '<hr class="wp-block-separator alignwide has-text-color has-alpha-channel-opacity has-background is-style-wide" style="background-color:#ffffff;color:#ffffff"/>'
+						. '<!-- /wp:separator -->'
+						. '<!-- wp:columns {"verticalAlignment":"center","align":"wide"} --><div class="wp-block-columns alignwide are-vertically-aligned-center">'
+						. '<!-- wp:column {"verticalAlignment":"center","width":"20%"} --><div class="wp-block-column is-vertically-aligned-center" style="flex-basis:20%">'
+						. '<!-- wp:post-date {"fontSize":"extra-small","style":{"color":{"text":"#ffffff"}}} /-->'
+						. '</div><!-- /wp:column -->'
+						. '<!-- wp:column {"verticalAlignment":"center","width":"80%"} --><div class="wp-block-column is-vertically-aligned-center" style="flex-basis:80%">'
+						. '<!-- wp:post-title {"isLink":true,"style":{"color":{"text":"#ffffff"},"elements":{"link":{"color":{"text":"#ffffff"}}},"typography":{"fontSize":"72px","lineHeight":"1.1"}}} /-->'
+						. '</div><!-- /wp:column -->'
+						. '</div><!-- /wp:columns -->',
 						3,
 					)
 					. '</div><!-- /wp:group -->',
@@ -270,13 +149,11 @@ final class Channel_Content_Patterns implements Feature {
 			],
 		);
 
-		$offset_post = [
-			[ 'core/post-featured-image' ],
-			[ 'core/post-title' ],
-			[ 'core/post-date' ],
-		];
+		$offset_post = '<!-- wp:post-featured-image /-->'
+			. '<!-- wp:post-title /-->'
+			. '<!-- wp:post-date /-->';
 
-		$spacer = [ 'core/spacer', [ 'height' => '200px' ] ];
+		$spacer = '<!-- wp:spacer {"height":"200px"} --><div style="height:200px" aria-hidden="true" class="wp-block-spacer"></div><!-- /wp:spacer -->';
 
 		register_block_pattern(
 			'wp-curate/channel-content-offset',
@@ -288,10 +165,10 @@ final class Channel_Content_Patterns implements Feature {
 					. '<div class="wp-block-group" style="padding-top:30px;padding-right:30px;padding-bottom:30px;padding-left:30px">'
 					. '<!-- wp:columns --><div class="wp-block-columns">'
 					. '<!-- wp:column {"width":"50%"} --><div class="wp-block-column" style="flex-basis:50%">'
-					. $this->channel_loop( [], [ ...$offset_post, $spacer ], 2 )
+					. $this->channel_loop( [], $offset_post . $spacer, 2 )
 					. '</div><!-- /wp:column -->'
 					. '<!-- wp:column {"width":"50%"} --><div class="wp-block-column" style="flex-basis:50%">'
-					. $this->channel_loop( [], [ $spacer, ...$offset_post ], 2 )
+					. $this->channel_loop( [], $spacer . $offset_post, 2 )
 					. '</div><!-- /wp:column -->'
 					. '</div><!-- /wp:columns -->'
 					. '</div><!-- /wp:group -->',
@@ -314,20 +191,14 @@ final class Channel_Content_Patterns implements Feature {
 	/**
 	 * A Channel Loop block with Single Post blocks.
 	 *
-	 * @param mixed[] $attrs    Attributes of the Channel Loop other than its template.
-	 * @param mixed[] $template The template of the Single Post blocks, in the shape of the editor's
-	 *                          `InnerBlockTemplate`.
+	 * @param mixed[] $attrs    Attributes of the Channel Loop other than its posts.
+	 * @param string  $template Serialized template of the Single Post blocks.
 	 * @param int     $count    The number of Single Post blocks.
 	 * @return string
 	 */
-	private function channel_loop( array $attrs, array $template, int $count ): string {
-		$attrs['template'] = $template;
+	private function channel_loop( array $attrs, string $template, int $count ): string {
+		$attrs['posts'] = array_fill( 0, $count, [ 'wp-curate/single-post' ] );
 
-		$single_posts = str_repeat(
-			get_comment_delimited_block_content( 'wp-curate/single-post', [], '' ),
-			$count,
-		);
-
-		return get_comment_delimited_block_content( 'wp-curate/channel-loop', $attrs, $single_posts );
+		return get_comment_delimited_block_content( 'wp-curate/channel-loop', $attrs, $template );
 	}
 }

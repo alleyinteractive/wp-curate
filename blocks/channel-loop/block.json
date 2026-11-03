@@ -17,19 +17,24 @@
     "layout": true
   },
   "attributes": {
-    "template": {
+    "posts": {
       "type": "array",
       "default": [
         [
-          "core/post-title",
-          {
-            "isLink": true
-          }
+          "wp-curate/single-post"
+        ],
+        [
+          "wp-curate/single-post"
+        ],
+        [
+          "wp-curate/single-post"
         ]
       ]
+    },
+    "template": {
+      "type": "array",
+      "default": [],
+      "role": "local"
     }
-  },
-  "providesContext": {
-    "wp-curate/loopTemplate": "template"
   }
 }

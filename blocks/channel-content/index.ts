@@ -28,15 +28,7 @@ registerBlockType(
     }) => ({
       icon: layoutIcon,
       innerBlocks: [
-        [
-          'wp-curate/channel-loop',
-          { template: blocks },
-          [
-            ['wp-curate/single-post'],
-            ['wp-curate/single-post'],
-            ['wp-curate/single-post'],
-          ],
-        ],
+        ['wp-curate/channel-loop', { template: blocks }],
       ],
       name,
       scope: ['block'],

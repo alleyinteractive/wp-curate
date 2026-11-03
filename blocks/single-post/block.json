@@ -28,7 +28,6 @@
   },
   "usesContext": [
     "postId",
-    "postType",
-    "wp-curate/loopTemplate"
+    "postType"
   ]
 }

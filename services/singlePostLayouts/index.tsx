@@ -25,11 +25,29 @@ export interface SinglePostLayout {
   title: string;
 }
 
+/*
+ * The post's publish date, as core's Post Date variation makes it. A Post Date block without the
+ * binding shows a fixed date, which its edit function sets to the time of the insert.
+ */
+const POST_DATE: InnerBlockTemplate = [
+  'core/post-date',
+  {
+    metadata: {
+      bindings: {
+        datetime: {
+          args: { field: 'date' },
+          source: 'core/post-data',
+        },
+      },
+    },
+  },
+];
+
 const SINGLE_POST_LAYOUTS: SinglePostLayout[] = [
   {
     blocks: [
       ['core/post-title', { isLink: true }],
-      ['core/post-date'],
+      POST_DATE,
     ],
     icon: postDate,
     name: 'title-date',
@@ -47,7 +65,7 @@ const SINGLE_POST_LAYOUTS: SinglePostLayout[] = [
   {
     blocks: [
       ['core/post-title', { isLink: true }],
-      ['core/post-date'],
+      POST_DATE,
       ['core/post-excerpt'],
     ],
     icon: postContent,
@@ -57,7 +75,7 @@ const SINGLE_POST_LAYOUTS: SinglePostLayout[] = [
   {
     blocks: [
       ['core/post-featured-image'],
-      ['core/post-date'],
+      POST_DATE,
       ['core/post-title', { isLink: true }],
     ],
     icon: postFeaturedImage,

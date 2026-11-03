@@ -14,8 +14,6 @@
  * @package wp-curate
  */
 
-use Alley\WP\WP_Curate\Inner_Block_Template;
-
 /*
  * The `wp-curate/channels` block support gives the block its post as the `postId` context: the ref,
  * or else the top of the channel's queue. It is 0 when there is no post to show.
@@ -30,20 +28,13 @@ if ( ! $promoted_post instanceof WP_Post ) {
 	return;
 }
 
-$parsed_block = $block->parsed_block;
-
-// Inside a Channel Loop block, the block renders that block's template, not inner blocks of its own.
-if ( isset( $block->context['wp-curate/loopTemplate'] ) && is_array( $block->context['wp-curate/loopTemplate'] ) ) {
-	$template        = new Inner_Block_Template( $block->context['wp-curate/loopTemplate'] );
-	$template_blocks = parse_blocks( $template->serialized_blocks() );
-
-	$parsed_block['innerBlocks']  = $template_blocks;
-	$parsed_block['innerHTML']    = '';
-	$parsed_block['innerContent'] = array_fill( 0, count( $template_blocks ), null );
-}
-
-// Assume that $parsed_block has the correct shape.
-$inner = new WP_Block( $parsed_block ); // @phpstan-ignore-line argument.type
+/*
+ * Inside a Channel Loop block, the inner blocks are that block's template. See
+ * `\Alley\WP\WP_Curate\Features\Channel_Loop_Single_Posts`.
+ *
+ * Assume that the parsed block has the correct shape.
+ */
+$inner = new WP_Block( $block->parsed_block ); // @phpstan-ignore-line argument.type
 
 // Give the post to the inner blocks, the way that a Query Loop gives each post to its template.
 $filter_block_context = static function ( $context ) use ( $promoted_post ) {
