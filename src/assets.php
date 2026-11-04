@@ -9,60 +9,6 @@
 
 namespace Alley\WP\WP_Curate;
 
-// Register and enqueue assets.
-add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\action_wp_enqueue_scripts' );
-add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\action_admin_enqueue_scripts' );
-add_action( 'enqueue_block_editor_assets', __NAMESPACE__ . '\action_enqueue_block_editor_assets' );
-
-/**
- * A callback for the wp_enqueue_scripts hook.
- */
-function action_wp_enqueue_scripts(): void {
-	/*
-	|--------------------------------------------------------------------------
-	| Enqueue site assets using the asset/entry helper functions.
-	|--------------------------------------------------------------------------
-	|
-	| This function is called by the enqueue_block_editor_assets hook. Use it to
-	| enqueue assets that are loaded across your site.
-	|
-	| For more advanced usage, check out the WordPress Asset Manager plugin by Alley.
-	|
-	|     https://github.com/alleyinteractive/wp-asset-manager
-	|
-	*/
-}
-
-/**
- * A callback for the admin_enqueue_scripts hook.
- */
-function action_admin_enqueue_scripts(): void {
-	/*
-	|--------------------------------------------------------------------------
-	| Enqueue admin assets using the asset/entry helper functions.
-	|--------------------------------------------------------------------------
-	|
-	| This function is called by the admin_enqueue_scripts hook. Use it to enqueue
-	| assets that are loaded only in the WordPress admin.
-	|
-	*/
-}
-
-/**
- * A callback for the enqueue_block_editor_assets hook.
- */
-function action_enqueue_block_editor_assets(): void {
-	/*
-	|--------------------------------------------------------------------------
-	| Enqueue block editor assets using the asset/entry helper functions.
-	|--------------------------------------------------------------------------
-	|
-	| This function is called by the enqueue_block_editor_assets hook. Use it to
-	| enqueue assets that are loaded in the block editor.
-	|
-	*/
-}
-
 /**
  * Validate file paths to prevent a PHP error if a file doesn't exist.
  *

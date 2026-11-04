@@ -1,0 +1,60 @@
+/**
+ * Editor styles for the wp-curate/single-post block.
+ *
+ * A block that has pinned a post gets a mark like the contextual indicators of the Block Visibility
+ * plugin: a dashed outline and a pin icon in the top right corner, while the block and its inner
+ * blocks are not selected. When the pinned post is scheduled, the mark also says "Scheduled".
+ *
+ * When the pinned post is not published or scheduled, the mark shows its status, such as "Draft", and
+ * the outline and mark use the error color of the WordPress design system, as Notice does. The admin
+ * color schemes set only the theme color, so this color is the same in every scheme.
+ */
+
+.wp-block-wp-curate-single-post {
+  --wp-curate-single-post-pin-color: var(--wp-admin-theme-color);
+
+  &.has-unpublished-pin {
+    --wp-curate-single-post-pin-color: var(--wpds-color-stroke-surface-error-strong, #cc1818);
+  }
+}
+
+.wp-block-wp-curate-single-post.is-pinned:not(.is-selected):not(.has-child-selected) {
+  outline: 1px dashed var(--wp-curate-single-post-pin-color);
+}
+
+.wp-curate-single-post__pin-badge {
+  align-items: center;
+  background-color: #fff;
+  border-radius: 2px;
+  color: var(--wp-curate-single-post-pin-color);
+  display: inline-flex;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 2px;
+  line-height: 20px;
+  pointer-events: none;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  z-index: 1;
+
+  svg {
+    fill: currentColor;
+  }
+
+  // Shown only while the block and its inner blocks are not selected, like the outline.
+  .wp-block-wp-curate-single-post.is-selected > &,
+  .wp-block-wp-curate-single-post.has-child-selected > & {
+    display: none;
+  }
+
+  // Leave room for the icon of the Block Visibility plugin.
+  .block-visibility__has-visibility > & {
+    right: 32px;
+  }
+}
+
+.wp-curate-single-post__pin-badge-text {
+  padding-right: 4px;
+}
