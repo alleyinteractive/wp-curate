@@ -6,6 +6,7 @@ on:
       - develop
       - main
       - production
+      - alpha/v3
 
 permissions:
   contents: write
