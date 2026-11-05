@@ -4,6 +4,9 @@ All notable changes to `WP Curate` will be documented in this file.
 
 ## Unreleased
 
+- Bug fix: Stop query blocks refetching in a loop in template previews.
+- Bug fix: Fix pinned post validation failing when the pinned IDs joined with commas exceed 100 characters.
+
 ## 3.5.1 - 2026-11-03
 
 - Bug fix: Fix editor crash when moving a pinned post in a multi-post-type query. The registered multi-type entity now declares `rawAttributes` so titles are strings.
