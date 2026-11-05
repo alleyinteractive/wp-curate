@@ -14,7 +14,7 @@ interface UpdateValidPostsArgs {
 }
 
 /**
- * Store which pinned posts still exist and are published, and deduplicate when they change.
+ * Store which pinned posts are still valid, and deduplicate if that changed.
  */
 export default async function updateValidPosts({
   manualPosts,
@@ -63,25 +63,18 @@ export default async function updateValidPosts({
       : [];
   }
 
-  // A newer run started while this request was in flight. Writing it would drop the current pin.
+  // A newer run started. This stale result would drop the current pin.
   if (isSuperseded()) {
     return;
   }
 
-  /*
-   * An equal write still edits the post, which remounts every other template preview.
-   * The block editor compares attributes by identity, so an equal array counts as a change.
-   */
+  // Attributes compare by identity, so an equal array still edits the post and remounts previews.
   if (isShallowEqual(validPosts, newValidPosts)) {
     return;
   }
 
   setAttributes({ validPosts: newValidPosts });
 
-  /*
-   * `mainDedupe` drops any pin missing from `validPosts`, so the pass
-   * triggered by the pin itself runs against stale data and fills
-   * the slot from backfill instead. This is the pass that applies the pin.
-   */
+  // `mainDedupe` drops pins missing from `validPosts`, so only this pass applies a new pin.
   mainDedupe();
 }

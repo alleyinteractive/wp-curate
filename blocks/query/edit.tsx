@@ -313,7 +313,7 @@ export default function Edit({
     return () => {
       superseded = true;
     };
-  // `validPosts` is read only to skip an equal write, not to refetch.
+  // Omit `validPosts` so writing it doesn't refetch.
   }, [ // eslint-disable-line react-hooks/exhaustive-deps
     manualPosts,
     setAttributes,
