@@ -24,7 +24,8 @@ export default async function updateValidPosts({
   setAttributes,
   isSuperseded,
 }: UpdateValidPostsArgs) {
-  const postsToInclude = manualPosts.filter((id) => id !== null).join(',');
+  const ids = manualPosts.filter((id) => id !== null);
+  const postsToInclude = ids.join(',');
   let newValidPosts: number[] = [];
 
   if (postsToInclude.length > 0) {
@@ -34,7 +35,7 @@ export default async function updateValidPosts({
         {
           offset: 0,
           orderby: 'include',
-          per_page: postsToInclude.length,
+          per_page: ids.length,
           type: postTypeString,
           include: postsToInclude,
           status: includeFuturePosts ? ['publish', 'future'] : 'publish',

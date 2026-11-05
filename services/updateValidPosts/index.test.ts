@@ -40,6 +40,14 @@ describe('updateValidPosts', () => {
     expect(mainDedupe).not.toHaveBeenCalled();
   });
 
+  it('requests one result per pinned post', async () => {
+    await run({ manualPosts: [101, null, 102, 103] });
+
+    expect(apiFetch).toHaveBeenCalledWith({
+      path: expect.stringContaining('per_page=3&'),
+    });
+  });
+
   it('ignores entries without a numeric id', async () => {
     (apiFetch as unknown as jest.Mock).mockResolvedValue([{ id: 1 }, { id: '2' }, null]);
 
