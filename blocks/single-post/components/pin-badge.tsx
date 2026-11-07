@@ -19,8 +19,12 @@ export default function PinBadge({
 }: {
   text: string;
 }) {
-  /* translators: %s: Status of the pinned post, such as "Draft". */
-  const spokenText = sprintf(__('Pinned post: %s', 'wp-curate'), text);
+  let spokenText = '';
+
+  if (text !== '') {
+    /* translators: %s: Status of the pinned post, such as "Draft". */
+    spokenText = sprintf(__('Pinned post: %s', 'wp-curate'), text);
+  }
 
   return (
     <>
@@ -34,7 +38,7 @@ export default function PinBadge({
         ) : null}
       </span>
 
-      {text !== '' ? (
+      {spokenText !== '' ? (
         <VisuallyHidden as="span">
           {spokenText}
         </VisuallyHidden>
