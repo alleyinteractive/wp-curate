@@ -131,13 +131,16 @@ final readonly class Latest_Posts implements Channel {
 			$query_args['s'] = $search;
 		}
 
+		// Order by ID if posts share the same date.
 		return new Queried_Post_IDs(
 			array_merge(
 				$query_args,
 				[
 					'ignore_sticky_posts' => true,
-					'order'               => 'DESC',
-					'orderby'             => 'date',
+					'orderby'             => [
+						'date' => 'DESC',
+						'ID'   => 'DESC',
+					],
 					'post_status'         => $post_statuses,
 					'post_type'           => $this->post_type,
 				],

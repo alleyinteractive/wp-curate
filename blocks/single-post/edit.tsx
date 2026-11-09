@@ -46,7 +46,7 @@ import './index.scss';
 
 /**
  * The editable inner blocks of the block, which show its post, and the mark of a pinned post after
- * them.
+ * them. The post is in an `article` element, like on the page.
  */
 function PostInnerBlocks({
   badge,
@@ -61,10 +61,10 @@ function PostInnerBlocks({
   } = useInnerBlocksProps(blockProps);
 
   return (
-    <div {...combinedBlockProps}>
+    <article {...combinedBlockProps}>
       {children}
       {badge}
-    </div>
+    </article>
   );
 }
 
