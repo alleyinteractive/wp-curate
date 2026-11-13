@@ -7,10 +7,10 @@ import { useSelect } from '@wordpress/data';
 import {
   channelArgFields,
   channelContext,
-  defaultChannel,
   hasEveryChannelArg,
   isChannelProvider,
   pickChannelArgs,
+  toBlockChannel,
   toBlockChannelArgs,
   toChannelName,
 } from '../useBlockChannel';
@@ -110,12 +110,15 @@ function postContext(select: any): Record<string, unknown> {
  * - A single-item block shows its ref, or else the top of its channel's queue. That ID is then
  *   removed from the queue.
  * - A block that provides the `wp-curate/channel` context, like Channel Content, takes nothing.
+ * - A block without a channel takes nothing. Its inner blocks get its context.
+ *   Inside a provider, a block has the provider's channel, so it has none if the provider has
+ *   none. Outside a provider, it has its own channel.
  *
- * A block without a channel of its own uses the channel that `toBlockChannel()` describes. A
- * channel has a separate queue for each set of arguments that it accepts and context that it
- * reads, and has no posts until the block gives it each argument. The context of a block inside a
- * block that takes a post, like Single Post, has that post as `postId` and `postType`, the way
- * that `Channel_Block_Support` gives it in PHP. Otherwise, it has the post.
+ * A block uses the channel that `toBlockChannel()` describes. A channel has a separate queue for
+ * each set of arguments that it accepts and context that it reads, and has no posts until the
+ * block gives it each argument. The context of a block inside a block that takes a post, like
+ * Single Post, has that post as `postId` and `postType`, the way that `Channel_Block_Support`
+ * gives it in PHP. Otherwise, it has the post.
  *
  * The blocks that use the same queue never show the same post twice. The queues do not share IDs,
  * so blocks that use different queues can show the same post. A block always shows its own pin. A
@@ -137,14 +140,13 @@ function channelQueue(
   } = select(blocksStore);
 
   const {
+    getAvailableChannels,
     getChannelResults,
     getTypeOfPostInChannel,
   } = select('wp-curate/channels') as any;
 
-  const globalChannel = defaultChannel(select);
-
-  // Every block can use the default channel, so all of them wait for the list of channels.
-  if (globalChannel === null) {
+  // Every block reads the arguments and context of its channel, so all of them wait for the list.
+  if (getAvailableChannels({}) === null) {
     return {
       context: null,
       post: null,
@@ -189,10 +191,6 @@ function channelQueue(
     let ref = 0;
     let taken = NO_IDS;
 
-    if (name === '') {
-      name = globalChannel;
-    }
-
     if (providerName !== null) {
       name = providerName;
     }
@@ -211,7 +209,7 @@ function channelQueue(
       ({ postType } = block.attributes);
     }
 
-    // Without a channel, there is nothing to take.
+    // The walk does not call this for a block without a channel. Like that block, take nothing.
     if (name === null || name === '') {
       return {
         isLoading,
@@ -331,6 +329,9 @@ function channelQueue(
       const isProvider = isChannelProvider(getBlockType(block.name));
       const name = toChannelName(channelAttribute(block));
 
+      // Like a block without channel support, a block without a channel takes nothing.
+      const hasNoChannel = name !== null && toBlockChannel(name, providerChannel) === '';
+
       let childContext = context;
       let childChannel = providerChannel;
       let isChildContextLoading = isContextLoading;
@@ -347,7 +348,7 @@ function channelQueue(
         childChannel = channelAttribute(block);
       }
 
-      if (!isProvider && name !== null) {
+      if (!isProvider && name !== null && !hasNoChannel) {
         const {
           isLoading,
           postType,

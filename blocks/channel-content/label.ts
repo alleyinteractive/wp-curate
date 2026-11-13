@@ -2,7 +2,7 @@
 import { select } from '@wordpress/data';
 
 // Plugin dependencies.
-import { channelLabel, defaultChannel, toChannelName } from '../../hooks/useBlockChannel';
+import { channelLabel, toChannelName } from '../../hooks/useBlockChannel';
 import customBlockName from '../../services/customBlockName';
 
 /**
@@ -10,7 +10,7 @@ import customBlockName from '../../services/customBlockName';
  *
  * A name from the "Rename" option comes first, in List View and the breadcrumb, as core does for
  * blocks without their own label. Without one, the name is the block title while the list of
- * channels loads, or if the channel is not registered.
+ * channels loads, if the block has no channel, or if the channel is not registered.
  *
  * @param attributes      Block attributes.
  * @param options         Label options.
@@ -35,12 +35,7 @@ export default function label(
     return out;
   }
 
-  let name: string | null = toChannelName(attributes.channel);
-
-  // An empty name means the default channel.
-  if (name === '') {
-    name = defaultChannel(select);
-  }
+  const name = toChannelName(attributes.channel);
 
   let channelTitle = '';
 

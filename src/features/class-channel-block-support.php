@@ -8,7 +8,6 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
-use Alley\WP\WP_Curate\Channels\Channel;
 use Alley\WP\WP_Curate\Channels\Queues;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
@@ -26,6 +25,10 @@ use WP_Post;
  * A block that also provides the `wp-curate/channel` context, like Channel Content, passes its channel to its inner
  * blocks. Any other block takes a post from its channel's queue and gets that post as the `postId` and `postType` context.
  *
+ * An empty channel name means no channel. A block that has no channel takes no post. Its context does not change, as if
+ * it did not have the support. Inside a block that provides the channel, a block has the channel of that block, so it
+ * has no channel if that block has none. Outside one, it has its own channel.
+ *
  * Blocks can pin a post with an integer `ref` attribute. A block whose pinned post is not published, such as a
  * scheduled post, takes the top of the queue instead.
  *
@@ -38,11 +41,9 @@ final readonly class Channel_Block_Support implements Feature {
 	/**
 	 * Constructor.
 	 *
-	 * @param Channel                $default_channel     The default channel.
 	 * @param WP_Block_Type_Registry $block_type_registry Core block type registry.
 	 */
 	public function __construct(
-		private Channel $default_channel,
 		private WP_Block_Type_Registry $block_type_registry,
 	) {}
 
@@ -167,15 +168,15 @@ final readonly class Channel_Block_Support implements Feature {
 		$channel      = $this->channel_name( $own_channel );
 		$channel_args = $this->channel_args( $own_channel );
 
-		// A block without its own channel uses the default channel.
-		if ( '' === $channel ) {
-			$channel = $this->default_channel->name();
-		}
-
 		// A block inside a parent block uses its channel and arguments, even if the block has its own from before it moved in.
 		if ( isset( $context['wp-curate/channel'] ) && is_array( $context['wp-curate/channel'] ) ) {
 			$channel      = $this->channel_name( $context['wp-curate/channel'] );
 			$channel_args = $this->channel_args( $context['wp-curate/channel'] );
+		}
+
+		// A block without a channel, or inside a parent block without one, takes no post and keeps its context.
+		if ( '' === $channel ) {
+			return $context;
 		}
 
 		// A pinned post that is not published, such as a scheduled post, gives its place to the top of the queue.
@@ -210,7 +211,7 @@ final readonly class Channel_Block_Support implements Feature {
 	 * The channel name in a `channel` attribute or context.
 	 *
 	 * @param mixed[] $value The attribute or context.
-	 * @return string The name, or an empty string for the default channel.
+	 * @return string The name, or an empty string for no channel.
 	 */
 	private function channel_name( array $value ): string {
 		$name = '';
