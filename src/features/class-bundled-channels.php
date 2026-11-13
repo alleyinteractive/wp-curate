@@ -97,7 +97,7 @@ final readonly class Bundled_Channels implements Feature {
 	 * @return mixed
 	 */
 	public function filter_wp_curate_channel_include_future_posts( $include_future_posts, $channel ) {
-		if ( $channel instanceof Channel && 'parsely_trending' === $channel->name() ) {
+		if ( $channel instanceof Channel && 'wp_curate_parsely_trending' === $channel->name() ) {
 			$include_future_posts = false;
 		}
 

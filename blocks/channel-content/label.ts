@@ -2,8 +2,7 @@
 import { select } from '@wordpress/data';
 
 // Plugin dependencies.
-import type { AvailableChannel } from '../../entries/block-editor/channelStore';
-import { defaultChannel, toChannelName } from '../../hooks/useBlockChannel';
+import { channelLabel, toChannelName } from '../../hooks/useBlockChannel';
 import customBlockName from '../../services/customBlockName';
 
 /**
@@ -11,7 +10,7 @@ import customBlockName from '../../services/customBlockName';
  *
  * A name from the "Rename" option comes first, in List View and the breadcrumb, as core does for
  * blocks without their own label. Without one, the name is the block title while the list of
- * channels loads, or if the channel is not registered.
+ * channels loads, if the block has no channel, or if the channel is not registered.
  *
  * @param attributes      Block attributes.
  * @param options         Label options.
@@ -36,25 +35,16 @@ export default function label(
     return out;
   }
 
-  const {
-    getAvailableChannels,
-  } = select('wp-curate/channels') as any;
+  const name = toChannelName(attributes.channel);
 
-  const channels: AvailableChannel[] | null = getAvailableChannels({});
+  let channelTitle = '';
 
-  let name: string | null = toChannelName(attributes.channel);
-
-  // An empty name means the default channel.
-  if (name === '') {
-    name = defaultChannel(select);
+  if (name !== null && name !== '') {
+    channelTitle = channelLabel(select, name);
   }
 
-  if (channels !== null && name !== null && name !== '') {
-    const found = channels.find((channel) => channel.name === name);
-
-    if (found !== undefined) {
-      out = found.label;
-    }
+  if (channelTitle !== '') {
+    out = channelTitle;
   }
 
   return out;

@@ -14,7 +14,8 @@ use WP_Block_Type_Registry;
 
 /**
  * The posts that the channel blocks inside a block took from their queues, such as the Single Post
- * blocks inside a Channel Content block, in document order.
+ * blocks inside a Channel Content block, in document order. A Channel Template block gives only the
+ * first post that it took, as its `postId`.
  *
  * Read the IDs after the inner blocks render. Before then, the channel blocks have no posts. Like
  * `Channel_Block_Support`, a channel block is a block with `wp-curate/channels` support that does not

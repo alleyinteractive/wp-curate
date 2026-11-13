@@ -24,7 +24,7 @@ const DEFAULT_BLOCK = {
 };
 
 /**
- * The wp-curate/channel-loop block edit function.
+ * The wp-curate/single-post-template block edit function.
  *
  * The inner blocks are Single Post blocks, which each show one post, so the number of them is the
  * number of posts. Each Single Post has its own copy of the template as its inner blocks, and the
@@ -32,7 +32,7 @@ const DEFAULT_BLOCK = {
  * no channel of its own: the Single Posts use the channel of the Channel Content block around it.
  *
  * A block without Single Posts shows a picker of layouts. A Single Post moved in from outside
- * keeps its pinned post and gets the loop's template.
+ * keeps its pinned post and gets the block's template.
  */
 export default function Edit({
   clientId,

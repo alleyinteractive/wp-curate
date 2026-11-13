@@ -146,7 +146,7 @@ function FreeForAllArgItems({
   clientId,
   setArgs,
 }: ChannelPanelFillProps) {
-  return channel === 'free_for_all' ? (
+  return channel === 'wp_curate_free_for_all' ? (
     <>
       {Object.entries(argFields).map(([id, field]) => {
         const {

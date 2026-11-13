@@ -9,7 +9,6 @@ namespace Alley\WP\WP_Curate;
 
 use Alley\WP\Features\Group;
 use Alley\WP\Features\Ordered;
-use Alley\WP\Post_IDs\Empty_Post_IDs;
 use Alley\WP\Post_Queries\Default_Post_Queries;
 use Alley\WP\Post_Queries\Optimistic_Date_Queries;
 use Alley\WP\Post_Query\Global_Post_Query;
@@ -27,7 +26,7 @@ function main(): void {
 	$channels         = new Channels\Available_Channels();
 	$default_channel  = new Channels\Default_Channel(
 		channels: $channels,
-		preferred: 'post_latest',
+		preferred: 'wp_curate_post_latest',
 	);
 
 	$posts_per_page        = 10;
@@ -86,13 +85,9 @@ function main(): void {
 			first: new Features\Queues_Block_Context(
 				queues: new Channels\Queues(
 					channels: $channels,
-					taken: new History(
-						seed: new Empty_Post_IDs(),
-					),
 				),
 			),
 			then: new Features\Channel_Block_Support(
-				default_channel: $default_channel,
 				block_type_registry: WP_Block_Type_Registry::get_instance(),
 			),
 		),

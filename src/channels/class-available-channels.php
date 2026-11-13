@@ -33,9 +33,7 @@ final class Available_Channels {
 			/**
 			 * Filters the channels that blocks can use.
 			 *
-			 * A channel's name can have only lowercase letters, numbers, underscores and hyphens.
-			 *
-			 * @phpstan-param mixed $channels
+			 * A channel must have a nonempty name consisting of lowercase letters, numbers, underscores and hyphens.
 			 *
 			 * @param Channel[] $channels The channels, in order.
 			 */
@@ -45,12 +43,12 @@ final class Available_Channels {
 				$filtered = [];
 			}
 
-			// Leave out values that are not channels, names that blocks cannot use, and names that were taken.
+			// Leave out values that are not channels, empty names, names that blocks cannot use, and names that were taken.
 			foreach ( $filtered as $channel ) {
 				if ( $channel instanceof Channel ) {
 					$name = $channel->name();
 
-					if ( ! isset( $names[ $name ] ) && preg_match( '/^[a-z0-9_-]+$/', $name ) === 1 ) {
+					if ( ! isset( $names[ $name ] ) && '' !== $name && preg_match( '/^[a-z0-9_-]+\z/', $name ) === 1 ) {
 						$channels[]     = $channel;
 						$names[ $name ] = true;
 					}

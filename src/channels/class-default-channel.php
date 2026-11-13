@@ -8,7 +8,7 @@
 namespace Alley\WP\WP_Curate\Channels;
 
 /**
- * The channel that blocks fall back to.
+ * The channel that the editor gives new blocks.
  *
  * The preferred channel is the default while it is registered. Otherwise, the first registered
  * channel is. With no channels registered, there is no default, and the channel is empty.

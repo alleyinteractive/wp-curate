@@ -1,21 +1,23 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "wp-curate/channel-loop",
+  "name": "wp-curate/channel-template",
   "version": "0.1.0",
-  "title": "Channel Loop",
+  "title": "Channel Results",
   "category": "theme",
-  "description": "Displays posts from the surrounding channel using the same template.",
+  "description": "Displays every remaining post in a channel, with the same template for each post.",
   "textdomain": "wp-curate",
-  "ancestor": [
-    "wp-curate/channel-content"
+  "keywords": [
+    "loop",
+    "posts",
+    "channel"
   ],
   "editorScript": "file:index.ts",
   "render": "file:render.php",
   "supports": {
-    "contentRole": true,
     "html": false,
-    "layout": true
+    "layout": true,
+    "wp-curate/channels": true
   },
   "attributes": {
     "namespace": {
