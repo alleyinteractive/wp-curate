@@ -8,7 +8,7 @@ import {
   InspectorControls,
   store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { getBlockType } from '@wordpress/blocks';
+import { getBlockType, store as blocksStore } from '@wordpress/blocks';
 import {
   __experimentalToolsPanel as ToolsPanel,
   __experimentalToolsPanelItem as ToolsPanelItem,
@@ -26,12 +26,16 @@ import ChannelSelectControl from '../../../components/ChannelSelectControl';
 import useBlockChannel, {
   CHANNEL_CONTEXT,
   channelArgFields,
+  channelBlockSupportSettings,
   hasChannelSupport,
   isChannelProvider,
   toChannelArgs,
   toChannelName,
 } from '../../../hooks/useBlockChannel';
 import useChannelQueuePost from '../../../hooks/useChannelQueue';
+
+// Namespace for bundled blocks.
+const BLOCK_NAMESPACE = 'wp-curate/';
 
 // The post context while the channel loads.
 const LOADING_POST = {
@@ -49,7 +53,58 @@ const LOADING_POST = {
  * the arguments through the Channel panel's slot, in `components/ChannelPanelSlotFill`. The
  * `Channel_Block_Support` feature in PHP adds the `channel` attribute and the context that the
  * block uses, and gives the block the same post on the front end.
+ *
+ * Like on the Query Loop block, a variation of a block in the `wp-curate` namespace can list the
+ * controls to show in its `allowedControls` property. The panel ignores this property on the
+ * variations of other block types. The only key is `channel`, for the channel picker. Without the
+ * property, the panel shows the picker. With an empty array, it does not. Use this for a variation
+ * that always uses one channel. The variation must give the `channel` attribute the
+ * channel, or the block gets the default channel. The variation must also have an `isActive`
+ * property, such as `['namespace']` with its own `namespace` attribute, so the editor can tell
+ * which blocks are the variation. The controls of the channel arguments still show.
+ *
+ * A block type can also list the controls, in an object as the value of its `wp-curate/channels`
+ * support. The panel uses this list when the block has no variation list. Give the `channel`
+ * attribute a default in the block type, or the block gets the default channel.
+ *
+ * @example
+ * registerBlockVariation('wp-curate/single-post', {
+ *   name: 'my-plugin/featured',
+ *   title: 'Featured Post',
+ *   attributes: {
+ *     channel: { name: 'my_plugin_featured' },
+ *     namespace: 'my-plugin/featured',
+ *   },
+ *   allowedControls: [],
+ *   isActive: ['namespace'],
+ * });
+ *
+ * @example
+ * // block.json
+ * {
+ *   "attributes": {
+ *     "channel": { "type": "object", "default": { "name": "my_plugin_featured" } }
+ *   },
+ *   "supports": {
+ *     "wp-curate/channels": { "allowedControls": [] }
+ *   }
+ * }
  */
+
+/**
+ * Whether a list of controls allows a control in the Channel panel.
+ *
+ * @param allowedControls The list of the variation or the block type.
+ * @param key             Key of the control.
+ */
+function isControlAllowed(allowedControls: unknown, key: string): boolean {
+  // Every control is allowed if there is no list.
+  if (!Array.isArray(allowedControls)) {
+    return true;
+  }
+
+  return allowedControls.includes(key);
+}
 
 /**
  * The Channel panel of a block with channel support.
@@ -62,6 +117,7 @@ const LOADING_POST = {
  * in again. The block uses its own channel again if it moves back out.
  */
 function ChannelControls({
+  attributes,
   blockName,
   channel,
   channelArgs,
@@ -71,6 +127,7 @@ function ChannelControls({
   isProvider,
   setAttributes,
 }: {
+  attributes: Record<string, unknown>;
   blockName: string;
   channel: string;
   channelArgs: Record<string, unknown>;
@@ -78,7 +135,7 @@ function ChannelControls({
   context: Record<string, unknown>;
   contextChannel: unknown;
   isProvider: boolean;
-  setAttributes: (attributes: Record<string, unknown>) => void;
+  setAttributes: (next: Record<string, unknown>) => void;
 }) {
   // The channel the block would use if it didn't have one: inherited from context or the default.
   const inheritedChannel = useBlockChannel('', contextChannel);
@@ -86,6 +143,35 @@ function ChannelControls({
   const argFields = useSelect(
     (select) => channelArgFields(select, channel),
     [channel],
+  );
+
+  const allowedControls = useSelect(
+    (select) => {
+      const {
+        getActiveBlockVariation,
+        getBlockType: selectBlockType,
+      } = select(blocksStore) as any;
+
+      /*
+       * Read the variation's list only on the blocks of this plugin. A variation of another
+       * block type can have an `allowedControls` property for a different purpose.
+       */
+      const variation = blockName.startsWith(BLOCK_NAMESPACE)
+        ? getActiveBlockVariation(blockName, attributes)
+        : null;
+
+      // The list of the active variation takes precedence over the list of the block type.
+      if (
+        typeof variation === 'object'
+        && variation !== null
+        && Array.isArray(variation.allowedControls)
+      ) {
+        return variation.allowedControls;
+      }
+
+      return channelBlockSupportSettings(selectBlockType(blockName)).allowedControls;
+    },
+    [attributes, blockName],
   );
 
   // The channel context has a value only inside a block that provides it, like Channel Content.
@@ -149,25 +235,27 @@ function ChannelControls({
             }
           });
 
-          setArgs(next);
+          setAttributes({ channel: { args: next, name: channel } });
         }}
       >
         {/* A block always has a channel, so the item has no value to reset. */}
-        <ToolsPanelItem
-          hasValue={() => false}
-          isShownByDefault
-          label={__('Channel', 'wp-curate')}
-          panelId={clientId}
-        >
-          <ChannelSelectControl
-            // The block's context, from the ancestor block, tells which channels it can select.
-            context={context}
-            help={help}
-            // Reset args when the channel changes.
-            onChange={(next) => setAttributes({ channel: { name: next } })}
-            value={channel}
-          />
-        </ToolsPanelItem>
+        {isControlAllowed(allowedControls, 'channel') ? (
+          <ToolsPanelItem
+            hasValue={() => false}
+            isShownByDefault
+            label={__('Channel', 'wp-curate')}
+            panelId={clientId}
+          >
+            <ChannelSelectControl
+              // The block's context, from the ancestor block, tells which channels it can select.
+              context={context}
+              help={help}
+              // Reset args when the channel changes.
+              onChange={(next) => setAttributes({ channel: { name: next } })}
+              value={channel}
+            />
+          </ToolsPanelItem>
+        ) : null}
 
         <ChannelPanelSlot fillProps={fillProps} />
       </ToolsPanel>
@@ -216,14 +304,16 @@ function BlockEditWithPostFromChannel({
 const withChannelSupport = createHigherOrderComponent(
   (BlockEdit: React.ComponentType<any>) => function ChannelSupportEdit(props: any) {
     const {
-      attributes: {
-        channel,
-      },
+      attributes,
       clientId,
       context,
       name,
       setAttributes,
     } = props;
+
+    const {
+      channel,
+    } = attributes;
 
     const contextChannel = context[CHANNEL_CONTEXT];
 
@@ -240,6 +330,7 @@ const withChannelSupport = createHigherOrderComponent(
     return (
       <>
         <ChannelControls
+          attributes={attributes}
           blockName={name}
           channel={ownName}
           channelArgs={toChannelArgs(channel)}

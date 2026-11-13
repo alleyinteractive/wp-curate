@@ -42,10 +42,40 @@ export function hasChannelSupport(blockType: unknown): boolean {
   } = blockType as Record<string, unknown>;
 
   if (typeof supports === 'object' && supports !== null && CHANNEL_SUPPORT in supports) {
-    hasSupport = (supports as Record<string, unknown>)[CHANNEL_SUPPORT] === true;
+    const value = (supports as Record<string, unknown>)[CHANNEL_SUPPORT];
+
+    // Like `block_has_support()` in PHP, an object of settings also turns on the support.
+    hasSupport = value === true || (typeof value === 'object' && value !== null);
   }
 
   return hasSupport;
+}
+
+/**
+ * The settings in the `wp-curate/channels` block support of a block type.
+ *
+ * @param blockType Block type from the blocks store.
+ * @return The settings, or an empty object if the support is `true` or the block type does not
+ *         have it.
+ */
+export function channelBlockSupportSettings(blockType: unknown): Record<string, unknown> {
+  let settings: Record<string, unknown> = {};
+
+  if (!hasChannelSupport(blockType)) {
+    return settings;
+  }
+
+  const {
+    supports,
+  } = blockType as Record<string, unknown>;
+
+  const value = (supports as Record<string, unknown>)[CHANNEL_SUPPORT];
+
+  if (typeof value === 'object' && value !== null) {
+    settings = value as Record<string, unknown>;
+  }
+
+  return settings;
 }
 
 /**
