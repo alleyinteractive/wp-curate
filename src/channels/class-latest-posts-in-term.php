@@ -33,12 +33,12 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	) {}
 
 	/**
-	 * Machine name that blocks use to name the channel, such as `post_category_latest`.
+	 * Machine name that blocks use to name the channel, such as `wp_curate_post_category_latest`.
 	 *
 	 * @return string
 	 */
 	public function name(): string {
-		return $this->post_type . '_' . $this->taxonomy . '_latest';
+		return 'wp_curate_' . $this->post_type . '_' . $this->taxonomy . '_latest';
 	}
 
 	/**
@@ -64,7 +64,8 @@ final readonly class Latest_Posts_In_Term implements Channel {
 	 * The arguments that the channel accepts, keyed by argument name, like the `args` of a REST API route.
 	 *
 	 * The editor script `entries/block-editor/latestPostsInTermArgs` adds a term picker for the
-	 * `term` argument of a channel whose name ends with the argument's `taxonomy` and `_latest`.
+	 * `term` argument of a channel whose name starts with `wp_curate_` and ends with the argument's
+	 * `taxonomy` and `_latest`.
 	 *
 	 * @phpstan-return array<string, array{label: string, ...<string, mixed>}>
 	 *

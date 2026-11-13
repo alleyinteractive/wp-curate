@@ -21,7 +21,7 @@ use WP_Post;
  * `postId` and `postType` for channels that read it.
  *
  * Like a block binding, the `channel` attribute is an object with the channel `name` and the `args` to pass to
- * the channel, such as `{"name":"post_category_latest","args":{"term":7}}`.
+ * the channel, such as `{"name":"wp_curate_post_category_latest","args":{"term":7}}`.
  *
  * A block that also provides the `wp-curate/channel` context, like Channel Content, passes its channel to its inner
  * blocks. Any other block takes a post from its channel's queue and gets that post as the `postId` and `postType` context.

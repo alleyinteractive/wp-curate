@@ -47,7 +47,7 @@ final readonly class Free_For_All implements Channel {
 	 * @return string
 	 */
 	public function name(): string {
-		return 'free_for_all';
+		return 'wp_curate_free_for_all';
 	}
 
 	/**

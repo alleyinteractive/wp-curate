@@ -26,12 +26,12 @@ final readonly class Latest_Posts implements Channel {
 	) {}
 
 	/**
-	 * Machine name that blocks use to name the channel, such as `post_latest` for posts.
+	 * Machine name that blocks use to name the channel, such as `wp_curate_post_latest` for posts.
 	 *
 	 * @return string
 	 */
 	public function name(): string {
-		return $this->post_type . '_latest';
+		return 'wp_curate_' . $this->post_type . '_latest';
 	}
 
 	/**

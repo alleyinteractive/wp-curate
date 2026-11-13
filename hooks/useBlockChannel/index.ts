@@ -11,8 +11,8 @@ import type { ChannelArgField, AvailableChannel } from '../../entries/block-edit
  * channel.
  *
  * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
- * block gives the channel, such as `{ name: 'post_category_latest', args: { term: 7 } }`. An
- * empty name means the default channel.
+ * block gives the channel, such as `{ name: 'wp_curate_post_category_latest', args: { term: 7 } }`.
+ * An empty name means the default channel.
  */
 export const CHANNEL_SUPPORT = 'wp-curate/channels';
 
