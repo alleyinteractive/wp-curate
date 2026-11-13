@@ -192,14 +192,17 @@ final readonly class Latest_Posts_In_Term implements Channel {
 			$term = get_term( $term_id, $this->taxonomy );
 		}
 
+		// Order by ID if posts share the same date.
 		if ( $term instanceof WP_Term ) {
 			$posts = new Queried_Post_IDs(
 				array_merge(
 					$query_args,
 					[
 						'ignore_sticky_posts' => true,
-						'order'               => 'DESC',
-						'orderby'             => 'date',
+						'orderby'             => [
+							'date' => 'DESC',
+							'ID'   => 'DESC',
+						],
 						'post_status'         => $post_statuses,
 						'post_type'           => $this->post_type,
 						// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
