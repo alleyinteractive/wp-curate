@@ -1,0 +1,68 @@
+{
+  "name": "alleyinteractive/traverse-reshape",
+  "description": "Safely break down arrays or objects, and put them back together in new shapes.",
+  "license": "GPL-2.0-or-later",
+  "type": "library",
+  "authors": [
+    {
+      "name": "Alley",
+      "email": "info@alley.com"
+    }
+  ],
+  "require": {
+    "php": "^8.2"
+  },
+  "require-dev": {
+    "ergebnis/composer-normalize": "^2.44",
+    "phpstan/phpstan": "^1.12",
+    "phpunit/phpunit": "^11.4",
+    "squizlabs/php_codesniffer": "^3.10"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "autoload": {
+    "psr-4": {
+      "Alley\\": "src/"
+    },
+    "files": [
+      "src/reshape.php",
+      "src/traverse.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Alley\\Tests\\": "tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "ergebnis/composer-normalize": true
+    },
+    "lock": false,
+    "sort-packages": true
+  },
+  "extra": {
+    "composer-normalize": {
+      "indent-size": 2,
+      "indent-style": "space"
+    }
+  },
+  "scripts": {
+    "pre-install-cmd": [
+      "@tidy"
+    ],
+    "post-install-cmd": [
+      "@tidy"
+    ],
+    "phpcbf": "phpcbf",
+    "phpcs": "phpcs",
+    "phpstan": "phpstan -v",
+    "phpunit": "phpunit",
+    "test": [
+      "@phpcs",
+      "@phpstan",
+      "@phpunit"
+    ],
+    "tidy": "[ $COMPOSER_DEV_MODE -eq 0 ] || composer normalize"
+  }
+}
