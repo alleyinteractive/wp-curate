@@ -32,12 +32,24 @@ use WP_Post;
  * The Single Post block can pin a post with an integer `ref` attribute. A pinned post that is not published, such as a
  * scheduled post, gives its place to the top of the queue.
  *
+ * The Channel Template block takes every post that remains in its queue. It cannot pin a post. Only this block type can
+ * take the remaining posts.
+ *
  * Blocks that use the same channel, arguments, and context share a queue, so they do not show the same post twice.
  * Blocks in other queues can show the same post. See `Queues`.
  *
  * Keep the rules matched with the `channelSupport` editor script.
  */
 final readonly class Channel_Block_Support implements Feature {
+	/**
+	 * The name of the block type that takes the remaining posts.
+	 *
+	 * Keep the value matched with `CHANNEL_TEMPLATE_BLOCK` in the `useBlockChannel` hook.
+	 *
+	 * @var string
+	 */
+	private const CHANNEL_TEMPLATE_BLOCK = 'wp-curate/channel-template';
+
 	/**
 	 * The name of the block type that can pin a post with its `ref` attribute.
 	 *
@@ -46,6 +58,15 @@ final readonly class Channel_Block_Support implements Feature {
 	 * @var string
 	 */
 	private const SINGLE_POST_BLOCK = 'wp-curate/single-post';
+
+	/**
+	 * The most posts that the channel template block can take, for safety.
+	 *
+	 * Keep the value matched with `MAX_REMAINING_POSTS` in the `useChannelQueue` hook.
+	 *
+	 * @var int
+	 */
+	private const MAX_REMAINING_POSTS = 100;
 
 	/**
 	 * Constructor.
@@ -122,7 +143,8 @@ final readonly class Channel_Block_Support implements Feature {
 	 * A block gets a post if it has `wp-curate/channels` support and does not itself provide the
 	 * `wp-curate/channel` context, like Single Post. A block that provides the context, like
 	 * Channel Content, gets no post and instead passes its channel to the blocks inside it. The
-	 * Single Post block takes its pinned post, if it has one.
+	 * Channel Template block takes each post that remains and gets the first one. The Single Post block
+	 * takes its pinned post, if it has one.
 	 *
 	 * @phpstan-param mixed $context
 	 * @phpstan-param mixed $parsed_block
@@ -189,7 +211,8 @@ final readonly class Channel_Block_Support implements Feature {
 			return $context;
 		}
 
-		$pins_post = self::SINGLE_POST_BLOCK === $block_type->name;
+		$takes_remaining = self::CHANNEL_TEMPLATE_BLOCK === $block_type->name;
+		$pins_post       = self::SINGLE_POST_BLOCK === $block_type->name;
 
 		// A pinned post that is not published, such as a scheduled post, gives its place to the top of the queue.
 		if (
@@ -203,8 +226,26 @@ final readonly class Channel_Block_Support implements Feature {
 		}
 
 		// Take the pinned post, or else the top of the channel's queue, and remove that ID from the queue.
-		if ( isset( $context['wp-curate/queues'] ) && $context['wp-curate/queues'] instanceof Queues ) {
+		if ( ! $takes_remaining && isset( $context['wp-curate/queues'] ) && $context['wp-curate/queues'] instanceof Queues ) {
 			$post_id = $context['wp-curate/queues']->take_one( $channel, $ref, $channel_args, $context );
+		}
+
+		/*
+		 * The Channel Template block takes each ID that remains in the queue, and the first is its post. The block reads
+		 * all of them with `Queues::taken_by()` when it renders.
+		 */
+		if ( $takes_remaining && isset( $context['wp-curate/queues'] ) && $context['wp-curate/queues'] instanceof Queues ) {
+			$remaining = $context['wp-curate/queues']->take_remaining(
+				$channel,
+				$channel_args,
+				$context,
+				self::MAX_REMAINING_POSTS,
+				$parsed_block,
+			);
+
+			// Like a single post, a published post can still be one that visitors cannot see.
+			$remaining = array_values( array_filter( $remaining, 'is_post_publicly_viewable' ) );
+			$post_id   = $remaining[0] ?? null;
 		}
 
 		$taken = null;

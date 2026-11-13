@@ -102,6 +102,36 @@ export function isChannelProvider(blockType: unknown): boolean {
 }
 
 /*
+ * The name of the block type that takes every post that remains in its channel's queue. Only this
+ * block type can take them, so that the plugin does not commit to a public API for it yet.
+ *
+ * Keep the value matched with `Channel_Block_Support::CHANNEL_TEMPLATE_BLOCK` in PHP.
+ */
+const CHANNEL_TEMPLATE_BLOCK = 'wp-curate/channel-template';
+
+/**
+ * Whether a block type takes every post that remains in its channel's queue, instead of one post.
+ * Only the Channel Template block does.
+ *
+ * Keep the rules matched with `Channel_Block_Support` in PHP.
+ *
+ * @param blockType Block type from the blocks store.
+ */
+export function takesRemainingPosts(blockType: unknown): boolean {
+  let takesRemaining = false;
+
+  if (hasChannelSupport(blockType)) {
+    const {
+      name,
+    } = blockType as Record<string, unknown>;
+
+    takesRemaining = name === CHANNEL_TEMPLATE_BLOCK;
+  }
+
+  return takesRemaining;
+}
+
+/*
  * The name of the block type that can pin a post with its `ref` attribute. Only this block type can
  * pin a post, so that the plugin does not give `ref` a meaning on the blocks of other plugins.
  *

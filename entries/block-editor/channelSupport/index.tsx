@@ -30,6 +30,7 @@ import {
   defaultChannel,
   hasChannelSupport,
   isChannelProvider,
+  takesRemainingPosts,
   toBlockChannel,
   toChannelArgs,
   toChannelName,
@@ -63,6 +64,11 @@ const NO_POST_CONTEXT = {};
  * The Single Post block can pin a post with an integer `ref` attribute, and a `postType` attribute
  * with the pinned post's type. Only this block type can pin a post, so the plugin gives `ref` no
  * meaning on other block types. See `pinsPost()`.
+ *
+ * The Channel Template block takes every post that remains in its channel's queue instead of one
+ * post. Only this block type can do so. See `takesRemainingPosts()`. Like other blocks, it gets the
+ * first post as `postId` context. Its edit function reads all of the posts with
+ * `useChannelQueuePosts()`.
  *
  * An empty channel name means no channel. A block without a channel takes no post. Its context
  * does not change, as if it did not have the support. A Single Post without a channel shows
@@ -158,6 +164,7 @@ function ChannelControls({
   contextChannel,
   isProvider,
   setAttributes,
+  takesRemaining,
 }: {
   attributes: Record<string, unknown>;
   blockName: string;
@@ -168,6 +175,7 @@ function ChannelControls({
   contextChannel: unknown;
   isProvider: boolean;
   setAttributes: (next: Record<string, unknown>) => void;
+  takesRemaining: boolean;
 }) {
   // The channel for a new block, or null while the list of channels loads.
   const globalChannel = useSelect((select) => defaultChannel(select), []);
@@ -288,6 +296,10 @@ function ChannelControls({
 
   if (isProvider) {
     help = __('The blocks inside this block show posts from this channel.', 'wp-curate');
+  }
+
+  if (takesRemaining) {
+    help = __('The block shows each post that remains in this channel.', 'wp-curate');
   }
 
   if (channel === '') {
@@ -414,6 +426,7 @@ const withChannelSupport = createHigherOrderComponent(
     }
 
     const isProvider = isChannelProvider(blockType);
+    const takesRemaining = takesRemainingPosts(blockType);
 
     // Keep the rule matched with the queue walk in `useChannelQueue`.
     const hasNoChannel = toBlockChannel(ownName, contextChannel) === '';
@@ -430,6 +443,7 @@ const withChannelSupport = createHigherOrderComponent(
           contextChannel={contextChannel}
           isProvider={isProvider}
           setAttributes={setAttributes}
+          takesRemaining={takesRemaining}
         />
         {isProvider ? (
           <BlockEdit {...props} />
