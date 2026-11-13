@@ -68,8 +68,10 @@ const NO_POST_CONTEXT = {};
  * nothing, not even its pin. Inside a block that provides the channel, a block has the channel of
  * that block, so it has none if that block has none. Outside one, it has its own channel. The
  * editor gives the default channel to a new block that does not get the channel of a block around
- * it, so blocks always have a channel. The Channel panel cannot clear the channel. A block has no
- * channel only if no channels are registered, or if its saved content has none.
+ * it, and to a block that moves out of such a block. The Channel panel cannot clear the channel. A
+ * block has no channel only if no channels are registered, or if its saved content has none. The
+ * editor does not give a saved block the default channel when the post opens, so the block shows
+ * nothing in the editor, as on the front end, until the user selects a channel.
  *
  * Like on the Query Loop block, a variation of a block in the `wp-curate` namespace can list the
  * controls to show in its `allowedControls` property. The panel ignores this property on the
@@ -107,6 +109,18 @@ const NO_POST_CONTEXT = {};
  *   }
  * }
  */
+
+/*
+ * Whether each block got the channel of a block around it when it last rendered, by client ID. It
+ * is kept outside the component, because a block that moves to another parent mounts again.
+ */
+const inheritedChannelByBlock = new Map<string, boolean>();
+
+/*
+ * The client IDs of blocks that moved out of a block that provides the channel, and wait for the
+ * default channel, such as while the list of channels loads.
+ */
+const movedOutBlocks = new Set<string>();
 
 /**
  * Whether a list of controls allows a control in the Channel panel.
@@ -200,9 +214,41 @@ function ChannelControls({
     __unstableMarkNextChangeAsNotPersistent: markNextChangeAsNotPersistent,
   } = useDispatch(blockEditorStore) as any;
 
+  /*
+   * Whether the block is new: it, or a block around it, is the last block inserted, such as from
+   * the inserter, a paste, or a duplicate. The editor records only the top-level blocks of an
+   * insert, and forgets them when it loads the post's blocks, so a saved block is not new.
+   */
+  const isJustInserted: boolean = useSelect((select) => {
+    const {
+      getBlockParents,
+      wasBlockJustInserted,
+    } = select(blockEditorStore) as any;
+
+    return [clientId, ...getBlockParents(clientId)].some((id: string) => wasBlockJustInserted(id));
+  }, [clientId]);
+
   useEffect(() => {
-    // Ensure that new blocks get a channel attribute if they're not inheriting one.
-    if (!inheritsChannel && channel === '' && globalChannel !== null && globalChannel !== '') {
+    if (inheritedChannelByBlock.get(clientId) === true && !inheritsChannel) {
+      movedOutBlocks.add(clientId);
+    }
+
+    inheritedChannelByBlock.set(clientId, inheritsChannel);
+
+    // A block that keeps its own channel after the move needs none.
+    if (channel !== '') {
+      movedOutBlocks.delete(clientId);
+    }
+
+    if (
+      (isJustInserted || movedOutBlocks.has(clientId))
+      && !inheritsChannel
+      && channel === ''
+      && globalChannel !== null
+      && globalChannel !== ''
+    ) {
+      movedOutBlocks.delete(clientId);
+
       /*
        * Add the channel to the undo step of the insert or move that caused it. As its own step,
        * undoing it would clear the channel, and this effect would set it again.
@@ -210,7 +256,15 @@ function ChannelControls({
       markNextChangeAsNotPersistent();
       setAttributes({ channel: { name: globalChannel } });
     }
-  }, [channel, globalChannel, inheritsChannel, markNextChangeAsNotPersistent, setAttributes]);
+  }, [
+    channel,
+    clientId,
+    globalChannel,
+    inheritsChannel,
+    isJustInserted,
+    markNextChangeAsNotPersistent,
+    setAttributes,
+  ]);
 
   const setArgs = useCallback((args: Record<string, unknown>) => {
     setAttributes({ channel: { args, name: channel } });
