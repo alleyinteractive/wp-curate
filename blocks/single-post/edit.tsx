@@ -76,8 +76,8 @@ function PostInnerBlocks({
  * as the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
  * after the blocks before this one. The support also gives that post to the inner blocks.
  *
- * A block without inner blocks shows a picker of layouts. Inside a Channel Loop block, the loop
- * keeps the inner blocks of its Single Posts the same.
+ * A block without inner blocks shows a picker of layouts. Inside a Single Post Template block, that
+ * block keeps the inner blocks of its Single Posts the same.
  */
 export default function Edit({
   attributes: {

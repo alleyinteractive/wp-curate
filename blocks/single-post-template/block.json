@@ -1,11 +1,11 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "wp-curate/channel-loop",
+  "name": "wp-curate/single-post-template",
   "version": "0.1.0",
-  "title": "Channel Loop",
+  "title": "Uniform Single Posts",
   "category": "theme",
-  "description": "Displays posts from the surrounding channel using the same template.",
+  "description": "Use a consistent template with a group of Single Post blocks.",
   "textdomain": "wp-curate",
   "ancestor": [
     "wp-curate/channel-content"
