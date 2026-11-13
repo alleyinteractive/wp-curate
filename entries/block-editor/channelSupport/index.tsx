@@ -60,8 +60,9 @@ const NO_POST_CONTEXT = {};
  * the `channel` attribute and the context that the block uses, and gives the block the same post
  * on the front end.
  *
- * A block can pin a post with an integer `ref` attribute, and a `postType` attribute with the
- * pinned post's type.
+ * The Single Post block can pin a post with an integer `ref` attribute, and a `postType` attribute
+ * with the pinned post's type. Only this block type can pin a post, so the plugin gives `ref` no
+ * meaning on other block types. See `pinsPost()`.
  *
  * An empty channel name means no channel. A block without a channel takes no post. Its context
  * does not change, as if it did not have the support. A Single Post without a channel shows

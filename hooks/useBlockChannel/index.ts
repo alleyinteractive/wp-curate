@@ -101,6 +101,35 @@ export function isChannelProvider(blockType: unknown): boolean {
   return isProvider;
 }
 
+/*
+ * The name of the block type that can pin a post with its `ref` attribute. Only this block type can
+ * pin a post, so that the plugin does not give `ref` a meaning on the blocks of other plugins.
+ *
+ * Keep the value matched with `Channel_Block_Support::SINGLE_POST_BLOCK` in PHP.
+ */
+const SINGLE_POST_BLOCK = 'wp-curate/single-post';
+
+/**
+ * Whether a block type can pin a post with its `ref` attribute. Only the Single Post block can.
+ *
+ * Keep the rules matched with `Channel_Block_Support` in PHP.
+ *
+ * @param blockType Block type from the blocks store.
+ */
+export function pinsPost(blockType: unknown): boolean {
+  let canPin = false;
+
+  if (hasChannelSupport(blockType)) {
+    const {
+      name,
+    } = blockType as Record<string, unknown>;
+
+    canPin = name === SINGLE_POST_BLOCK;
+  }
+
+  return canPin;
+}
+
 /**
  * Get the default channel, which the list of channels marks with `default`.
  *

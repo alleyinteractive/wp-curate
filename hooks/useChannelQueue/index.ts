@@ -10,6 +10,7 @@ import {
   hasEveryChannelArg,
   isChannelProvider,
   pickChannelArgs,
+  pinsPost,
   toBlockChannel,
   toBlockChannelArgs,
   toChannelName,
@@ -107,8 +108,9 @@ function postContext(select: any): Record<string, unknown> {
  *
  * Keep the rules in sync with `Queues` in PHP. Blocks take IDs in document order:
  *
- * - A single-item block shows its ref, or else the top of its channel's queue. That ID is then
- *   removed from the queue.
+ * - A single-item block shows the top of its channel's queue. A Single Post shows its ref instead,
+ *   if it has one. That ID is then removed from the queue. Other block types cannot pin a post, so
+ *   their `ref` attribute has no meaning here. See `pinsPost()`.
  * - A block that provides the `wp-curate/channel` context, like Channel Content, takes nothing.
  * - A block without a channel takes nothing. Its inner blocks get its context.
  *   Inside a provider, a block has the provider's channel, so it has none if the provider has
@@ -181,6 +183,7 @@ function channelQueue(
     block: any,
     context: Record<string, unknown>,
     providerChannel: unknown,
+    canPin: boolean,
     isContextLoading: boolean,
   ) => {
     const providerName = toChannelName(providerChannel);
@@ -195,11 +198,12 @@ function channelQueue(
       name = providerName;
     }
 
-    if (Number.isInteger(block.attributes.ref)) {
+    // Only a Single Post can pin a post.
+    if (canPin && Number.isInteger(block.attributes.ref)) {
       ref = block.attributes.ref;
     }
 
-    // A single-item block takes its ref, if it has one.
+    // A block that can pin a post takes its ref, if it has one.
     if (ref > 0) {
       taken = [ref];
     }
@@ -326,7 +330,9 @@ function channelQueue(
     isContextLoading: boolean,
   ) => {
     blocks.forEach((block) => {
-      const isProvider = isChannelProvider(getBlockType(block.name));
+      const blockType = getBlockType(block.name);
+      const isProvider = isChannelProvider(blockType);
+      const canPin = pinsPost(blockType);
       const name = toChannelName(channelAttribute(block));
 
       // Like a block without channel support, a block without a channel takes nothing.
@@ -353,7 +359,7 @@ function channelQueue(
           isLoading,
           postType,
           taken,
-        } = take(block, context, providerChannel, isContextLoading);
+        } = take(block, context, providerChannel, canPin, isContextLoading);
 
         let post = NO_POST;
 
