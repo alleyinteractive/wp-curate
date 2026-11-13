@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "wp-curate/channel-template",
+  "version": "0.1.0",
+  "title": "Channel Results",
+  "category": "theme",
+  "description": "Displays every remaining post in a channel, with the same template for each post.",
+  "textdomain": "wp-curate",
+  "keywords": [
+    "loop",
+    "posts",
+    "channel"
+  ],
+  "editorScript": "file:index.ts",
+  "render": "file:render.php",
+  "supports": {
+    "html": false,
+    "layout": true,
+    "wp-curate/channels": true
+  },
+  "attributes": {
+    "namespace": {
+      "type": "string"
+    }
+  }
+}
