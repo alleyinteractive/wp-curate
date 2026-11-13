@@ -23,12 +23,15 @@ import { __ } from '@wordpress/i18n';
 import { ChannelPanelSlot } from '../../../components/ChannelPanelSlotFill';
 import type { ChannelPanelFillProps } from '../../../components/ChannelPanelSlotFill';
 import ChannelSelectControl from '../../../components/ChannelSelectControl';
-import useBlockChannel, {
+import {
   CHANNEL_CONTEXT,
   channelArgFields,
   channelBlockSupportSettings,
+  defaultChannel,
   hasChannelSupport,
   isChannelProvider,
+  takesRemainingPosts,
+  toBlockChannel,
   toChannelArgs,
   toChannelName,
 } from '../../../hooks/useBlockChannel';
@@ -43,16 +46,39 @@ const LOADING_POST = {
   postType: '',
 };
 
+// The context of a block without a channel, which keeps the context it has.
+const NO_POST_CONTEXT = {};
+
 /*
  * Blocks with the `wp-curate/channels` block support get a Channel panel. A block that provides the
  * channel context, like Channel Content, gives the channel to the blocks inside it. Any other block
- * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. It
- * can pin a post with an integer `ref` attribute, and a `postType` attribute with the pinned post's
- * type. Like a block binding, the `channel` attribute is an object with the channel `name` and
- * the `args` that the block gives the channel, such as a term. Other scripts add the controls of
- * the arguments through the Channel panel's slot, in `components/ChannelPanelSlotFill`. The
- * `Channel_Block_Support` feature in PHP adds the `channel` attribute and the context that the
- * block uses, and gives the block the same post on the front end.
+ * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. Like
+ * a block binding, the `channel` attribute is an object with the channel `name` and the `args` that
+ * the block gives the channel, such as a term. Other scripts add the controls of the arguments
+ * through the Channel panel's slot, in `components/ChannelPanelSlotFill`. The blocks that use the
+ * same channel, arguments, and context share a queue, so they do not show the same post twice.
+ * Blocks in other queues can show the same post. The `Channel_Block_Support` feature in PHP adds
+ * the `channel` attribute and the context that the block uses, and gives the block the same post
+ * on the front end.
+ *
+ * The Single Post block can pin a post with an integer `ref` attribute, and a `postType` attribute
+ * with the pinned post's type. Only this block type can pin a post, so the plugin gives `ref` no
+ * meaning on other block types. See `pinsPost()`.
+ *
+ * The Channel Template block takes every post that remains in its channel's queue instead of one
+ * post. Only this block type can do so. See `takesRemainingPosts()`. Like other blocks, it gets the
+ * first post as `postId` context. Its edit function reads all of the posts with
+ * `useChannelQueuePosts()`.
+ *
+ * An empty channel name means no channel. A block without a channel takes no post. Its context
+ * does not change, as if it did not have the support. A Single Post without a channel shows
+ * nothing, not even its pin. Inside a block that provides the channel, a block has the channel of
+ * that block, so it has none if that block has none. Outside one, it has its own channel. The
+ * editor gives the default channel to a new block that does not get the channel of a block around
+ * it, and to a block that moves out of such a block. The Channel panel cannot clear the channel. A
+ * block has no channel only if no channels are registered, or if its saved content has none. The
+ * editor does not give a saved block the default channel when the post opens, so the block shows
+ * nothing in the editor, as on the front end, until the user selects a channel.
  *
  * Like on the Query Loop block, a variation of a block in the `wp-curate` namespace can list the
  * controls to show in its `allowedControls` property. The panel ignores this property on the
@@ -91,6 +117,18 @@ const LOADING_POST = {
  * }
  */
 
+/*
+ * Whether each block got the channel of a block around it when it last rendered, by client ID. It
+ * is kept outside the component, because a block that moves to another parent mounts again.
+ */
+const inheritedChannelByBlock = new Map<string, boolean>();
+
+/*
+ * The client IDs of blocks that moved out of a block that provides the channel, and wait for the
+ * default channel, such as while the list of channels loads.
+ */
+const movedOutBlocks = new Set<string>();
+
 /**
  * Whether a list of controls allows a control in the Channel panel.
  *
@@ -126,6 +164,7 @@ function ChannelControls({
   contextChannel,
   isProvider,
   setAttributes,
+  takesRemaining,
 }: {
   attributes: Record<string, unknown>;
   blockName: string;
@@ -136,9 +175,10 @@ function ChannelControls({
   contextChannel: unknown;
   isProvider: boolean;
   setAttributes: (next: Record<string, unknown>) => void;
+  takesRemaining: boolean;
 }) {
-  // The channel the block would use if it didn't have one: inherited from context or the default.
-  const inheritedChannel = useBlockChannel('', contextChannel);
+  // The channel for a new block, or null while the list of channels loads.
+  const globalChannel = useSelect((select) => defaultChannel(select), []);
 
   const argFields = useSelect(
     (select) => channelArgFields(select, channel),
@@ -183,17 +223,57 @@ function ChannelControls({
     __unstableMarkNextChangeAsNotPersistent: markNextChangeAsNotPersistent,
   } = useDispatch(blockEditorStore) as any;
 
+  /*
+   * Whether the block is new: it, or a block around it, is the last block inserted, such as from
+   * the inserter, a paste, or a duplicate. The editor records only the top-level blocks of an
+   * insert, and forgets them when it loads the post's blocks, so a saved block is not new.
+   */
+  const isJustInserted: boolean = useSelect((select) => {
+    const {
+      getBlockParents,
+      wasBlockJustInserted,
+    } = select(blockEditorStore) as any;
+
+    return [clientId, ...getBlockParents(clientId)].some((id: string) => wasBlockJustInserted(id));
+  }, [clientId]);
+
   useEffect(() => {
-    // Ensure that new blocks get a channel attribute if they're not inheriting one.
-    if (!inheritsChannel && channel === '' && inheritedChannel !== null && inheritedChannel !== '') {
+    if (inheritedChannelByBlock.get(clientId) === true && !inheritsChannel) {
+      movedOutBlocks.add(clientId);
+    }
+
+    inheritedChannelByBlock.set(clientId, inheritsChannel);
+
+    // A block that keeps its own channel after the move needs none.
+    if (channel !== '') {
+      movedOutBlocks.delete(clientId);
+    }
+
+    if (
+      (isJustInserted || movedOutBlocks.has(clientId))
+      && !inheritsChannel
+      && channel === ''
+      && globalChannel !== null
+      && globalChannel !== ''
+    ) {
+      movedOutBlocks.delete(clientId);
+
       /*
        * Add the channel to the undo step of the insert or move that caused it. As its own step,
        * undoing it would clear the channel, and this effect would set it again.
        */
       markNextChangeAsNotPersistent();
-      setAttributes({ channel: { name: inheritedChannel } });
+      setAttributes({ channel: { name: globalChannel } });
     }
-  }, [channel, inheritedChannel, inheritsChannel, markNextChangeAsNotPersistent, setAttributes]);
+  }, [
+    channel,
+    clientId,
+    globalChannel,
+    inheritsChannel,
+    isJustInserted,
+    markNextChangeAsNotPersistent,
+    setAttributes,
+  ]);
 
   const setArgs = useCallback((args: Record<string, unknown>) => {
     setAttributes({ channel: { args, name: channel } });
@@ -216,6 +296,18 @@ function ChannelControls({
 
   if (isProvider) {
     help = __('The blocks inside this block show posts from this channel.', 'wp-curate');
+  }
+
+  if (takesRemaining) {
+    help = __('The block shows each post that remains in this channel.', 'wp-curate');
+  }
+
+  if (channel === '') {
+    help = __('Select a channel for the block to show a post from it.', 'wp-curate');
+  }
+
+  if (channel === '' && isProvider) {
+    help = __('Select a channel for the blocks inside this block to show posts from it.', 'wp-curate');
   }
 
   return (
@@ -266,26 +358,34 @@ function ChannelControls({
 /**
  * The edit component of a block that takes a post from its channel, with that post as context.
  *
- * `postId` is null while the channel loads, and 0 when the channel has no posts left.
+ * `postId` is null while the channel loads, and 0 when the channel has no posts left. A block
+ * without a channel takes no post and keeps the context it has. It uses this component
+ * too, so that the block's edit component does not mount again when the block gets a channel.
  */
 function BlockEditWithPostFromChannel({
   BlockEdit,
   clientId,
   context: blockContext,
+  hasNoChannel,
   props,
 }: {
   BlockEdit: React.ComponentType<any>;
   clientId: string;
   context: Record<string, unknown>;
+  hasNoChannel: boolean;
   props: Record<string, unknown>;
 }) {
   const post = useChannelQueuePost(clientId);
 
-  // The post context for the inner blocks. Both values keep their identity between renders.
-  let innerContext: { postId: number | null, postType: string } = LOADING_POST;
+  // The post context for the inner blocks. Each value keeps its identity between renders.
+  let innerContext: { postId?: number | null, postType?: string } = LOADING_POST;
 
   if (post !== null) {
     innerContext = post;
+  }
+
+  if (hasNoChannel) {
+    innerContext = NO_POST_CONTEXT;
   }
 
   // The block's own context comes from its props, which the editor has already filtered.
@@ -326,6 +426,10 @@ const withChannelSupport = createHigherOrderComponent(
     }
 
     const isProvider = isChannelProvider(blockType);
+    const takesRemaining = takesRemainingPosts(blockType);
+
+    // Keep the rule matched with the queue walk in `useChannelQueue`.
+    const hasNoChannel = toBlockChannel(ownName, contextChannel) === '';
 
     return (
       <>
@@ -339,6 +443,7 @@ const withChannelSupport = createHigherOrderComponent(
           contextChannel={contextChannel}
           isProvider={isProvider}
           setAttributes={setAttributes}
+          takesRemaining={takesRemaining}
         />
         {isProvider ? (
           <BlockEdit {...props} />
@@ -347,6 +452,7 @@ const withChannelSupport = createHigherOrderComponent(
             BlockEdit={BlockEdit}
             clientId={clientId}
             context={context}
+            hasNoChannel={hasNoChannel}
             props={props}
           />
         )}

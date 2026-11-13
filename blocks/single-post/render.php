@@ -17,8 +17,26 @@
 /*
  * The `wp-curate/channels` block support gives the block its post as the `postId` context: the ref,
  * or else the top of the channel's queue. It is 0 when there is no post to show.
+ *
+ * A block without a channel takes no post. Its `postId` context is then the post of an outer block
+ * or of the page, which it must not show. It also does not show its pin, because a pin is a post of
+ * the channel. Keep the rule matched with `Channel_Block_Support`: inside a Channel Content block,
+ * the block has the channel of that block. Outside one, it has its own.
  */
+$channel       = [];
 $promoted_post = null;
+
+if ( isset( $attributes['channel'] ) && is_array( $attributes['channel'] ) ) {
+	$channel = $attributes['channel'];
+}
+
+if ( isset( $block->context['wp-curate/channel'] ) && is_array( $block->context['wp-curate/channel'] ) ) {
+	$channel = $block->context['wp-curate/channel'];
+}
+
+if ( ! isset( $channel['name'] ) || ! is_string( $channel['name'] ) || '' === $channel['name'] ) {
+	return;
+}
 
 if ( isset( $block->context['postId'] ) && is_int( $block->context['postId'] ) && $block->context['postId'] > 0 ) {
 	$promoted_post = get_post( $block->context['postId'] );

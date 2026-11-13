@@ -276,14 +276,14 @@ export default function Edit({
         name={name}
       />
     );
-  } else if (channel === '' && ref === 0 && blockChannel !== null) {
-    // There is always a channel unless none is registered, which will be handled later.
+  } else if (channel === '' && blockChannel !== null) {
+    // Like on the front end, a block without a channel shows no post, not even its pinned post.
     preview = (
       <div {...blockProps}>
         <Placeholder
           label={blockType.title}
           icon={blockType.icon.src}
-          instructions={__('No channels are available.', 'wp-curate')}
+          instructions={__('Select a channel for the block.', 'wp-curate')}
         />
       </div>
     );

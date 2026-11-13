@@ -12,7 +12,7 @@ import type { ChannelArgField, AvailableChannel } from '../../entries/block-edit
  *
  * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
  * block gives the channel, such as `{ name: 'wp_curate_post_category_latest', args: { term: 7 } }`.
- * An empty name means the default channel.
+ * An empty name means no channel. The editor gives new blocks the default channel.
  */
 export const CHANNEL_SUPPORT = 'wp-curate/channels';
 
@@ -101,6 +101,65 @@ export function isChannelProvider(blockType: unknown): boolean {
   return isProvider;
 }
 
+/*
+ * The name of the block type that takes every post that remains in its channel's queue. Only this
+ * block type can take them, so that the plugin does not commit to a public API for it yet.
+ *
+ * Keep the value matched with `Channel_Block_Support::CHANNEL_TEMPLATE_BLOCK` in PHP.
+ */
+const CHANNEL_TEMPLATE_BLOCK = 'wp-curate/channel-template';
+
+/**
+ * Whether a block type takes every post that remains in its channel's queue, instead of one post.
+ * Only the Channel Template block does.
+ *
+ * Keep the rules matched with `Channel_Block_Support` in PHP.
+ *
+ * @param blockType Block type from the blocks store.
+ */
+export function takesRemainingPosts(blockType: unknown): boolean {
+  let takesRemaining = false;
+
+  if (hasChannelSupport(blockType)) {
+    const {
+      name,
+    } = blockType as Record<string, unknown>;
+
+    takesRemaining = name === CHANNEL_TEMPLATE_BLOCK;
+  }
+
+  return takesRemaining;
+}
+
+/*
+ * The name of the block type that can pin a post with its `ref` attribute. Only this block type can
+ * pin a post, so that the plugin does not give `ref` a meaning on the blocks of other plugins.
+ *
+ * Keep the value matched with `Channel_Block_Support::SINGLE_POST_BLOCK` in PHP.
+ */
+const SINGLE_POST_BLOCK = 'wp-curate/single-post';
+
+/**
+ * Whether a block type can pin a post with its `ref` attribute. Only the Single Post block can.
+ *
+ * Keep the rules matched with `Channel_Block_Support` in PHP.
+ *
+ * @param blockType Block type from the blocks store.
+ */
+export function pinsPost(blockType: unknown): boolean {
+  let canPin = false;
+
+  if (hasChannelSupport(blockType)) {
+    const {
+      name,
+    } = blockType as Record<string, unknown>;
+
+    canPin = name === SINGLE_POST_BLOCK;
+  }
+
+  return canPin;
+}
+
 /**
  * Get the default channel, which the list of channels marks with `default`.
  *
@@ -137,8 +196,8 @@ export function defaultChannel(select: any): string | null {
  * Reads the name in a `channel` attribute or context.
  *
  * @param value The attribute or context.
- * @return The name, an empty string for the default channel, or null if the value is not a
- *         channel, such as the context of a block that is not inside a Channel Content block.
+ * @return The name, an empty string for no channel, or null if the value is not a channel,
+ *         such as the context of a block that is not inside a Channel Content block.
  */
 export function toChannelName(value: unknown): string | null {
   let name: string | null = null;
@@ -189,19 +248,15 @@ export function toChannelArgs(value: unknown): Record<string, unknown> {
  *
  * Keep the rules matched with `Channel_Block_Support` in PHP. The block uses the channel in its
  * block context, which the nearest Channel Content block around it provides, even if the block has
- * its own from before it moved in. Otherwise it uses its own channel, or else the default channel.
+ * its own from before it moved in. Otherwise it uses its own channel.
  *
- * @param select         The data registry's `select`.
  * @param ownName        The name in the block's `channel` attribute.
  * @param contextChannel The `wp-curate/channel` block context.
- * @return The channel, an empty string if no channels are registered or the Channel Content block
- *         around the block has no channel, or null while the list of channels loads.
+ * @return The channel, or an empty string if the block has no channel. A block has no channel if
+ *         the Channel Content block around it has no channel, or if it is not inside one and has
+ *         no channel of its own.
  */
-export function toBlockChannel(
-  select: any,
-  ownName: string,
-  contextChannel: unknown,
-): string | null {
+export function toBlockChannel(ownName: string, contextChannel: unknown): string {
   const contextName = toChannelName(contextChannel);
 
   // A Channel Content block without a channel is an error, so the blocks inside it get no channel.
@@ -209,13 +264,7 @@ export function toBlockChannel(
     return contextName;
   }
 
-  let channel: string | null = ownName;
-
-  if (channel === '') {
-    channel = defaultChannel(select);
-  }
-
-  return channel;
+  return ownName;
 }
 
 /**
@@ -436,11 +485,11 @@ export function hasEveryChannelArg(
 }
 
 /**
- * Get the channel that a block uses.
+ * Get the channel that a block uses. See `toBlockChannel()`.
  *
  * @param ownName        The name in the block's `channel` attribute.
  * @param contextChannel The `wp-curate/channel` block context.
- * @return The channel, an empty string if no channels are registered, or null while the list of
+ * @return The channel, an empty string if the block has no channel, or null while the list of
  *         channels loads.
  */
 export default function useBlockChannel(
@@ -448,7 +497,21 @@ export default function useBlockChannel(
   contextChannel: unknown,
 ): string | null {
   return useSelect(
-    (select) => toBlockChannel(select, ownName, contextChannel),
+    (select) => {
+      const {
+        getAvailableChannels,
+      } = select('wp-curate/channels') as any;
+
+      /*
+       * Wait for the list. Before the list loads, the editor cannot give a new block the default
+       * channel, so the block would show that it has no channel.
+       */
+      if (getAvailableChannels({}) === null) {
+        return null;
+      }
+
+      return toBlockChannel(ownName, contextChannel);
+    },
     [contextChannel, ownName],
   );
 }
