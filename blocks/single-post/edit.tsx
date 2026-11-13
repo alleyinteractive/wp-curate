@@ -25,13 +25,14 @@ import {
   useMemo,
   useState,
 } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { closeSmall, pin } from '@wordpress/icons';
 
 // Plugin dependencies.
 import LayoutVariationPicker from '../../components/LayoutVariationPicker';
 import useBlockChannel, {
   channelArgFields,
+  channelLabel,
   hasEveryChannelArg,
   pickChannelArgs,
   toBlockChannelArgs,
@@ -218,6 +219,11 @@ export default function Edit({
     [channel],
   );
 
+  const channelTitle = useSelect(
+    (select) => channelLabel(select, channel),
+    [channel],
+  );
+
   // The block's channel arguments, found as the queue finds them, so the picker shows its posts.
   const args = useMemo(
     () => pickChannelArgs(argFields, toBlockChannelArgs(ownChannel, contextChannel)),
@@ -298,12 +304,23 @@ export default function Edit({
       </div>
     );
   } else if (postId === 0) {
+    // A channel that is not registered has no label.
+    let instructions: string = __('No content remaining in this channel.', 'wp-curate');
+
+    if (channelTitle !== '') {
+      instructions = sprintf(
+        /* translators: %s: Channel label, such as "Free-For-All". */
+        __('%s: No content remaining in this channel.', 'wp-curate'),
+        channelTitle,
+      );
+    }
+
     preview = (
       <div {...blockProps}>
         <Placeholder
           label={blockType.title}
           icon={blockType.icon.src}
-          instructions={__('No posts remaining in the channel.', 'wp-curate')}
+          instructions={instructions}
         />
       </div>
     );

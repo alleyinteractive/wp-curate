@@ -241,6 +241,38 @@ export function channelArgFields(select: any, name: string): Record<string, Chan
 }
 
 /**
+ * Get the label of a channel, such as "Free-For-All".
+ *
+ * @param select The data registry's `select`.
+ * @param name   Channel name.
+ * @return The label, or an empty string for a channel that is not registered or while the list of
+ *         channels loads.
+ */
+export function channelLabel(select: any, name: string): string {
+  const {
+    getAvailableChannels,
+  } = select('wp-curate/channels') as any;
+
+  const channels: AvailableChannel[] | null = getAvailableChannels({});
+
+  let label = '';
+
+  if (channels === null) {
+    return label;
+  }
+
+  const option = channels.find((channel) => channel.name === name);
+
+  if (option !== undefined) {
+    ({
+      label,
+    } = option);
+  }
+
+  return label;
+}
+
+/**
  * Get only the values of the block context that some channels read.
  *
  * @param keys    The names of the context values.
