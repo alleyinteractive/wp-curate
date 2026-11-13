@@ -8,10 +8,10 @@ import { useEffect } from '@wordpress/element';
 import toInnerBlockTemplate from '../../services/innerBlockTemplate';
 
 /**
- * Keeps the inner blocks of the Single Post blocks in a Channel Loop block the same.
+ * Keeps the inner blocks of the Single Post blocks in a Single Post Template block the same.
  *
  * Each Single Post block saves its own copy of the template. When the inner blocks of one Single
- * Post change, the hook copies them to the other Single Posts. A Single Post that joins the loop,
+ * Post change, the hook copies them to the other Single Posts. A Single Post that joins the block,
  * such as from the appender or by a move, gets a copy of the template of the Single Posts already
  * there. The copies are not persistent changes, so they are part of the undo step of the change
  * that caused them.
@@ -19,7 +19,7 @@ import toInnerBlockTemplate from '../../services/innerBlockTemplate';
  * When the inner blocks of more than one Single Post change at once, such as by undo or redo, the
  * hook copies nothing, because there is no one copy to follow.
  *
- * @param clientId Client ID of the Channel Loop block.
+ * @param clientId Client ID of the Single Post Template block.
  */
 export default function useSharedTemplate(clientId: string) {
   // `useRegistry` is typed as returning `Function`.
@@ -88,7 +88,7 @@ export default function useSharedTemplate(clientId: string) {
       } else if (changed.length === 0 && added.length > 0) {
         const existing = order.find((id) => seen.has(id));
 
-        // A Single Post that joins a loop with no other Single Posts keeps its inner blocks.
+        // A Single Post that joins a block with no other Single Posts keeps its inner blocks.
         if (existing !== undefined) {
           copy(getBlocks(existing), added);
         }

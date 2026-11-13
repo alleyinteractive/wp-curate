@@ -25,13 +25,14 @@ import {
   useMemo,
   useState,
 } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { closeSmall, pin } from '@wordpress/icons';
 
 // Plugin dependencies.
 import LayoutVariationPicker from '../../components/LayoutVariationPicker';
 import useBlockChannel, {
   channelArgFields,
+  channelLabel,
   hasEveryChannelArg,
   pickChannelArgs,
   toBlockChannelArgs,
@@ -46,7 +47,7 @@ import './index.scss';
 
 /**
  * The editable inner blocks of the block, which show its post, and the mark of a pinned post after
- * them.
+ * them. The post is in an `article` element, like on the page.
  */
 function PostInnerBlocks({
   badge,
@@ -61,10 +62,10 @@ function PostInnerBlocks({
   } = useInnerBlocksProps(blockProps);
 
   return (
-    <div {...combinedBlockProps}>
+    <article {...combinedBlockProps}>
       {children}
       {badge}
-    </div>
+    </article>
   );
 }
 
@@ -75,8 +76,8 @@ function PostInnerBlocks({
  * as the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
  * after the blocks before this one. The support also gives that post to the inner blocks.
  *
- * A block without inner blocks shows a picker of layouts. Inside a Channel Loop block, the loop
- * keeps the inner blocks of its Single Posts the same.
+ * A block without inner blocks shows a picker of layouts. Inside a Single Post Template block, that
+ * block keeps the inner blocks of its Single Posts the same.
  */
 export default function Edit({
   attributes: {
@@ -218,6 +219,11 @@ export default function Edit({
     [channel],
   );
 
+  const channelTitle = useSelect(
+    (select) => channelLabel(select, channel),
+    [channel],
+  );
+
   // The block's channel arguments, found as the queue finds them, so the picker shows its posts.
   const args = useMemo(
     () => pickChannelArgs(argFields, toBlockChannelArgs(ownChannel, contextChannel)),
@@ -298,12 +304,23 @@ export default function Edit({
       </div>
     );
   } else if (postId === 0) {
+    // A channel that is not registered has no label.
+    let instructions: string = __('No content remaining in this channel.', 'wp-curate');
+
+    if (channelTitle !== '') {
+      instructions = sprintf(
+        /* translators: %s: Channel label, such as "Free-For-All". */
+        __('%s: No content remaining in this channel.', 'wp-curate'),
+        channelTitle,
+      );
+    }
+
     preview = (
       <div {...blockProps}>
         <Placeholder
           label={blockType.title}
           icon={blockType.icon.src}
-          instructions={__('No posts remaining in the channel.', 'wp-curate')}
+          instructions={instructions}
         />
       </div>
     );

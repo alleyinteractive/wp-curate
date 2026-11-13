@@ -26,12 +26,12 @@ final readonly class Latest_Posts implements Channel {
 	) {}
 
 	/**
-	 * Machine name that blocks use to name the channel, such as `post_latest` for posts.
+	 * Machine name that blocks use to name the channel, such as `wp_curate_post_latest` for posts.
 	 *
 	 * @return string
 	 */
 	public function name(): string {
-		return $this->post_type . '_latest';
+		return 'wp_curate_' . $this->post_type . '_latest';
 	}
 
 	/**
@@ -131,13 +131,16 @@ final readonly class Latest_Posts implements Channel {
 			$query_args['s'] = $search;
 		}
 
+		// Order by ID if posts share the same date.
 		return new Queried_Post_IDs(
 			array_merge(
 				$query_args,
 				[
 					'ignore_sticky_posts' => true,
-					'order'               => 'DESC',
-					'orderby'             => 'date',
+					'orderby'             => [
+						'date' => 'DESC',
+						'ID'   => 'DESC',
+					],
 					'post_status'         => $post_statuses,
 					'post_type'           => $this->post_type,
 				],

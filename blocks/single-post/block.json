@@ -15,6 +15,9 @@
     "wp-curate/channels": true
   },
   "attributes": {
+    "namespace": {
+      "type": "string"
+    },
     "postType": {
       "type": "string",
       "default": "",

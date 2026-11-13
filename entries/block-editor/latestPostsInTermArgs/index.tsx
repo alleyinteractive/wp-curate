@@ -3,7 +3,6 @@ import React from 'react';
 
 // WordPress dependencies.
 import { __experimentalToolsPanelItem as ToolsPanelItem } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
 import { ChannelPanelFill } from '../../../components/ChannelPanelSlotFill';
@@ -23,7 +22,8 @@ function withoutArg(args: Record<string, unknown>, id: string): Record<string, u
 /**
  * A panel item with a term picker for the `term` argument of a "Latest Posts in Term" channel.
  *
- * The channel is named `{post_type}_{taxonomy}_latest`, and its `term` field has the `taxonomy`.
+ * The channel is named `wp_curate_{post_type}_{taxonomy}_latest`, and its `term` field has the
+ * `taxonomy`.
  */
 function LatestPostsInTermArgItems({
   argFields,
@@ -42,6 +42,7 @@ function LatestPostsInTermArgItems({
         if (
           id !== 'term'
           || typeof taxonomy !== 'string'
+          || !channel.startsWith('wp_curate_')
           || !channel.endsWith(`_${taxonomy}_latest`)
         ) {
           return null;

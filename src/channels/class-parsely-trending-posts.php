@@ -38,12 +38,12 @@ final readonly class Parsely_Trending_Posts implements Channel {
 	) {}
 
 	/**
-	 * Machine name that blocks use to name the channel, such as `post_latest` for posts.
+	 * Machine name that blocks use to name the channel.
 	 *
 	 * @return string
 	 */
 	public function name(): string {
-		return 'parsely_trending';
+		return 'wp_curate_parsely_trending';
 	}
 
 	/**

@@ -21,7 +21,7 @@ use WP_Post;
  * `postId` and `postType` for channels that read it.
  *
  * Like a block binding, the `channel` attribute is an object with the channel `name` and the `args` to pass to
- * the channel, such as `{"name":"post_category_latest","args":{"term":7}}`.
+ * the channel, such as `{"name":"wp_curate_post_category_latest","args":{"term":7}}`.
  *
  * A block that also provides the `wp-curate/channel` context, like Channel Content, passes its channel to its inner
  * blocks. Any other block takes a post from its channel's queue and gets that post as the `postId` and `postType` context.
@@ -66,7 +66,8 @@ final readonly class Channel_Block_Support implements Feature {
 			&& isset( $args['supports'] )
 			&& is_array( $args['supports'] )
 			&& isset( $args['supports']['wp-curate/channels'] )
-			&& $args['supports']['wp-curate/channels'] === true
+			// Like `block_has_support()`, an array of settings also turns on the support.
+			&& ( true === $args['supports']['wp-curate/channels'] || is_array( $args['supports']['wp-curate/channels'] ) )
 		) {
 			$attributes   = [];
 			$uses_context = [];
@@ -142,6 +143,16 @@ final readonly class Channel_Block_Support implements Feature {
 
 		if ( isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ) {
 			$attrs = $parsed_block['attrs'];
+		}
+
+		// The parsed block does not save default values, such as a channel that a third-party block type gives itself.
+		if (
+			! array_key_exists( 'channel', $attrs )
+			&& isset( $block_type->attributes['channel'] )
+			&& is_array( $block_type->attributes['channel'] )
+			&& array_key_exists( 'default', $block_type->attributes['channel'] )
+		) {
+			$attrs['channel'] = $block_type->attributes['channel']['default'];
 		}
 
 		$own_channel = [];

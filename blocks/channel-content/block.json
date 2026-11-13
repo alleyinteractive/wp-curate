@@ -15,5 +15,10 @@
   },
   "providesContext": {
     "wp-curate/channel": "channel"
+  },
+  "attributes": {
+    "namespace": {
+      "type": "string"
+    }
   }
 }

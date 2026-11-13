@@ -26,6 +26,8 @@ interface PickerItem {
   date: string;
   id: number;
   imageUrl: string;
+  /** Singular name of the post type, such as "Post". */
+  postType: string;
   /** Post status, such as `publish` or `future`. */
   status: string;
   title: string;
@@ -56,6 +58,15 @@ const FIELDS = [
     }: { item: PickerItem }) => item.title,
     id: 'title',
     label: __('Title', 'wp-curate'),
+  },
+  {
+    enableHiding: false,
+    enableSorting: false,
+    getValue: ({
+      item,
+    }: { item: PickerItem }) => item.postType,
+    id: 'postType',
+    label: __('Post type', 'wp-curate'),
   },
   {
     enableHiding: false,
@@ -205,6 +216,44 @@ function toFeaturedMediaId(post: unknown): number {
 const NO_IDS: number[] = [];
 
 /**
+ * Maps each post type slug to its singular name.
+ *
+ * @param postTypes Post type records from core-data, or null while they load.
+ */
+function toPostTypeLabels(postTypes: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+
+  if (!Array.isArray(postTypes)) {
+    return out;
+  }
+
+  postTypes.forEach((postType: unknown) => {
+    if (typeof postType !== 'object' || postType === null) {
+      return;
+    }
+
+    const {
+      labels,
+      slug,
+    } = postType as Record<string, unknown>;
+
+    if (typeof slug !== 'string' || typeof labels !== 'object' || labels === null) {
+      return;
+    }
+
+    const {
+      singular_name: singularName,
+    } = labels as Record<string, unknown>;
+
+    if (typeof singularName === 'string') {
+      out[slug] = singularName;
+    }
+  });
+
+  return out;
+}
+
+/**
  * Reads the raw title of a post record, or an empty string if it has none.
  *
  * @param post Post record from core-data.
@@ -255,7 +304,7 @@ export default function PostPicker({
 }) {
   const [selection, setSelection] = useState<string[]>(selectedId > 0 ? [String(selectedId)] : []);
   const [view, setView] = useState<any>({
-    fields: ['status', 'date'],
+    fields: ['postType', 'status', 'date'],
     filters: [],
     mediaField: 'media',
     page: 1,
@@ -487,10 +536,20 @@ export default function PostPicker({
     return records;
   }, [imageQuery]);
 
+  // Every post type, for its name. The editor has usually loaded them already.
+  const postTypes = useSelect((select) => {
+    const {
+      getPostTypes,
+    } = select(coreStore);
+
+    return getPostTypes({ per_page: -1 });
+  }, []);
+
   // List the page's posts in channel order.
   const data = useMemo(() => {
     const imageUrls: Record<number, string> = {};
     const items: PickerItem[] = [];
+    const postTypeLabels = toPostTypeLabels(postTypes);
 
     if (Array.isArray(images)) {
       images.forEach((image: any) => {
@@ -504,6 +563,16 @@ export default function PostPicker({
       let imageUrl = '';
       let status = '';
       let date = '';
+      let postType = '';
+
+      if (resultsPage !== null && id in resultsPage.post_types) {
+        postType = resultsPage.post_types[id];
+      }
+
+      // Show the slug of a post type that the user cannot read.
+      if (postType in postTypeLabels) {
+        postType = postTypeLabels[postType];
+      }
 
       if (id in postsById && toPostTitle(postsById[id]) !== '') {
         itemTitle = toPostTitle(postsById[id]);
@@ -523,6 +592,7 @@ export default function PostPicker({
           date,
           id,
           imageUrl,
+          postType,
           status,
           title: itemTitle,
         });
@@ -530,7 +600,7 @@ export default function PostPicker({
     });
 
     return items;
-  }, [images, pageIds, postsById]);
+  }, [images, pageIds, postTypes, postsById, resultsPage]);
 
   return (
     <Modal

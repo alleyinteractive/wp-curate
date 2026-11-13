@@ -52,9 +52,11 @@ $post          = $promoted_post;
 
 setup_postdata( $post );
 add_filter( 'render_block_context', $filter_block_context, 1 );
+
+$post_classes = implode( ' ', get_post_class( '', $promoted_post ) );
 ?>
 
-<article <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
+<article <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => $post_classes ] ) ); ?>>
 	<?php echo $inner->render( [ 'dynamic' => false ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 </article>
 

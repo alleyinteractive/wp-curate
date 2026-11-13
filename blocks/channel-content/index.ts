@@ -20,23 +20,23 @@ registerBlockType(
     save,
     variations: [
       /*
-       * The Channel Loop block can be only inside a Channel Content block, so the inserter offers
-       * it as a Channel Content block with an empty Channel Loop block, which shows a picker of
-       * layouts.
+       * The Single Post Template block can be only inside a Channel Content block, so the
+       * inserter offers it as a Channel Content block with an empty Single Post Template block,
+       * which shows a picker of layouts.
        */
       {
-        description: __('Displays posts from a channel using the same layout.', 'wp-curate'),
+        description: __('Use a consistent template with a group of Single Post blocks.', 'wp-curate'),
         icon: postList,
         innerBlocks: [
-          ['wp-curate/channel-loop'],
+          ['wp-curate/single-post-template'],
         ],
         keywords: [
           __('loop', 'wp-curate'),
           __('posts', 'wp-curate'),
         ],
-        name: 'channel-loop',
+        name: 'single-post-template',
         scope: ['inserter'],
-        title: __('Channel Loop', 'wp-curate'),
+        title: __('Uniform Single Posts', 'wp-curate'),
       },
     ],
   },

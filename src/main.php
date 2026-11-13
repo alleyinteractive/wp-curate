@@ -27,7 +27,7 @@ function main(): void {
 	$channels         = new Channels\Available_Channels();
 	$default_channel  = new Channels\Default_Channel(
 		channels: $channels,
-		preferred: 'post_latest',
+		preferred: 'wp_curate_post_latest',
 	);
 
 	$posts_per_page        = 10;

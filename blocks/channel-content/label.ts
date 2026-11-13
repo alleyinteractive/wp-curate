@@ -2,8 +2,7 @@
 import { select } from '@wordpress/data';
 
 // Plugin dependencies.
-import type { AvailableChannel } from '../../entries/block-editor/channelStore';
-import { defaultChannel, toChannelName } from '../../hooks/useBlockChannel';
+import { channelLabel, defaultChannel, toChannelName } from '../../hooks/useBlockChannel';
 import customBlockName from '../../services/customBlockName';
 
 /**
@@ -36,12 +35,6 @@ export default function label(
     return out;
   }
 
-  const {
-    getAvailableChannels,
-  } = select('wp-curate/channels') as any;
-
-  const channels: AvailableChannel[] | null = getAvailableChannels({});
-
   let name: string | null = toChannelName(attributes.channel);
 
   // An empty name means the default channel.
@@ -49,12 +42,14 @@ export default function label(
     name = defaultChannel(select);
   }
 
-  if (channels !== null && name !== null && name !== '') {
-    const found = channels.find((channel) => channel.name === name);
+  let channelTitle = '';
 
-    if (found !== undefined) {
-      out = found.label;
-    }
+  if (name !== null && name !== '') {
+    channelTitle = channelLabel(select, name);
+  }
+
+  if (channelTitle !== '') {
+    out = channelTitle;
   }
 
   return out;

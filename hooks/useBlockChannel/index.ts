@@ -11,8 +11,8 @@ import type { ChannelArgField, AvailableChannel } from '../../entries/block-edit
  * channel.
  *
  * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
- * block gives the channel, such as `{ name: 'post_category_latest', args: { term: 7 } }`. An
- * empty name means the default channel.
+ * block gives the channel, such as `{ name: 'wp_curate_post_category_latest', args: { term: 7 } }`.
+ * An empty name means the default channel.
  */
 export const CHANNEL_SUPPORT = 'wp-curate/channels';
 
@@ -42,10 +42,40 @@ export function hasChannelSupport(blockType: unknown): boolean {
   } = blockType as Record<string, unknown>;
 
   if (typeof supports === 'object' && supports !== null && CHANNEL_SUPPORT in supports) {
-    hasSupport = (supports as Record<string, unknown>)[CHANNEL_SUPPORT] === true;
+    const value = (supports as Record<string, unknown>)[CHANNEL_SUPPORT];
+
+    // Like `block_has_support()` in PHP, an object of settings also turns on the support.
+    hasSupport = value === true || (typeof value === 'object' && value !== null);
   }
 
   return hasSupport;
+}
+
+/**
+ * The settings in the `wp-curate/channels` block support of a block type.
+ *
+ * @param blockType Block type from the blocks store.
+ * @return The settings, or an empty object if the support is `true` or the block type does not
+ *         have it.
+ */
+export function channelBlockSupportSettings(blockType: unknown): Record<string, unknown> {
+  let settings: Record<string, unknown> = {};
+
+  if (!hasChannelSupport(blockType)) {
+    return settings;
+  }
+
+  const {
+    supports,
+  } = blockType as Record<string, unknown>;
+
+  const value = (supports as Record<string, unknown>)[CHANNEL_SUPPORT];
+
+  if (typeof value === 'object' && value !== null) {
+    settings = value as Record<string, unknown>;
+  }
+
+  return settings;
 }
 
 /**
@@ -238,6 +268,38 @@ export function channelArgFields(select: any, name: string): Record<string, Chan
   }
 
   return fields;
+}
+
+/**
+ * Get the label of a channel, such as "Free-For-All".
+ *
+ * @param select The data registry's `select`.
+ * @param name   Channel name.
+ * @return The label, or an empty string for a channel that is not registered or while the list of
+ *         channels loads.
+ */
+export function channelLabel(select: any, name: string): string {
+  const {
+    getAvailableChannels,
+  } = select('wp-curate/channels') as any;
+
+  const channels: AvailableChannel[] | null = getAvailableChannels({});
+
+  let label = '';
+
+  if (channels === null) {
+    return label;
+  }
+
+  const option = channels.find((channel) => channel.name === name);
+
+  if (option !== undefined) {
+    ({
+      label,
+    } = option);
+  }
+
+  return label;
 }
 
 /**
