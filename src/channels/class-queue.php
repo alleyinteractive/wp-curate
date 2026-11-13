@@ -7,14 +7,12 @@
 
 namespace Alley\WP\WP_Curate\Channels;
 
-use Alley\WP\Types\Post_IDs;
 use Generator;
 
 /**
  * The queue of available IDs in a channel.
  *
- * The channel's IDs are loaded only to the extent that the blocks on a page need them. The IDs are maintained so that
- * an ID that one block skips stays available to the blocks after it.
+ * The channel's IDs are loaded only to the extent that the blocks on a page need them.
  *
  * This class is mutable, one per channel per request.
  */
@@ -56,18 +54,16 @@ final class Queue {
 	/**
 	 * Returns the next ID and keeps it in the queue.
 	 *
-	 * @param Post_IDs $skipped IDs to pass over, which stay in the queue.
 	 * @return int|null The ID, or null when no IDs remain.
 	 */
-	public function top( Post_IDs $skipped ): ?int {
-		$skipped = array_flip( $skipped->post_ids() );
-		$index   = 0;
-		$top     = null;
+	public function top(): ?int {
+		$index = 0;
+		$top   = null;
 
 		while ( null === $top && $this->has_read( $index ) ) {
 			$id = $this->read[ $index ];
 
-			if ( ! isset( $this->removed[ $id ] ) && ! isset( $skipped[ $id ] ) ) {
+			if ( ! isset( $this->removed[ $id ] ) ) {
 				$top = $id;
 			}
 

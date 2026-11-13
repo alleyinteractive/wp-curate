@@ -29,6 +29,9 @@ use WP_Post;
  * Blocks can pin a post with an integer `ref` attribute. A block whose pinned post is not published, such as a
  * scheduled post, takes the top of the queue instead.
  *
+ * Blocks that use the same channel, arguments, and context share a queue, so they do not show the same post twice.
+ * Blocks in other queues can show the same post. See `Queues`.
+ *
  * Keep the rules matched with the `channelSupport` editor script.
  */
 final readonly class Channel_Block_Support implements Feature {

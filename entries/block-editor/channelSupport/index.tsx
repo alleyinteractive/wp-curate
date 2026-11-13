@@ -46,13 +46,17 @@ const LOADING_POST = {
 /*
  * Blocks with the `wp-curate/channels` block support get a Channel panel. A block that provides the
  * channel context, like Channel Content, gives the channel to the blocks inside it. Any other block
- * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. It
- * can pin a post with an integer `ref` attribute, and a `postType` attribute with the pinned post's
- * type. Like a block binding, the `channel` attribute is an object with the channel `name` and
- * the `args` that the block gives the channel, such as a term. Other scripts add the controls of
- * the arguments through the Channel panel's slot, in `components/ChannelPanelSlotFill`. The
- * `Channel_Block_Support` feature in PHP adds the `channel` attribute and the context that the
- * block uses, and gives the block the same post on the front end.
+ * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. Like
+ * a block binding, the `channel` attribute is an object with the channel `name` and the `args` that
+ * the block gives the channel, such as a term. Other scripts add the controls of the arguments
+ * through the Channel panel's slot, in `components/ChannelPanelSlotFill`. The blocks that use the
+ * same channel, arguments, and context share a queue, so they do not show the same post twice.
+ * Blocks in other queues can show the same post. The `Channel_Block_Support` feature in PHP adds
+ * the `channel` attribute and the context that the block uses, and gives the block the same post
+ * on the front end.
+ *
+ * A block can pin a post with an integer `ref` attribute, and a `postType` attribute with the
+ * pinned post's type.
  *
  * Like on the Query Loop block, a variation of a block in the `wp-curate` namespace can list the
  * controls to show in its `allowedControls` property. The panel ignores this property on the

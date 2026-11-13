@@ -117,9 +117,9 @@ function postContext(select: any): Record<string, unknown> {
  * block that takes a post, like Single Post, has that post as `postId` and `postType`, the way
  * that `Channel_Block_Support` gives it in PHP. Otherwise, it has the post.
  *
- * A block that takes the top of its queue skips the IDs that the blocks before it took from any
- * queue, so channel blocks never show the same post twice. A block always shows its own pin. A
- * block waits for every block before it, whose IDs it skips.
+ * The blocks that use the same queue never show the same post twice. The queues do not share IDs,
+ * so blocks that use different queues can show the same post. A block always shows its own pin. A
+ * block waits only for the blocks before it in the same queue.
  *
  * @param select   The data registry's `select`.
  * @param clientId Client ID of the block.
@@ -163,12 +163,6 @@ function channelQueue(
    * others can.
    */
   const loadingChannels = new Set<string>();
-
-  // The IDs taken so far from any queue, which the blocks after them skip.
-  const usedIds = new Set<number>();
-
-  // Whether a block before the current one is loading.
-  let isEarlierLoading = false;
 
   let isOutLoading = false;
   let outContext: Record<string, unknown> | null = null;
@@ -270,10 +264,13 @@ function channelQueue(
         previous = takenFromQueues.get(key) as number[];
       }
 
+      // The IDs removed from the queue.
+      const skipped = new Set(previous);
+
       /*
-       * Without a ref, the block takes the top of the queue that it does not skip. Every ID taken
-       * before can be in the queue, so load that many IDs plus one, in whole pages, and then a
-       * page more each time that every loaded ID is skipped.
+       * Without a ref, the block takes the top of the queue. Every ID taken before can be in the
+       * queue, so load that many IDs plus one, in whole pages, and then a page more each time that
+       * every loaded ID was removed.
        */
       if (ref === 0) {
         let count = Math.ceil((previous.length + 1) / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
@@ -289,7 +286,7 @@ function channelQueue(
           }
 
           if (loaded !== null) {
-            const top = loaded.ids.find((id) => !usedIds.has(id));
+            const top = loaded.ids.find((id) => !skipped.has(id));
 
             if (top !== undefined) {
               postType = getTypeOfPostInChannel(top);
@@ -352,13 +349,10 @@ function channelQueue(
 
       if (!isProvider && name !== null) {
         const {
-          isLoading: isChannelLoading,
+          isLoading,
           postType,
           taken,
         } = take(block, context, providerChannel, isContextLoading);
-
-        // A block skips the IDs of the blocks before it, so it waits for them.
-        const isLoading = isChannelLoading || isEarlierLoading;
 
         let post = NO_POST;
 
@@ -373,12 +367,6 @@ function channelQueue(
           isOutLoading = isLoading;
           outPost = post;
         }
-
-        if (isLoading) {
-          isEarlierLoading = true;
-        }
-
-        taken.forEach((id) => usedIds.add(id));
 
         // Until the block's post is known, the blocks inside it do not know their context.
         if (isLoading) {
