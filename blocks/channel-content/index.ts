@@ -36,7 +36,7 @@ registerBlockType(
         ],
         name: 'single-post-template',
         scope: ['inserter'],
-        title: __('Uniform Single Posts', 'wp-curate'),
+        title: __('Single Post Template', 'wp-curate'),
       },
     ],
   },
