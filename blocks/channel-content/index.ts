@@ -1,7 +1,6 @@
 // WordPress dependencies.
 import { registerBlockType } from '@wordpress/blocks';
-import { __ } from '@wordpress/i18n';
-import { inbox as icon, postList } from '@wordpress/icons';
+import { inbox as icon } from '@wordpress/icons';
 
 // Internal dependencies.
 import metadata from './block.json';
@@ -18,26 +17,5 @@ registerBlockType(
     edit,
     icon,
     save,
-    variations: [
-      /*
-       * The Single Post Template block can be only inside a Channel Content block, so the
-       * inserter offers it as a Channel Content block with an empty Single Post Template block,
-       * which shows a picker of layouts.
-       */
-      {
-        description: __('Use a consistent template with a group of Single Post blocks.', 'wp-curate'),
-        icon: postList,
-        innerBlocks: [
-          ['wp-curate/single-post-template'],
-        ],
-        keywords: [
-          __('loop', 'wp-curate'),
-          __('posts', 'wp-curate'),
-        ],
-        name: 'single-post-template',
-        scope: ['inserter'],
-        title: __('Single Post Template', 'wp-curate'),
-      },
-    ],
   },
 );

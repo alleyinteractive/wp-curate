@@ -6,10 +6,11 @@
   "title": "Single Post Template",
   "category": "theme",
   "description": "Use a consistent template with a group of Single Post blocks.",
-  "textdomain": "wp-curate",
-  "ancestor": [
-    "wp-curate/channel-content"
+  "keywords": [
+    "loop",
+    "posts"
   ],
+  "textdomain": "wp-curate",
   "editorScript": "file:index.ts",
   "render": "file:render.php",
   "supports": {
@@ -21,5 +22,8 @@
     "namespace": {
       "type": "string"
     }
-  }
+  },
+  "usesContext": [
+    "wp-curate/channel"
+  ]
 }
