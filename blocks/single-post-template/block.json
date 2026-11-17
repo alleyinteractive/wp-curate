@@ -3,7 +3,7 @@
   "apiVersion": 3,
   "name": "wp-curate/single-post-template",
   "version": "0.1.0",
-  "title": "Uniform Single Posts",
+  "title": "Single Post Template",
   "category": "theme",
   "description": "Use a consistent template with a group of Single Post blocks.",
   "textdomain": "wp-curate",

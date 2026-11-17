@@ -3,7 +3,7 @@
   "apiVersion": 3,
   "name": "wp-curate/channel-template",
   "version": "0.1.0",
-  "title": "Channel Results",
+  "title": "Channel Results Template",
   "category": "theme",
   "description": "Displays every remaining post in a channel, with the same template for each post.",
   "textdomain": "wp-curate",
