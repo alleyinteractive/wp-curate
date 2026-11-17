@@ -1,6 +1,6 @@
 <?php
 /**
- * The render callback for the wp-curate/single-post-template block.
+ * The render callback for the wp-curate/single-post-loop block.
  *
  * All of the parameters passed to the function where this file is being required are accessible in this scope:
  *

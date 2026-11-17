@@ -30,7 +30,7 @@ const DEFAULT_BLOCK = {
 };
 
 /**
- * The wp-curate/single-post-template block edit function.
+ * The wp-curate/single-post-loop block edit function.
  *
  * The inner blocks are Single Post blocks, which each show one post, so the number of them is the
  * number of posts. Each Single Post has its own copy of the template as its inner blocks, and the

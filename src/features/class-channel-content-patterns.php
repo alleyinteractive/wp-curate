@@ -56,7 +56,7 @@ final class Channel_Content_Patterns implements Feature {
 					. get_comment_delimited_block_content( 'wp-curate/single-post', [], $featured_post )
 					. '</div><!-- /wp:column -->'
 					. '<!-- wp:column {"width":"40%"} --><div class="wp-block-column" style="flex-basis:40%">'
-					. $this->single_post_template( [], $media_object, 4 )
+					. $this->single_post_loop( [], $media_object, 4 )
 					. '</div><!-- /wp:column -->'
 					. '</div><!-- /wp:columns -->',
 				),
@@ -76,20 +76,20 @@ final class Channel_Content_Patterns implements Feature {
 	}
 
 	/**
-	 * A Single Post Template block with Single Post blocks, which each have their own copy of the
+	 * A Single Post Loop block with Single Post blocks, which each have their own copy of the
 	 * template.
 	 *
-	 * @param mixed[] $attrs    Attributes of the Single Post Template.
+	 * @param mixed[] $attrs    Attributes of the Single Post Loop.
 	 * @param string  $template Serialized template of the Single Post blocks.
 	 * @param int     $count    The number of Single Post blocks.
 	 * @return string
 	 */
-	private function single_post_template( array $attrs, string $template, int $count ): string {
+	private function single_post_loop( array $attrs, string $template, int $count ): string {
 		$single_posts = str_repeat(
 			get_comment_delimited_block_content( 'wp-curate/single-post', [], $template ),
 			$count,
 		);
 
-		return get_comment_delimited_block_content( 'wp-curate/single-post-template', $attrs, $single_posts );
+		return get_comment_delimited_block_content( 'wp-curate/single-post-loop', $attrs, $single_posts );
 	}
 }

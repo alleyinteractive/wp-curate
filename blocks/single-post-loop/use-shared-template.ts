@@ -8,7 +8,7 @@ import { useEffect } from '@wordpress/element';
 import toInnerBlockTemplate from '../../services/innerBlockTemplate';
 
 /**
- * Keeps the inner blocks of the Single Post blocks in a Single Post Template block the same.
+ * Keeps the inner blocks of the Single Post blocks in a Single Post Loop block the same.
  *
  * Each Single Post block saves its own copy of the template. When the inner blocks of one Single
  * Post change, the hook copies them to the other Single Posts. A Single Post that joins the block,
@@ -19,7 +19,7 @@ import toInnerBlockTemplate from '../../services/innerBlockTemplate';
  * When the inner blocks of more than one Single Post change at once, such as by undo or redo, the
  * hook copies nothing, because there is no one copy to follow.
  *
- * @param clientId Client ID of the Single Post Template block.
+ * @param clientId Client ID of the Single Post Loop block.
  */
 export default function useSharedTemplate(clientId: string) {
   // `useRegistry` is typed as returning `Function`.
