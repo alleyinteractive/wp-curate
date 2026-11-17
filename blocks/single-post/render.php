@@ -46,8 +46,15 @@ if ( ! $promoted_post instanceof WP_Post ) {
 	return;
 }
 
+/*
+ * Like core's Post Template, render the inner blocks as a block type that is not registered, so
+ * that the `render_block` filters and the supports of this block do not apply a second time.
+ */
+$template              = $block->parsed_block;
+$template['blockName'] = 'core/null';
+
 // Assume that the parsed block has the correct shape.
-$inner = new WP_Block( $block->parsed_block ); // @phpstan-ignore-line argument.type
+$inner = new WP_Block( $template ); // @phpstan-ignore-line argument.type
 
 // Give the post to the inner blocks, the way that a Query Loop gives each post to its template.
 $filter_block_context = static function ( $context ) use ( $promoted_post ) {
