@@ -17,75 +17,103 @@
 use Alley\WP\WP_Curate\Channels\Queues;
 
 /*
- * The `wp-curate/channels` block support took the posts that remain in the block's channel's queue,
- * and removed them from the queue. It gives the block the first post as `postId`. The queues keep
- * every post that the block took.
+ * The block support gives the block its channel as the `wp-curate/queue` context: the channel of
+ * the Channel Content block around it, or else its own. The Single Post blocks below get the same
+ * channel and take from its queue.
  */
-$channel_posts = [];
+$own_channel  = [];
+$channel_name = '';
+$channel_args = [];
 
-if ( isset( $block->context['wp-curate/queues'] ) && $block->context['wp-curate/queues'] instanceof Queues ) {
-	foreach ( $block->context['wp-curate/queues']->taken_by( $block->parsed_block ) as $channel_post_id ) {
-		$channel_post = get_post( $channel_post_id );
+if ( isset( $attributes['channel'] ) && is_array( $attributes['channel'] ) ) {
+	$own_channel = $attributes['channel'];
+}
 
-		// Like the block's `postId`, a published post can still be one that visitors cannot see.
-		if ( $channel_post instanceof WP_Post && is_post_publicly_viewable( $channel_post ) ) {
-			$channel_posts[] = $channel_post;
-		}
+if ( isset( $block->context['wp-curate/queue'] ) && is_array( $block->context['wp-curate/queue'] ) ) {
+	if ( isset( $block->context['wp-curate/queue']['name'] ) && is_string( $block->context['wp-curate/queue']['name'] ) ) {
+		$channel_name = $block->context['wp-curate/queue']['name'];
+	}
+
+	if ( isset( $block->context['wp-curate/queue']['args'] ) && is_array( $block->context['wp-curate/queue']['args'] ) ) {
+		$channel_args = $block->context['wp-curate/queue']['args'];
 	}
 }
 
-if ( [] === $channel_posts ) {
+if (
+	'' === $channel_name
+	|| ! isset( $block->context['wp-curate/queues'] )
+	|| ! $block->context['wp-curate/queues'] instanceof Queues
+) {
 	return;
 }
 
+$queues = $block->context['wp-curate/queues'];
+
 /*
- * Some post blocks read the global post instead of the context, such as `core/post-title` with
- * `get_the_title()`. Set it like a Query Loop does, then restore the post that was there before.
+ * Each post is a Single Post block that has the inner blocks of this block. It has no pin. Like any
+ * Single Post, it takes the top of the queue as it renders. Inside a Channel Content block, it gets
+ * the channel of that block as context. Outside one, it has the channel of this block.
+ *
+ * The Single Post renders inside a block type that is not registered, like the template of core's
+ * Post Template. Core then applies the context filters to the Single Post as to any inner block. The
+ * supports of this block, such as its layout, apply only to its own wrapper.
  */
-global $post;
+$single_post = [
+	'blockName'    => 'core/null',
+	'attrs'        => [],
+	'innerBlocks'  => [
+		[
+			'blockName'    => 'wp-curate/single-post',
+			'attrs'        => [
+				'channel' => $own_channel,
+			],
+			'innerBlocks'  => $block->parsed_block['innerBlocks'],
+			'innerHTML'    => $block->parsed_block['innerHTML'],
+			'innerContent' => $block->parsed_block['innerContent'],
+		],
+	],
+	'innerHTML'    => '',
+	'innerContent' => [ null ],
+];
 
-$previous_post = $post;
+/*
+ * The most Single Post blocks to render. Keep the value matched with `MAX_REMAINING_POSTS` in the
+ * `useChannelQueue` hook.
+ */
+$limit = 100;
+
+$rendered      = 0;
 $posts_content = '';
+$has_posts     = false;
 
-foreach ( $channel_posts as $channel_post ) {
-	/*
-	 * Like core's Post Template, render the template as a block type that is not registered, so
-	 * that the supports of this block, such as its layout, do not apply to each copy.
-	 */
-	$template              = $block->parsed_block;
-	$template['blockName'] = 'core/null';
-
-	// Give the post to the template, the way that a Query Loop gives each post to its template.
-	$filter_block_context = static function ( $context ) use ( $channel_post ) {
-		if ( is_array( $context ) ) {
-			$context['postId']   = $channel_post->ID;
-			$context['postType'] = $channel_post->post_type;
-		}
-
-		return $context;
-	};
-
-	$post = $channel_post;
-
-	setup_postdata( $post );
-	add_filter( 'render_block_context', $filter_block_context, 1 );
-
+while ( $rendered < $limit && null !== $queues->top( $channel_name, $channel_args, $block->context ) ) {
 	// Assume that the parsed block has the correct shape.
-	$template_content = new WP_Block( $template )->render( [ 'dynamic' => false ] ); // @phpstan-ignore-line argument.type
+	$wrapper = new WP_Block( $single_post, $block->available_context ); // @phpstan-ignore-line argument.type
+	$single  = $wrapper->inner_blocks[0] ?? null;
 
-	remove_filter( 'render_block_context', $filter_block_context, 1 );
+	if ( ! $single instanceof WP_Block ) {
+		break;
+	}
 
-	$posts_content .= sprintf(
-		'<article class="%1$s">%2$s</article>',
-		esc_attr( implode( ' ', get_post_class( '', $channel_post ) ) ),
-		$template_content,
-	);
+	$posts_content .= $wrapper->render();
+
+	++$rendered;
+
+	/*
+	 * Its `postId` context is the post that it took. It is 0 when the post is one that visitors
+	 * cannot see. The Single Post then renders nothing, and the loop goes on to the next post.
+	 */
+	if ( isset( $single->context['postId'] ) && is_int( $single->context['postId'] ) && $single->context['postId'] > 0 ) {
+		$has_posts = true;
+	}
 }
 
-$post = $previous_post;
-
-if ( $post instanceof WP_Post ) {
-	setup_postdata( $post );
+/*
+ * The Channel Content block around this block looks for this wrapper to know whether this block
+ * showed posts, so render it only with posts.
+ */
+if ( ! $has_posts ) {
+	return;
 }
 ?>
 

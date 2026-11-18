@@ -66,9 +66,9 @@ const NO_POST_CONTEXT = {};
  * meaning on other block types. See `pinsPost()`.
  *
  * The Channel Template block takes every post that remains in its channel's queue instead of one
- * post. Only this block type can do so. See `takesRemainingPosts()`. Like other blocks, it gets the
- * first post as `postId` context. Its edit function reads all of the posts with
- * `useChannelQueuePosts()`.
+ * post. Only this block type can do so. See `takesRemainingPosts()`. Like Channel Content, its
+ * `postId` and `postType` context does not change, as on the front end. Its edit function reads all
+ * of the posts with `useChannelQueuePosts()`, and gives each post to its copy of the template.
  *
  * An empty channel name means no channel. A block without a channel takes no post. Its context
  * does not change, as if it did not have the support. A Single Post without a channel shows
@@ -445,7 +445,11 @@ const withChannelSupport = createHigherOrderComponent(
           setAttributes={setAttributes}
           takesRemaining={takesRemaining}
         />
-        {isProvider ? (
+        {/*
+          * Channel Template gives each post to the template in its edit function, so the post
+          * context of the block itself stays the context around it.
+          */}
+        {isProvider || takesRemaining ? (
           <BlockEdit {...props} />
         ) : (
           <BlockEditWithPostFromChannel

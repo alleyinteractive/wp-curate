@@ -1,49 +1,53 @@
 <?php
 /**
- * Channel_Post_IDs_In_Block class file
+ * Channel_Posts_In_Block class file
  *
  * @package wp-curate
  */
 
-namespace Alley\WP\WP_Curate\Post_IDs;
+namespace Alley\WP\WP_Curate\Channels;
 
-use Alley\WP\Types\Post_IDs;
 use WP_Block;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
+use WP_HTML_Tag_Processor;
 
 /**
- * The posts that the channel blocks inside a block took from their queues, such as the Single Post
- * blocks inside a Channel Content block, in document order. A Channel Template block gives only the
- * first post that it took, as its `postId`.
- *
- * Read the IDs after the inner blocks render. Before then, the channel blocks have no posts. Like
- * `Channel_Block_Support`, a channel block is a block with `wp-curate/channels` support that does not
- * provide the `wp-curate/channel` context.
+ * Whether the inner channel blocks inside a block show a post, such as the Single Post blocks inside a
+ * Channel Content block.
  */
-final readonly class Channel_Post_IDs_In_Block implements Post_IDs {
+final readonly class Channel_Posts_In_Block {
 	/**
 	 * Constructor.
 	 *
 	 * @param WP_Block               $block               The block.
+	 * @param string                 $content             The rendered inner blocks of the block.
 	 * @param WP_Block_Type_Registry $block_type_registry Core block type registry.
 	 */
 	public function __construct(
 		private WP_Block $block,
+		private string $content,
 		private WP_Block_Type_Registry $block_type_registry,
 	) {}
 
 	/**
-	 * Post IDs.
+	 * Whether a channel block inside the block shows a post.
 	 *
-	 * @return int[]
+	 * @return bool
 	 */
-	public function post_ids(): array {
-		return $this->post_ids_in( $this->block->inner_blocks );
+	public function exist(): bool {
+		if ( $this->exist_in( $this->block->inner_blocks ) ) {
+			return true;
+		}
+
+		$processor = new WP_HTML_Tag_Processor( $this->content );
+
+		return $processor->next_tag( [ 'class_name' => 'wp-block-wp-curate-channel-template' ] );
 	}
 
 	/**
-	 * The posts that the channel blocks in a list of blocks and their inner blocks took.
+	 * Whether a channel block in a list of blocks and their inner blocks took a post. Stops at the
+	 * first post.
 	 *
 	 * The blocks inside a channel block show its post, so a channel block without a post shows
 	 * nothing, and the blocks inside it do not count.
@@ -52,26 +56,28 @@ final readonly class Channel_Post_IDs_In_Block implements Post_IDs {
 	 *
 	 * @param iterable $blocks The blocks. `WP_Block::$inner_blocks` is a `WP_Block_List`, or an empty
 	 *                         array when the block has no inner blocks.
-	 * @return int[]
+	 * @return bool
 	 */
-	private function post_ids_in( iterable $blocks ): array {
-		$out = [];
-
+	private function exist_in( iterable $blocks ): bool {
 		foreach ( $blocks as $inner ) {
 			if ( ! $inner instanceof WP_Block ) {
 				continue;
 			}
 
+			if ( 'wp-curate/channel-template' === $inner->name ) {
+				continue;
+			}
+
 			if ( $this->is_channel_block( $inner ) ) {
 				if ( isset( $inner->context['postId'] ) && is_int( $inner->context['postId'] ) && $inner->context['postId'] > 0 ) {
-					$out[] = $inner->context['postId'];
+					return true;
 				}
-			} else {
-				$out = array_merge( $out, $this->post_ids_in( $inner->inner_blocks ) );
+			} elseif ( $this->exist_in( $inner->inner_blocks ) ) {
+				return true;
 			}
 		}
 
-		return $out;
+		return false;
 	}
 
 	/**

@@ -12,7 +12,7 @@ function wp_curate_channel_template_block_init(): void {
 	register_block_type(
 		__DIR__,
 		[
-			// `render.php` renders the inner blocks itself, once for each post.
+			// `render.php` renders the inner blocks itself, in a Single Post block for each post.
 			'skip_inner_blocks' => true,
 		],
 	);

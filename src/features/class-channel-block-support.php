@@ -25,15 +25,20 @@ use WP_Post;
  * A block that also provides the `wp-curate/channel` context, like Channel Content, passes its channel to its inner
  * blocks. Any other block takes a post from its channel's queue and gets that post as the `postId` and `postType` context.
  *
- * An empty channel name means no channel. A block that has no channel takes no post. Its context does not change, as if
- * it did not have the support. Inside a block that provides the channel, a block has the channel of that block, so it
- * has no channel if that block has none. Outside one, it has its own channel.
+ * An empty channel name means no channel. A block that has no channel takes no post. Its `postId` and `postType` context
+ * does not change, as if it did not have the support. Inside a block that provides the channel, a block has the channel
+ * of that block, so it has no channel if that block has none. Outside one, it has its own channel.
+ *
+ * Every block with the support gets the channel that it has as the `wp-curate/queue` context, with the same shape as
+ * the `channel` attribute. A block that has no channel gets an empty name. Read this context instead of applying the
+ * rule above again, the way that core's Post Template reads the `query` context.
  *
  * The Single Post block can pin a post with an integer `ref` attribute. A pinned post that is not published, such as a
  * scheduled post, gives its place to the top of the queue.
  *
- * The Channel Template block takes every post that remains in its queue. It cannot pin a post. Only this block type can
- * take the remaining posts.
+ * The Channel Template block takes no post itself, and its `postId` and `postType` context does not change. When it
+ * renders, it finds its queue from its `wp-curate/queue` context. It renders a Single Post block for each post that
+ * remains in that queue, and each Single Post takes its post as usual. See the block's `render.php`.
  *
  * Blocks that use the same channel, arguments, and context share a queue, so they do not show the same post twice.
  * Blocks in other queues can show the same post. See `Queues`.
@@ -42,7 +47,7 @@ use WP_Post;
  */
 final readonly class Channel_Block_Support implements Feature {
 	/**
-	 * The name of the block type that takes the remaining posts.
+	 * The name of the block type that shows the remaining posts through Single Post blocks.
 	 *
 	 * Keep the value matched with `CHANNEL_TEMPLATE_BLOCK` in the `useBlockChannel` hook.
 	 *
@@ -58,15 +63,6 @@ final readonly class Channel_Block_Support implements Feature {
 	 * @var string
 	 */
 	private const SINGLE_POST_BLOCK = 'wp-curate/single-post';
-
-	/**
-	 * The most posts that the channel template block can take, for safety.
-	 *
-	 * Keep the value matched with `MAX_REMAINING_POSTS` in the `useChannelQueue` hook.
-	 *
-	 * @var int
-	 */
-	private const MAX_REMAINING_POSTS = 100;
 
 	/**
 	 * Constructor.
@@ -126,9 +122,10 @@ final readonly class Channel_Block_Support implements Feature {
 			$uses_context[] = 'postId';
 			$uses_context[] = 'postType';
 
-			// The channel of a parent block, and the queues to take a post from.
+			// The channel of a parent block, the queues to take a post from, and the channel that the block has.
 			$uses_context[] = 'wp-curate/channel';
 			$uses_context[] = 'wp-curate/queues';
+			$uses_context[] = 'wp-curate/queue';
 
 			$args['attributes']   = $attributes;
 			$args['uses_context'] = array_values( array_unique( $uses_context ) );
@@ -138,12 +135,14 @@ final readonly class Channel_Block_Support implements Feature {
 	}
 
 	/**
-	 * Filters the default context provided to a rendered block to give it a post from its channel.
+	 * Filters the default context provided to a rendered block to give it its channel and a post
+	 * from that channel.
 	 *
-	 * A block gets a post if it has `wp-curate/channels` support and does not itself provide the
-	 * `wp-curate/channel` context, like Single Post. A block that provides the context, like
-	 * Channel Content, gets no post and instead passes its channel to the blocks inside it. The
-	 * Channel Template block takes each post that remains and gets the first one. The Single Post block
+	 * Every block with `wp-curate/channels` support gets its channel as the `wp-curate/queue`
+	 * context. A block gets a post if it does not itself provide the `wp-curate/channel` context,
+	 * like Single Post. A block that provides the context, like Channel Content, gets no post and
+	 * instead passes its channel to the blocks inside it. The Channel Template block also gets no
+	 * post, because the Single Post blocks that it renders take the posts. The Single Post block
 	 * takes its pinned post, if it has one.
 	 *
 	 * @phpstan-param mixed $context
@@ -165,11 +164,7 @@ final readonly class Channel_Block_Support implements Feature {
 
 		$block_type = $this->block_type_registry->get_registered( $parsed_block['blockName'] );
 
-		if (
-			! $block_type instanceof WP_Block_Type
-			|| ! block_has_support( $block_type, 'wp-curate/channels' )
-			|| isset( $block_type->provides_context['wp-curate/channel'] )
-		) {
+		if ( ! $block_type instanceof WP_Block_Type || ! block_has_support( $block_type, 'wp-curate/channels' ) ) {
 			return $context;
 		}
 
@@ -206,13 +201,25 @@ final readonly class Channel_Block_Support implements Feature {
 			$channel_args = $this->channel_args( $context['wp-curate/channel'] );
 		}
 
-		// A block without a channel, or inside a parent block without one, takes no post and keeps its context.
-		if ( '' === $channel ) {
+		/*
+		 * Set the key on every block, also without a channel. Inner blocks get the context of the
+		 * blocks around them, so a block without the key would read the channel of an outer block.
+		 */
+		$context['wp-curate/queue'] = [
+			'name' => $channel,
+			'args' => $channel_args,
+		];
+
+		if (
+			// A block without a channel, or inside a parent block without one, takes no post and keeps its post context.
+			'' === $channel
+			|| isset( $block_type->provides_context['wp-curate/channel'] )
+			|| self::CHANNEL_TEMPLATE_BLOCK === $block_type->name
+		) {
 			return $context;
 		}
 
-		$takes_remaining = self::CHANNEL_TEMPLATE_BLOCK === $block_type->name;
-		$pins_post       = self::SINGLE_POST_BLOCK === $block_type->name;
+		$pins_post = self::SINGLE_POST_BLOCK === $block_type->name;
 
 		// A pinned post that is not published, such as a scheduled post, gives its place to the top of the queue.
 		if (
@@ -226,26 +233,8 @@ final readonly class Channel_Block_Support implements Feature {
 		}
 
 		// Take the pinned post, or else the top of the channel's queue, and remove that ID from the queue.
-		if ( ! $takes_remaining && isset( $context['wp-curate/queues'] ) && $context['wp-curate/queues'] instanceof Queues ) {
+		if ( isset( $context['wp-curate/queues'] ) && $context['wp-curate/queues'] instanceof Queues ) {
 			$post_id = $context['wp-curate/queues']->take_one( $channel, $ref, $channel_args, $context );
-		}
-
-		/*
-		 * The Channel Template block takes each ID that remains in the queue, and the first is its post. The block reads
-		 * all of them with `Queues::taken_by()` when it renders.
-		 */
-		if ( $takes_remaining && isset( $context['wp-curate/queues'] ) && $context['wp-curate/queues'] instanceof Queues ) {
-			$remaining = $context['wp-curate/queues']->take_remaining(
-				$channel,
-				$channel_args,
-				$context,
-				self::MAX_REMAINING_POSTS,
-				$parsed_block,
-			);
-
-			// Like a single post, a published post can still be one that visitors cannot see.
-			$remaining = array_values( array_filter( $remaining, 'is_post_publicly_viewable' ) );
-			$post_id   = $remaining[0] ?? null;
 		}
 
 		$taken = null;

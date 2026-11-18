@@ -22,7 +22,7 @@ import { CHANNEL_PAGE_SIZE, type ChannelResults } from '../useChannelResults';
 /**
  * The most posts that a block that takes the remaining posts, like Channel Template, can take.
  *
- * Keep the value matched with `Channel_Block_Support::MAX_REMAINING_POSTS` in PHP.
+ * Keep the value matched with `$limit` in `blocks/channel-template/render.php`.
  */
 const MAX_REMAINING_POSTS = 100;
 
@@ -538,8 +538,8 @@ export default function useChannelQueuePost(clientId: string): ChannelQueuePost 
 
 /**
  * Get the posts that a block that takes the remaining posts in its channel's queue takes, like
- * Channel Template, given the blocks before it in the editor. The block's `postId` context is the
- * first of them.
+ * Channel Template, given the blocks before it in the editor. The block's own `postId` context is
+ * the context around it, not one of these posts.
  *
  * `useSelect()` compares its result shallowly, and the queue gives a new array each time, so the
  * hook compares the posts by value and gives back the same array until one of them changes.
