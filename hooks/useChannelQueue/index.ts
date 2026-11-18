@@ -20,9 +20,9 @@ import {
 import { CHANNEL_PAGE_SIZE, type ChannelResults } from '../useChannelResults';
 
 /**
- * The most posts that a block that takes the remaining posts, like Channel Template, can take.
+ * The most posts that a block that takes the remaining posts, like Channel Loop, can take.
  *
- * Keep the value matched with `$limit` in `blocks/channel-template/render.php`.
+ * Keep the value matched with `$limit` in `blocks/channel-loop/render.php`.
  */
 const MAX_REMAINING_POSTS = 100;
 
@@ -146,7 +146,7 @@ function postContext(select: any): Record<string, unknown> {
  * - A single-item block shows the top of its channel's queue. A Single Post shows its ref instead,
  *   if it has one. That ID is then removed from the queue. Other block types cannot pin a post, so
  *   their `ref` attribute has no meaning here. See `pinsPost()`.
- * - A block that takes the remaining posts, like Channel Template, shows each ID that remains in
+ * - A block that takes the remaining posts, like Channel Loop, shows each ID that remains in
  *   its channel's queue, up to `MAX_REMAINING_POSTS`. Those IDs are then removed from the queue.
  * - A block that provides the `wp-curate/channel` context, like Channel Content, takes nothing.
  * - A block without a channel takes nothing. Its inner blocks get its context.
@@ -435,7 +435,7 @@ function channelQueue(
 
         /*
          * A Single Post gives its post to the blocks inside it, or no post if it has none. A
-         * Channel Template block gives each post to its template on the page, but the editor has
+         * Channel Loop block gives each post to its template on the page, but the editor has
          * only one copy of the template, so it gives the first post here.
          */
         let post = NO_POST;
@@ -538,7 +538,7 @@ export default function useChannelQueuePost(clientId: string): ChannelQueuePost 
 
 /**
  * Get the posts that a block that takes the remaining posts in its channel's queue takes, like
- * Channel Template, given the blocks before it in the editor. The block's own `postId` context is
+ * Channel Loop, given the blocks before it in the editor. The block's own `postId` context is
  * the context around it, not one of these posts.
  *
  * `useSelect()` compares its result shallowly, and the queue gives a new array each time, so the

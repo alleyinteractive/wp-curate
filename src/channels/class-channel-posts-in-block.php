@@ -42,7 +42,7 @@ final readonly class Channel_Posts_In_Block {
 
 		$processor = new WP_HTML_Tag_Processor( $this->content );
 
-		return $processor->next_tag( [ 'class_name' => 'wp-block-wp-curate-channel-template' ] );
+		return $processor->next_tag( [ 'class_name' => 'wp-block-wp-curate-channel-loop' ] );
 	}
 
 	/**
@@ -64,7 +64,7 @@ final readonly class Channel_Posts_In_Block {
 				continue;
 			}
 
-			if ( 'wp-curate/channel-template' === $inner->name ) {
+			if ( 'wp-curate/channel-loop' === $inner->name ) {
 				continue;
 			}
 

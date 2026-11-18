@@ -65,7 +65,7 @@ const NO_POST_CONTEXT = {};
  * with the pinned post's type. Only this block type can pin a post, so the plugin gives `ref` no
  * meaning on other block types. See `pinsPost()`.
  *
- * The Channel Template block takes every post that remains in its channel's queue instead of one
+ * The Channel Loop block takes every post that remains in its channel's queue instead of one
  * post. Only this block type can do so. See `takesRemainingPosts()`. Like Channel Content, its
  * `postId` and `postType` context does not change, as on the front end. Its edit function reads all
  * of the posts with `useChannelQueuePosts()`, and gives each post to its copy of the template.
@@ -446,7 +446,7 @@ const withChannelSupport = createHigherOrderComponent(
           takesRemaining={takesRemaining}
         />
         {/*
-          * Channel Template gives each post to the template in its edit function, so the post
+          * Channel Loop gives each post to the template in its edit function, so the post
           * context of the block itself stays the context around it.
           */}
         {isProvider || takesRemaining ? (

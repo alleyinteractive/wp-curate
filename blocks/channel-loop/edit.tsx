@@ -95,7 +95,7 @@ function TemplatePreview({
 const MemoizedTemplatePreview = memo(TemplatePreview);
 
 /**
- * The wp-curate/channel-template block edit function.
+ * The wp-curate/channel-loop block edit function.
  *
  * The `wp-curate/channels` block support gives the block a channel, like a Single Post, and the
  * block shows each post that remains in the channel's queue after the blocks before it.

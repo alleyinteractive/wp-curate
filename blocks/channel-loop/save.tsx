@@ -5,7 +5,7 @@ import React from 'react';
 import { InnerBlocks } from '@wordpress/block-editor';
 
 /**
- * The wp-curate/channel-template block save function.
+ * The wp-curate/channel-loop block save function.
  *
  * @return {WPElement} Element to render.
  */

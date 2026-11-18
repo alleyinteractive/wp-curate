@@ -15,7 +15,7 @@ namespace Alley\WP\WP_Curate\Channels;
  * removed from that queue, so the blocks that use the same queue never show the same post twice. The queues do not
  * share IDs, so blocks that use different queues can show the same post. A block always shows its own pin.
  *
- * A block that shows the remaining IDs, like Channel Template, renders one Single Post block at a time while its queue
+ * A block that shows the remaining IDs, like Channel Loop, renders one Single Post block at a time while its queue
  * has a `top()`, up to a limit. Each Single Post takes the top of the queue. The blocks after it in the same queue get
  * the IDs past the limit, if any.
  *

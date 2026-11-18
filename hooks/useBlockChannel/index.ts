@@ -105,13 +105,13 @@ export function isChannelProvider(blockType: unknown): boolean {
  * The name of the block type that takes every post that remains in its channel's queue. Only this
  * block type can take them, so that the plugin does not commit to a public API for it yet.
  *
- * Keep the value matched with `Channel_Block_Support::CHANNEL_TEMPLATE_BLOCK` in PHP.
+ * Keep the value matched with `Channel_Block_Support::CHANNEL_LOOP_BLOCK` in PHP.
  */
-const CHANNEL_TEMPLATE_BLOCK = 'wp-curate/channel-template';
+const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
 
 /**
  * Whether a block type takes every post that remains in its channel's queue, instead of one post.
- * Only the Channel Template block does.
+ * Only the Channel Loop block does.
  *
  * Keep the rules matched with `Channel_Block_Support` in PHP.
  *
@@ -125,7 +125,7 @@ export function takesRemainingPosts(blockType: unknown): boolean {
       name,
     } = blockType as Record<string, unknown>;
 
-    takesRemaining = name === CHANNEL_TEMPLATE_BLOCK;
+    takesRemaining = name === CHANNEL_LOOP_BLOCK;
   }
 
   return takesRemaining;

@@ -36,7 +36,7 @@ use WP_Post;
  * The Single Post block can pin a post with an integer `ref` attribute. A pinned post that is not published, such as a
  * scheduled post, gives its place to the top of the queue.
  *
- * The Channel Template block takes no post itself, and its `postId` and `postType` context does not change. When it
+ * The Channel Loop block takes no post itself, and its `postId` and `postType` context does not change. When it
  * renders, it finds its queue from its `wp-curate/queue` context. It renders a Single Post block for each post that
  * remains in that queue, and each Single Post takes its post as usual. See the block's `render.php`.
  *
@@ -49,11 +49,11 @@ final readonly class Channel_Block_Support implements Feature {
 	/**
 	 * The name of the block type that shows the remaining posts through Single Post blocks.
 	 *
-	 * Keep the value matched with `CHANNEL_TEMPLATE_BLOCK` in the `useBlockChannel` hook.
+	 * Keep the value matched with `CHANNEL_LOOP_BLOCK` in the `useBlockChannel` hook.
 	 *
 	 * @var string
 	 */
-	private const CHANNEL_TEMPLATE_BLOCK = 'wp-curate/channel-template';
+	private const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
 
 	/**
 	 * The name of the block type that can pin a post with its `ref` attribute.
@@ -141,7 +141,7 @@ final readonly class Channel_Block_Support implements Feature {
 	 * Every block with `wp-curate/channels` support gets its channel as the `wp-curate/queue`
 	 * context. A block gets a post if it does not itself provide the `wp-curate/channel` context,
 	 * like Single Post. A block that provides the context, like Channel Content, gets no post and
-	 * instead passes its channel to the blocks inside it. The Channel Template block also gets no
+	 * instead passes its channel to the blocks inside it. The Channel Loop block also gets no
 	 * post, because the Single Post blocks that it renders take the posts. The Single Post block
 	 * takes its pinned post, if it has one.
 	 *
@@ -214,7 +214,7 @@ final readonly class Channel_Block_Support implements Feature {
 			// A block without a channel, or inside a parent block without one, takes no post and keeps its post context.
 			'' === $channel
 			|| isset( $block_type->provides_context['wp-curate/channel'] )
-			|| self::CHANNEL_TEMPLATE_BLOCK === $block_type->name
+			|| self::CHANNEL_LOOP_BLOCK === $block_type->name
 		) {
 			return $context;
 		}
