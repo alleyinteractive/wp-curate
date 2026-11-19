@@ -182,19 +182,19 @@ export default function Edit({
     [argFields, contextChannel, ownChannel],
   );
 
-  // The post in each slot, or null while the channel loads.
-  const slotPosts = useChannelQueuePosts(clientId);
+  // Each post that the block takes, or null while the channel loads.
+  const takenPosts = useChannelQueuePosts(clientId);
 
-  // The posts, or null while the channel loads. Slots past the end of the queue have no post.
+  // The posts, or null while the channel loads. The block takes no post past the end of the queue.
   const posts = useMemo(() => {
     let out: ChannelQueuePost[] | null = null;
 
-    if (slotPosts !== null) {
-      out = slotPosts.filter((post): post is ChannelQueuePost => post !== null);
+    if (takenPosts !== null) {
+      out = takenPosts.filter((post): post is ChannelQueuePost => post !== null);
     }
 
     return out;
-  }, [slotPosts]);
+  }, [takenPosts]);
 
   let activeId = 0;
 

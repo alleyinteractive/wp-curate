@@ -33,8 +33,8 @@ use WP_Block_Type_Registry;
  *
  * A block that shows posts takes them itself when it renders, with `Queues::take()`. It finds its queue from its
  * `wp-curate/queue` context and its `context`, which has the post around it as `postId`. In the editor, its block type
- * gives a `channelSlots` callback that returns the same slots. The Single Post block takes one post, its pin or else
- * the top of the queue, and gives that post to its inner blocks. The Channel Loop block renders a Single Post block for
+ * gives a `channelPostsToTake` callback that returns the same posts. The Single Post block takes one post, its pin or
+ * else the top of the queue, and gives that post to its inner blocks. The Channel Loop block renders a Single Post block for
  * each post that remains in its queue. See the `render.php` of each block.
  *
  * Blocks that use the same channel, arguments, and context share a queue, so they do not show the same post twice.

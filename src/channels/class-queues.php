@@ -15,25 +15,25 @@ namespace Alley\WP\WP_Curate\Channels;
  * removed from that queue, so the blocks that use the same queue never show the same post twice. The queues do not
  * share IDs, so blocks that use different queues can show the same post. A block always shows its own pin.
  *
- * A block takes an ID for each of its slots, in order, with `take()`, when it renders. The Single Post block has one
- * slot. A block of another plugin takes its own slots in the same way. Keep its slots matched with the
- * `channelSlots` callback that its block type gives in the editor.
+ * A block takes its IDs in order with `take()` when it renders. The Single Post block takes one ID. A block of another
+ * plugin takes its IDs in the same way. Keep the IDs that it takes matched with the `channelPostsToTake` callback that
+ * its block type gives in the editor.
  *
  * A block that shows the remaining IDs, like Channel Loop, renders one Single Post block at a time while its queue
- * has a `top()`, up to `MAX_SLOTS`. Each Single Post takes the top of the queue. The blocks after it in the same queue
+ * has a `top()`, up to `MAX_POSTS`. Each Single Post takes the top of the queue. The blocks after it in the same queue
  * get the IDs past the limit, if any.
  *
  * Keep these rules matched with `useChannelQueue()`.
  */
 final class Queues {
 	/**
-	 * The most slots that one block can have.
+	 * The most IDs that one block can take.
 	 *
-	 * Keep the value matched with `MAX_CHANNEL_SLOTS` in the `useBlockChannel` hook.
+	 * Keep the value matched with `MAX_CHANNEL_POSTS` in the `useBlockChannel` hook.
 	 *
 	 * @var int
 	 */
-	public const MAX_SLOTS = 100;
+	public const MAX_POSTS = 100;
 
 	/**
 	 * Queues that exist so far, keyed by channel and context.
@@ -52,24 +52,24 @@ final class Queues {
 	) {}
 
 	/**
-	 * Takes an ID for each slot of a block, in order, and removes each ID from the queue.
+	 * Takes the IDs of a block in order, and removes each ID from the queue.
 	 *
-	 * A slot with a pin takes the pin. A pin that is not published, such as a scheduled post, gives its place to the top
-	 * of the queue. Other slots take the top of the queue. Each ID is removed before the next slot takes, so a block does
-	 * not show the same post twice, except a pin that an earlier slot took as the top of the queue.
+	 * A pin takes the pinned ID. A pin that is not published, such as a scheduled post, takes the top of the queue in its
+	 * place. A ref of 0 takes the top of the queue. Each ID is removed before the next one is taken, so a block does not
+	 * show the same post twice, except a pin that the block already took as the top of the queue.
 	 *
 	 * The caller must still check that visitors can see each post, such as with `is_post_publicly_viewable()`.
 	 *
 	 * @param string  $name    Channel name that the block uses.
-	 * @param mixed[] $refs    The pinned ID of each slot, or 0 for the top of the queue. Only the first `MAX_SLOTS` count.
+	 * @param mixed[] $refs    The pinned ID of each post, or 0 for the top of the queue. Only the first `MAX_POSTS` count.
 	 * @param mixed[] $args    The block's arguments for the channel.
 	 * @param mixed[] $context Block context.
-	 * @return array<int|null> The ID that each slot took, in the order of the slots, or null for a slot when no ID remains.
+	 * @return array<int|null> The ID taken for each ref, in the same order, or null where no ID remains.
 	 */
 	public function take( string $name, array $refs, array $args, array $context ): array {
 		$taken = [];
 
-		foreach ( array_slice( $refs, 0, self::MAX_SLOTS ) as $ref ) {
+		foreach ( array_slice( $refs, 0, self::MAX_POSTS ) as $ref ) {
 			if ( ! is_int( $ref ) || $ref < 1 || 'publish' !== get_post_status( $ref ) ) {
 				$ref = 0;
 			}

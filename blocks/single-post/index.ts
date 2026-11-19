@@ -18,8 +18,9 @@ registerBlockType(
   {
     // The name in List View shows the type of the post that the block shows.
     __experimentalLabel: label,
-    // One slot: the pin, or the top of the queue. Keep matched with `Channel_Block_Support`.
-    channelSlots: ({ postType, ref }: Record<string, unknown>) => [{ postType, ref }],
+    // The block takes one post: its pin, or the top of the queue. Keep matched with
+    // `Channel_Block_Support`.
+    channelPostsToTake: ({ postType, ref }: Record<string, unknown>) => [{ postType, ref }],
     // The inner blocks get the post. Keep matched with the context filter in `render.php`.
     channelInnerContext: firstPostContext,
     edit,

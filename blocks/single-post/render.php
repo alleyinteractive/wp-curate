@@ -57,7 +57,7 @@ if ( isset( $attributes['ref'] ) && is_int( $attributes['ref'] ) ) {
 }
 
 /*
- * The block has one slot. Keep it matched with the `channelSlots` callback of the block type in the
+ * The block takes one post. Keep it matched with the `channelPostsToTake` callback of the block type in the
  * editor. The ID leaves the queue even if visitors cannot see the post.
  */
 $post_id = $block->context['wp-curate/queues']->take( $channel_name, [ $ref ], $channel_args, $block->context )[0] ?? null;

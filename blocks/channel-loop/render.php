@@ -77,10 +77,10 @@ $single_post = [
 ];
 
 /*
- * The most Single Post blocks to render. Each is one of the slots that the block type's
- * `channelSlots` callback gives in the editor.
+ * The most Single Post blocks to render. Each takes one of the posts that the block type's
+ * `channelPostsToTake` callback gives in the editor.
  */
-$limit = Queues::MAX_SLOTS;
+$limit = Queues::MAX_POSTS;
 
 $rendered      = 0;
 $posts_content = '';
@@ -107,7 +107,7 @@ while ( $rendered < $limit && null !== $queues->top( $channel_name, $channel_arg
 	 * post that visitors cannot see, and the loop goes on to the next post.
 	 */
 	if ( ! $has_posts ) {
-		$has_posts = ( new WP_HTML_Tag_Processor( $rendered_post ) )->next_tag( [ 'class_name' => 'wp-block-wp-curate-single-post' ] );
+		$has_posts = new WP_HTML_Tag_Processor( $rendered_post )->next_tag( [ 'class_name' => 'wp-block-wp-curate-single-post' ] );
 	}
 }
 

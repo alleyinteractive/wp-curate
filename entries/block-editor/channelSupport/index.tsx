@@ -40,31 +40,32 @@ const SINGLE_POST_BLOCK = 'wp-curate/single-post';
 
 /*
  * The Channel Loop block, which has its own help text. It shows every post that remains in its
- * queue. Its slots stop at `MAX_CHANNEL_SLOTS`, but that limit only guards the page.
+ * queue. It takes no more than `MAX_CHANNEL_POSTS`, but that limit only guards the page.
  */
 const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
 
 /*
  * Blocks with the `wp-curate/channels` block support get a Channel panel. A block that provides the
  * channel context, like Channel Content, gives the channel to the blocks inside it. A block type
- * that gives a `channelSlots` callback takes a post from its channel's queue for each slot. See
- * `channelSlots()`. The support does not change the `postId` and `postType` context of any block,
- * so that its channel can read the post around it. The blocks of this plugin read their posts with
- * `useChannelQueuePost()` and `useChannelQueuePosts()`. Other blocks read them with
- * `getChannelPosts()` in the `wp-curate/channels` store. Like a block binding, the `channel`
- * attribute is an object with the channel `name` and the `args` that the block gives the channel,
- * such as a term. Other scripts add the controls of the arguments through the Channel panel's
- * slot, in `components/ChannelPanelSlotFill`. The blocks that use the same channel, arguments, and
- * context share a queue, so they do not show the same post twice. Blocks in other queues can show
- * the same post. The `Channel_Block_Support` feature in PHP adds the `channel` attribute and the
- * context that the block uses. On the front end, each block takes the same posts when it renders.
+ * that gives a `channelPostsToTake` callback takes the posts that the callback returns from its
+ * channel's queue. See `channelPostsToTake()`. The support does not change the `postId` and
+ * `postType` context of any block, so that its channel can read the post around it. The blocks of
+ * this plugin read their posts with `useChannelQueuePost()` and `useChannelQueuePosts()`. Other
+ * blocks read them with `getChannelPosts()` in the `wp-curate/channels` store. Like a block
+ * binding, the `channel` attribute is an object with the channel `name` and the `args` that the
+ * block gives the channel, such as a term. Other scripts add the controls of the arguments through
+ * the Channel panel's slot, in `components/ChannelPanelSlotFill`. The blocks that use the same
+ * channel, arguments, and context share a queue, so they do not show the same post twice. Blocks in
+ * other queues can show the same post. The `Channel_Block_Support` feature in PHP adds the
+ * `channel` attribute and the context that the block uses. On the front end, each block takes the
+ * same posts when it renders.
  *
- * The Single Post block has one slot. It can pin a post with an integer `ref` attribute, and a
+ * The Single Post block takes one post. It can pin a post with an integer `ref` attribute, and a
  * `postType` attribute with the pinned post's type. Its edit function gives its post to its inner
  * blocks as context, as its `render.php` does.
  *
- * The Channel Loop block has a slot for each post that can remain in its channel's queue, up to
- * `MAX_CHANNEL_SLOTS`. Its edit function reads all of the posts with `useChannelQueuePosts()`, and
+ * The Channel Loop block takes each post that remains in its channel's queue, up to
+ * `MAX_CHANNEL_POSTS`. Its edit function reads all of the posts with `useChannelQueuePosts()`, and
  * gives each post to its copy of the template.
  *
  * An empty channel name means no channel. A block without a channel takes no post. A Single Post

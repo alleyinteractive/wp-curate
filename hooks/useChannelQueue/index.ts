@@ -6,12 +6,12 @@ import { useMemo } from '@wordpress/element';
 
 // Plugin dependencies.
 import {
-  type ChannelSlot,
+  type ChannelPostToTake,
   channelArgFields,
   channelContext,
   channelInnerContext,
-  channelSlots,
-  hasChannelSlots,
+  channelPostsToTake,
+  hasChannelPostsToTake,
   hasEveryChannelArg,
   isChannelProvider,
   pickChannelArgs,
@@ -39,12 +39,11 @@ const NO_POST: ChannelQueuePost = {
 };
 
 /**
- * The post in each slot of a block, in the order of the slots. A slot is null when the queue has
- * no post for it.
+ * Each post that a block takes, in order. An entry is null when the queue has no post for it.
  */
-export type ChannelSlotPosts = (ChannelQueuePost | null)[];
+export type ChannelBlockPosts = (ChannelQueuePost | null)[];
 
-const NO_POSTS: ChannelSlotPosts = [];
+const NO_POSTS: ChannelBlockPosts = [];
 
 /**
  * The context that tells the block its channel and the data the block takes from the channel.
@@ -52,8 +51,8 @@ const NO_POSTS: ChannelSlotPosts = [];
 interface ChannelQueue {
   /** The context, or null while the block above it that gives it its context loads. */
   context: Record<string, unknown> | null;
-  /** The post in each slot of the block, or null while channels load. See `channelSlots()`. */
-  posts: ChannelSlotPosts | null;
+  /** Each post that the block takes, or null while channels load. See `channelPostsToTake()`. */
+  posts: ChannelBlockPosts | null;
 }
 
 /**
@@ -80,12 +79,12 @@ function channelAttribute(block: unknown): unknown {
 }
 
 /**
- * The posts of the pinned slots, with null for the other slots.
+ * The pins of a block, with null for each post without a pin.
  *
- * @param slots The block's slots.
+ * @param toTake Each post that the block takes.
  */
-function pinnedPosts(slots: ChannelSlot[]): ChannelSlotPosts {
-  return slots.map(({ postType, ref }) => {
+function pinnedPosts(toTake: ChannelPostToTake[]): ChannelBlockPosts {
+  return toTake.map(({ postType, ref }) => {
     let post: ChannelQueuePost | null = null;
 
     if (ref > 0) {
@@ -140,11 +139,11 @@ function postContext(select: any): Record<string, unknown> {
  *
  * Keep the rules in sync with `Queues` in PHP. Blocks take IDs in document order:
  *
- * - A block type with a `channelSlots` callback, like Single Post and Channel Loop, takes an ID for
- *   each of its slots, in order. A pinned slot takes its ref. Another slot takes the top of the
- *   channel's queue. Each ID is then removed from the queue. See `channelSlots()`. Its inner blocks
- *   get the context that its `channelInnerContext` callback gives, or its own context if it has no
- *   callback. See `channelInnerContext()`.
+ * - A block type with a `channelPostsToTake` callback, like Single Post and Channel Loop, takes an
+ *   ID for each post that the callback returns, in order. A pin takes its ref. A post without a pin
+ *   takes the top of the channel's queue. Each ID is then removed from the queue. See
+ *   `channelPostsToTake()`. Its inner blocks get the context that its `channelInnerContext`
+ *   callback gives, or its own context if it has no callback. See `channelInnerContext()`.
  * - Any other block, such as Channel Content, takes nothing. Its inner blocks get its context.
  * - A block without a channel takes nothing. Its inner blocks get its context.
  *   Inside a provider, a block has the provider's channel, so it has none if the provider has
@@ -205,8 +204,8 @@ function channelQueue(
   let outPosts = NO_POSTS;
 
   /*
-   * Take the ID for each slot of a block from its queue. The block is loading if its channel is
-   * loading, or if the block above it that gives it its context is loading.
+   * Take the ID for each post that a block takes from its queue. The block is loading if its
+   * channel is loading, or if the block above it that gives it its context is loading.
    *
    * A block inside a provider uses the provider's channel and arguments, even if the block has its
    * own from before it moved in.
@@ -215,13 +214,13 @@ function channelQueue(
     block: any,
     context: Record<string, unknown>,
     providerChannel: unknown,
-    slots: ChannelSlot[],
+    toTake: ChannelPostToTake[],
     isContextLoading: boolean,
   ) => {
     const providerName = toChannelName(providerChannel);
 
-    // A pinned slot shows its pin while the queue loads, and also if the channel has no posts.
-    const pinned = pinnedPosts(slots);
+    // A pin shows while the queue loads, and also if the channel has no posts.
+    const pinned = pinnedPosts(toTake);
 
     let isLoading = false;
     let name = toChannelName(channelAttribute(block));
@@ -235,7 +234,7 @@ function channelQueue(
     if (name === null || name === '') {
       return {
         isLoading,
-        posts: slots.map(() => null),
+        posts: toTake.map(() => null),
       };
     }
 
@@ -274,11 +273,11 @@ function channelQueue(
       previous = takenFromQueues.get(key) as number[];
     }
 
-    const openSlots = slots.filter(({ ref }) => ref === 0).length;
+    const unpinnedCount = toTake.filter(({ ref }) => ref === 0).length;
 
-    // A block with only pinned slots, or none, needs no IDs from the channel.
-    if (openSlots === 0) {
-      takenFromQueues.set(key, [...previous, ...slots.map(({ ref }) => ref)]);
+    // A block with only pins, or with no posts to take, needs no IDs from the channel.
+    if (unpinnedCount === 0) {
+      takenFromQueues.set(key, [...previous, ...toTake.map(({ ref }) => ref)]);
 
       return {
         isLoading,
@@ -287,11 +286,12 @@ function channelQueue(
     }
 
     /*
-     * Every ID taken before can be in the queue, so load that many IDs plus one for each open
-     * slot, in whole pages. Then load a page more each time that an open slot finds every loaded ID
-     * removed, until the channel ends.
+     * Every ID taken before can be in the queue, so load that many IDs plus one for each post
+     * without a pin, in whole pages. Then load a page more each time that a post without a pin
+     * finds every loaded ID removed, until the channel ends.
      */
-    let count = Math.ceil((previous.length + openSlots) / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
+    const needed = previous.length + unpinnedCount;
+    let count = Math.ceil(needed / CHANNEL_PAGE_SIZE) * CHANNEL_PAGE_SIZE;
     let isSearching = true;
 
     while (isSearching) {
@@ -309,20 +309,20 @@ function channelQueue(
           ids,
         } = loaded;
 
-        // The count of this request, for the slots below.
+        // The count of this request, for the loop below.
         const requested = count;
 
-        // The IDs removed from the queue, which grows as each slot takes an ID.
+        // The IDs removed from the queue. The set grows each time that the block takes an ID.
         const skipped = new Set(previous);
 
         // The index of the first loaded ID that might not be removed. It only moves forward.
         let next = 0;
         let isShort = false;
 
-        posts = slots.map(({ postType, ref }) => {
+        posts = toTake.map(({ postType, ref }) => {
           let post: ChannelQueuePost | null = null;
 
-          // A pin is removed from the queue, so the slots after it do not show it again.
+          // A pin is removed from the queue, so the block does not show it again.
           if (ref > 0) {
             skipped.add(ref);
 
@@ -393,7 +393,7 @@ function channelQueue(
     blocks.forEach((block) => {
       const blockType = getBlockType(block.name);
       const isProvider = isChannelProvider(blockType);
-      const hasSlots = hasChannelSlots(blockType);
+      const takesPosts = hasChannelPostsToTake(blockType);
       const name = toChannelName(channelAttribute(block));
 
       // Like a block without channel support, a block without a channel takes nothing.
@@ -415,7 +415,7 @@ function channelQueue(
         childChannel = channelAttribute(block);
       }
 
-      if (hasSlots && name !== null && !hasNoChannel) {
+      if (takesPosts && name !== null && !hasNoChannel) {
         const {
           isLoading,
           posts,
@@ -423,7 +423,7 @@ function channelQueue(
           block,
           context,
           providerChannel,
-          channelSlots(blockType, block.attributes, context),
+          channelPostsToTake(blockType, block.attributes, context),
           isContextLoading,
         );
 
@@ -457,7 +457,7 @@ function channelQueue(
 
   walk(getBlocks(), postContext(select), undefined, false);
 
-  let posts: ChannelSlotPosts | null = outPosts;
+  let posts: ChannelBlockPosts | null = outPosts;
 
   if (isOutLoading) {
     posts = null;
@@ -470,20 +470,20 @@ function channelQueue(
 }
 
 /**
- * A `channelInnerContext` callback that gives the inner blocks the post in the first slot as their
- * `postId` and `postType` context, or no post if the slot is empty. Single Post and Channel Loop
- * use it. On the page, Single Post gives its post with a context filter in `render.php`. Channel
- * Loop renders a Single Post for each post, but the editor has only one copy of its template, so
- * the template gets the first post.
+ * A `channelInnerContext` callback that gives the inner blocks the first post that the block takes
+ * as their `postId` and `postType` context, or no post if the queue had none. Single Post and
+ * Channel Loop use it. On the page, Single Post gives its post with a context filter in
+ * `render.php`. Channel Loop renders a Single Post for each post, but the editor has only one copy
+ * of its template, so the template gets the first post.
  *
  * @param attributes Block attributes.
  * @param context    The context around the block.
- * @param posts      The post in each slot of the block.
+ * @param posts      Each post that the block takes, in order.
  */
 export function firstPostContext(
   attributes: unknown,
   context: Record<string, unknown>,
-  posts: ChannelSlotPosts,
+  posts: ChannelBlockPosts,
 ): ChannelQueuePost {
   let post = NO_POST;
 
@@ -495,7 +495,7 @@ export function firstPostContext(
 }
 
 /**
- * Get the post in the first slot of a block, given the blocks before it in the editor, as the
+ * Get the first post that a block takes, given the blocks before it in the editor, as the
  * `postId` and `postType` context that a Single Post gives the blocks inside it.
  *
  * This is a plain function of `select`, so that a label callback, which cannot call hooks, can use
@@ -503,7 +503,7 @@ export function firstPostContext(
  *
  * @param select   The data registry's `select`.
  * @param clientId Client ID of the block.
- * @return The post, no post if the slot is empty or the block has no slots, or null while
+ * @return The post, no post if the queue had none or the block takes no posts, or null while
  *         channels load.
  */
 export function channelQueuePost(select: any, clientId: string): ChannelQueuePost | null {
@@ -525,15 +525,15 @@ export function channelQueuePost(select: any, clientId: string): ChannelQueuePos
 }
 
 /**
- * Get the post in each slot of a block, given the blocks before it in the editor. See
- * `channelSlots()`. The `getChannelPosts()` selector of the `wp-curate/channels` store gives this
- * to the blocks of other plugins.
+ * Get each post that a block takes, given the blocks before it in the editor. See
+ * `channelPostsToTake()`. The `getChannelPosts()` selector of the `wp-curate/channels` store gives
+ * this to the blocks of other plugins.
  *
  * @param select   The data registry's `select`.
  * @param clientId Client ID of the block.
  * @return The posts, or null while channels load.
  */
-export function channelQueuePosts(select: any, clientId: string): ChannelSlotPosts | null {
+export function channelQueuePosts(select: any, clientId: string): ChannelBlockPosts | null {
   return channelQueue(select, clientId).posts;
 }
 
@@ -554,7 +554,7 @@ export function channelQueueContext(select: any, clientId: string): Record<strin
 }
 
 /**
- * Get the post in the first slot of a block, given the blocks before it in the editor.
+ * Get the first post that a block takes, given the blocks before it in the editor.
  *
  * `useSelect()` gives back the same object until the ID or the type changes, because it compares
  * the result shallowly.
@@ -570,7 +570,7 @@ export default function useChannelQueuePost(clientId: string): ChannelQueuePost 
 }
 
 /**
- * Get the post in each slot of a block, given the blocks before it in the editor. A slot is null
+ * Get each post that a block takes, given the blocks before it in the editor. An entry is null
  * when the queue has no post for it. The block's own `postId` context is the context around it,
  * not one of these posts.
  *
@@ -580,7 +580,7 @@ export default function useChannelQueuePost(clientId: string): ChannelQueuePost 
  * @param clientId Client ID of the block.
  * @return The posts, or null while channels load.
  */
-export function useChannelQueuePosts(clientId: string): ChannelSlotPosts | null {
+export function useChannelQueuePosts(clientId: string): ChannelBlockPosts | null {
   const postsKey = useSelect(
     (select) => JSON.stringify(channelQueuePosts(select, clientId)),
     [clientId],

@@ -4,7 +4,7 @@ import { createReduxStore, createRegistrySelector, register } from '@wordpress/d
 import { addQueryArgs } from '@wordpress/url';
 
 // Plugin dependencies.
-import { type ChannelSlotPosts, channelQueuePosts } from '../../../hooks/useChannelQueue';
+import { type ChannelBlockPosts, channelQueuePosts } from '../../../hooks/useChannelQueue';
 import type { ChannelResultsPage, ChannelResults } from '../../../hooks/useChannelResults';
 
 /*
@@ -598,19 +598,19 @@ const getAvailableChannels = (state: ChannelState, context: object) => {
  * The last posts that `getChannelPosts()` gave for each block, by client ID, so that it gives back
  * the same array until a post changes.
  */
-const channelPostsByBlock = new Map<string, { key: string, posts: ChannelSlotPosts | null }>();
+const channelPostsByBlock = new Map<string, { key: string, posts: ChannelBlockPosts | null }>();
 
 /**
- * Get the post in each slot of a block, given the blocks before it in the editor.
+ * Get each post that a block takes, given the blocks before it in the editor.
  *
- * A block type with the `wp-curate/channels` support and a `channelSlots` callback takes a post
- * for each slot that the callback returns. A block of another plugin cannot import the queue,
+ * A block type with the `wp-curate/channels` support and a `channelPostsToTake` callback takes the
+ * posts that the callback returns. A block of another plugin cannot import the queue,
  * so it reads its posts here, such as with
  * `useSelect( ( select ) => select( 'wp-curate/channels' ).getChannelPosts( clientId ) )`.
  *
  * @param clientId Client ID of the block.
- * @return The post in each slot, in the order of the slots, with null for a slot that the queue
- *         has no post for. Null while channels load.
+ * @return Each post that the block takes, in order, with null where the queue has no post. Null
+ *         while channels load.
  */
 const getChannelPosts = createRegistrySelector((select) => (
   state: ChannelState,
