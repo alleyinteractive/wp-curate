@@ -1,9 +1,10 @@
 // WordPress dependencies.
 import apiFetch from '@wordpress/api-fetch';
-import { createReduxStore, register } from '@wordpress/data';
+import { createReduxStore, createRegistrySelector, register } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 // Plugin dependencies.
+import { type ChannelSlotPosts, channelQueuePosts } from '../../../hooks/useChannelQueue';
 import type { ChannelResultsPage, ChannelResults } from '../../../hooks/useChannelResults';
 
 /*
@@ -593,6 +594,41 @@ const getAvailableChannels = (state: ChannelState, context: object) => {
   return list;
 };
 
+/*
+ * The last posts that `getChannelPosts()` gave for each block, by client ID, so that it gives back
+ * the same array until a post changes.
+ */
+const channelPostsByBlock = new Map<string, { key: string, posts: ChannelSlotPosts | null }>();
+
+/**
+ * Get the post in each slot of a block, given the blocks before it in the editor.
+ *
+ * A block type with the `wp-curate/channels` support and a `channelSlots` callback takes a post
+ * for each slot that the callback returns. A block of another plugin cannot import the queue,
+ * so it reads its posts here, such as with
+ * `useSelect( ( select ) => select( 'wp-curate/channels' ).getChannelPosts( clientId ) )`.
+ *
+ * @param clientId Client ID of the block.
+ * @return The post in each slot, in the order of the slots, with null for a slot that the queue
+ *         has no post for. Null while channels load.
+ */
+const getChannelPosts = createRegistrySelector((select) => (
+  state: ChannelState,
+  clientId: string,
+) => {
+  const posts = channelQueuePosts(select, clientId);
+  const key = JSON.stringify(posts);
+  const last = channelPostsByBlock.get(clientId);
+
+  if (last !== undefined && last.key === key) {
+    return last.posts;
+  }
+
+  channelPostsByBlock.set(clientId, { key, posts });
+
+  return posts;
+});
+
 // Skip the request when the store already has enough IDs.
 resolveChannelResults.isFulfilled = (
   state: ChannelState,
@@ -669,6 +705,7 @@ const store = createReduxStore('wp-curate/channels', {
     },
   },
   selectors: {
+    getChannelPosts,
     getChannelResults,
     getChannelResultsPage,
     getTypeOfPostInChannel,

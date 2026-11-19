@@ -4,6 +4,8 @@ import React from 'react';
 
 // WordPress dependencies.
 import {
+  // @ts-expect-error BlockContextProvider not available in types yet.
+  BlockContextProvider,
   BlockControls,
   store as blockEditorStore,
   useBlockProps,
@@ -38,6 +40,7 @@ import useBlockChannel, {
   toBlockChannelArgs,
   toChannelName,
 } from '../../hooks/useBlockChannel';
+import useChannelQueuePost from '../../hooks/useChannelQueue';
 
 // Internal dependencies.
 import PinBadge from './components/pin-badge';
@@ -47,14 +50,17 @@ import './index.scss';
 
 /**
  * The editable inner blocks of the block, which show its post, and the mark of a pinned post after
- * them. The post is in an `article` element, like on the page.
+ * them. The post is in an `article` element, like on the page. The inner blocks get the post as
+ * their `postId` and `postType` context, as the context filter in `render.php` gives it.
  */
 function PostInnerBlocks({
   badge,
   blockProps,
+  post,
 }: {
   badge: React.ReactNode;
   blockProps: Record<string, unknown>;
+  post: { postId: number, postType: string };
 }) {
   const {
     children,
@@ -62,19 +68,22 @@ function PostInnerBlocks({
   } = useInnerBlocksProps(blockProps);
 
   return (
-    <article {...combinedBlockProps}>
-      {children}
-      {badge}
-    </article>
+    <BlockContextProvider value={post}>
+      <article {...combinedBlockProps}>
+        {children}
+        {badge}
+      </article>
+    </BlockContextProvider>
   );
 }
 
 /**
  * The wp-curate/single-post block edit function.
  *
- * The `wp-curate/channels` block support gives the block its Channel panel, and gives it its post
- * as the `postId` and `postType` context: the pinned post, or else the top of the channel's queue
- * after the blocks before this one. The support also gives that post to the inner blocks.
+ * The `wp-curate/channels` block support gives the block its Channel panel. The block shows its
+ * post: the pinned post, or else the top of the channel's queue after the blocks before this one.
+ * It gives that post to its inner blocks as context. Its own `postId` and `postType` context stays
+ * the post around it, as on the page.
  *
  * A block without inner blocks shows a picker of layouts. Inside a Single Post Loop block, that
  * block keeps the inner blocks of its Single Posts the same.
@@ -87,8 +96,6 @@ export default function Edit({
   },
   clientId,
   context: {
-    postId: contextPostId,
-    postType: contextPostType,
     'wp-curate/channel': contextChannel,
   },
   name,
@@ -233,26 +240,33 @@ export default function Edit({
   // The channel has no posts to pick from until the block gives it each argument.
   const hasPosts = channel !== '' && hasEveryChannelArg(argFields, args);
 
-  // The post, null while the channel loads, or 0 when there is no post to show.
+  // The post, null while the channel loads, or a post ID of 0 when there is no post to show.
+  const post = useChannelQueuePost(clientId);
+
   let postId: number | null = null;
   let postType = '';
 
-  if (typeof contextPostId === 'number') {
-    postId = contextPostId;
+  if (post !== null) {
+    ({
+      postId,
+      postType,
+    } = post);
   }
 
-  if (typeof contextPostType === 'string') {
-    postType = contextPostType;
-  }
+  let preview = null;
 
-  let preview = (
-    <PostInnerBlocks
-      badge={ref > 0 ? (
-        <PinBadge text={pinBadgeText} />
-      ) : null}
-      blockProps={blockProps}
-    />
-  );
+  // Below, the block shows a placeholder in place of its inner blocks until it has a post.
+  if (post !== null) {
+    preview = (
+      <PostInnerBlocks
+        badge={ref > 0 ? (
+          <PinBadge text={pinBadgeText} />
+        ) : null}
+        blockProps={blockProps}
+        post={post}
+      />
+    );
+  }
 
   const isLayoutPickerShown = !hasInnerBlocks;
 

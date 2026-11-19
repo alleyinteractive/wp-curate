@@ -3,12 +3,15 @@ import { useSelect } from '@wordpress/data';
 
 // Plugin dependencies.
 import type { ChannelArgField, AvailableChannel } from '../../entries/block-editor/channelStore';
+import type { ChannelSlotPosts } from '../useChannelQueue';
 
 /*
  * The block support of a block that has a channel. wp-curate gives the block a `channel` attribute
  * and a Channel panel. A block that also provides the `wp-curate/channel` context, like Channel
- * Content, gives its channel to the blocks inside it. Any other block takes a post from its
- * channel.
+ * Content, gives its channel to the blocks inside it. A block type that gives a `channelSlots`
+ * callback, like Single Post and Channel Loop, takes posts from its channel. See `channelSlots()`.
+ * A block type that gives a `channelInnerContext` callback gives context to the blocks inside it.
+ * See `channelInnerContext()`.
  *
  * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
  * block gives the channel, such as `{ name: 'wp_curate_post_category_latest', args: { term: 7 } }`.
@@ -101,63 +104,198 @@ export function isChannelProvider(blockType: unknown): boolean {
   return isProvider;
 }
 
-/*
- * The name of the block type that takes every post that remains in its channel's queue. Only this
- * block type can take them, so that the plugin does not commit to a public API for it yet.
+/**
+ * The most slots that one block can have.
  *
- * Keep the value matched with `Channel_Block_Support::CHANNEL_LOOP_BLOCK` in PHP.
+ * Keep the value matched with `Queues::MAX_SLOTS` in PHP.
  */
-const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
+export const MAX_CHANNEL_SLOTS = 100;
 
 /**
- * Whether a block type takes every post that remains in its channel's queue, instead of one post.
- * Only the Channel Loop block does.
- *
- * Keep the rules matched with `Channel_Block_Support` in PHP.
- *
- * @param blockType Block type from the blocks store.
+ * A place for one post in a block that shows posts from its channel.
  */
-export function takesRemainingPosts(blockType: unknown): boolean {
-  let takesRemaining = false;
-
-  if (hasChannelSupport(blockType)) {
-    const {
-      name,
-    } = blockType as Record<string, unknown>;
-
-    takesRemaining = name === CHANNEL_LOOP_BLOCK;
-  }
-
-  return takesRemaining;
+export interface ChannelSlot {
+  /** The pinned post ID, or 0 for the top of the queue. */
+  ref: number;
+  /**
+   * The type of the pinned post, or an empty string if it is not known. A pinned post can be past
+   * the IDs that have loaded, so the block can give its type.
+   */
+  postType: string;
 }
 
-/*
- * The name of the block type that can pin a post with its `ref` attribute. Only this block type can
- * pin a post, so that the plugin does not give `ref` a meaning on the blocks of other plugins.
- *
- * Keep the value matched with `Channel_Block_Support::SINGLE_POST_BLOCK` in PHP.
- */
-const SINGLE_POST_BLOCK = 'wp-curate/single-post';
+const NO_SLOTS: ChannelSlot[] = [];
 
 /**
- * Whether a block type can pin a post with its `ref` attribute. Only the Single Post block can.
- *
- * Keep the rules matched with `Channel_Block_Support` in PHP.
+ * Whether a block type gives a `channelSlots` callback, and so takes posts from its channel.
  *
  * @param blockType Block type from the blocks store.
  */
-export function pinsPost(blockType: unknown): boolean {
-  let canPin = false;
+export function hasChannelSlots(blockType: unknown): boolean {
+  let hasSlots = false;
 
   if (hasChannelSupport(blockType)) {
     const {
-      name,
+      channelSlots: callback,
     } = blockType as Record<string, unknown>;
 
-    canPin = name === SINGLE_POST_BLOCK;
+    hasSlots = typeof callback === 'function';
   }
 
-  return canPin;
+  return hasSlots;
+}
+
+/**
+ * Makes a slot from a value that a `channelSlots` callback returns.
+ *
+ * @param value The value.
+ */
+function toChannelSlot(value: unknown): ChannelSlot {
+  const slot: ChannelSlot = {
+    postType: '',
+    ref: 0,
+  };
+
+  if (typeof value !== 'object' || value === null) {
+    return slot;
+  }
+
+  const {
+    postType,
+    ref,
+  } = value as Record<string, unknown>;
+
+  if (Number.isInteger(ref) && (ref as number) > 0) {
+    slot.ref = ref as number;
+  }
+
+  if (slot.ref > 0 && typeof postType === 'string') {
+    slot.postType = postType;
+  }
+
+  return slot;
+}
+
+/**
+ * Get the slots of a block: one for each post that the block takes from its channel, in order.
+ *
+ * A block type that takes posts gives a `channelSlots` function when it registers, next to its
+ * `edit` function. The function gets the block's attributes and the context that the block gives
+ * its channel, and returns an array with an object for each slot. A slot with a positive integer
+ * `ref` pins that post. Other slots take the top of the queue. The function must be pure and
+ * synchronous, because the queue walk calls it for each block before any block shows its posts.
+ *
+ * In PHP, the block takes the same slots when it renders, with `Queues::take()`. Keep the two
+ * rules matched.
+ *
+ * @example
+ * registerBlockType(metadata, {
+ *   edit,
+ *   channelSlots: ({ items }) => items.map(({ postId }) => ({ ref: postId })),
+ * });
+ *
+ * @param blockType  Block type from the blocks store.
+ * @param attributes Block attributes.
+ * @param context    The context that the block gives its channel.
+ * @return The slots, up to `MAX_CHANNEL_SLOTS`, or none if the block type has no callback or the
+ *         callback fails.
+ */
+export function channelSlots(
+  blockType: unknown,
+  attributes: unknown,
+  context: Record<string, unknown>,
+): ChannelSlot[] {
+  let slots = NO_SLOTS;
+
+  if (!hasChannelSlots(blockType)) {
+    return slots;
+  }
+
+  const {
+    channelSlots: callback,
+  } = blockType as Record<string, unknown>;
+
+  let value: unknown;
+
+  try {
+    value = (callback as (a: unknown, c: Record<string, unknown>) => unknown)(attributes, context);
+  } catch (error) {
+    // One block with a broken callback must not stop the blocks after it from showing posts.
+    value = undefined;
+  }
+
+  if (Array.isArray(value)) {
+    slots = value.slice(0, MAX_CHANNEL_SLOTS).map(toChannelSlot);
+  }
+
+  return slots;
+}
+
+/**
+ * Get the context that a block with slots gives the blocks inside it.
+ *
+ * On the page, the block's `render.php` decides the context of its inner blocks, such as with a
+ * `render_block_context` filter. The queue walk cannot run that code, but a channel block inside
+ * the block finds its queue from that context. So a block type that changes the context of its
+ * inner blocks gives a `channelInnerContext` function when it registers, next to `channelSlots`.
+ * The function gets the block's attributes, the context around the block, and the post in each of
+ * its slots. It returns an object with the context keys that it sets. The walk merges that object
+ * into the context around the block.
+ *
+ * A block type without the function does not change the context of its inner blocks. This is the
+ * same as a block in PHP that adds no context filter. The function must be pure and synchronous,
+ * like `channelSlots`.
+ *
+ * @example
+ * registerBlockType(metadata, {
+ *   edit,
+ *   channelSlots,
+ *   // Give each inner block the post in the first slot, or keep the context if it has none.
+ *   channelInnerContext: (attributes, context, [post]) => (post !== null ? post : {}),
+ * });
+ *
+ * @param blockType  Block type from the blocks store.
+ * @param attributes Block attributes.
+ * @param context    The context around the block.
+ * @param posts      The post in each slot of the block, with null for an empty slot.
+ * @return The context of the inner blocks. It is the context around the block if the block type
+ *         has no function, or if the function fails or returns a value that is not an object.
+ */
+export function channelInnerContext(
+  blockType: unknown,
+  attributes: unknown,
+  context: Record<string, unknown>,
+  posts: ChannelSlotPosts,
+): Record<string, unknown> {
+  if (typeof blockType !== 'object' || blockType === null) {
+    return context;
+  }
+
+  const {
+    channelInnerContext: callback,
+  } = blockType as Record<string, unknown>;
+
+  if (typeof callback !== 'function') {
+    return context;
+  }
+
+  let value: unknown;
+
+  try {
+    value = callback(attributes, context, posts);
+  } catch (error) {
+    // One block with a broken callback must not stop the blocks after it from showing posts.
+    value = undefined;
+  }
+
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return context;
+  }
+
+  return {
+    ...context,
+    ...value,
+  };
 }
 
 /**

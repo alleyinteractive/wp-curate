@@ -32,7 +32,7 @@ import useBlockChannel, {
   toBlockChannelArgs,
   toChannelName,
 } from '../../hooks/useBlockChannel';
-import { useChannelQueuePosts } from '../../hooks/useChannelQueue';
+import { type ChannelQueuePost, useChannelQueuePosts } from '../../hooks/useChannelQueue';
 
 /**
  * The editable copy of the template, for the active post. The post is in an `article` element,
@@ -182,8 +182,19 @@ export default function Edit({
     [argFields, contextChannel, ownChannel],
   );
 
-  // The posts, or null while the channel loads.
-  const posts = useChannelQueuePosts(clientId);
+  // The post in each slot, or null while the channel loads.
+  const slotPosts = useChannelQueuePosts(clientId);
+
+  // The posts, or null while the channel loads. Slots past the end of the queue have no post.
+  const posts = useMemo(() => {
+    let out: ChannelQueuePost[] | null = null;
+
+    if (slotPosts !== null) {
+      out = slotPosts.filter((post): post is ChannelQueuePost => post !== null);
+    }
+
+    return out;
+  }, [slotPosts]);
 
   let activeId = 0;
 
