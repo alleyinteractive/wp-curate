@@ -107,7 +107,7 @@ while ( $rendered < $limit && null !== $queues->top( $channel_name, $channel_arg
 	 * post that visitors cannot see, and the loop goes on to the next post.
 	 */
 	if ( ! $has_posts ) {
-		$has_posts = new WP_HTML_Tag_Processor( $rendered_post )->next_tag( [ 'class_name' => 'wp-block-wp-curate-single-post' ] );
+		$has_posts = ( new WP_HTML_Tag_Processor( $rendered_post ) )->next_tag( [ 'class_name' => 'wp-block-wp-curate-single-post' ] );
 	}
 }
 
