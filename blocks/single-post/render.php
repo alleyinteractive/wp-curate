@@ -14,31 +14,60 @@
  * @package wp-curate
  */
 
+use Alley\WP\WP_Curate\Channels\Queues;
+
 /*
- * The `wp-curate/channels` block support gives the block its post as the `postId` context: the ref,
- * or else the top of the channel's queue. It is 0 when there is no post to show.
+ * The block takes its post here: the ref, or else the top of its channel's queue. Its own `postId`
+ * context stays the post around it, which the channel can read to find its queue. Only the inner
+ * blocks get the post that it takes.
  *
- * A block without a channel takes no post. Its `postId` context is then the post of an outer block
- * or of the page, which it must not show. It also does not show its pin, because a pin is a post of
- * the channel. The block support gives the block the channel that it has as the `wp-curate/queue`
- * context.
+ * The block support gives the block the channel that it has as the `wp-curate/queue` context. A
+ * block without a channel takes no post and shows nothing, not even its pin, because a pin is a
+ * post of the channel.
  */
 $queue         = [];
+$channel_name  = '';
+$channel_args  = [];
+$ref           = 0;
+$post_id       = null;
 $promoted_post = null;
 
 if ( isset( $block->context['wp-curate/queue'] ) && is_array( $block->context['wp-curate/queue'] ) ) {
 	$queue = $block->context['wp-curate/queue'];
 }
 
-if ( ! isset( $queue['name'] ) || ! is_string( $queue['name'] ) || '' === $queue['name'] ) {
+if ( isset( $queue['name'] ) && is_string( $queue['name'] ) ) {
+	$channel_name = $queue['name'];
+}
+
+if ( isset( $queue['args'] ) && is_array( $queue['args'] ) ) {
+	$channel_args = $queue['args'];
+}
+
+if (
+	'' === $channel_name
+	|| ! isset( $block->context['wp-curate/queues'] )
+	|| ! $block->context['wp-curate/queues'] instanceof Queues
+) {
 	return;
 }
 
-if ( isset( $block->context['postId'] ) && is_int( $block->context['postId'] ) && $block->context['postId'] > 0 ) {
-	$promoted_post = get_post( $block->context['postId'] );
+if ( isset( $attributes['ref'] ) && is_int( $attributes['ref'] ) ) {
+	$ref = $attributes['ref'];
 }
 
-if ( ! $promoted_post instanceof WP_Post ) {
+/*
+ * The block has one slot. Keep it matched with the `channelSlots` callback of the block type in the
+ * editor. The ID leaves the queue even if visitors cannot see the post.
+ */
+$post_id = $block->context['wp-curate/queues']->take( $channel_name, [ $ref ], $channel_args, $block->context )[0] ?? null;
+
+if ( is_int( $post_id ) && $post_id > 0 ) {
+	$promoted_post = get_post( $post_id );
+}
+
+// A published post can still be one that visitors cannot see, such as of a post type that is not public.
+if ( ! $promoted_post instanceof WP_Post || ! is_post_publicly_viewable( $promoted_post ) ) {
 	return;
 }
 

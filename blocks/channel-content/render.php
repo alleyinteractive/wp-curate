@@ -13,16 +13,18 @@
  * @package wp-curate
  */
 
-use Alley\WP\WP_Curate\Channels\Channel_Posts_In_Block;
-
 /*
  * The inner blocks have rendered already, in document order. Each Single Post block inside took its
- * post from the queue of this block's channel, which the block gives them as context. Without any
+ * post from the queue of this block's channel, which this block gives them as context. Without any
  * posts, the block shows nothing, so other inner blocks, such as a heading, do not show alone.
+ *
+ * A Single Post block renders its wrapper only when it shows a post, so look for that wrapper. The
+ * Single Posts that a Channel Loop block renders count too. This does not see the posts that a block
+ * of another plugin takes when it renders.
  */
-$channel_posts = new Channel_Posts_In_Block( $block, $content, WP_Block_Type_Registry::get_instance() );
+$processor = new WP_HTML_Tag_Processor( $content );
 
-if ( ! $channel_posts->exist() ) {
+if ( ! $processor->next_tag( [ 'class_name' => 'wp-block-wp-curate-single-post' ] ) ) {
 	return;
 }
 ?>

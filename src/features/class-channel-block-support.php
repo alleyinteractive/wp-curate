@@ -8,10 +8,8 @@
 namespace Alley\WP\WP_Curate\Features;
 
 use Alley\WP\Types\Feature;
-use Alley\WP\WP_Curate\Channels\Queues;
 use WP_Block_Type;
 use WP_Block_Type_Registry;
-use WP_Post;
 
 /**
  * The `wp-curate/channels` block support.
@@ -23,22 +21,21 @@ use WP_Post;
  * the channel, such as `{"name":"wp_curate_post_category_latest","args":{"term":7}}`.
  *
  * A block that also provides the `wp-curate/channel` context, like Channel Content, passes its channel to its inner
- * blocks. Any other block takes a post from its channel's queue and gets that post as the `postId` and `postType` context.
+ * blocks. The support does not take posts, and does not change the `postId` and `postType` context of any block. That
+ * context stays the post around the block, so that its channel can read it.
  *
- * An empty channel name means no channel. A block that has no channel takes no post. Its `postId` and `postType` context
- * does not change, as if it did not have the support. Inside a block that provides the channel, a block has the channel
- * of that block, so it has no channel if that block has none. Outside one, it has its own channel.
+ * An empty channel name means no channel. Inside a block that provides the channel, a block has the channel of that
+ * block, so it has no channel if that block has none. Outside one, it has its own channel.
  *
  * Every block with the support gets the channel that it has as the `wp-curate/queue` context, with the same shape as
  * the `channel` attribute. A block that has no channel gets an empty name. Read this context instead of applying the
  * rule above again, the way that core's Post Template reads the `query` context.
  *
- * The Single Post block can pin a post with an integer `ref` attribute. A pinned post that is not published, such as a
- * scheduled post, gives its place to the top of the queue.
- *
- * The Channel Loop block takes no post itself, and its `postId` and `postType` context does not change. When it
- * renders, it finds its queue from its `wp-curate/queue` context. It renders a Single Post block for each post that
- * remains in that queue, and each Single Post takes its post as usual. See the block's `render.php`.
+ * A block that shows posts takes them itself when it renders, with `Queues::take()`. It finds its queue from its
+ * `wp-curate/queue` context and its `context`, which has the post around it as `postId`. In the editor, its block type
+ * gives a `channelSlots` callback that returns the same slots. The Single Post block takes one post, its pin or else
+ * the top of the queue, and gives that post to its inner blocks. The Channel Loop block renders a Single Post block for
+ * each post that remains in its queue. See the `render.php` of each block.
  *
  * Blocks that use the same channel, arguments, and context share a queue, so they do not show the same post twice.
  * Blocks in other queues can show the same post. See `Queues`.
@@ -46,24 +43,6 @@ use WP_Post;
  * Keep the rules matched with the `channelSupport` editor script.
  */
 final readonly class Channel_Block_Support implements Feature {
-	/**
-	 * The name of the block type that shows the remaining posts through Single Post blocks.
-	 *
-	 * Keep the value matched with `CHANNEL_LOOP_BLOCK` in the `useBlockChannel` hook.
-	 *
-	 * @var string
-	 */
-	private const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
-
-	/**
-	 * The name of the block type that can pin a post with its `ref` attribute.
-	 *
-	 * Keep the value matched with `SINGLE_POST_BLOCK` in the `useBlockChannel` hook.
-	 *
-	 * @var string
-	 */
-	private const SINGLE_POST_BLOCK = 'wp-curate/single-post';
-
 	/**
 	 * Constructor.
 	 *
@@ -135,15 +114,10 @@ final readonly class Channel_Block_Support implements Feature {
 	}
 
 	/**
-	 * Filters the default context provided to a rendered block to give it its channel and a post
-	 * from that channel.
+	 * Filters the default context provided to a rendered block to give it its channel.
 	 *
 	 * Every block with `wp-curate/channels` support gets its channel as the `wp-curate/queue`
-	 * context. A block gets a post if it does not itself provide the `wp-curate/channel` context,
-	 * like Single Post. A block that provides the context, like Channel Content, gets no post and
-	 * instead passes its channel to the blocks inside it. The Channel Loop block also gets no
-	 * post, because the Single Post blocks that it renders take the posts. The Single Post block
-	 * takes its pinned post, if it has one.
+	 * context. The block takes its posts itself when it renders.
 	 *
 	 * @phpstan-param mixed $context
 	 * @phpstan-param mixed $parsed_block
@@ -168,9 +142,7 @@ final readonly class Channel_Block_Support implements Feature {
 			return $context;
 		}
 
-		$attrs   = [];
-		$ref     = 0;
-		$post_id = null;
+		$attrs = [];
 
 		if ( isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ) {
 			$attrs = $parsed_block['attrs'];
@@ -209,48 +181,6 @@ final readonly class Channel_Block_Support implements Feature {
 			'name' => $channel,
 			'args' => $channel_args,
 		];
-
-		if (
-			// A block without a channel, or inside a parent block without one, takes no post and keeps its post context.
-			'' === $channel
-			|| isset( $block_type->provides_context['wp-curate/channel'] )
-			|| self::CHANNEL_LOOP_BLOCK === $block_type->name
-		) {
-			return $context;
-		}
-
-		$pins_post = self::SINGLE_POST_BLOCK === $block_type->name;
-
-		// A pinned post that is not published, such as a scheduled post, gives its place to the top of the queue.
-		if (
-			$pins_post
-			&& isset( $attrs['ref'] )
-			&& is_int( $attrs['ref'] )
-			&& $attrs['ref'] > 0
-			&& 'publish' === get_post_status( $attrs['ref'] )
-		) {
-			$ref = $attrs['ref'];
-		}
-
-		// Take the pinned post, or else the top of the channel's queue, and remove that ID from the queue.
-		if ( isset( $context['wp-curate/queues'] ) && $context['wp-curate/queues'] instanceof Queues ) {
-			$post_id = $context['wp-curate/queues']->take_one( $channel, $ref, $channel_args, $context );
-		}
-
-		$taken = null;
-
-		if ( is_int( $post_id ) && $post_id > 0 ) {
-			$taken = get_post( $post_id );
-		}
-
-		$context['postId']   = 0;
-		$context['postType'] = '';
-
-		// A published post can still be one that visitors cannot see, such as of a post type that is not public.
-		if ( $taken instanceof WP_Post && is_post_publicly_viewable( $taken ) ) {
-			$context['postId']   = $taken->ID;
-			$context['postType'] = $taken->post_type;
-		}
 
 		return $context;
 	}

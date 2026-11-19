@@ -77,41 +77,41 @@ $single_post = [
 ];
 
 /*
- * The most Single Post blocks to render. Keep the value matched with `MAX_REMAINING_POSTS` in the
- * `useChannelQueue` hook.
+ * The most Single Post blocks to render. Each is one of the slots that the block type's
+ * `channelSlots` callback gives in the editor.
  */
-$limit = 100;
+$limit = Queues::MAX_SLOTS;
 
 $rendered      = 0;
 $posts_content = '';
 $has_posts     = false;
 
+/*
+ * Give the Single Post the context of this block. This file cannot read `$block->available_context`,
+ * because the property is protected. The block support gives this block and Single Post the same
+ * context keys, such as `postId`, which a channel can read to find its queue. A key that a site
+ * adds only to Single Post is lost.
+ */
+$single_post_context = $block->context;
+
 while ( $rendered < $limit && null !== $queues->top( $channel_name, $channel_args, $block->context ) ) {
-	// Assume that the parsed block has the correct shape.
-	$wrapper = new WP_Block( $single_post, $block->available_context ); // @phpstan-ignore-line argument.type
-	$single  = $wrapper->inner_blocks[0] ?? null;
+	$wrapper       = new WP_Block( $single_post, $single_post_context );
+	$rendered_post = $wrapper->render();
 
-	if ( ! $single instanceof WP_Block ) {
-		break;
-	}
-
-	$posts_content .= $wrapper->render();
+	$posts_content .= $rendered_post;
 
 	++$rendered;
 
 	/*
-	 * Its `postId` context is the post that it took. It is 0 when the post is one that visitors
-	 * cannot see. The Single Post then renders nothing, and the loop goes on to the next post.
+	 * A Single Post renders its wrapper only when it shows a post. It shows nothing when it took a
+	 * post that visitors cannot see, and the loop goes on to the next post.
 	 */
-	if ( isset( $single->context['postId'] ) && is_int( $single->context['postId'] ) && $single->context['postId'] > 0 ) {
-		$has_posts = true;
+	if ( ! $has_posts ) {
+		$has_posts = ( new WP_HTML_Tag_Processor( $rendered_post ) )->next_tag( [ 'class_name' => 'wp-block-wp-curate-single-post' ] );
 	}
 }
 
-/*
- * The Channel Content block around this block looks for this wrapper to know whether this block
- * showed posts, so render it only with posts.
- */
+// Like a Single Post without a post, the block shows nothing without posts.
 if ( ! $has_posts ) {
 	return;
 }
