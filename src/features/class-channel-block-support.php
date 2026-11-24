@@ -25,7 +25,9 @@ use WP_Block_Type_Registry;
  * context stays the post around the block, so that its channel can read it.
  *
  * An empty channel name means no channel. Inside a block that provides the channel, a block has the channel of that
- * block, so it has no channel if that block has none. Outside one, it has its own channel.
+ * block, so it has no channel if that block has none. This is true at any depth, until another block that provides the
+ * channel. A block that gives a post to its inner blocks, like Single Post, also gives them this channel. See
+ * `Post_Template`. Outside a block that provides the channel, a block has its own channel.
  *
  * Every block with the support gets the channel that it has as the `wp-curate/queue` context, with the same shape as
  * the `channel` attribute. A block that has no channel gets an empty name. Read this context instead of applying the
@@ -34,8 +36,8 @@ use WP_Block_Type_Registry;
  * A block that shows posts takes them itself when it renders, with `Queues::take()`. It finds its queue from its
  * `wp-curate/queue` context and its `context`, which has the post around it as `postId`. In the editor, its block type
  * gives a `channelPostsToTake` callback that returns the same posts. The Single Post block takes one post, its pin or
- * else the top of the queue, and gives that post to its inner blocks. The Channel Loop block renders a Single Post block for
- * each post that remains in its queue. See the `render.php` of each block.
+ * else the top of the queue, and gives that post to its inner blocks. The Channel Loop block takes each post that
+ * remains in its queue, and renders its inner blocks for each post. See the `render.php` of each block.
  *
  * Blocks that use the same channel, arguments, and context share a queue, so they do not show the same post twice.
  * Blocks in other queues can show the same post. See `Queues`.

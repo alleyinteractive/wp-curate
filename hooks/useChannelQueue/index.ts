@@ -6,12 +6,14 @@ import { useMemo } from '@wordpress/element';
 
 // Plugin dependencies.
 import {
+  CHANNEL_CONTEXT,
   type ChannelPostToTake,
   channelArgFields,
   channelContext,
-  channelInnerContext,
+  channelInnerContexts,
   channelPostsToTake,
   hasChannelPostsToTake,
+  hasChannelSupport,
   hasEveryChannelArg,
   isChannelProvider,
   pickChannelArgs,
@@ -134,6 +136,31 @@ function postContext(select: any): Record<string, unknown> {
 }
 
 /**
+ * Give a context the channel of the provider around a block, as `wp-curate/channel`, or no channel
+ * if no provider is around the block. A provider sets the channel of every block inside it, at any
+ * depth, until another provider. So a block that takes posts does not decide the channel of the
+ * blocks inside it, even if its `channelInnerContext` callback leaves out the key or sets it. In
+ * PHP, `Post_Template` gives its inner blocks the same channel.
+ *
+ * @param context      The context around the block.
+ * @param childContext A context of the blocks inside it.
+ */
+function withChannelOf(
+  context: Record<string, unknown>,
+  childContext: Record<string, unknown>,
+): Record<string, unknown> {
+  const out = { ...childContext };
+
+  delete out[CHANNEL_CONTEXT];
+
+  if (CHANNEL_CONTEXT in context) {
+    out[CHANNEL_CONTEXT] = context[CHANNEL_CONTEXT];
+  }
+
+  return out;
+}
+
+/**
  * Get the posts that a block with a channel takes, given the blocks before it in the editor, and
  * the context that the block gives its channel.
  *
@@ -142,20 +169,26 @@ function postContext(select: any): Record<string, unknown> {
  * - A block type with a `channelPostsToTake` callback, like Single Post and Channel Loop, takes an
  *   ID for each post that the callback returns, in order. A pin takes its ref. A post without a pin
  *   takes the top of the channel's queue. Each ID is then removed from the queue. See
- *   `channelPostsToTake()`. Its inner blocks get the context that its `channelInnerContext`
- *   callback gives, or its own context if it has no callback. See `channelInnerContext()`.
- * - Any other block, such as Channel Content, takes nothing. Its inner blocks get its context.
- * - A block without a channel takes nothing. Its inner blocks get its context.
- *   Inside a provider, a block has the provider's channel, so it has none if the provider has
- *   none. Outside a provider, it has its own channel.
+ *   `channelPostsToTake()`. A block without a channel takes nothing. Then its inner blocks render
+ *   once for each post that its `channelInnerContext` callback gives a context for. See
+ *   `channelInnerContexts()`. Each of those contexts keeps the channel of the provider around the
+ *   block. See `withChannelOf()`.
+ * - Any other block, such as Channel Content, takes nothing. Its inner blocks render once with its
+ *   context. A provider adds its channel to that context as `wp-curate/channel`.
  *
- * A block uses the channel that `toBlockChannel()` describes. A channel has a separate queue for
- * each set of arguments that it accepts and context that it reads, and has no posts until the
- * block gives it each argument. The blocks at the top of the post have the post as context.
+ * A block uses the channel that `toBlockChannel()` describes. Inside a provider, a block has the
+ * provider's channel, so it has none if the provider has none. Outside a provider, it has its own
+ * channel. A channel has a separate queue for each set of arguments that it accepts and context
+ * that it reads, and has no posts until the block gives it each argument. The blocks at the top of
+ * the post have the post as context.
+ *
+ * A block takes all of its posts before its inner blocks take any, on the page as in the walk. So
+ * inside a provider, a block in the template of a Channel Loop gets no posts from the provider's
+ * channel, because the Channel Loop took all of them.
  *
  * The blocks that use the same queue never show the same post twice. The queues do not share IDs,
- * so blocks that use different queues can show the same post. A block always shows its own pin. A
- * block waits only for the blocks before it in the same queue.
+ * so blocks that use different queues can show the same post. In the editor, a block always shows
+ * its own pin. A block waits only for the blocks before it in the same queue.
  *
  * @param select   The data registry's `select`.
  * @param clientId Client ID of the block.
@@ -199,9 +232,17 @@ function channelQueue(
    */
   const loadingChannels = new Set<string>();
 
+  /*
+   * A block inside a block that renders its inner blocks more than once is in the walk more than
+   * once. The editor shows its first copy, so the first visit gives its context and posts.
+   */
+  let isOutFound = false;
   let isOutLoading = false;
   let outContext: Record<string, unknown> | null = null;
   let outPosts = NO_POSTS;
+
+  // The number of blocks with channel support that the walk has visited.
+  let channelBlockCount = 0;
 
   /*
    * Take the ID for each post that a block takes from its queue. The block is loading if its
@@ -213,10 +254,10 @@ function channelQueue(
   const take = (
     block: any,
     context: Record<string, unknown>,
-    providerChannel: unknown,
     toTake: ChannelPostToTake[],
     isContextLoading: boolean,
   ) => {
+    const providerChannel = context[CHANNEL_CONTEXT];
     const providerName = toChannelName(providerChannel);
 
     // A pin shows while the queue loads, and also if the channel has no posts.
@@ -387,7 +428,6 @@ function channelQueue(
   const walk = (
     blocks: any[],
     context: Record<string, unknown>,
-    providerChannel: unknown,
     isContextLoading: boolean,
   ) => {
     blocks.forEach((block) => {
@@ -395,50 +435,62 @@ function channelQueue(
       const isProvider = isChannelProvider(blockType);
       const takesPosts = hasChannelPostsToTake(blockType);
       const name = toChannelName(channelAttribute(block));
+      const isOut = block.clientId === clientId && !isOutFound;
 
       // Like a block without channel support, a block without a channel takes nothing.
-      const hasNoChannel = name !== null && toBlockChannel(name, providerChannel) === '';
+      const hasNoChannel = name !== null && toBlockChannel(name, context[CHANNEL_CONTEXT]) === '';
 
-      let childContext = context;
-      let childChannel = providerChannel;
+      let childContexts = [context];
       let isChildContextLoading = isContextLoading;
 
-      if (block.clientId === clientId && !isContextLoading) {
+      if (hasChannelSupport(blockType)) {
+        channelBlockCount += 1;
+      }
+
+      if (isOut) {
+        isOutFound = true;
+      }
+
+      if (isOut && !isContextLoading) {
         outContext = context;
       }
 
-      /*
-       * Keep the provider's channel apart from `context`, which goes to the channel and is part of
-       * the key of its requests.
-       */
-      if (isProvider && name !== null) {
-        childChannel = channelAttribute(block);
-      }
+      if (takesPosts && name !== null) {
+        const toTake = channelPostsToTake(blockType, block.attributes, context);
 
-      if (takesPosts && name !== null && !hasNoChannel) {
-        const {
-          isLoading,
-          posts,
-        } = take(
-          block,
-          context,
-          providerChannel,
-          channelPostsToTake(blockType, block.attributes, context),
-          isContextLoading,
-        );
+        let isLoading = false;
+        let posts: ChannelBlockPosts = toTake.map(() => null);
 
-        if (block.clientId === clientId) {
+        if (!hasNoChannel) {
+          ({
+            isLoading,
+            posts,
+          } = take(block, context, toTake, isContextLoading));
+        }
+
+        if (isOut) {
           isOutLoading = isLoading;
           outPosts = posts;
         }
 
-        // Until the block's post is known, the blocks inside it do not know their context.
+        /*
+         * The block type says how its `render.php` renders the blocks inside it. Until the block's
+         * posts are known, those blocks do not know their context, so they render once and wait.
+         */
         if (isLoading) {
           isChildContextLoading = true;
+        } else {
+          childContexts = channelInnerContexts(blockType, block.attributes, context, posts)
+            .map((childContext) => withChannelOf(context, childContext));
         }
+      }
 
-        // The block type says what context it gives the blocks inside it, as its `render.php` does.
-        childContext = channelInnerContext(blockType, block.attributes, context, posts);
+      // A provider gives its channel to the blocks inside it, as `providesContext` does.
+      if (isProvider && name !== null) {
+        childContexts = childContexts.map((childContext) => ({
+          ...childContext,
+          [CHANNEL_CONTEXT]: channelAttribute(block),
+        }));
       }
 
       /*
@@ -446,16 +498,23 @@ function channelQueue(
        * controlled inner blocks, like Post Content in "Show template" mode or a synced pattern,
        * keeps them only under its own client ID in the store.
        */
-      walk(
-        getBlocks(block.clientId),
-        childContext,
-        childChannel,
-        isChildContextLoading,
-      );
+      const innerBlocks = getBlocks(block.clientId);
+      const countBefore = channelBlockCount;
+
+      childContexts.every((childContext) => {
+        walk(innerBlocks, childContext, isChildContextLoading);
+
+        /*
+         * Without a channel block inside, each copy takes nothing, and the first copy already gave
+         * any block inside its context. So skip the other copies, such as the other 99 copies of
+         * a Channel Loop's template.
+         */
+        return channelBlockCount > countBefore;
+      });
     });
   };
 
-  walk(getBlocks(), postContext(select), undefined, false);
+  walk(getBlocks(), postContext(select), false);
 
   let posts: ChannelBlockPosts | null = outPosts;
 
@@ -470,28 +529,31 @@ function channelQueue(
 }
 
 /**
- * A `channelInnerContext` callback that gives the inner blocks the first post that the block takes
- * as their `postId` and `postType` context, or no post if the queue had none. Single Post and
- * Channel Loop use it. On the page, Single Post gives its post with a context filter in
- * `render.php`. Channel Loop renders a Single Post for each post, but the editor has only one copy
- * of its template, so the template gets the first post.
+ * A `channelInnerContext` callback that renders the inner blocks once for each post that the block
+ * takes, with that post as their `postId` and `postType` context. Single Post and Channel Loop use
+ * it. On the page, both render their inner blocks with `Post_Template`.
+ *
+ * Like on the page, the inner blocks do not get other context around the block. The walk adds the
+ * channel of a Channel Content block around it. See `withChannelOf()`.
  *
  * @param attributes Block attributes.
  * @param context    The context around the block.
- * @param posts      Each post that the block takes, in order.
+ * @param post       A post that the block takes.
  */
-export function firstPostContext(
+export function contextForPost(
   attributes: unknown,
   context: Record<string, unknown>,
-  posts: ChannelBlockPosts,
-): ChannelQueuePost {
-  let post = NO_POST;
+  post: ChannelQueuePost,
+): Record<string, unknown> {
+  const {
+    postId,
+    postType,
+  } = post;
 
-  if (posts.length > 0 && posts[0] !== null) {
-    [post] = posts;
-  }
-
-  return { ...post };
+  return {
+    postId,
+    postType,
+  };
 }
 
 /**

@@ -3,7 +3,7 @@ import { registerBlockType } from '@wordpress/blocks';
 import { post as icon } from '@wordpress/icons';
 
 // Plugin dependencies.
-import { firstPostContext } from '../../hooks/useChannelQueue';
+import { contextForPost } from '../../hooks/useChannelQueue';
 import SINGLE_POST_LAYOUTS from '../../services/singlePostLayouts';
 
 // Internal dependencies.
@@ -18,11 +18,11 @@ registerBlockType(
   {
     // The name in List View shows the type of the post that the block shows.
     __experimentalLabel: label,
-    // The block takes one post: its pin, or the top of the queue. Keep matched with
-    // `Channel_Block_Support`.
+    // The block takes one post: its pin, or the top of the queue. Keep matched with `render.php`.
     channelPostsToTake: ({ postType, ref }: Record<string, unknown>) => [{ postType, ref }],
-    // The inner blocks get the post. Keep matched with the context filter in `render.php`.
-    channelInnerContext: firstPostContext,
+    // The inner blocks render only with a post, and get the post as context. Keep matched with
+    // `render.php`.
+    channelInnerContext: contextForPost,
     edit,
     icon,
     save,

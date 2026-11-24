@@ -276,7 +276,11 @@ export default function Edit({
      */
     out = (
       <div {...blockProps}>
-        {/* The hook gives the same post objects until they change, so each context stays. */}
+        {/*
+          * The hook gives the same post objects until they change, so each context stays. Like on
+          * the page, the template also keeps the channel of a Channel Content block around this
+          * block, because `BlockContextProvider` merges with the context around it.
+          */}
         {posts.map((post) => (
           <BlockContextProvider key={post.postId} value={post}>
             {post.postId === activeId ? (

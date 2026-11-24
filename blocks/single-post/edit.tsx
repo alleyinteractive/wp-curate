@@ -51,7 +51,9 @@ import './index.scss';
 /**
  * The editable inner blocks of the block, which show its post, and the mark of a pinned post after
  * them. The post is in an `article` element, like on the page. The inner blocks get the post as
- * their `postId` and `postType` context, as the context filter in `render.php` gives it.
+ * their `postId` and `postType` context, as `Post_Template` gives it in `render.php`. Like on the
+ * page, they keep the channel of a Channel Content block around this block, because
+ * `BlockContextProvider` merges with the context around it.
  */
 function PostInnerBlocks({
   badge,

@@ -13,22 +13,42 @@
  * @package wp-curate
  */
 
-/*
- * The inner blocks have rendered already, in document order. Each Single Post block inside took its
- * post from the queue of this block's channel, which this block gives them as context. Without any
- * posts, the block shows nothing, so other inner blocks, such as a heading, do not show alone.
- *
- * A Single Post block renders its wrapper only when it shows a post, so look for that wrapper. The
- * Single Posts that a Channel Loop block renders count too. This does not see the posts that a block
- * of another plugin takes when it renders.
- */
-$processor = new WP_HTML_Tag_Processor( $content );
+use Alley\WP\WP_Curate\Channels\Queues;
 
-if ( ! $processor->next_tag( [ 'class_name' => 'wp-block-wp-curate-single-post' ] ) ) {
+if ( ! isset( $block->context['wp-curate/queues'] ) || ! $block->context['wp-curate/queues'] instanceof Queues ) {
+	return;
+}
+
+$queues = $block->context['wp-curate/queues'];
+
+/*
+ * The block type skips its inner blocks, so they render here. Then the block can count the posts
+ * that they show. Each block that shows a post, such as a Single Post or a block of another plugin,
+ * got its ID from `Queues::take()`, which counts it. A Channel Loop and the blocks in its template
+ * count too.
+ *
+ * A copy of this block renders the inner blocks as a block type that is not registered, like
+ * `Post_Template` does, so that the `render_block` filters and the supports of this block do not apply a
+ * second time. Unlike a new `WP_Block`, the copy keeps the context that the inner blocks got from
+ * this block, such as its channel and the context around it.
+ *
+ * Core gives a block type that is not registered a null type too, though the type of the property
+ * does not allow it.
+ */
+$inner                            = clone $block;
+$inner->name                      = 'core/null';
+$inner->block_type                = null; // @phpstan-ignore assign.propertyType
+$inner->parsed_block['blockName'] = 'core/null';
+
+$given_before  = $queues->given_count();
+$inner_content = $inner->render( [ 'dynamic' => false ] );
+
+// Without any posts, the block shows nothing, so other inner blocks, such as a heading, do not show alone.
+if ( $queues->given_count() === $given_before ) {
 	return;
 }
 ?>
 
 <div <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
-	<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 </div>

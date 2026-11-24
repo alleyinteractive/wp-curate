@@ -62,7 +62,8 @@ const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
  *
  * The Single Post block takes one post. It can pin a post with an integer `ref` attribute, and a
  * `postType` attribute with the pinned post's type. Its edit function gives its post to its inner
- * blocks as context, as its `render.php` does.
+ * blocks as context, as its `render.php` does. Like any block inside a Channel Content block, its
+ * inner blocks get the channel of that block.
  *
  * The Channel Loop block takes each post that remains in its channel's queue, up to
  * `MAX_CHANNEL_POSTS`. Its edit function reads all of the posts with `useChannelQueuePosts()`, and
@@ -70,13 +71,13 @@ const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
  *
  * An empty channel name means no channel. A block without a channel takes no post. A Single Post
  * without a channel shows nothing, not even its pin. Inside a block that provides the channel, a
- * block has the channel of that block, so it has none if that block has none. Outside one, it has
- * its own channel. The editor gives the default channel to a new block that does not get the
- * channel of a block around it, and to a block that moves out of such a block. The Channel panel
- * cannot clear the channel. A block has no channel only if no channels are registered, or if its
- * saved content has none. The editor does not give a saved block the default channel when the post
- * opens, so the block shows nothing in the editor, as on the front end, until the user selects a
- * channel.
+ * block has the channel of that block at any depth, so it has none if that block has none. Outside
+ * one, it has its own channel. The editor gives the default channel to a new block that does not
+ * get the channel of a block around it, and to a block that moves out of such a block. The Channel
+ * panel cannot clear the channel. A block has no channel only if no channels are registered, or if
+ * its saved content has none. The editor does not give a saved block the default channel when the
+ * post opens, so the block shows nothing in the editor, as on the front end, until the user selects
+ * a channel.
  *
  * Like on the Query Loop block, a variation of a block in the `wp-curate` namespace can list the
  * controls to show in its `allowedControls` property. The panel ignores this property on the

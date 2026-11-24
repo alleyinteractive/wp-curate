@@ -4,7 +4,7 @@ import { postList as icon } from '@wordpress/icons';
 
 // Plugin dependencies.
 import { MAX_CHANNEL_POSTS } from '../../hooks/useBlockChannel';
-import { firstPostContext } from '../../hooks/useChannelQueue';
+import { contextForPost } from '../../hooks/useChannelQueue';
 import SINGLE_POST_LAYOUTS from '../../services/singlePostLayouts';
 
 // Internal dependencies.
@@ -23,8 +23,8 @@ registerBlockType(
   metadata,
   {
     channelPostsToTake: () => POSTS_TO_TAKE,
-    // The template gets the first post. See `firstPostContext()`.
-    channelInnerContext: firstPostContext,
+    // The template renders once for each post. See `contextForPost()`.
+    channelInnerContext: contextForPost,
     edit,
     icon,
     save,
