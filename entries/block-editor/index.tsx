@@ -12,6 +12,7 @@ import './channelSupport';
 import Deduplication from './deduplication/deduplication';
 import FreeForAllArgs from './freeForAllArgs';
 import LatestPostsInTermArgs from './latestPostsInTermArgs';
+import SharedLayouts from './sharedLayouts';
 
 /**
  * The Deduplication panel, where the Query block is registered.
@@ -53,5 +54,17 @@ registerPlugin(
         </>
       );
     },
+  },
+);
+
+/**
+ * The shared layouts of Single Post blocks.
+ */
+registerPlugin(
+  'wp-curate-shared-layouts',
+  {
+    // @ts-ignore
+    icon: '',
+    render: SharedLayouts,
   },
 );

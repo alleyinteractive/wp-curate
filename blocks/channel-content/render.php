@@ -13,20 +13,42 @@
  * @package wp-curate
  */
 
-use Alley\WP\WP_Curate\Post_IDs\Channel_Post_IDs_In_Block;
+use Alley\WP\WP_Curate\Channels\Queues;
+
+if ( ! isset( $block->context['wp-curate/queues'] ) || ! $block->context['wp-curate/queues'] instanceof Queues ) {
+	return;
+}
+
+$queues = $block->context['wp-curate/queues'];
 
 /*
- * The inner blocks have rendered already, in document order. Each Single Post block inside took its
- * post from the queue of this block's channel, which the block gives them as context. Without any
- * posts, the block shows nothing, so other inner blocks, such as a heading, do not show alone.
+ * The block type skips its inner blocks, so they render here. Then the block can count the posts
+ * that they show. Each block that shows a post, such as a Single Post or a block of another plugin,
+ * got its ID from `Queues::take()`, which counts it. A Channel Loop and the blocks in its template
+ * count too.
+ *
+ * A copy of this block renders the inner blocks as a block type that is not registered, like
+ * `Post_Template` does, so that the `render_block` filters and the supports of this block do not apply a
+ * second time. Unlike a new `WP_Block`, the copy keeps the context that the inner blocks got from
+ * this block, such as its channel and the context around it.
+ *
+ * Core gives a block type that is not registered a null type too, though the type of the property
+ * does not allow it.
  */
-$channel_posts = new Channel_Post_IDs_In_Block( $block, WP_Block_Type_Registry::get_instance() );
+$inner                            = clone $block;
+$inner->name                      = 'core/null';
+$inner->block_type                = null; // @phpstan-ignore assign.propertyType
+$inner->parsed_block['blockName'] = 'core/null';
 
-if ( [] === $channel_posts->post_ids() ) {
+$given_before  = $queues->given_count();
+$inner_content = $inner->render( [ 'dynamic' => false ] );
+
+// Without any posts, the block shows nothing, so other inner blocks, such as a heading, do not show alone.
+if ( $queues->given_count() === $given_before ) {
 	return;
 }
 ?>
 
 <div <?php echo wp_kses_data( get_block_wrapper_attributes() ); ?>>
-	<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 </div>

@@ -3,12 +3,16 @@ import { useSelect } from '@wordpress/data';
 
 // Plugin dependencies.
 import type { ChannelArgField, AvailableChannel } from '../../entries/block-editor/channelStore';
+import type { ChannelBlockPosts } from '../useChannelQueue';
 
 /*
  * The block support of a block that has a channel. wp-curate gives the block a `channel` attribute
  * and a Channel panel. A block that also provides the `wp-curate/channel` context, like Channel
- * Content, gives its channel to the blocks inside it. Any other block takes a post from its
- * channel.
+ * Content, gives its channel to the blocks inside it. A block type that gives a
+ * `channelPostsToTake` callback, like Single Post and Channel Loop, takes posts from its channel.
+ * See `channelPostsToTake()`.
+ * A block type that gives a `channelInnerContext` callback says how it renders the blocks inside
+ * it. See `channelInnerContexts()`.
  *
  * Like a block binding, the attribute is an object with the channel `name` and the `args` that the
  * block gives the channel, such as `{ name: 'wp_curate_post_category_latest', args: { term: 7 } }`.
@@ -101,63 +105,223 @@ export function isChannelProvider(blockType: unknown): boolean {
   return isProvider;
 }
 
-/*
- * The name of the block type that takes every post that remains in its channel's queue. Only this
- * block type can take them, so that the plugin does not commit to a public API for it yet.
+/**
+ * The most posts that one block can take from its channel.
  *
- * Keep the value matched with `Channel_Block_Support::CHANNEL_TEMPLATE_BLOCK` in PHP.
+ * Keep the value matched with `Queues::MAX_POSTS` in PHP.
  */
-const CHANNEL_TEMPLATE_BLOCK = 'wp-curate/channel-template';
+export const MAX_CHANNEL_POSTS = 100;
 
 /**
- * Whether a block type takes every post that remains in its channel's queue, instead of one post.
- * Only the Channel Template block does.
- *
- * Keep the rules matched with `Channel_Block_Support` in PHP.
- *
- * @param blockType Block type from the blocks store.
+ * One post that a block takes from its channel: a pin, or the top of the queue.
  */
-export function takesRemainingPosts(blockType: unknown): boolean {
-  let takesRemaining = false;
-
-  if (hasChannelSupport(blockType)) {
-    const {
-      name,
-    } = blockType as Record<string, unknown>;
-
-    takesRemaining = name === CHANNEL_TEMPLATE_BLOCK;
-  }
-
-  return takesRemaining;
+export interface ChannelPostToTake {
+  /** The pinned post ID, or 0 for the top of the queue. */
+  ref: number;
+  /**
+   * The type of the pinned post, or an empty string if it is not known. A pinned post can be past
+   * the IDs that have loaded, so the block can give its type.
+   */
+  postType: string;
 }
 
-/*
- * The name of the block type that can pin a post with its `ref` attribute. Only this block type can
- * pin a post, so that the plugin does not give `ref` a meaning on the blocks of other plugins.
- *
- * Keep the value matched with `Channel_Block_Support::SINGLE_POST_BLOCK` in PHP.
- */
-const SINGLE_POST_BLOCK = 'wp-curate/single-post';
+const NO_POSTS_TO_TAKE: ChannelPostToTake[] = [];
 
 /**
- * Whether a block type can pin a post with its `ref` attribute. Only the Single Post block can.
- *
- * Keep the rules matched with `Channel_Block_Support` in PHP.
+ * Whether a block type gives a `channelPostsToTake` callback, and so takes posts from its channel.
  *
  * @param blockType Block type from the blocks store.
  */
-export function pinsPost(blockType: unknown): boolean {
-  let canPin = false;
+export function hasChannelPostsToTake(blockType: unknown): boolean {
+  let takesPosts = false;
 
   if (hasChannelSupport(blockType)) {
     const {
-      name,
+      channelPostsToTake: callback,
     } = blockType as Record<string, unknown>;
 
-    canPin = name === SINGLE_POST_BLOCK;
+    takesPosts = typeof callback === 'function';
   }
 
-  return canPin;
+  return takesPosts;
+}
+
+/**
+ * Makes a post to take from a value that a `channelPostsToTake` callback returns.
+ *
+ * @param value The value.
+ */
+function toChannelPostToTake(value: unknown): ChannelPostToTake {
+  const postToTake: ChannelPostToTake = {
+    postType: '',
+    ref: 0,
+  };
+
+  if (typeof value !== 'object' || value === null) {
+    return postToTake;
+  }
+
+  const {
+    postType,
+    ref,
+  } = value as Record<string, unknown>;
+
+  if (Number.isInteger(ref) && (ref as number) > 0) {
+    postToTake.ref = ref as number;
+  }
+
+  if (postToTake.ref > 0 && typeof postType === 'string') {
+    postToTake.postType = postType;
+  }
+
+  return postToTake;
+}
+
+/**
+ * Get each post that a block takes from its channel, in order.
+ *
+ * A block type that takes posts gives a `channelPostsToTake` function when it registers, next to
+ * its `edit` function. The function gets the block's attributes and the context that the block
+ * gives its channel. It returns an array with one object for each post that the block takes. An
+ * object with a positive integer `ref` pins that post. An object without a pin takes the top of the
+ * queue. The function must be pure and synchronous, because the queue walk calls it for each block
+ * before any block shows its posts.
+ *
+ * In PHP, the block takes the same posts when it renders, with `Queues::take()`. Keep the two
+ * rules matched.
+ *
+ * @example
+ * registerBlockType(metadata, {
+ *   edit,
+ *   channelPostsToTake: ({ items }) => items.map(({ postId }) => ({ ref: postId })),
+ * });
+ *
+ * @param blockType  Block type from the blocks store.
+ * @param attributes Block attributes.
+ * @param context    The context that the block gives its channel.
+ * @return The posts to take, up to `MAX_CHANNEL_POSTS`, or none if the block type has no callback
+ *         or the callback fails.
+ */
+export function channelPostsToTake(
+  blockType: unknown,
+  attributes: unknown,
+  context: Record<string, unknown>,
+): ChannelPostToTake[] {
+  let toTake = NO_POSTS_TO_TAKE;
+
+  if (!hasChannelPostsToTake(blockType)) {
+    return toTake;
+  }
+
+  const {
+    channelPostsToTake: callback,
+  } = blockType as Record<string, unknown>;
+
+  let value: unknown;
+
+  try {
+    value = (callback as (a: unknown, c: Record<string, unknown>) => unknown)(attributes, context);
+  } catch (error) {
+    // One block with a broken callback must not stop the blocks after it from showing posts.
+    value = undefined;
+  }
+
+  if (Array.isArray(value)) {
+    toTake = value.slice(0, MAX_CHANNEL_POSTS).map(toChannelPostToTake);
+  }
+
+  return toTake;
+}
+
+/**
+ * Get the context of the blocks inside a block that takes posts, once for each time that the block
+ * renders them.
+ *
+ * On the page, the block's `render.php` decides how its inner blocks render. It can render them
+ * once, once for each post, or not at all, and it decides their context. The queue walk cannot run
+ * that code, but the channel blocks inside the block take posts each time that they render, and
+ * they find their queues from their context. So a block type that takes posts can give a
+ * `channelInnerContext` function when it registers, next to `channelPostsToTake`.
+ *
+ * The walk calls the function once for each post that the block takes, in order. It does not call
+ * it for a post that the queue did not have. The function gets the block's attributes, the context
+ * around the block, and the post. It returns the context of the inner blocks for that post, or
+ * null if they do not render for it. This is the same as `Post_Template::render()` in PHP, which
+ * renders the inner blocks once for one post. To keep a key of the context around the block, the
+ * function must copy it. A block that renders its inner blocks with `new WP_Block()` in PHP, like
+ * Single Post, does not keep it.
+ *
+ * The function does not set the `wp-curate/channel` context. A Channel Content block sets the
+ * channel of every block inside it, at any depth, so the walk gives each context the channel around
+ * the block. In PHP, a block that renders its inner blocks with `new WP_Block()` must give them
+ * that channel too. `Post_Template` does this.
+ *
+ * The walk takes all of the block's posts before its inner blocks take any. Its `render.php` must
+ * do the same: take its posts with one call to `Queues::take()`, and then render its inner blocks.
+ *
+ * A block type without the function renders its inner blocks once, with the context around it.
+ * This is the same as a block in PHP that renders `$content` and adds no context filter. The
+ * function must be pure and synchronous, like `channelPostsToTake`.
+ *
+ * @example
+ * registerBlockType(metadata, {
+ *   edit,
+ *   channelPostsToTake: ({ items }) => items.map(({ postId }) => ({ ref: postId })),
+ *   // Render the inner blocks once for each post, with the post and the context around the block.
+ *   channelInnerContext: (attributes, context, post) => ({ ...context, ...post }),
+ * });
+ *
+ * @param blockType  Block type from the blocks store.
+ * @param attributes Block attributes.
+ * @param context    The context around the block.
+ * @param posts      Each post that the block takes, in order, with null where the queue had none.
+ * @return The contexts, one for each post that the function returns an object for. It is the
+ *         context around the block once if the block type has no function. A post is left out if
+ *         the function fails for it or does not return an object.
+ */
+export function channelInnerContexts(
+  blockType: unknown,
+  attributes: unknown,
+  context: Record<string, unknown>,
+  posts: ChannelBlockPosts,
+): Record<string, unknown>[] {
+  const once = [context];
+
+  if (typeof blockType !== 'object' || blockType === null) {
+    return once;
+  }
+
+  const {
+    channelInnerContext: callback,
+  } = blockType as Record<string, unknown>;
+
+  if (typeof callback !== 'function') {
+    return once;
+  }
+
+  const contexts: Record<string, unknown>[] = [];
+
+  // `channelPostsToTake()` caps the posts at `MAX_CHANNEL_POSTS`, so the contexts cannot pass it.
+  posts.forEach((post) => {
+    if (post === null) {
+      return;
+    }
+
+    let value: unknown;
+
+    try {
+      value = callback(attributes, context, post);
+    } catch (error) {
+      // One block with a broken callback must not stop the blocks after it from showing posts.
+      value = null;
+    }
+
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      contexts.push(value as Record<string, unknown>);
+    }
+  });
+
+  return contexts;
 }
 
 /**

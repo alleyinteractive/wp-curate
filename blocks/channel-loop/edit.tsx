@@ -32,7 +32,7 @@ import useBlockChannel, {
   toBlockChannelArgs,
   toChannelName,
 } from '../../hooks/useBlockChannel';
-import { useChannelQueuePosts } from '../../hooks/useChannelQueue';
+import { type ChannelQueuePost, useChannelQueuePosts } from '../../hooks/useChannelQueue';
 
 /**
  * The editable copy of the template, for the active post. The post is in an `article` element,
@@ -95,7 +95,7 @@ function TemplatePreview({
 const MemoizedTemplatePreview = memo(TemplatePreview);
 
 /**
- * The wp-curate/channel-template block edit function.
+ * The wp-curate/channel-loop block edit function.
  *
  * The `wp-curate/channels` block support gives the block a channel, like a Single Post, and the
  * block shows each post that remains in the channel's queue after the blocks before it.
@@ -182,8 +182,19 @@ export default function Edit({
     [argFields, contextChannel, ownChannel],
   );
 
-  // The posts, or null while the channel loads.
-  const posts = useChannelQueuePosts(clientId);
+  // Each post that the block takes, or null while the channel loads.
+  const takenPosts = useChannelQueuePosts(clientId);
+
+  // The posts, or null while the channel loads. The block takes no post past the end of the queue.
+  const posts = useMemo(() => {
+    let out: ChannelQueuePost[] | null = null;
+
+    if (takenPosts !== null) {
+      out = takenPosts.filter((post): post is ChannelQueuePost => post !== null);
+    }
+
+    return out;
+  }, [takenPosts]);
 
   let activeId = 0;
 
@@ -265,7 +276,11 @@ export default function Edit({
      */
     out = (
       <div {...blockProps}>
-        {/* The hook gives the same post objects until they change, so each context stays. */}
+        {/*
+          * The hook gives the same post objects until they change, so each context stays. Like on
+          * the page, the template also keeps the channel of a Channel Content block around this
+          * block, because `BlockContextProvider` merges with the context around it.
+          */}
         {posts.map((post) => (
           <BlockContextProvider key={post.postId} value={post}>
             {post.postId === activeId ? (

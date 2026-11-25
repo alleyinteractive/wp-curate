@@ -15,14 +15,20 @@ import {
 } from '@wordpress/blocks';
 import { useDispatch, useSelect } from '@wordpress/data';
 
+// No attributes to add to the inner blocks.
+const NO_ATTRIBUTES = {};
+
 /**
  * A picker of the block's variations, which replaces the block's inner blocks with those of the
  * chosen variation, like the placeholder of core's Query block.
+ *
+ * `innerBlockAttributes` adds attributes to each top-level inner block of the chosen variation.
  */
 export default function LayoutVariationPicker({
   blockProps,
   clientId,
   icon,
+  innerBlockAttributes = NO_ATTRIBUTES,
   instructions,
   label,
   name,
@@ -30,6 +36,7 @@ export default function LayoutVariationPicker({
   blockProps: Record<string, unknown>;
   clientId: string;
   icon: unknown;
+  innerBlockAttributes?: Record<string, unknown>;
   instructions: string;
   label: string;
   name: string;
@@ -61,9 +68,17 @@ export default function LayoutVariationPicker({
         label={label}
         onSelect={(variation: BlockVariation | undefined) => {
           if (variation !== undefined && Array.isArray(variation.innerBlocks)) {
+            const template = (variation.innerBlocks as InnerBlockTemplate[]).map(
+              ([blockName, attributes, innerBlocks]) => [
+                blockName,
+                { ...attributes, ...innerBlockAttributes },
+                innerBlocks,
+              ] as InnerBlockTemplate,
+            );
+
             replaceInnerBlocks(
               clientId,
-              createBlocksFromInnerBlocksTemplate(variation.innerBlocks as InnerBlockTemplate[]),
+              createBlocksFromInnerBlocksTemplate(template),
               false,
             );
           }

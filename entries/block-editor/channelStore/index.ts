@@ -1,9 +1,10 @@
 // WordPress dependencies.
 import apiFetch from '@wordpress/api-fetch';
-import { createReduxStore, register } from '@wordpress/data';
+import { createReduxStore, createRegistrySelector, register } from '@wordpress/data';
 import { addQueryArgs } from '@wordpress/url';
 
 // Plugin dependencies.
+import { type ChannelBlockPosts, channelQueuePosts } from '../../../hooks/useChannelQueue';
 import type { ChannelResultsPage, ChannelResults } from '../../../hooks/useChannelResults';
 
 /*
@@ -593,6 +594,41 @@ const getAvailableChannels = (state: ChannelState, context: object) => {
   return list;
 };
 
+/*
+ * The last posts that `getChannelPosts()` gave for each block, by client ID, so that it gives back
+ * the same array until a post changes.
+ */
+const channelPostsByBlock = new Map<string, { key: string, posts: ChannelBlockPosts | null }>();
+
+/**
+ * Get each post that a block takes, given the blocks before it in the editor.
+ *
+ * A block type with the `wp-curate/channels` support and a `channelPostsToTake` callback takes the
+ * posts that the callback returns. A block of another plugin cannot import the queue,
+ * so it reads its posts here, such as with
+ * `useSelect( ( select ) => select( 'wp-curate/channels' ).getChannelPosts( clientId ) )`.
+ *
+ * @param clientId Client ID of the block.
+ * @return Each post that the block takes, in order, with null where the queue has no post. Null
+ *         while channels load.
+ */
+const getChannelPosts = createRegistrySelector((select) => (
+  state: ChannelState,
+  clientId: string,
+) => {
+  const posts = channelQueuePosts(select, clientId);
+  const key = JSON.stringify(posts);
+  const last = channelPostsByBlock.get(clientId);
+
+  if (last !== undefined && last.key === key) {
+    return last.posts;
+  }
+
+  channelPostsByBlock.set(clientId, { key, posts });
+
+  return posts;
+});
+
 // Skip the request when the store already has enough IDs.
 resolveChannelResults.isFulfilled = (
   state: ChannelState,
@@ -669,6 +705,7 @@ const store = createReduxStore('wp-curate/channels', {
     },
   },
   selectors: {
+    getChannelPosts,
     getChannelResults,
     getChannelResultsPage,
     getTypeOfPostInChannel,

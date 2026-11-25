@@ -15,6 +15,10 @@
     "wp-curate/channels": true
   },
   "attributes": {
+    "layoutGroup": {
+      "type": "string",
+      "default": ""
+    },
     "namespace": {
       "type": "string"
     },

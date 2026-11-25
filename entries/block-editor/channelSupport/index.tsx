@@ -3,8 +3,6 @@ import React from 'react';
 
 // WordPress dependencies.
 import {
-  // @ts-expect-error BlockContextProvider not available in types yet.
-  BlockContextProvider,
   InspectorControls,
   store as blockEditorStore,
 } from '@wordpress/block-editor';
@@ -30,55 +28,56 @@ import {
   defaultChannel,
   hasChannelSupport,
   isChannelProvider,
-  takesRemainingPosts,
-  toBlockChannel,
   toChannelArgs,
   toChannelName,
 } from '../../../hooks/useBlockChannel';
-import useChannelQueuePost from '../../../hooks/useChannelQueue';
 
 // Namespace for bundled blocks.
 const BLOCK_NAMESPACE = 'wp-curate/';
 
-// The post context while the channel loads.
-const LOADING_POST = {
-  postId: null,
-  postType: '',
-};
+// The Single Post block, which has its own help text. It shows one post.
+const SINGLE_POST_BLOCK = 'wp-curate/single-post';
 
-// The context of a block without a channel, which keeps the context it has.
-const NO_POST_CONTEXT = {};
+/*
+ * The Channel Loop block, which has its own help text. It shows every post that remains in its
+ * queue. It takes no more than `MAX_CHANNEL_POSTS`, but that limit only guards the page.
+ */
+const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
 
 /*
  * Blocks with the `wp-curate/channels` block support get a Channel panel. A block that provides the
- * channel context, like Channel Content, gives the channel to the blocks inside it. Any other block
- * takes a post from its channel's queue, which it gets as the `postId` and `postType` context. Like
- * a block binding, the `channel` attribute is an object with the channel `name` and the `args` that
- * the block gives the channel, such as a term. Other scripts add the controls of the arguments
- * through the Channel panel's slot, in `components/ChannelPanelSlotFill`. The blocks that use the
- * same channel, arguments, and context share a queue, so they do not show the same post twice.
- * Blocks in other queues can show the same post. The `Channel_Block_Support` feature in PHP adds
- * the `channel` attribute and the context that the block uses, and gives the block the same post
- * on the front end.
+ * channel context, like Channel Content, gives the channel to the blocks inside it. A block type
+ * that gives a `channelPostsToTake` callback takes the posts that the callback returns from its
+ * channel's queue. See `channelPostsToTake()`. The support does not change the `postId` and
+ * `postType` context of any block, so that its channel can read the post around it. The blocks of
+ * this plugin read their posts with `useChannelQueuePost()` and `useChannelQueuePosts()`. Other
+ * blocks read them with `getChannelPosts()` in the `wp-curate/channels` store. Like a block
+ * binding, the `channel` attribute is an object with the channel `name` and the `args` that the
+ * block gives the channel, such as a term. Other scripts add the controls of the arguments through
+ * the Channel panel's slot, in `components/ChannelPanelSlotFill`. The blocks that use the same
+ * channel, arguments, and context share a queue, so they do not show the same post twice. Blocks in
+ * other queues can show the same post. The `Channel_Block_Support` feature in PHP adds the
+ * `channel` attribute and the context that the block uses. On the front end, each block takes the
+ * same posts when it renders.
  *
- * The Single Post block can pin a post with an integer `ref` attribute, and a `postType` attribute
- * with the pinned post's type. Only this block type can pin a post, so the plugin gives `ref` no
- * meaning on other block types. See `pinsPost()`.
+ * The Single Post block takes one post. It can pin a post with an integer `ref` attribute, and a
+ * `postType` attribute with the pinned post's type. Its edit function gives its post to its inner
+ * blocks as context, as its `render.php` does. Like any block inside a Channel Content block, its
+ * inner blocks get the channel of that block.
  *
- * The Channel Template block takes every post that remains in its channel's queue instead of one
- * post. Only this block type can do so. See `takesRemainingPosts()`. Like other blocks, it gets the
- * first post as `postId` context. Its edit function reads all of the posts with
- * `useChannelQueuePosts()`.
+ * The Channel Loop block takes each post that remains in its channel's queue, up to
+ * `MAX_CHANNEL_POSTS`. Its edit function reads all of the posts with `useChannelQueuePosts()`, and
+ * gives each post to its copy of the template.
  *
- * An empty channel name means no channel. A block without a channel takes no post. Its context
- * does not change, as if it did not have the support. A Single Post without a channel shows
- * nothing, not even its pin. Inside a block that provides the channel, a block has the channel of
- * that block, so it has none if that block has none. Outside one, it has its own channel. The
- * editor gives the default channel to a new block that does not get the channel of a block around
- * it, and to a block that moves out of such a block. The Channel panel cannot clear the channel. A
- * block has no channel only if no channels are registered, or if its saved content has none. The
- * editor does not give a saved block the default channel when the post opens, so the block shows
- * nothing in the editor, as on the front end, until the user selects a channel.
+ * An empty channel name means no channel. A block without a channel takes no post. A Single Post
+ * without a channel shows nothing, not even its pin. Inside a block that provides the channel, a
+ * block has the channel of that block at any depth, so it has none if that block has none. Outside
+ * one, it has its own channel. The editor gives the default channel to a new block that does not
+ * get the channel of a block around it, and to a block that moves out of such a block. The Channel
+ * panel cannot clear the channel. A block has no channel only if no channels are registered, or if
+ * its saved content has none. The editor does not give a saved block the default channel when the
+ * post opens, so the block shows nothing in the editor, as on the front end, until the user selects
+ * a channel.
  *
  * Like on the Query Loop block, a variation of a block in the `wp-curate` namespace can list the
  * controls to show in its `allowedControls` property. The panel ignores this property on the
@@ -164,7 +163,6 @@ function ChannelControls({
   contextChannel,
   isProvider,
   setAttributes,
-  takesRemaining,
 }: {
   attributes: Record<string, unknown>;
   blockName: string;
@@ -175,7 +173,6 @@ function ChannelControls({
   contextChannel: unknown;
   isProvider: boolean;
   setAttributes: (next: Record<string, unknown>) => void;
-  takesRemaining: boolean;
 }) {
   // The channel for a new block, or null while the list of channels loads.
   const globalChannel = useSelect((select) => defaultChannel(select), []);
@@ -292,14 +289,18 @@ function ChannelControls({
     return null;
   }
 
-  let help: string = __('The block shows a post from this channel.', 'wp-curate');
+  let help: string = __('The block shows posts from this channel.', 'wp-curate');
+
+  if (blockName === SINGLE_POST_BLOCK) {
+    help = __('The block shows a post from this channel.', 'wp-curate');
+  }
+
+  if (blockName === CHANNEL_LOOP_BLOCK) {
+    help = __('The block shows each post that remains in this channel.', 'wp-curate');
+  }
 
   if (isProvider) {
     help = __('The blocks inside this block show posts from this channel.', 'wp-curate');
-  }
-
-  if (takesRemaining) {
-    help = __('The block shows each post that remains in this channel.', 'wp-curate');
   }
 
   if (channel === '') {
@@ -355,52 +356,6 @@ function ChannelControls({
   );
 }
 
-/**
- * The edit component of a block that takes a post from its channel, with that post as context.
- *
- * `postId` is null while the channel loads, and 0 when the channel has no posts left. A block
- * without a channel takes no post and keeps the context it has. It uses this component
- * too, so that the block's edit component does not mount again when the block gets a channel.
- */
-function BlockEditWithPostFromChannel({
-  BlockEdit,
-  clientId,
-  context: blockContext,
-  hasNoChannel,
-  props,
-}: {
-  BlockEdit: React.ComponentType<any>;
-  clientId: string;
-  context: Record<string, unknown>;
-  hasNoChannel: boolean;
-  props: Record<string, unknown>;
-}) {
-  const post = useChannelQueuePost(clientId);
-
-  // The post context for the inner blocks. Each value keeps its identity between renders.
-  let innerContext: { postId?: number | null, postType?: string } = LOADING_POST;
-
-  if (post !== null) {
-    innerContext = post;
-  }
-
-  if (hasNoChannel) {
-    innerContext = NO_POST_CONTEXT;
-  }
-
-  // The block's own context comes from its props, which the editor has already filtered.
-  const context = useMemo(() => ({
-    ...blockContext,
-    ...innerContext,
-  }), [blockContext, innerContext]);
-
-  return (
-    <BlockContextProvider value={innerContext}>
-      <BlockEdit {...props} context={context} />
-    </BlockContextProvider>
-  );
-}
-
 const withChannelSupport = createHigherOrderComponent(
   (BlockEdit: React.ComponentType<any>) => function ChannelSupportEdit(props: any) {
     const {
@@ -426,10 +381,6 @@ const withChannelSupport = createHigherOrderComponent(
     }
 
     const isProvider = isChannelProvider(blockType);
-    const takesRemaining = takesRemainingPosts(blockType);
-
-    // Keep the rule matched with the queue walk in `useChannelQueue`.
-    const hasNoChannel = toBlockChannel(ownName, contextChannel) === '';
 
     return (
       <>
@@ -443,19 +394,8 @@ const withChannelSupport = createHigherOrderComponent(
           contextChannel={contextChannel}
           isProvider={isProvider}
           setAttributes={setAttributes}
-          takesRemaining={takesRemaining}
         />
-        {isProvider ? (
-          <BlockEdit {...props} />
-        ) : (
-          <BlockEditWithPostFromChannel
-            BlockEdit={BlockEdit}
-            clientId={clientId}
-            context={context}
-            hasNoChannel={hasNoChannel}
-            props={props}
-          />
-        )}
+        <BlockEdit {...props} />
       </>
     );
   },

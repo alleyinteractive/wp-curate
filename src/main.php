@@ -86,6 +86,7 @@ function main(): void {
 				queues: new Channels\Queues(
 					channels: $channels,
 				),
+				block_type_registry: WP_Block_Type_Registry::get_instance(),
 			),
 			then: new Features\Channel_Block_Support(
 				block_type_registry: WP_Block_Type_Registry::get_instance(),

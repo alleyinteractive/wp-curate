@@ -1,9 +1,9 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "wp-curate/channel-template",
+  "name": "wp-curate/channel-loop",
   "version": "0.1.0",
-  "title": "Channel Results Template",
+  "title": "Channel Loop",
   "category": "theme",
   "description": "Displays every remaining post in a channel, with the same template for each post.",
   "textdomain": "wp-curate",

@@ -56,7 +56,7 @@ final class Channel_Content_Patterns implements Feature {
 					. get_comment_delimited_block_content( 'wp-curate/single-post', [], $featured_post )
 					. '</div><!-- /wp:column -->'
 					. '<!-- wp:column {"width":"40%"} --><div class="wp-block-column" style="flex-basis:40%">'
-					. $this->single_post_template( [], $media_object, 4 )
+					. $this->shared_layout_posts( 'list', $media_object, 4 )
 					. '</div><!-- /wp:column -->'
 					. '</div><!-- /wp:columns -->',
 				),
@@ -76,20 +76,20 @@ final class Channel_Content_Patterns implements Feature {
 	}
 
 	/**
-	 * A Single Post Template block with Single Post blocks, which each have their own copy of the
-	 * template.
+	 * Single Post blocks that share a layout. Each has its own copy of the template.
 	 *
-	 * @param mixed[] $attrs    Attributes of the Single Post Template.
-	 * @param string  $template Serialized template of the Single Post blocks.
-	 * @param int     $count    The number of Single Post blocks.
+	 * The key is a template key: each time that the pattern is inserted, the editor gives the blocks a new key, so
+	 * that they make a new group. See `isTemplateKey()` in `services/layoutGroups`.
+	 *
+	 * @param string $key      The `layoutGroup` key of the blocks. Must not be a UUID.
+	 * @param string $template Serialized template of the Single Post blocks.
+	 * @param int    $count    The number of Single Post blocks.
 	 * @return string
 	 */
-	private function single_post_template( array $attrs, string $template, int $count ): string {
-		$single_posts = str_repeat(
-			get_comment_delimited_block_content( 'wp-curate/single-post', [], $template ),
+	private function shared_layout_posts( string $key, string $template, int $count ): string {
+		return str_repeat(
+			get_comment_delimited_block_content( 'wp-curate/single-post', [ 'layoutGroup' => $key ], $template ),
 			$count,
 		);
-
-		return get_comment_delimited_block_content( 'wp-curate/single-post-template', $attrs, $single_posts );
 	}
 }
