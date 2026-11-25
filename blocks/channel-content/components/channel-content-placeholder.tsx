@@ -19,8 +19,8 @@ import PatternSelectionModal from './pattern-selection-modal';
 
 /**
  * The placeholder of a block without inner blocks, like the one of core's Query block. The user
- * chooses a pattern for the block, or starts blank with a Single Post Loop block, which shows a
- * picker of layouts.
+ * chooses a pattern for the block, or starts blank with a Single Post block, which shows a picker
+ * of layouts.
  *
  * A block that was just inserted uses its pattern without asking, if it has only one.
  *
@@ -132,7 +132,7 @@ export default function ChannelContentPlaceholder({
 
         <Button
           __next40pxDefaultSize
-          onClick={() => replaceInnerBlocks(clientId, [createBlock('wp-curate/single-post-loop')], true)}
+          onClick={() => replaceInnerBlocks(clientId, [createBlock('wp-curate/single-post')], true)}
           variant="secondary"
         >
           {__('Start blank', 'wp-curate')}

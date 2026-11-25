@@ -46,6 +46,8 @@ import useChannelQueuePost from '../../hooks/useChannelQueue';
 import PinBadge from './components/pin-badge';
 import PostPicker from './components/post-picker';
 import PostToolsDropdown from './components/post-tools-dropdown';
+import SharedLayoutPanel from './components/shared-layout-panel';
+import { useIsLayoutHighlighted } from './layout-highlight';
 import './index.scss';
 
 /**
@@ -87,8 +89,10 @@ function PostInnerBlocks({
  * It gives that post to its inner blocks as context. Its own `postId` and `postType` context stays
  * the post around it, as on the page.
  *
- * A block without inner blocks shows a picker of layouts. Inside a Single Post Loop block, that
- * block keeps the inner blocks of its Single Posts the same.
+ * A block without inner blocks shows a picker of layouts. Single Posts with the same `layoutGroup`
+ * attribute share a layout: the editor keeps their inner blocks the same, at any place in the
+ * post. See `entries/block-editor/sharedLayouts`. The "Single Post Layout" panel in the Styles tab
+ * shows the layouts in the post and the variations, and changes the group of the block.
  */
 export default function Edit({
   attributes: {
@@ -104,6 +108,7 @@ export default function Edit({
   setAttributes,
 }: BlockEditProps<{
   channel: { args?: Record<string, unknown>, name: string };
+  layoutGroup: string;
   postType: string;
   ref: number;
 }> & {
@@ -201,10 +206,14 @@ export default function Edit({
    */
   const hasOverlay = hasInnerBlocks && !isInSelection;
 
+  // The user points to the layout of this block in the "Single Post Layout" panel of a block.
+  const isLayoutHighlighted = useIsLayoutHighlighted(clientId);
+
   const blockProps = useBlockProps({
     className: classnames({
       'has-unpublished-pin': isPinUnpublished,
       'has-block-overlay': hasOverlay,
+      'is-layout-highlighted': isLayoutHighlighted,
       'is-pinned': ref > 0,
     }),
   });
@@ -368,6 +377,13 @@ export default function Edit({
           </ToolbarGroup>
         </BlockControls>
       ) : null}
+
+      <SharedLayoutPanel
+        clientId={clientId}
+        onDetach={() => setAttributes({ layoutGroup: '' })}
+        postId={postId}
+        postType={postType}
+      />
 
       {preview}
 
