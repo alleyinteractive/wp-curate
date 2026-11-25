@@ -41,9 +41,6 @@ final readonly class Bundled_Channels implements Feature {
 	/**
 	 * Filters the channels that blocks can use to add the bundled channels.
 	 *
-	 * The bundled channels come before the channels of other plugins, whatever the priority of
-	 * their filters.
-	 *
 	 * @phpstan-param mixed $channels
 	 *
 	 * @param Channel[] $channels The channels, in order.

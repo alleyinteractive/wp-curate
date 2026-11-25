@@ -28,12 +28,14 @@ final class Available_Channels {
 
 		if ( null === $channels ) {
 			$channels = [];
+			$last     = [];
 			$names    = [];
 
 			/**
 			 * Filters the channels that blocks can use.
 			 *
 			 * A channel must have a nonempty name consisting of lowercase letters, numbers, underscores and hyphens.
+			 * The Free-For-All channel is always last, whatever its position in the filtered list.
 			 *
 			 * @param Channel[] $channels The channels, in order.
 			 */
@@ -49,11 +51,18 @@ final class Available_Channels {
 					$name = $channel->name();
 
 					if ( ! isset( $names[ $name ] ) && '' !== $name && preg_match( '/^[a-z0-9_-]+\z/', $name ) === 1 ) {
-						$channels[]     = $channel;
 						$names[ $name ] = true;
+
+						if ( 'wp_curate_free_for_all' === $name ) {
+							$last[] = $channel;
+						} else {
+							$channels[] = $channel;
+						}
 					}
 				}
 			}
+
+			$channels = array_merge( $channels, $last );
 		}
 
 		// Post types register during `init`, so keep the list only after it.

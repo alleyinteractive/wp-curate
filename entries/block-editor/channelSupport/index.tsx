@@ -27,6 +27,7 @@ import {
   channelBlockSupportSettings,
   defaultChannel,
   hasChannelSupport,
+  hasSinglePostSupport,
   isChannelProvider,
   toChannelArgs,
   toChannelName,
@@ -34,9 +35,6 @@ import {
 
 // Namespace for bundled blocks.
 const BLOCK_NAMESPACE = 'wp-curate/';
-
-// The Single Post block, which has its own help text. It shows one post.
-const SINGLE_POST_BLOCK = 'wp-curate/single-post';
 
 /*
  * The Channel Loop block, which has its own help text. It shows every post that remains in its
@@ -60,10 +58,12 @@ const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
  * `channel` attribute and the context that the block uses. On the front end, each block takes the
  * same posts when it renders.
  *
- * The Single Post block takes one post. It can pin a post with an integer `ref` attribute, and a
- * `postType` attribute with the pinned post's type. Its edit function gives its post to its inner
- * blocks as context, as its `render.php` does. Like any block inside a Channel Content block, its
- * inner blocks get the channel of that block.
+ * A block with the `wp-curate/single-post` support, like Single Post, takes one post. It can pin a
+ * post with an integer `ref` attribute, and a `postType` attribute with the pinned post's type. It
+ * takes the post itself, as other blocks do, and its own `postId` context stays the post around
+ * it. See `singlePostSupport`. The Single Post block gives its post to its inner blocks as context,
+ * as its `render.php` does. Like any block inside a Channel Content block, its inner blocks get the
+ * channel of that block.
  *
  * The Channel Loop block takes each post that remains in its channel's queue, up to
  * `MAX_CHANNEL_POSTS`. Its edit function reads all of the posts with `useChannelQueuePosts()`, and
@@ -291,7 +291,8 @@ function ChannelControls({
 
   let help: string = __('The block shows posts from this channel.', 'wp-curate');
 
-  if (blockName === SINGLE_POST_BLOCK) {
+  // A block with the `wp-curate/single-post` support, like Single Post, shows one post.
+  if (hasSinglePostSupport(getBlockType(blockName))) {
     help = __('The block shows a post from this channel.', 'wp-curate');
   }
 

@@ -124,10 +124,19 @@ function postContext(select: any): Record<string, unknown> {
   const postId = getCurrentPostId();
   const postType = getCurrentPostType();
 
-  // A template in the site editor has a string ID, and no post to give.
   if (Number.isInteger(postId) && postId > 0 && typeof postType === 'string') {
     context = {
       postId,
+      postType,
+    };
+  }
+
+  /*
+   * A template or template part in the site editor has a string ID, and no post to give. Give only
+   * its post type, so that a channel can choose a sample post for the preview.
+   */
+  if (postType === 'wp_template' || postType === 'wp_template_part') {
+    context = {
       postType,
     };
   }

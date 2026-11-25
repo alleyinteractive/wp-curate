@@ -12,25 +12,12 @@
   "render": "file:render.php",
   "supports": {
     "html": false,
-    "wp-curate/channels": true
+    "wp-curate/channels": true,
+    "wp-curate/single-post": true
   },
   "attributes": {
-    "layoutGroup": {
-      "type": "string",
-      "default": ""
-    },
     "namespace": {
       "type": "string"
-    },
-    "postType": {
-      "type": "string",
-      "default": "",
-      "role": "content"
-    },
-    "ref": {
-      "type": "number",
-      "default": 0,
-      "role": "content"
     }
   },
   "usesContext": [
