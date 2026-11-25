@@ -23,8 +23,7 @@ import LayoutVariationPicker from '../../components/LayoutVariationPicker';
 import useChannelQueuePost from '../../hooks/useChannelQueue';
 
 // Internal dependencies.
-import SharedLayoutPanel from './components/shared-layout-panel';
-import { useIsLayoutHighlighted } from './layout-highlight';
+import LayoutPanel from './components/layout-panel';
 import './index.scss';
 
 /**
@@ -60,18 +59,13 @@ function PostInnerBlocks({
  * stays the post around it.
  *
  * A block without inner blocks shows a picker of layouts. The support shows this function, not its
- * placeholders, while the picker shows. Single Posts with the same `layoutGroup` attribute share a
- * layout: the editor keeps their inner blocks the same, at any place in the post. See
- * `entries/block-editor/sharedLayouts`. The "Single Post Layout" panel in the Styles tab shows the
- * layouts in the post and the variations, and changes the group of the block.
+ * placeholders, while the picker shows. The "Single Post Layout" panel in the Styles tab shows the
+ * variations, and replaces the inner blocks with the one that the user selects.
  */
 export default function Edit({
   clientId,
   name,
-  setAttributes,
-}: BlockEditProps<{
-  layoutGroup: string;
-}> & {
+}: BlockEditProps<Record<string, never>> & {
   clientId: string;
   name: string;
 }) {
@@ -105,13 +99,9 @@ export default function Edit({
    */
   const hasOverlay = hasInnerBlocks && !isInSelection;
 
-  // The user points to the layout of this block in the "Single Post Layout" panel of a block.
-  const isLayoutHighlighted = useIsLayoutHighlighted(clientId);
-
   const blockProps = useBlockProps({
     className: classnames({
       'has-block-overlay': hasOverlay,
-      'is-layout-highlighted': isLayoutHighlighted,
     }),
   });
 
@@ -136,9 +126,9 @@ export default function Edit({
 
   return (
     <>
-      <SharedLayoutPanel
+      <LayoutPanel
         clientId={clientId}
-        onDetach={() => setAttributes({ layoutGroup: '' })}
+        name={name}
         postId={shownPostId}
         postType={shownPostType}
       />
