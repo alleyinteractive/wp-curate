@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "wp-curate/single-post",
+  "version": "0.1.0",
+  "title": "Single Post",
+  "category": "theme",
+  "description": "Displays a single post from a channel.",
+  "textdomain": "wp-curate",
+  "editorScript": "file:index.js",
+  "editorStyle": "file:index.css",
+  "render": "file:render.php",
+  "supports": {
+    "html": false,
+    "wp-curate/channels": true,
+    "wp-curate/single-post": true
+  },
+  "attributes": {
+    "namespace": {
+      "type": "string"
+    }
+  },
+  "usesContext": [
+    "postId",
+    "postType"
+  ]
+}

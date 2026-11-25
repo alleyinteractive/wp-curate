@@ -1,0 +1,273 @@
+<?php
+
+/*
+ * This file is part of the Symfony package.
+ *
+ * (c) Fabien Potencier <fabien@symfony.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Symfony\Component\Serializer\Normalizer;
+
+use Symfony\Component\PropertyAccess\Exception\InvalidArgumentException as PropertyAccessInvalidArgumentException;
+use Symfony\Component\PropertyAccess\Exception\InvalidTypeException;
+use Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
+use Symfony\Component\PropertyInfo\PropertyInfoExtractorInterface;
+use Symfony\Component\PropertyInfo\PropertyTypeExtractorInterface;
+use Symfony\Component\PropertyInfo\PropertyWriteInfo;
+use Symfony\Component\Serializer\Attribute\Ignore;
+use Symfony\Component\Serializer\Exception\LogicException;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
+use Symfony\Component\Serializer\Mapping\ClassDiscriminatorResolverInterface;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
+use Symfony\Component\Serializer\Mapping\Loader\AccessorCollisionResolverTrait;
+use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
+
+/**
+ * Converts between objects and arrays using the PropertyAccess component.
+ *
+ * @author Kévin Dunglas <dunglas@gmail.com>
+ */
+final class ObjectNormalizer extends AbstractObjectNormalizer
+{
+    use AccessorCollisionResolverTrait;
+
+    private static $reflectionCache = [];
+    private static $isReadableCache = [];
+    private static $isWritableCache = [];
+
+    protected PropertyAccessorInterface $propertyAccessor;
+    protected $propertyInfoExtractor;
+    private $writeInfoExtractor;
+
+    private readonly \Closure $objectClassResolver;
+
+    public function __construct(?ClassMetadataFactoryInterface $classMetadataFactory = null, ?NameConverterInterface $nameConverter = null, ?PropertyAccessorInterface $propertyAccessor = null, ?PropertyTypeExtractorInterface $propertyTypeExtractor = null, ?ClassDiscriminatorResolverInterface $classDiscriminatorResolver = null, ?callable $objectClassResolver = null, array $defaultContext = [], ?PropertyInfoExtractorInterface $propertyInfoExtractor = null)
+    {
+        if (!class_exists(PropertyAccess::class)) {
+            throw new LogicException('The ObjectNormalizer class requires the "PropertyAccess" component. Try running "composer require symfony/property-access".');
+        }
+
+        parent::__construct($classMetadataFactory, $nameConverter, $propertyTypeExtractor, $classDiscriminatorResolver, $objectClassResolver, $defaultContext);
+
+        $this->propertyAccessor = $propertyAccessor ?: PropertyAccess::createPropertyAccessor();
+
+        $this->objectClassResolver = ($objectClassResolver ?? static fn ($class) => \is_object($class) ? $class::class : $class)(...);
+        $this->propertyInfoExtractor = $propertyInfoExtractor ?: new ReflectionExtractor();
+        $this->writeInfoExtractor = new ReflectionExtractor();
+    }
+
+    public function getSupportedTypes(?string $format): array
+    {
+        return ['object' => true];
+    }
+
+    protected function extractAttributes(object $object, ?string $format = null, array $context = []): array
+    {
+        if (\stdClass::class === $object::class) {
+            return array_keys((array) $object);
+        }
+
+        // If not using groups, detect manually
+        $attributes = [];
+
+        // methods
+        $class = ($this->objectClassResolver)($object);
+        $reflClass = new \ReflectionClass($class);
+
+        foreach ($reflClass->getMethods(\ReflectionMethod::IS_PUBLIC) as $reflMethod) {
+            $name = $reflMethod->name;
+            $attributeName = $this->getAttributeNameFromAccessor($reflClass, $reflMethod, false);
+
+            if ($this->hasPropertyForAccessor($reflMethod->getDeclaringClass(), $name) && (null === $attributeName || $this->hasAttributeNameCollision($reflClass, $attributeName, $name))) {
+                $attributeName = $name;
+            }
+
+            if (null !== $attributeName && $this->isAllowedAttribute($object, $attributeName, $format, $context)) {
+                $attributes[$attributeName] = true;
+            }
+        }
+
+        // properties
+        foreach ($reflClass->getProperties() as $reflProperty) {
+            if (!$reflProperty->isPublic()) {
+                continue;
+            }
+
+            if ($reflProperty->isStatic() || !$this->isAllowedAttribute($object, $reflProperty->name, $format, $context)) {
+                continue;
+            }
+
+            $attributes[$reflProperty->name] = true;
+        }
+
+        return array_keys($attributes);
+    }
+
+    protected function getAttributeValue(object $object, string $attribute, ?string $format = null, array $context = []): mixed
+    {
+        $mapping = $this->classDiscriminatorResolver?->getMappingForMappedObject($object);
+
+        return $attribute === $mapping?->getTypeProperty()
+            ? $mapping
+            : $this->propertyAccessor->getValue($object, $attribute);
+    }
+
+    protected function setAttributeValue(object $object, string $attribute, mixed $value, ?string $format = null, array $context = []): void
+    {
+        if ($writeInfo = $this->getWriteInfoInsteadOfGetterSetter($object, $attribute, $value, $context)) {
+            if (PropertyWriteInfo::TYPE_PROPERTY === $writeInfo->getType()) {
+                $object->{$writeInfo->getName()} = $value;
+            }
+
+            return;
+        }
+
+        try {
+            $this->propertyAccessor->setValue($object, $attribute, $value);
+        } catch (NoSuchPropertyException) {
+            // Properties not found are ignored
+        } catch (PropertyAccessInvalidArgumentException $e) {
+            throw NotNormalizableValueException::createForUnexpectedDataType(\sprintf('Failed to denormalize attribute "%s" value for class "%s": %s', $attribute, $object::class, $e->getMessage()), $value, $e instanceof InvalidTypeException ? [$e->expectedType] : ['unknown'], $context['deserialization_path'] ?? null, false, $e->getCode(), $e);
+        }
+    }
+
+    protected function isAllowedAttribute($classOrObject, string $attribute, ?string $format = null, array $context = []): bool
+    {
+        if (!parent::isAllowedAttribute($classOrObject, $attribute, $format, $context)) {
+            return false;
+        }
+
+        $class = \is_object($classOrObject) ? $classOrObject::class : $classOrObject;
+
+        if ($this->isDiscriminatorTypeProperty($classOrObject, $attribute)) {
+            return true;
+        }
+
+        if ($context['_read_attributes'] ?? true) {
+            $context = array_intersect_key($context, ['enable_getter_setter_extraction' => true, 'enable_magic_methods_extraction' => true]);
+            $cacheKey = $class.'::'.$attribute.hash('xxh128', serialize($context));
+
+            return self::$isReadableCache[$cacheKey] ??= $this->isPropertyPath($attribute) || $this->propertyInfoExtractor->isReadable($class, $attribute, $context) || $this->hasAttributeAccessorMethod($class, $attribute) || (\is_object($classOrObject) && $this->propertyAccessor->isReadable($classOrObject, $attribute));
+        }
+
+        if ($ignoredAttributes = $context[self::IGNORED_ATTRIBUTES] ?? $this->defaultContext[self::IGNORED_ATTRIBUTES]) {
+            $foldedAttribute = strtolower(str_replace(['_', ' '], '', $attribute));
+            foreach ($ignoredAttributes as $ignoredAttribute) {
+                if ($foldedAttribute === strtolower(str_replace(['_', ' '], '', $ignoredAttribute)) && $this->isWrittenByMethod($class, $attribute, $context)) {
+                    return false;
+                }
+            }
+        }
+
+        if ($this->isPropertyPath($attribute)) {
+            // a property path is writable only when the class metadata declares it as an attribute
+            return $this->classMetadataFactory && isset($this->classMetadataFactory->getMetadataFor($class)->getAttributesMetadata()[$attribute]);
+        }
+
+        $context = array_intersect_key($context, ['enable_getter_setter_extraction' => true, 'enable_magic_methods_extraction' => true, 'enable_constructor_extraction' => true, 'enable_adder_remover_extraction' => true]);
+        $cacheKey = $class.'::'.$attribute.hash('xxh128', serialize($context));
+
+        if (isset(self::$isWritableCache[$cacheKey])) {
+            return self::$isWritableCache[$cacheKey];
+        }
+
+        if (1000 < \count(self::$isWritableCache)) {
+            // stop memory leak if there are many keys
+            self::$isWritableCache = \array_slice(self::$isWritableCache, 500, null, true);
+        }
+
+        // asking PropertyInfo about attributes that the class doesn't have would fill its cache with each unknown key
+        if (null !== ($name = $this->getWritableAttributeName($class, $attribute)) && $this->propertyInfoExtractor->isWritable($class, $name, $context)) {
+            return self::$isWritableCache[$cacheKey] = true;
+        }
+
+        $writeType = $this->writeInfoExtractor->getWriteInfo($class, $attribute, $context)?->getType();
+
+        return self::$isWritableCache[$cacheKey] = !\in_array($writeType, [null, PropertyWriteInfo::TYPE_NONE], true)
+            && (PropertyWriteInfo::TYPE_PROPERTY !== $writeType || !property_exists($class, $attribute));
+    }
+
+    /**
+     * Returns the name of the property or of the setter that the attribute refers to, as PropertyInfo lists it.
+     */
+    private function getWritableAttributeName(string $class, string $attribute): ?string
+    {
+        if (property_exists($class, $attribute)) {
+            return $attribute;
+        }
+
+        if (!method_exists($class, 'set'.$attribute)) {
+            return null;
+        }
+
+        // method names are case-insensitive, so the name is read from the method, the way ReflectionExtractor::getProperties() does
+        $name = substr((new \ReflectionMethod($class, 'set'.$attribute))->name, 3);
+
+        return property_exists($class, lcfirst($name)) || (!property_exists($class, $name) && !preg_match('/^[A-Z]{2,}/', $name)) ? lcfirst($name) : $name;
+    }
+
+    private function hasAttributeAccessorMethod(string $class, string $attribute): bool
+    {
+        $reflection = self::$reflectionCache[$class] ??= new \ReflectionClass($class);
+
+        if (!$reflection->hasMethod($attribute)) {
+            return false;
+        }
+
+        $method = $reflection->getMethod($attribute);
+
+        return !$method->isStatic()
+            && !$method->getAttributes(Ignore::class)
+            && !$method->getNumberOfRequiredParameters()
+            && !\in_array((string) $method->getReturnType(), ['void', 'never'], true);
+    }
+
+    private function isWrittenByMethod(string $class, string $attribute, array $context): bool
+    {
+        $writeInfo = $this->writeInfoExtractor->getWriteInfo($class, $attribute, ['enable_constructor_extraction' => false] + $context);
+
+        return match ($writeInfo?->getType()) {
+            PropertyWriteInfo::TYPE_METHOD => method_exists($class, $writeInfo->getName()),
+            PropertyWriteInfo::TYPE_ADDER_AND_REMOVER => true,
+            default => false,
+        };
+    }
+
+    private function isPropertyPath(string $attribute): bool
+    {
+        return str_contains($attribute, '.') || str_contains($attribute, '[');
+    }
+
+    /**
+     * Returns how to write the attribute when PropertyAccessor would call a method named after it, like name($value), that isAllowedAttribute() doesn't account for.
+     */
+    private function getWriteInfoInsteadOfGetterSetter(object $object, string $attribute, mixed $value, array $context): ?PropertyWriteInfo
+    {
+        $method = str_replace(['_', ' '], '', $attribute);
+
+        if (!method_exists($object, $method) || !(new \ReflectionMethod($object, $method))->getNumberOfParameters()) {
+            return null;
+        }
+
+        $context = ['enable_constructor_extraction' => false, 'enable_adder_remover_extraction' => is_iterable($value)] + array_intersect_key($context, ['enable_getter_setter_extraction' => true, 'enable_magic_methods_extraction' => true]);
+        $writeInfo = $this->writeInfoExtractor->getWriteInfo($object::class, $attribute, ['enable_getter_setter_extraction' => true] + $context);
+
+        if (PropertyWriteInfo::TYPE_METHOD !== $writeInfo->getType()) {
+            return null;
+        }
+
+        $writeInfoWithoutGetterSetter = $this->writeInfoExtractor->getWriteInfo($object::class, $attribute, $context);
+
+        if (PropertyWriteInfo::TYPE_METHOD === $writeInfoWithoutGetterSetter->getType() && $writeInfo->getName() === $writeInfoWithoutGetterSetter->getName()) {
+            return null;
+        }
+
+        return $writeInfoWithoutGetterSetter;
+    }
+}
