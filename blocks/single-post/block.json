@@ -16,6 +16,10 @@
     "wp-curate/single-post": true
   },
   "attributes": {
+    "layoutGroup": {
+      "type": "string",
+      "default": ""
+    },
     "namespace": {
       "type": "string"
     }
