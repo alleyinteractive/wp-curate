@@ -92,6 +92,7 @@ function main(): void {
 				block_type_registry: WP_Block_Type_Registry::get_instance(),
 			),
 		),
+		new Features\Single_Post_Block_Support(),
 	);
 	// phpcs:enable
 

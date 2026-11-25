@@ -9,6 +9,7 @@ import { registerPlugin } from '@wordpress/plugins';
 // Internal dependencies.
 import './channelStore';
 import './channelSupport';
+import './singlePostSupport';
 import Deduplication from './deduplication/deduplication';
 import FreeForAllArgs from './freeForAllArgs';
 import LatestPostsInTermArgs from './latestPostsInTermArgs';

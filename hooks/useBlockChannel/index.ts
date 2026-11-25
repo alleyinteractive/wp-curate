@@ -127,23 +127,97 @@ export interface ChannelPostToTake {
 
 const NO_POSTS_TO_TAKE: ChannelPostToTake[] = [];
 
+/*
+ * The block support of a block that shows one post from its channel, like Single Post. The block
+ * also needs the `wp-curate/channels` support. See `entries/block-editor/singlePostSupport`.
+ */
+export const SINGLE_POST_SUPPORT = 'wp-curate/single-post';
+
 /**
- * Whether a block type gives a `channelPostsToTake` callback, and so takes posts from its channel.
+ * Whether a block type has the `wp-curate/single-post` block support, and the
+ * `wp-curate/channels` support that it needs.
+ *
+ * Keep the rules matched with `Single_Post_Block_Support` in PHP.
+ *
+ * @param blockType Block type from the blocks store.
+ */
+export function hasSinglePostSupport(blockType: unknown): boolean {
+  let hasSupport = false;
+
+  if (!hasChannelSupport(blockType)) {
+    return hasSupport;
+  }
+
+  const {
+    supports,
+  } = blockType as Record<string, unknown>;
+
+  if (typeof supports === 'object' && supports !== null && SINGLE_POST_SUPPORT in supports) {
+    const value = (supports as Record<string, unknown>)[SINGLE_POST_SUPPORT];
+
+    // Like `block_has_support()` in PHP, an object of settings also turns on the support.
+    hasSupport = value === true || (typeof value === 'object' && value !== null);
+  }
+
+  return hasSupport;
+}
+
+/**
+ * The `channelPostsToTake` callback of a block type with the `wp-curate/single-post` support that
+ * gives none. The block takes one post: its pin, or the top of the queue. Its `render.php` must
+ * take the same post, with `[ $ref ]`.
+ *
+ * @param attributes Block attributes.
+ */
+export function singlePostToTake(attributes: unknown): unknown[] {
+  let postType: unknown = '';
+  let ref: unknown = 0;
+
+  if (typeof attributes === 'object' && attributes !== null) {
+    ({
+      postType,
+      ref,
+    } = attributes as Record<string, unknown>);
+  }
+
+  return [{ postType, ref }];
+}
+
+/**
+ * The `channelPostsToTake` callback of a block type, or the default of the `wp-curate/single-post`
+ * support, or undefined.
+ *
+ * The default does not depend on the block type's settings, so it works even if the block type
+ * registered before this plugin's scripts loaded.
+ *
+ * @param blockType Block type from the blocks store.
+ */
+function postsToTakeCallback(blockType: unknown): unknown {
+  let callback: unknown;
+
+  if (!hasChannelSupport(blockType)) {
+    return callback;
+  }
+
+  ({
+    channelPostsToTake: callback,
+  } = blockType as Record<string, unknown>);
+
+  if (typeof callback !== 'function' && hasSinglePostSupport(blockType)) {
+    callback = singlePostToTake;
+  }
+
+  return callback;
+}
+
+/**
+ * Whether a block type gives a `channelPostsToTake` callback, or has the `wp-curate/single-post`
+ * support, and so takes posts from its channel.
  *
  * @param blockType Block type from the blocks store.
  */
 export function hasChannelPostsToTake(blockType: unknown): boolean {
-  let takesPosts = false;
-
-  if (hasChannelSupport(blockType)) {
-    const {
-      channelPostsToTake: callback,
-    } = blockType as Record<string, unknown>;
-
-    takesPosts = typeof callback === 'function';
-  }
-
-  return takesPosts;
+  return typeof postsToTakeCallback(blockType) === 'function';
 }
 
 /**
@@ -209,13 +283,11 @@ export function channelPostsToTake(
 ): ChannelPostToTake[] {
   let toTake = NO_POSTS_TO_TAKE;
 
-  if (!hasChannelPostsToTake(blockType)) {
+  const callback = postsToTakeCallback(blockType);
+
+  if (typeof callback !== 'function') {
     return toTake;
   }
-
-  const {
-    channelPostsToTake: callback,
-  } = blockType as Record<string, unknown>;
 
   let value: unknown;
 

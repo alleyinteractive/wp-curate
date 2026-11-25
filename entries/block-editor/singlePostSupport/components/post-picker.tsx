@@ -17,9 +17,9 @@ import {
 import { __ } from '@wordpress/i18n';
 
 // Plugin dependencies.
-import { channelContext } from '../../../hooks/useBlockChannel';
-import { channelQueueContext } from '../../../hooks/useChannelQueue';
-import useChannelResults, { CHANNEL_PAGE_SIZE, type ChannelResultsPage } from '../../../hooks/useChannelResults';
+import { channelContext } from '../../../../hooks/useBlockChannel';
+import { channelQueueContext } from '../../../../hooks/useChannelQueue';
+import useChannelResults, { CHANNEL_PAGE_SIZE, type ChannelResultsPage } from '../../../../hooks/useChannelResults';
 
 interface PickerItem {
   /** Publish date in the site's time zone, or an empty string. */

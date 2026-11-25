@@ -18,10 +18,11 @@ registerBlockType(
   {
     // The name in List View shows the type of the post that the block shows.
     __experimentalLabel: label,
-    // The block takes one post: its pin, or the top of the queue. Keep matched with `render.php`.
-    channelPostsToTake: ({ postType, ref }: Record<string, unknown>) => [{ postType, ref }],
-    // The inner blocks render only with a post, and get the post as context. Keep matched with
-    // `render.php`.
+    /*
+     * The `wp-curate/single-post` support takes one post for the block: its pin, or the top of the
+     * queue. The inner blocks render only with a post, and get the post as context. Keep matched
+     * with `render.php`.
+     */
     channelInnerContext: contextForPost,
     edit,
     icon,
