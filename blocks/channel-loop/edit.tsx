@@ -23,6 +23,7 @@ import { memo, useMemo, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 // Plugin dependencies.
+import ChannelSelectControl from '../../components/ChannelSelectControl';
 import LayoutVariationPicker from '../../components/LayoutVariationPicker';
 import useBlockChannel, {
   channelArgFields,
@@ -102,6 +103,9 @@ const MemoizedTemplatePreview = memo(TemplatePreview);
  *
  * Like core's Post Template block, the inner blocks are the template of each post.
  * A block without inner blocks shows a picker of layouts.
+ *
+ * A block outside a Channel Content block does not get the default channel. Before the picker of
+ * layouts, it shows a picker of channels until the user chooses one.
  */
 export default function Edit({
   __unstableLayoutClassNames: layoutClassNames,
@@ -109,10 +113,9 @@ export default function Edit({
     channel: ownChannel,
   },
   clientId,
-  context: {
-    'wp-curate/channel': contextChannel,
-  },
+  context,
   name,
+  setAttributes,
 }: BlockEditProps<{
   channel: { args?: Record<string, unknown>, name: string };
 }> & {
@@ -121,6 +124,10 @@ export default function Edit({
   context: Record<string, unknown>;
   name: string;
 }) {
+  const {
+    'wp-curate/channel': contextChannel,
+  } = context;
+
   // The post whose template the user edits, or null for the first post.
   const [activePostId, setActivePostId] = useState<number | null>(null);
 
@@ -216,7 +223,31 @@ export default function Edit({
     </div>
   );
 
-  if (!hasInnerBlocks) {
+  // A block inside a Channel Content block uses its channel, and cannot choose its own.
+  const isInChannelContent = toChannelName(contextChannel) !== null;
+
+  if (blockChannel === null) {
+    // Wait for the list of channels, to know whether the block has a channel.
+  } else if (channel === '' && !isInChannelContent) {
+    out = (
+      <div {...blockProps}>
+        <Placeholder
+          label={blockType.title}
+          icon={blockType.icon.src}
+          instructions={__('Choose a channel for the block.', 'wp-curate')}
+          isColumnLayout
+        >
+          <ChannelSelectControl
+            // The block's context tells which channels it can select.
+            context={context}
+            help=""
+            onChange={(next) => setAttributes({ channel: { name: next } })}
+            value={channel}
+          />
+        </Placeholder>
+      </div>
+    );
+  } else if (!hasInnerBlocks) {
     out = (
       <LayoutVariationPicker
         blockProps={blockProps}
@@ -227,8 +258,8 @@ export default function Edit({
         name={name}
       />
     );
-  } else if (channel === '' && blockChannel !== null) {
-    // Like on the front end, a block without a channel shows no posts.
+  } else if (channel === '') {
+    // Like on the front end, a block in a Channel Content block without a channel shows no posts.
     out = (
       <div {...blockProps}>
         <Placeholder

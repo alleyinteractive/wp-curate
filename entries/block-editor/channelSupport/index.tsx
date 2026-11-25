@@ -73,11 +73,12 @@ const CHANNEL_LOOP_BLOCK = 'wp-curate/channel-loop';
  * without a channel shows nothing, not even its pin. Inside a block that provides the channel, a
  * block has the channel of that block at any depth, so it has none if that block has none. Outside
  * one, it has its own channel. The editor gives the default channel to a new block that does not
- * get the channel of a block around it, and to a block that moves out of such a block. The Channel
- * panel cannot clear the channel. A block has no channel only if no channels are registered, or if
- * its saved content has none. The editor does not give a saved block the default channel when the
- * post opens, so the block shows nothing in the editor, as on the front end, until the user selects
- * a channel.
+ * get the channel of a block around it, and to a block that moves out of such a block. A Channel
+ * Loop is the exception: it gets no channel, and shows a picker of channels until the user chooses
+ * one. The Channel panel cannot clear the channel. A block has no channel only if no channels are
+ * registered, if it is a Channel Loop that waits for the user, or if its saved content has none.
+ * The editor does not give a saved block the default channel when the post opens, so the block
+ * shows nothing in the editor, as on the front end, until the user selects a channel.
  *
  * Like on the Query Loop block, a variation of a block in the `wp-curate` namespace can list the
  * controls to show in its `allowedControls` property. The panel ignores this property on the
@@ -234,6 +235,14 @@ function ChannelControls({
     return [clientId, ...getBlockParents(clientId)].some((id: string) => wasBlockJustInserted(id));
   }, [clientId]);
 
+  /*
+   * A Channel Loop outside a block that provides the channel shows every post that remains in its
+   * channel, so the user must choose the channel. The block shows a picker of channels until then.
+   * Without the channel picker in the panel, the user cannot choose, so the block gets the default.
+   */
+  const usesDefaultChannel = blockName !== CHANNEL_LOOP_BLOCK
+    || !isControlAllowed(allowedControls, 'channel');
+
   useEffect(() => {
     if (inheritedChannelByBlock.get(clientId) === true && !inheritsChannel) {
       movedOutBlocks.add(clientId);
@@ -248,6 +257,7 @@ function ChannelControls({
 
     if (
       (isJustInserted || movedOutBlocks.has(clientId))
+      && usesDefaultChannel
       && !inheritsChannel
       && channel === ''
       && globalChannel !== null
@@ -270,6 +280,7 @@ function ChannelControls({
     isJustInserted,
     markNextChangeAsNotPersistent,
     setAttributes,
+    usesDefaultChannel,
   ]);
 
   const setArgs = useCallback((args: Record<string, unknown>) => {
@@ -306,6 +317,10 @@ function ChannelControls({
 
   if (channel === '') {
     help = __('Select a channel for the block to show a post from it.', 'wp-curate');
+  }
+
+  if (channel === '' && blockName === CHANNEL_LOOP_BLOCK) {
+    help = __('Select a channel for the block to show posts from it.', 'wp-curate');
   }
 
   if (channel === '' && isProvider) {
